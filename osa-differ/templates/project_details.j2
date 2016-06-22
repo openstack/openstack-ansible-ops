@@ -1,0 +1,17 @@
+
+**{{ project }}**
+{% if commits | length < 1 %}
+    No commits were found in the project between the OSA commits provided.
+{% elif commits | length == 1 %}
+    1 commit was found in the project (``{{ older_sha }}`` › ``{{ latest_sha }}``):
+
+::
+{% elif commits | length > 1 %}
+    {{ commits | length }} commits were found in the project (``{{ older_sha }}`` › ``{{ latest_sha }}``):
+
+::
+{% endif %}
+
+{% for commit in commits if not commit.commit['message'].split('\n')[0][0:7] == 'Merge "' %}
+{{ commit.sha[0:8] | indent(4, true)}} {{ commit.commit['message'].split('\n')[0] }}
+{% endfor %}

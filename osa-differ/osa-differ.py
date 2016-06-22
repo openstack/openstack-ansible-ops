@@ -15,7 +15,9 @@
 """Analyzes the differences between two OpenStack-Ansible commits."""
 
 import argparse
+import jinja2
 import pygithub3
+import os
 import requests
 import sys
 from urlparse import urlparse
@@ -105,10 +107,11 @@ if __name__ == "__main__":
 
     report_header = """
 OpenStack-Ansible Release Diff Generator
--------------------------------------------------------------------------------
-Old commit: {0} {1}
-New commit: {2} {3}
--------------------------------------------------------------------------------
+----------------------------------------
+
+Showing changes between ``{0} {1}`` and ``{2} {3}`` in OpenStack-Ansible.
+
+----
 """.format(
         short_commit(old_commit),
         old_commit_message,
@@ -117,16 +120,16 @@ New commit: {2} {3}
     )
     report += report_header
 
-    # Set up the URLs for the YAML files which contain the projects used by
-    # OpenStack-Ansible.
+    # Set up the base url that allows us to retrieve data from
+    # OpenStack-Ansible at a particular commit.
     base_url = 'https://raw.githubusercontent.com/openstack/' \
                'openstack-ansible/{0}/{1}'
+
+    # Get all of the OpenStack projects that OpenStack-Ansible builds
     repo_files = [
         'playbooks/defaults/repo_packages/openstack_services.yml',
         'playbooks/defaults/repo_packages/openstack_other.yml'
     ]
-
-    # Get all of the OpenStack projects that OpenStack-Ansible builds
     old_commit_yaml_urls = [base_url.format(old_commit, x) for x in repo_files]
     old_commit_projects = get_projects(old_commit_yaml_urls)
     new_commit_yaml_urls = [base_url.format(new_commit, x) for x in repo_files]
@@ -136,7 +139,21 @@ New commit: {2} {3}
     old_commit_project_names = get_project_names(old_commit_projects)
     new_commit_project_names = get_project_names(new_commit_projects)
 
-    # Loop through each project found in the latest commit
+    # Load our Jinja templates
+    TEMPLATE_DIR = "{0}/templates".format(
+        os.path.dirname(os.path.abspath(__file__))
+    )
+    jinja_env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
+        trim_blocks=True
+    )
+
+    report += """
+OpenStack Projects
+~~~~~~~~~~~~~~~~~~
+"""
+
+    # Loop through each OpenStack project found in the latest commit
     for project in sorted(new_commit_project_names):
 
         # Find the git repo URL from the new commit
@@ -164,24 +181,49 @@ New commit: {2} {3}
             head=latest_sha
         )
 
-        project_header = "________ {0} (commits: {1}) ".format(
-            project,
-            len(comparison.commits)
+        report += jinja_env.get_template('project_details.j2').render(
+            project=project,
+            commits=comparison.commits,
+            latest_sha=short_commit(latest_sha),
+            older_sha=short_commit(older_sha)
         )
-        project_header = project_header.ljust(78, '_')
-        report += "\n{0}\n".format(project_header)
 
-        if len(comparison.commits) == 0:
-            report += "         No changes\n"
-            continue
+    # Set up the URLs for the old and new ansible-role-requirements.yml
+    old_role_url = base_url.format(old_commit, 'ansible-role-requirements.yml')
+    new_role_url = base_url.format(new_commit, 'ansible-role-requirements.yml')
 
-        for commit in comparison.commits:
-            commit_line = commit.commit['message'].splitlines()[0]
+    # Retrieve the roles YAML
+    old_role_yaml = yaml.load(requests.get(old_role_url).text)
+    new_role_yaml = yaml.load(requests.get(new_role_url).text)
 
-            # Skip the merge messages since they're not terribly helpful
-            if commit_line.startswith('Merge "'):
-                continue
+    report += """
+OpenStack-Ansible Roles
+~~~~~~~~~~~~~~~~~~~~~~~
+"""
 
-            report += "{0} {1}\n".format(commit.sha[0:8], commit_line)
+    # Loop through each OpenStack-Ansible role found in the latest commit
+    for role in new_role_yaml:
+
+        # Get the user and repo name that we will need to use with GitHub
+        _, user, role_repo_name = urlparse(role['src']).path.split('/')
+
+        # Determine the older and newer SHA for this role
+        latest_sha = role['version']
+        older_sha = next(x['version'] for x in old_role_yaml
+                         if x['name'] == role['name'])
+
+        comparison = gh.repos.commits.compare(
+            user=user,
+            repo=role_repo_name,
+            base=older_sha,
+            head=latest_sha
+        )
+
+        report += jinja_env.get_template('role_details.j2').render(
+            role=role_repo_name,
+            commits=comparison.commits,
+            latest_sha=short_commit(latest_sha),
+            older_sha=short_commit(older_sha)
+        )
 
     print(report)
