@@ -1,0 +1,18 @@
+OpenStack-Ansible Diff Generator
+================================
+
+This report shows changes from ``{{ older_sha }}`` to ``{{ latest_sha }}`` in
+OpenStack-Ansible.
+
+{% if extra_vars['roles_only'] %}
+This report also includes the changes that were made in OpenStack-Ansible roles
+between these two OpenStack commits.
+{% elif extra_vars['projects_only'] %}
+This report also includes the changes that were made in OpenStack projects
+between thse two OpenStack-Ansible commits.
+{% else %}
+This report also includes the changes that were made in OpenStack projects and
+OpenStack-Ansible roles between these two OpenStack-Ansible commits.
+{% endif %}
+
+{% include 'repo_details.j2' %}
