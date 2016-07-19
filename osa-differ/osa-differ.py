@@ -16,6 +16,7 @@
 
 import argparse
 import jinja2
+import logging
 import pygithub3
 import os
 import requests
@@ -26,10 +27,23 @@ import yaml
 
 def get_arguments():
     """Setup argument Parsing."""
+    description = """OpenStack-Ansible Release Diff Generator
+----------------------------------------
+
+Finds changes in OpenStack projects and OpenStack-Ansible roles between two
+commits in OpenStack-Ansible.
+
+Tip: Set the GITHUB_TOKEN environment variable to provide a GitHub API token
+and get higher API limits.
+
+"""
+
     parser = argparse.ArgumentParser(
         usage='%(prog)s',
-        description='OpenStack-Ansible Release Diff Generator',
-        epilog='Licensed "Apache 2.0"')
+        description=description,
+        epilog='Licensed "Apache 2.0"',
+        formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument(
         'old_commit',
         action='store',
@@ -41,6 +55,11 @@ def get_arguments():
         action='store',
         nargs=1,
         help="Git SHA of the newer commit",
+    )
+    parser.add_argument(
+        '-d', '--debug',
+        action='store_true',
+        help="Enable debug output",
     )
     display_opts = parser.add_mutually_exclusive_group()
     display_opts.add_argument(
@@ -81,6 +100,7 @@ def get_projects(base_url, commit):
     """Get all projects from multiple YAML files."""
     # Assemble the full URLs to our YAML files that contain our OpenStack
     # projects' details.
+    logger.debug("Retrieving OSA project list at commit {0}".format(commit))
     repo_files = [
         'playbooks/defaults/repo_packages/openstack_services.yml',
         'playbooks/defaults/repo_packages/openstack_other.yml'
@@ -105,6 +125,8 @@ def render_commit_template(user, repo, old_commit, new_commit, extra_vars={},
 
     # Compare the two commits in the project's repository to see what
     # the differences are between them.
+    logger.debug("Retrieving commits between {2} and {3} in "
+                 "{0}/{1}".format(user, repo, old_commit, new_commit))
     comparison = gh.repos.commits.compare(
         user=user,
         repo=repo,
@@ -130,9 +152,23 @@ def short_commit(commit_sha):
 
 if __name__ == "__main__":
 
-    # Set up some initial variables
-    gh = pygithub3.Github()
+    # Get our arguments from the command line
     args = get_arguments()
+
+    # Configure logging
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level=logging.WARNING, format=log_format)
+    logger = logging.getLogger(__name__)
+    if 'debug' in args and args['debug']:
+        logger.setLevel(logging.DEBUG)
+
+    # Configure our connection to GitHub
+    github_token = os.environ.get('GITHUB_TOKEN')
+    if github_token is None:
+        logger.warning("Provide a GitHub API token via the GITHUB_TOKEN "
+                       "environment variable to avoid exceeding GitHub API "
+                       "limits.")
+    gh = pygithub3.Github(token=github_token)
 
     # Load our Jinja templates
     TEMPLATE_DIR = "{0}/templates".format(
@@ -148,6 +184,7 @@ if __name__ == "__main__":
     new_commit = args['new_commit'][0]
 
     # Get the first line of the commit message in the older commit
+    logger.debug("Retrieving commit message from the older OSA commit")
     try:
         old_commit_message = get_commit_message(old_commit)
     except pygithub3.exceptions.NotFound:
@@ -155,6 +192,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Get the first line of the commit message in the newer commit
+    logger.debug("Retrieving commit message from the newer OSA commit")
     try:
         new_commit_message = get_commit_message(new_commit)
     except pygithub3.exceptions.NotFound:
@@ -162,6 +200,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Generate header and initial report for OpenStack-Ansible itself
+    logger.debug("Generating initial report header for OpenStack-Ansible")
     report = render_commit_template(
         user='openstack',
         repo='openstack-ansible',
