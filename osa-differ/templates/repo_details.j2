@@ -1,6 +1,10 @@
 
 {{ repo }}
+{% if repo == 'openstack-ansible' %}
+{{ '-' * repo | length}}
+{% else %}
 {{ '~' * repo | length}}
+{% endif %}
 
 {% if commits | length < 1 %}
 No commits were found in `{{ repo }} <https://github.com/openstack/{{ repo }}>`_
