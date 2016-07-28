@@ -125,19 +125,27 @@ def render_commit_template(user, repo, old_commit, new_commit, extra_vars={},
 
     # Compare the two commits in the project's repository to see what
     # the differences are between them.
-    logger.debug("Retrieving commits between {2} and {3} in "
-                 "{0}/{1}".format(user, repo, old_commit, new_commit))
-    comparison = gh.repos.commits.compare(
-        user=user,
-        repo=repo,
-        base=old_commit,
-        head=new_commit
-    )
+    if old_commit == new_commit:
+        logger.debug("Same starting and ending commit ({0}) for {1}/{2} - "
+                     "nothing to compare".format(short_commit(old_commit),
+                                                 user, repo))
+        commits = []
+    else:
+        logger.debug("Retrieving commits between {2} and {3} in "
+                     "{0}/{1}".format(user, repo, short_commit(old_commit),
+                                      short_commit(new_commit)))
+        comparison = gh.repos.commits.compare(
+            user=user,
+            repo=repo,
+            base=old_commit,
+            head=new_commit
+        )
+        commits = comparison.commits
 
     # Render the jinja2 template
     rendered_template = jinja_env.get_template(template_file).render(
         repo=repo,
-        commits=comparison.commits,
+        commits=commits,
         latest_sha=short_commit(new_commit),
         older_sha=short_commit(old_commit),
         extra_vars=extra_vars
@@ -288,8 +296,11 @@ if __name__ == "__main__":
 
         # Determine the older and newer SHA for this role
         latest_sha = role['version']
-        older_sha = next(x['version'] for x in old_role_yaml
-                         if x['name'] == role['name'])
+        try:
+            older_sha = next(x['version'] for x in old_role_yaml
+                             if x['name'] == role['name'])
+        except StopIteration:
+            older_sha = latest_sha
 
         # Render a template showing the commits in this role's repository.
         report += render_commit_template(
