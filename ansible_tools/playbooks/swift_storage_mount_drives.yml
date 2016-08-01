@@ -1,0 +1,85 @@
+---
+# Copyright 2016, @WalmartLabs, Bangalore.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+#This role is to mount the drives in swift object node and is optional.
+#This gets executed only when the flag 'mount_drives' in swift configuration
+#file is set to true.
+
+- name: Mount drives in swift object servers
+  hosts: swift_hosts
+  user: root
+  vars:
+    device_path: 'opt'
+    filesystem_to_mount: 'xfs'
+  tasks:
+    - name: "Set swift_vars if undefined"
+      set_fact:
+        swift_vars: "{}"
+      when: swift_vars is not defined
+
+    - name: "Create mount point directory"
+      file:
+        state: "directory"
+        path: "{{ swift_vars.mount_point | default(swift.mount_point) }}/{{ item.name }}"
+      with_items: swift_vars.drives
+      when: swift_vars.drives is defined
+
+    - name: "Create mount point directory"
+      file:
+        state: "directory"
+        path: "{{ swift_vars.mount_point | default(swift.mount_point) }}/{{ item.name }}"
+      with_items: swift.drives
+      when: swift_vars.drives is not defined
+
+    - name: "Format to {{ filesystem_to_mount }}"
+      filesystem:
+        fstype: "{{ filesystem_to_mount }}"
+        dev: "/{{ device_path }}/{{ item.name }}"
+        force: "yes"
+      with_items: swift_vars.drives
+      when: swift_vars.drives is defined
+
+    - name: "Format to {{ filesystem_to_mount }}"
+      filesystem:
+        fstype: "{{ filesystem_to_mount }}"
+        dev: "/{{ device_path }}/{{ item.name }}"
+        force: "yes"
+      with_items: swift.drives
+      when: swift_vars.drives is not defined
+
+    - name: "Mount the storage"
+      mount:
+        name: "{{ swift_vars.mount_point | default(swift.mount_point) }}/{{ item.name }}"
+        src: "/{{ device_path }}/{{ item.name }}"
+        fstype: "{{ filesystem_to_mount }}"
+        opts: "rw,noatime,nodiratime,nobarrier,inode64,delaylog,logbufs=8,logbsize=256k,allocsize=4M"
+        dump: 0
+        passno: 0
+        state: "mounted"
+      with_items: swift_vars.drives
+      when: swift_vars.drives is defined
+
+    - name: "Mount the storage"
+      mount:
+        name: "{{ swift_vars.mount_point | default(swift.mount_point) }}/{{ item.name }}"
+        src: "/{{ device_path }}/{{ item.name }}"
+        fstype: "{{ filesystem_to_mount }}"
+        opts: "rw,noatime,nodiratime,nobarrier,inode64,delaylog,logbufs=8,logbsize=256k,allocsize=4M"
+        dump: 0
+        passno: 0
+        state: "mounted"
+      with_items: swift.drives
+      when: swift_vars.drives is not defined
