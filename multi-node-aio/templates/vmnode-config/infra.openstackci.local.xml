@@ -1,0 +1,131 @@
+<domain type='kvm'>
+  <name>__NODE__.openstackci.local</name>
+  <memory unit='GiB'>12</memory>
+  <currentMemory unit='GiB'>12</currentMemory>
+  <vcpu placement='static'>10</vcpu>
+  <resource>
+    <partition>/machine</partition>
+  </resource>
+  <os>
+    <type arch='x86_64' machine='pc-i440fx-trusty'>hvm</type>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode='host-model'>
+    <model fallback='allow'/>
+  </cpu>
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <pm>
+    <suspend-to-mem enabled='no'/>
+    <suspend-to-disk enabled='no'/>
+  </pm>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='none' io='native'/>
+      <source file='/var/lib/libvirt/images/__NODE__.openstackci.local.img'/>
+      <target dev='__DEVICE_NAME__' bus='virtio'/>
+      <boot order='1'/>
+      <alias name='virtio-disk0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
+    </disk>
+    <controller type='pci' index='0' model='pci-root'>
+      <alias name='pci.0'/>
+    </controller>
+    <controller type='virtio-serial' index='0'>
+      <alias name='virtio-serial0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
+    </controller>
+    <interface type='bridge'>
+      <mac address="52:54:00:bd:81:__COUNT__"/>
+      <source bridge='br-dhcp'/>
+      <target dev='vnet0'/>
+      <model type='virtio'/>
+      <boot order='2'/>
+      <alias name='net0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
+    </interface>
+    <interface type='bridge'>
+      <mac address="52:54:00:fd:7f:__COUNT__"/>
+      <source bridge='vm-br-eth1'/>
+      <target dev='vnet1'/>
+      <model type='virtio'/>
+      <boot order='3'/>
+      <alias name='net1'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x0'/>
+    </interface>
+    <interface type='bridge'>
+      <mac address="52:54:00:f5:44:__COUNT__"/>
+      <source bridge='vm-br-eth2'/>
+      <target dev='vnet2'/>
+      <model type='virtio'/>
+      <boot order='4'/>
+      <alias name='net2'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0b' function='0x0'/>
+    </interface>
+    <interface type='bridge'>
+      <mac address="52:54:00:1f:96:__COUNT__"/>
+      <source bridge='vm-br-eth3'/>
+      <target dev='vnet3'/>
+      <model type='virtio'/>
+      <boot order='5'/>
+      <alias name='net3'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0c' function='0x0'/>
+    </interface>
+    <interface type='bridge'>
+      <mac address="52:54:00:50:03:__COUNT__"/>
+      <source bridge='vm-br-eth4'/>
+      <target dev='vnet4'/>
+      <model type='virtio'/>
+      <boot order='6'/>
+      <alias name='net4'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0d' function='0x0'/>
+    </interface>
+    <interface type='bridge'>
+      <mac address="52:54:00:2d:12:__COUNT__"/>
+      <source bridge='vm-br-eth5'/>
+      <target dev='vnet5'/>
+      <model type='virtio'/>
+      <boot order='7'/>
+      <alias name='net5'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0e' function='0x0'/>
+    </interface>
+    <serial type='pty'>
+      <source path='/dev/pts/4'/>
+      <target port='0'/>
+      <alias name='serial0'/>
+    </serial>
+    <console type='pty' tty='/dev/pts/4'>
+      <source path='/dev/pts/4'/>
+      <target type='serial' port='0'/>
+      <alias name='serial0'/>
+    </console>
+    <input type='mouse' bus='ps2'/>
+    <input type='keyboard' bus='ps2'/>
+    <graphics type='vnc' port='-1' autoport='yes' listen='127.0.0.1'>
+      <listen type='address' address='127.0.0.1'/>
+    </graphics>
+    <video>
+      <model type='vmvga' vram='9216' heads='1'/>
+      <alias name='video0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+    </video>
+    <memballoon model='virtio'>
+      <alias name='balloon0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0'/>
+    </memballoon>
+    <rng model='virtio'>
+      <backend model='random'>/dev/random</backend>
+      <alias name='rng0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x09' function='0x0'/>
+    </rng>
+  </devices>
+</domain>

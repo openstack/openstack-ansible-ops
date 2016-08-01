@@ -1,0 +1,5 @@
+<network>
+  <name>__NETWORK__</name>
+  <forward mode="bridge"/>
+  <bridge name="__NETWORK__"/>
+</network>
