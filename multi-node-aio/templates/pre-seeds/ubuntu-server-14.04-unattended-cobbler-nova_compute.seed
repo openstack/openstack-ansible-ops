@@ -1,0 +1,295 @@
+#
+# Ubuntu Server 14.04 Preseed
+#
+# Usage:
+#
+# This Ubuntu Preseed file is meant to be used with Cobbler. It has been
+# tested only on Cobbler 2.4.1. It is a completely unattended install.
+#
+# References:
+#
+# https://help.ubuntu.com/14.04/installation-guide/example-preseed.txt
+# http://www.claudiokuenzler.com/blog/513/debian-ubuntu-preseed-create-two-volume-groups-same-disk
+
+#############
+#
+# Kernel Options
+#
+#############
+
+# Use the following option to add additional boot parameters for the
+# installed system (if supported by the bootloader installer).
+# Note: options passed to the installer will be added automatically.
+d-i debian-installer/add-kernel-opts string $kernel_options_post
+
+#############
+#
+# Networking
+#
+#############
+
+#if "__DEFAULT_NETWORK__" in $interfaces
+    #set idata = $interfaces["__DEFAULT_NETWORK__"]
+    #set static = $idata['static']
+    #set ip_address = $idata.get("ip_address", "127.0.0.1")
+    #set netmask = $idata.get("netmask", "255.0.0.0")
+    #set gateway = $getVar('gateway','127.0.0.1')
+#end if
+
+d-i netcfg/choose_interface select __DEFAULT_NETWORK__
+d-i netcfg/dhcp_timeout string 60
+d-i netcfg/disable_autoconfig boolean true
+d-i netcfg/dhcp_failed note
+d-i netcfg/dhcp_options select Configure network manually
+
+#if $static
+# Static network configuration.
+d-i netcfg/get_ipaddress string $idata.get("ip_address", "127.0.0.1")
+d-i netcfg/get_netmask string $idata.get("netmask", "255.0.0.0")
+d-i netcfg/get_gateway string $gateway
+d-i netcfg/get_nameservers string $name_servers[0]
+d-i netcfg/confirm_static boolean true
+#end if
+
+d-i netcfg/get_hostname string $system_name
+d-i netcfg/get_domain string $hostname
+
+# Disable that annoying WEP key dialog.
+d-i netcfg/wireless_wep string
+
+#############
+#
+# Pre Install
+#
+#############
+
+# Command Line 1: This is necessary otherwise you will be prompted to umount /dev/__DEVICE_NAME__. See Ubuntu bug #1347726.
+d-i preseed/early_command string \
+      umount /media || true
+
+#############
+#
+# Net Image
+#
+#############
+
+# Required at least for 12.10+
+d-i live-installer/net-image string http://$http_server/cobbler/links/$distro_name/install/filesystem.squashfs
+
+#############
+#
+# Localization
+#
+#############
+
+d-i debian-installer/locale string en
+d-i debian-installer/country string US
+d-i debian-installer/locale string en_US.UTF-8
+d-i debian-installer/language string en
+
+#############
+#
+# Keyboard
+#
+#############
+
+# Disable automatic (interactive) keymap detection.
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
+d-i console-setup/variantcode string
+d-i keyboard-configuration/layoutcode string us
+
+#############
+#
+# Mirror
+#
+#############
+
+d-i mirror/country string manual
+d-i mirror/http/proxy string
+d-i mirror/http/hostname string $http_server
+d-i mirror/http/directory string $install_source_directory
+
+#############
+#
+# Clock and Time Zone
+#
+#############
+
+# Controls whether to use NTP to set the clock during the install
+d-i clock-setup/ntp boolean true
+d-i clock-setup/ntp-server string ntp.ubuntu.com
+
+# You may set this to any valid setting for $TZ; see the contents of
+# /usr/share/zoneinfo/ for valid values.
+d-i time/zone string US/Central
+
+# Controls whether or not the hardware clock is set to UTC.
+d-i clock-setup/utc boolean true
+
+#############
+#
+# Partitioning
+#
+#############
+
+# If one of the disks that are going to be automatically partitioned
+# contains an old LVM configuration, the user will normally receive a
+# warning. This can be preseeded away...
+d-i partman-lvm/device_remove_lvm boolean true
+
+# The same applies to pre-existing software RAID array:
+d-i partman-md/device_remove_md boolean true
+
+# And the same goes for the confirmation to write the lvm partitions.
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+
+d-i partman-auto/method string lvm
+d-i partman-auto/disk string /dev/__DEVICE_NAME__
+
+# For LVM partitioning, you can select how much of the volume group to use
+# for logical volumes.
+d-i partman-auto-lvm/guided_size string max
+
+d-i partman-auto/choose_recipe select custompartitioning
+d-i partman-auto/expert_recipe string \
+      custompartitioning :: \
+              512 1 512 ext2                                  \
+                      $primary{ }                             \
+                      $bootable{ }                            \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext2 }    \
+                      label{ boot }                           \
+                      mountpoint{ /boot }                     \
+              .                                               \
+              1024 1 100% ext4                                \
+                      $primary{ }                             \
+                      method{ lvm }                           \
+                      device{ /dev/__DEVICE_NAME__2 }          \
+                      vg_name{ lxc }                          \
+              .                                               \
+              8192 1 8192 linux-swap                          \
+                      $lvmok{ } in_vg{ lxc }                  \
+                      lv_name{ swap00 }                       \
+                      method{ swap } format{ }                \
+              .                                               \
+              51200 1 51200 ext4                              \
+                      $lvmok{ } in_vg{ lxc }                  \
+                      lv_name{ root00 }                       \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      label{ root }                           \
+                      mountpoint{ / }                         \
+              .                                               \
+              76800 1 76800 ext4                              \
+                      $lvmok{ } in_vg{ lxc }                  \
+                      lv_name{ openstack00 }                  \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      label{ openstack00 }                    \
+                      mountpoint{ /openstack }                \
+              .                                               \
+              1024 1 1000000000 ext4                          \
+                      $lvmok{ } in_vg{ lxc }                  \
+                      lv_name{ nova00 }                       \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      label{ nova }                           \
+                      mountpoint{ /var/lib/nova }             \
+              .                                               \
+
+# This makes partman automatically partition without confirmation, provided
+# that you told it what to do using one of the methods above.
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+#############
+#
+# Packages
+#
+#############
+
+# Package selection
+tasksel tasksel/first multiselect openssh-server
+
+# Whether to upgrade packages after debootstrap.
+# Allowed values: none, safe-upgrade, full-upgrade
+d-i pkgsel/upgrade select none
+d-i pkgsel/include string bridge-utils ethtool ifenslave lvm2 openssh-server python2.7 vim vlan
+# Policy for applying updates. May be "none" (no automatic updates),
+# "unattended-upgrades" (install security updates automatically), or
+# "landscape" (manage system with Landscape).
+d-i pkgsel/update-policy select none
+
+# Some versions of the installer can report back on what software you have
+# installed, and what software you use. The default is not to report back,
+# but sending reports helps the project determine what software is most
+# popular and include it on CDs.
+popularity-contest popularity-contest/participate boolean false
+
+#############
+#
+# Users and Password
+#
+#############
+
+# Skip creation of a root account (normal user account will be able to
+# use sudo). The default is false; preseed this to true if you want to set
+# a root password.
+d-i passwd/root-login boolean true
+
+# Alternatively, to skip creation of a normal user account.
+d-i passwd/make-user boolean false
+
+# The installer will warn about weak passwords. If you are sure you know
+# what you're doing and want to override it, uncomment this.
+d-i user-setup/allow-password-weak boolean true
+
+# Root password, either in clear text
+d-i passwd/root-password password cobbler
+d-i passwd/root-password-again password cobbler
+
+#############
+#
+# Bootloader
+#
+#############
+
+# This is fairly safe to set, it makes grub install automatically to the MBR
+# if no other operating system is detected on the machine.
+d-i grub-installer/only_debian boolean true
+
+#############
+#
+# Post Install
+#
+#############
+
+# Command Line 1: Allow root to SSH.
+# Command Line 2: Cobbler overwrites sources.list with its own repos. Put the default Ubuntu sources.list back.
+# Command Line 3: Cobbler API call to turn off netboot.
+d-i preseed/late_command string \
+  wget http://$http_server/trusty-sources.list -O /target/etc/apt/sources.list; \
+  wget http://$http_server/osa-$hostname-bridges.cfg -O /target/etc/network/interfaces.d/osa-$hostname-bridges.cfg; \
+  wget http://$http_server/cblr/svc/op/nopxe/system/$system_name -O /dev/null; \
+  sed -i '/PermitRootLogin / s/ .*/ yes/' /target/etc/ssh/sshd_config; \
+  mkdir /target/root/.ssh; \
+  chmod 0700 /target/root/.ssh; \
+  echo "__SSHKEY__" >> /target/root/.ssh/authorized_keys; \
+  killall.sh || true; \
+  netcfg; \
+  echo -e '#!/bin/sh\n\nif ! grep -q "^source.*cfg$" /etc/network/interfaces; then echo "source /etc/network/interfaces.d/*.cfg" >> /etc/network/interfaces; fi' > /target/etc/network/if-pre-up.d/multi-nic; \
+  chmod +x /target/etc/network/if-pre-up.d/multi-nic
+
+
+#############
+#
+# Finish
+#
+#############
+
+# Reboot after the install is finished.
+finish-install finish-install/reboot_in_progress note
