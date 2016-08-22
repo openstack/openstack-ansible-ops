@@ -195,3 +195,36 @@ for node_type in $(get_all_types); do
   done
 done
 }
+
+function install_bits {
+successerator openstack-ansible ${ANSIBLE_PARAMETERS} $@
+}
+
+function successerator {
+set +e
+# Get the time taht the method was started
+OP_START_TIME=$(date +%s)
+#Set the initial return value to failure.
+false
+for ((RETRY=0; $? != 0 && RETRY < MAX_RETRIES; RETRY++)); do
+  if [ ${RETRY} -gt 1 ]; then
+    $@ -vvvv
+  else
+    $@
+  fi
+done
+
+# If max retries were hit, fail.
+if [ $? -ne 0 && [ ${RETRY} -eq ${MAX_RETRIES} ];then
+  echo -e "\n Hit maximum number of retries, giving up..\n"
+  exit
+fi
+
+# Print the time that the method completed.
+OP_TOTAL_SECONDS="$(( $(date +%s) - OP_START_TIME ))"
+REPORT_OUTPUT="${OP_TOTAL_SECONDS} seconds"
+REPORT_DATA+="- Operation: [ $@ ]\t${REPORT_OUTPUT}\tNumber of Attempts [ ${RETRY} ]\n"
+echo -e "Run Time = ${REPORT_OUTPUT}"
+set -e
+}
+

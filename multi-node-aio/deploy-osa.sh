@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+MAX_RETRIES=${MAX_RETRIES:-5}
+
 # Load all functions
 source functions.rc
 
@@ -102,10 +104,15 @@ export ANSIBLE_FORKS=${ANSIBLE_FORKS:-15}
 pushd /opt/openstack-ansible/playbooks
 
 # Running the HAP play is done because it "may" be needed. Note: In Master its not.
-openstack-ansible haproxy-install.yml
+install_bits haproxy-install.yml
 
 # Setup everything else
-openstack-ansible setup-everything.yml
+for root_include in $(awk -F'include:' '{print $2}' setup-everything.yml); do
+  for include in $(awk -F'include:' '{print $2}' "${root_include}"); do
+    echo "[Executing \"${include}\" playbook]"
+    install_bits "${include}"
+  done
+done
 
 # This is optional and only being done to give the cloud networks and an image.
 #  The tempest install will work out of the box because the deployment is setup
