@@ -197,7 +197,7 @@ done
 }
 
 function install_bits {
-successerator openstack-ansible ${ANSIBLE_PARAMETERS} $@
+successerator openstack-ansible $@
 }
 
 function successerator {
