@@ -48,7 +48,22 @@ rekick_vms
 # Wait here for all nodes to be booted and ready with SSH
 wait_ssh
 
-# Ensure that all running VMs have an updated apt-cache
-for node in $(get_all_hosts); do
-  ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "apt-get clean && apt-get update"
+# Export all system keys
+mkdir -p /tmp/keys
+for i in $(apt-key list | awk '/pub/ {print $2}' | awk -F'/' '{print $2}'); do
+  apt-key export "$i" > "/tmp/keys/$i"
 done
+
+# Ensure that all running VMs have an updated apt-cache with keys
+for node in $(get_all_hosts); do
+  ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mkdir -p /tmp/keys"
+  for i in /tmp/all-apt-keys /etc/apt/apt.conf.d/00-nokey /etc/apt/sources.list /etc/apt/sources.list.d/* /tmp/keys/*; do
+    scp "$i" "10.0.0.${node#*":"}:$i"
+  done
+  ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "(for i in /tmp/keys/*; do \
+      apt-key add \$i; \
+      apt-key adv --keyserver keyserver.ubuntu.com --recv-keys \$(basename \$i); done); \
+    apt-get clean; \
+    apt-get update"
+done
+

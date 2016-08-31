@@ -81,7 +81,7 @@ iptables_filter_rule_add mangle 'POSTROUTING -s 10.0.0.0/24 -o br-dhcp -p udp -m
 iptables_filter_rule_add mangle 'POSTROUTING -p tcp -j CHECKSUM --checksum-fill'
 
 # Enable partitioning of the "${DATA_DISK_DEVICE}"
-PARTITION_HOST=${PARTITION_HOST:-true}
+PARTITION_HOST=${PARTITION_HOST:-false}
 if [[ "${PARTITION_HOST}" = true ]]; then
   # Set the data disk device, if unset the largest unpartitioned device will be used to for host VMs
   DATA_DISK_DEVICE="${DATA_DISK_DEVICE:-$(lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | awk '/d[b-z]+ disk +0/{ if ($4>m){m=$4; d=$1}}; END{print d}')}"
@@ -93,3 +93,22 @@ if [[ "${PARTITION_HOST}" = true ]]; then
   fi
   mount -a
 fi
+
+cat > /etc/sources.list <<EOF
+# Faster likely unsigned repo
+deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty main universe
+deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-updates main universe
+deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-backports main universe
+deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-security main universe
+
+# i386 comes from the global known repo. This is slower and so it is only used for i386 packages
+deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty main universe
+deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-updates main universe
+deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-backports main universe
+deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-security main universe
+EOF
+
+# Allow apt repos to be UnAuthenticated
+cat > /etc/apt/apt.conf.d/00-nokey <<EOF
+APT { Get { AllowUnauthenticated "1"; }; };
+EOF

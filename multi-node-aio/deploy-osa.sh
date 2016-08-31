@@ -101,19 +101,12 @@ popd
 # Set the number of forks for the ansible client calls
 export ANSIBLE_FORKS=${ANSIBLE_FORKS:-15}
 
+pushd /opt/openstack-ansible
+  export DEPLOY_AIO=true
+  bash ./scripts/run-playbooks.sh
+popd
+
 pushd /opt/openstack-ansible/playbooks
-
-# Running the HAP play is done because it "may" be needed. Note: In Master its not.
-install_bits haproxy-install.yml
-
-# Setup everything else
-for root_include in $(awk -F'include:' '{print $2}' setup-everything.yml); do
-  for include in $(awk -F'include:' '{print $2}' "${root_include}"); do
-    echo "[Executing \"${include}\" playbook]"
-    install_bits "${include}"
-  done
-done
-
 # This is optional and only being done to give the cloud networks and an image.
 #  The tempest install will work out of the box because the deployment is setup
 #  already with all of the correct networks, devices, and other bits. If you want
