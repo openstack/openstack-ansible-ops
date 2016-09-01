@@ -1,0 +1,34 @@
+name: compute
+config: {}
+description: ""
+devices:
+  eth0:
+    name: eth0
+    nictype: bridged
+    parent: lxdbr0
+    type: nic
+  eth1:
+    name: eth1
+    nictype: bridged
+    parent: vm-br-eth1
+    type: nic
+  eth2:
+    name: eth2
+    nictype: bridged
+    parent: vm-br-eth2
+    type: nic
+  eth3:
+    name: eth3
+    nictype: bridged
+    parent: vm-br-eth3
+    type: nic
+  eth4:
+    name: eth4
+    nictype: bridged
+    parent: vm-br-eth4
+    type: nic
+  eth5:
+    name: eth5
+    nictype: bridged
+    parent: vm-br-eth5
+    type: nic

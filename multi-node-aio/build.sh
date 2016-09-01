@@ -17,22 +17,36 @@ set -eu
 # Load all functions
 source functions.rc
 
-# Instruct the system do all of the require host setup
-SETUP_HOST=${SETUP_HOST:-true}
-[[ "${SETUP_HOST}" = true ]] && source setup-host.sh
+# Run it LXD style, baby.
+export LXD_STYLE=${LXD_STYLE:-false}
 
-# Instruct the system do all of the cobbler setup
-SETUP_COBBLER=${SETUP_COBBLER:-true}
-[[ "${SETUP_COBBLER}" = true ]] && source setup-cobbler.sh
 
-# Instruct the system do all of the virsh setup
-SETUP_VIRSH_NET=${SETUP_VIRSH_NET:-true}
-[[ "${SETUP_VIRSH_NET}" = true ]] && source setup-virsh-net.sh
+if [[ ${LXD_STYLE} ]]; then
+    source setup-host-lxd.sh
 
-# Instruct the system to Kick all of the VMs
-DEPLOY_VMS=${DEPLOY_VMS:-true}
-[[ "${DEPLOY_VMS}" = true ]] && source deploy-vms.sh
+    source setup-lxd.sh
 
-# Instruct the system to deploy OpenStack Ansible
-DEPLOY_OSA=${DEPLOY_OSA:-true}
-[[ "${DEPLOY_OSA}" = true ]] && source deploy-osa.sh
+
+else:
+
+    # Instruct the system do all of the require host setup
+    SETUP_HOST=${SETUP_HOST:-true}
+    [[ "${SETUP_HOST}" = true ]] && source setup-host.sh
+    
+    # Instruct the system do all of the cobbler setup
+    SETUP_COBBLER=${SETUP_COBBLER:-true}
+    [[ "${SETUP_COBBLER}" = true ]] && source setup-cobbler.sh
+    
+    # Instruct the system do all of the virsh setup
+    SETUP_VIRSH_NET=${SETUP_VIRSH_NET:-true}
+    [[ "${SETUP_VIRSH_NET}" = true ]] && source setup-virsh-net.sh
+    
+    # Instruct the system to Kick all of the VMs
+    DEPLOY_VMS=${DEPLOY_VMS:-true}
+    [[ "${DEPLOY_VMS}" = true ]] && source deploy-vms.sh
+    
+    # Instruct the system to deploy OpenStack Ansible
+    DEPLOY_OSA=${DEPLOY_OSA:-true}
+    [[ "${DEPLOY_OSA}" = true ]] && source deploy-osa.sh
+
+fi
