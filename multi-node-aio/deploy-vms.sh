@@ -57,7 +57,7 @@ done
 # Ensure that all running VMs have an updated apt-cache with keys
 for node in $(get_all_hosts); do
   ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mkdir -p /tmp/keys"
-  for i in /tmp/all-apt-keys /etc/apt/apt.conf.d/00-nokey /etc/apt/sources.list /etc/apt/sources.list.d/* /tmp/keys/*; do
+  for i in /etc/apt/apt.conf.d/00-nokey /etc/apt/sources.list /etc/apt/sources.list.d/* /tmp/keys/*; do
     scp "$i" "10.0.0.${node#*":"}:$i"
   done
   ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "(for i in /tmp/keys/*; do \
