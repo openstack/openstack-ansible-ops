@@ -1,0 +1,67 @@
+---
+# Copyright 2016, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Deploy influxdb
+  hosts: "cluster-metrics"
+  gather_facts: true
+  user: root
+  tasks:
+    - name: InfluxDB datapath bind mount
+      lxc_container:
+        name: "{{ inventory_hostname }}"
+        container_command: |
+          [[ ! -d "/var/lib/influxdb" ]] && mkdir -p "/var/lib/influxdb"
+        container_config:
+          - "lxc.mount.entry=/openstack/{{ inventory_hostname }} var/lib/influxdb none bind 0 0"
+      delegate_to: "{{ physical_host }}"
+    - name: Add influxdata apt-keys
+      apt_key:
+        url: "https://repos.influxdata.com/influxdb.key"
+        state: "present"
+    - name: Add influxdata repo
+      apt_repository:
+        repo: "deb https://repos.influxdata.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+        state: "present"
+    - name: Install influxdb
+      apt:
+        pkg: "influxdb"
+        state: "latest"
+    - name: Drop influxdb config file
+      template:
+        src: templates/influxdb.conf.j2
+        dest: /etc/influxdb/influxdb.conf
+    - name: Enable and restart influxdb
+      service:
+        name: "influxdb"
+        enabled: true
+        state: restarted
+    - name: Wait for influxdb to be ready
+      wait_for:
+        host: "{{ hostvars[groups['cluster-metrics'][0]]['ansible_ssh_host'] }}"
+        port: "{{ influxdb_port }}"
+        delay: 1
+    - name: Create metrics DB
+      shell: >
+        influx -username {{ influxdb_db_root_name }}
+        -password {{ influxdb_db_root_password }}
+        -execute "{{ item }}"
+      with_items:
+        - "CREATE DATABASE {{ influxdb_db_name }}"
+        - "CREATE RETENTION POLICY {{ influxdb_db_retention_policy }} ON {{ influxdb_db_name }} DURATION {{ influxdb_db_retention }} REPLICATION {{ influxdb_db_replication }}"
+        - "CREATE USER {{ influxdb_db_metric_user }} WITH PASSWORD '{{ influxdb_db_metric_password }}'"
+        - "GRANT ALL ON {{ influxdb_db_name }} TO {{ influxdb_db_metric_user }}"
+  vars_files:
+    - vars.yml
+

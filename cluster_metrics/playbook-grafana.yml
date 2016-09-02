@@ -1,0 +1,70 @@
+---
+# Copyright 2016, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Deploy grafana
+  hosts: "cluster-metrics"
+  gather_facts: true
+  user: root
+  pre_tasks:
+    - name: Create DB for service
+      mysql_db:
+        login_user: "{{ galera_root_user }}"
+        login_password: "{{ galera_root_password }}"
+        login_host: "127.0.0.1"
+        name: "{{ grafana_db_name }}"
+        state: "present"
+      delegate_to: "{{ groups['galera_all'][0] }}"
+    - name: Grant access to the DB for the service
+      mysql_user:
+        login_user: "{{ galera_root_user }}"
+        login_password: "{{ galera_root_password }}"
+        login_host: "127.0.0.1"
+        name: "{{ grafana_db_user }}"
+        password: "{{ grafana_db_password }}"
+        host: "{{ item }}"
+        state: "present"
+        priv: "{{ grafana_db_name }}.*:ALL"
+      delegate_to: "{{ groups['galera_all'][0] }}"
+      with_items:
+        - "localhost"
+        - "%"
+  tasks:
+    - name: Ensure https repos function
+      apt:
+        pkg: "apt-transport-https"
+        state: "latest"
+    - name: Add grafana apt-keys
+      apt_key:
+        url: "https://packagecloud.io/gpg.key"
+        state: "present"
+    - name: Add grafana repo
+      apt_repository:
+        repo: "deb https://packagecloud.io/grafana/stable/debian/ wheezy main"
+        state: "present"
+    - name: Install grafana
+      apt:
+        pkg: "grafana"
+        state: "latest"
+    - name: Drop grafana config file
+      template:
+        src: templates/grafana.ini.j2
+        dest: /etc/grafana/grafana.ini
+    - name: Enable and start grafana
+      service:
+        name: "grafana-server"
+        enabled: true
+        state: restarted
+  vars_files:
+    - vars.yml

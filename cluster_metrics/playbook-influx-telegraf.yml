@@ -1,0 +1,64 @@
+---
+# Copyright 2016, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Deploy telegraf
+  hosts: "all"
+  gather_facts: true
+  user: root
+  tasks:
+    - name: Add influxdata apt-keys
+      apt_key:
+        url: "https://repos.influxdata.com/influxdb.key"
+        state: "present"
+    - name: Add influxdata repo
+      apt_repository:
+        repo: "deb https://repos.influxdata.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+        state: "present"
+    - name: Install telegraf
+      apt:
+        pkg: "telegraf"
+        state: "latest"
+    - name: Create telegraf plugin dir
+      file:
+        path: "/opt/telegraf"
+        state: directory
+        mode: "0755"
+    - name: Drop telegraf plugin file(s)
+      copy:
+        src: "files/{{ item }}"
+        dest: "/opt/telegraf/{{ item }}"
+        mode: '0755'
+      with_items:
+        - kvm_virsh.py
+    - name: Drop telegraf config file
+      template:
+        src: templates/telegraf.conf.j2
+        dest: /etc/telegraf/telegraf.conf
+      register: telegraf_config
+    - name: Enable and restart telegraf
+      service:
+        name: "telegraf"
+        enabled: true
+        state: restarted
+      when: telegraf_config | changed
+    - name: Enable and start telegraf
+      service:
+        name: "telegraf"
+        enabled: true
+        state: started
+      when: not telegraf_config | changed
+  vars_files:
+    - vars.yml
+

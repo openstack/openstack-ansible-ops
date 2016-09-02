@@ -1,0 +1,66 @@
+# {{ ansible_managed }}
+[paths]
+
+[server]
+http_port = {{ grafana_port }}
+{% if grafana_root_url is defined %}
+root_url = {{ grafana_root_url }}
+{% endif %}
+
+[database]
+type = mysql
+host = {{ galera_address }}:3306
+name = {{ grafana_db_name }}
+user = {{ grafana_db_user }}
+password = {{ grafana_db_password }}
+
+[session]
+
+[analytics]
+check_for_updates = true
+
+[security]
+admin_user = admin
+admin_password = {{ grafana_admin_password }}
+
+[snapshots]
+
+[users]
+allow_sign_up = false
+allow_org_create = false
+
+[auth.anonymous]
+enabled = true
+org_name = OpenStack
+org_role = Viewer
+
+[auth.github]
+
+[auth.google]
+
+[auth.proxy]
+
+[auth.basic]
+
+[auth.ldap]
+
+[smtp]
+
+[emails]
+
+[log]
+
+[log.console]
+
+[log.file]
+
+[log.syslog]
+
+[event_publisher]
+
+[dashboards.json]
+
+[metrics]
+
+[grafana_net]
+url = https://grafana.net

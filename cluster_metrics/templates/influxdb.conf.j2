@@ -1,0 +1,81 @@
+# {{ ansible_managed }}
+reporting-disabled = false
+
+[logging]
+  level = "info"
+
+[meta]
+  dir = "/var/lib/influxdb/meta"
+  retention-autocreate = true
+  logging-enabled = true
+  pprof-enabled = false
+  lease-duration = "1m0s"
+
+[data]
+  enabled = true
+  dir = "/var/lib/influxdb/data"
+  wal-dir = "/var/lib/influxdb/wal"
+  wal-logging-enabled = true
+  query-log-enabled = false
+  cache-max-memory-size = 679477248
+  cache-snapshot-memory-size = 28311552
+  cache-snapshot-write-cold-duration = "1h0m0s"
+  compact-full-write-cold-duration = "24h0m0s"
+  max-points-per-block = 0
+  data-logging-enabled = false
+
+[cluster]
+  shard-writer-timeout = "8s" # The time within which a remote shard must respond to a write request.
+  write-timeout = "16s" # The time within which a write request must complete on the cluster.
+  max-concurrent-queries = 0 # The maximum number of concurrent queries that can run. 0 to disable.
+  query-timeout = "0s" # The time within a query must complete before being killed automatically. 0s to disable.
+  max-select-point = 0 # The maximum number of points to scan in a query. 0 to disable.
+  max-select-series = 0 # The maximum number of series to select in a query. 0 to disable.
+  max-select-buckets = 0 # The maximum number of buckets to select in an aggregate query. 0 to disable.
+
+[retention]
+  enabled = true
+  check-interval = "32m"
+
+[shard-precreation]
+  enabled = true
+  check-interval = "16m"
+  advance-period = "32m"
+
+[monitor]
+  store-enabled = true # Whether to record statistics internally.
+  store-database = "_internal" # The destination database for recorded statistics
+  store-interval = "16s" # The interval at which to record statistics
+
+[admin]
+  enabled = true
+  bind-address = ":{{ influxdb_admin_port }}"
+  https-enabled = false
+  https-certificate = "/etc/ssl/influxdb.pem"
+
+[http]
+  enabled = true
+  bind-address = ":{{ influxdb_port }}"
+  auth-enabled = false
+  log-enabled = false
+  write-tracing = false
+  pprof-enabled = false
+  https-enabled = false
+  https-certificate = "/etc/ssl/influxdb.pem"
+  max-row-limit = 10240
+
+[[graphite]]
+  enabled = false
+
+[[collectd]]
+  enabled = false
+
+[[opentsdb]]
+  enabled = false
+
+[[udp]]
+  enabled = false
+
+[continuous_queries]
+  log-enabled = false
+  enabled = true

@@ -1,0 +1,67 @@
+[global_tags]
+{% if inventory_hostname in groups['all_containers'] %}
+  node_type = "container"
+{% elif inventory_hostname in groups['hosts'] %}
+  node_type = "physical_host"
+{% endif %}
+
+[agent]
+  interval = "24s"
+  round_interval = false
+  metric_batch_size = 1024
+  metric_buffer_limit = 10240
+  collection_jitter = "8s"
+  flush_interval = "48s"
+  flush_jitter = "8s"
+  debug = false
+  quiet = true
+{% if inventory_hostname in groups['all_containers'] %}
+  hostname = "{{ ansible_hostname }}"
+{% else %}
+  hostname = "{{ inventory_hostname }}"
+{% endif %}
+  omit_hostname = false
+
+[[outputs.influxdb]]
+  urls = ["http://{{ hostvars[groups['cluster-metrics'][0]]['ansible_ssh_host'] }}:{{ influxdb_port }}"]
+  database = "{{ influxdb_db_name }}"
+  precision = "s"
+  write_consistency = "any"
+  timeout = "5s"
+
+[[inputs.processes]]
+
+[[inputs.system]]
+
+{% if inventory_hostname in groups['all_containers'] %}
+[[inputs.net]]
+
+{% elif inventory_hostname in groups['hosts'] %}
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  fielddrop = ["time_*"]
+
+[[inputs.net]]
+
+[[inputs.netstat]]
+
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs"]
+
+[[inputs.diskio]]
+
+[[inputs.kernel]]
+
+[[inputs.mem]]
+
+[[inputs.swap]]
+
+{%   if inventory_hostname in groups['nova_compute'] %}
+[[inputs.exec]]
+  commands = ["/opt/telegraf/kvm_virsh.py"]
+  timeout = "15s"
+  data_format = "json"
+  name_prefix = "custom_"
+{%   endif %}
+{% endif %}
