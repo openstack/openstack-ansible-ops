@@ -22,3 +22,10 @@ cp templates/lxd-bridge /etc/default/lxd-bridge
 
 systemctl enable lxd-bridge
 systemctl start lxd-bridge
+
+# Create and setup profiles
+lxc profile create infra
+lxc profile create compute
+cat templates/lxc_profiles/infra.yml | lxc profile edit infra
+cat templates/lxc profiles/compute.yml | lxc profile edit compute
+lxc profile edit

@@ -26,6 +26,8 @@ if [[ ${LXD_STYLE} ]]; then
 
     source setup-lxd.sh
 
+    exit
+
 
 else:
 
