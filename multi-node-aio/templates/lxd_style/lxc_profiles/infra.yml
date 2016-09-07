@@ -1,5 +1,10 @@
-name: compute
-config: {}
+name: infra
+config:
+  user.user-data: |
+    #cloud-config
+    packages:
+      - bridge-utils
+    output: { all: '| tee -a /var/log/cloud-init-output.log' }
 description: ""
 devices:
   eth0:

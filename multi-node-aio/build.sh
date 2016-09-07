@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -eux
 # Copyright [2016] [Kevin Carter]
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,8 @@ if [[ ${LXD_STYLE} ]]; then
     source setup-host-lxd.sh
 
     source setup-lxd.sh
+
+    source deploy-containers.sh
 
     exit
 

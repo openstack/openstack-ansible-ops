@@ -50,8 +50,8 @@ libvirt-bin lvm2 openssh-server python2.7 qemu-kvm vim virtinst virt-manager vla
 #fi
 
 # create lxd bridges
-cp -v templates/lxc-bridges.cfg /etc/network/interfaces.d/lxc-bridges.cfg
-for i in $(awk '/iface/ {print $2}' /etc/network/interfaces.d/lxd-bridges.cfg); do
+cp -v templates/lxd_style/host_bridges.cfg /etc/network/interfaces.d/lxc-bridges.cfg
+for i in $(awk '/iface/ {print $2}' /etc/network/interfaces.d/lxc-bridges.cfg); do
   ifup $i
 done
 
