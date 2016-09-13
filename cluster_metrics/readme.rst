@@ -27,6 +27,18 @@ Copy the env.d files into place
     cd openstack-ansible-ops/cluster_metrics
     cp etc/env.d/cluster_metrics.yml /etc/openstack_deploy/env.d/
 
+Add the export to update the inventory file location
+
+.. code-block:: bash
+
+    export ANSIBLE_INVENTORY=/opt/openstack-ansible/playbooks/inventory/dynamic_inventory.py
+
+If you are running the HA Proxy you should run the following playbook as well to enable the grafana port 8089
+
+.. code-block:: bash
+
+    openstack-ansible playbook-metrics-lb.yml
+
 Create the containers
 
 .. code-block:: bash
