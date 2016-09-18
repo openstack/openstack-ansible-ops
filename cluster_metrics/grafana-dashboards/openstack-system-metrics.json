@@ -1,9 +1,9 @@
 {
   "__inputs": [
     {
-      "name": "DS_OSIC_INFLUXDB",
-      "label": "OSIC InfluxDB",
-      "description": "",
+      "name": "DS_INFLUXDB",
+      "label": "InfluxDB",
+      "description": "Influx DB data source",
       "type": "datasource",
       "pluginId": "influxdb",
       "pluginName": "InfluxDB"
@@ -62,7 +62,7 @@
             "rgba(40, 147, 237, 0.89)",
             "rgba(40, 147, 237, 0.89)"
           ],
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "format": "s",
@@ -175,7 +175,7 @@
             "rgba(40, 147, 237, 0.89)",
             "rgba(40, 147, 237, 0.89)"
           ],
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "format": "bytes",
@@ -289,7 +289,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "format": "percent",
@@ -405,7 +405,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -578,7 +578,7 @@
         {
           "aliasColors": {},
           "bars": true,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -752,7 +752,7 @@
         {
           "aliasColors": {},
           "bars": true,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -921,7 +921,7 @@
         {
           "aliasColors": {},
           "bars": true,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -1099,7 +1099,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 0,
@@ -1210,7 +1210,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -1331,7 +1331,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -1447,7 +1447,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -1575,7 +1575,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -1708,7 +1708,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -1885,7 +1885,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -2062,7 +2062,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -2239,7 +2239,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -2358,7 +2358,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -2477,7 +2477,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_OSIC_INFLUXDB}",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -2622,18 +2622,18 @@
       {
         "allFormat": "glob",
         "current": {
-          "text": "OSIC InfluxDB",
-          "value": "OSIC InfluxDB"
+          "text": "InfluxDB",
+          "value": "InfluxDB"
         },
-        "datasource": "OSIC InfluxDB",
+        "datasource": "InfluxDB",
         "hide": 0,
         "includeAll": false,
         "multi": false,
         "name": "datasource",
         "options": [
           {
-            "text": "OSIC InfluxDB",
-            "value": "OSIC InfluxDB",
+            "text": "InfluxDB",
+            "value": "InfluxDB",
             "selected": true
           },
           {
@@ -2649,7 +2649,7 @@
       },
       {
         "current": {},
-        "datasource": "${DS_OSIC_INFLUXDB}",
+        "datasource": "${DS_INFLUXDB}",
         "hide": 0,
         "includeAll": false,
         "label": "Server",
