@@ -8,7 +8,8 @@ Gather and visualize cluster wide metrics
 About this repository
 ---------------------
 
-This set of playbooks will deploy InfluxDB, Telegraf, and Grafana for the purpose of collecting metrics on an OpenStack cluster.
+This set of playbooks will deploy InfluxDB, Telegraf, Grafana and Kapacitor for the purpose of collecting
+metrics on an OpenStack cluster.
 
 Process
 -------
@@ -66,3 +67,9 @@ If you're proxy'ing grafana you will need to provide the full ``root_path`` when
     openstack-ansible playbook-grafana.yml -e galera_root_user=root -e galera_address='127.0.0.1'
 
 Once that last playbook is completed you will have a functioning InfluxDB, Telegraf, and Grafana metric collection system active and collecting metrics. Grafana will need some setup, however functional dash boards have been provided in the ``grafana-dashboards`` directory.
+
+Install Kapacitor
+
+.. code-block:: bash
+
+   openstack-ansible playbook-kapacitor.yml

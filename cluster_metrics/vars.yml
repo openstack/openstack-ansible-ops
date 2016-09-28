@@ -32,3 +32,6 @@ influxdb_db_root_name: root
 influxdb_db_root_password: SuperSecrete
 influxdb_db_metric_user: openstack
 influxdb_db_metric_password: SuperDuperSecrete
+
+# Kapacitor Vars
+kapacitor_port: 9092
