@@ -30,12 +30,13 @@
       template:
         src: templates/kapacitor.conf.j2
         dest: /etc/kapacitor/kapacitor.conf
-    - name: Enable and restart kapacitor
-      service:
-        name: "kapacitor"
-        enabled: true
-        state: restarted
     - name: Start kapacitor server
-      shell: kapacitord -config /etc/kapacitor/kapacitor.conf -log-file /var/log/kapacitor/kapacitor.log &
+      shell: kapacitord config > /etc/kapacitor/kapacitor.conf;kapacitord -config /etc/kapacitor/kapacitor.conf -log-file /var/log/kapacitor/kapacitor.log &
+    - name: Copy tickscripts
+      copy:
+        src: /opt/openstack-ansible-ops/cluster_metrics/kapacitor_files
+        dest: /opt/kapacitor/
+    - name: Execute tickscripts
+      shell: chmod 755 /opt/kapacitor/kapacitor_files/*.*;bash /opt/kapacitor/kapacitor_files/run_all.sh
   vars_files:
     - vars.yml
