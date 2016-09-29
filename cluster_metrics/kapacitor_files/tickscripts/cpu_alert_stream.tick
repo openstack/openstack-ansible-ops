@@ -1,0 +1,46 @@
+// cpu_alert_stream
+
+// metric: usage_idle
+// available_fields: "usage_guest","usage_guest_nice","usage_user","usage_iowait", "usage_irq","usage_nice","usage_softirq","usage_steal","usage_system"
+
+// TELEGRAF CONFIGURATION
+// [[inputs.cpu]]
+//   percpu = true
+//   totalcpu = true
+//   fielddrop = ["time_*"]
+
+// DEFINE: kapacitor define cpu_alert_stream -type stream -tick cpu/cpu_alert_stream.tick -dbrp telegraf.autogen
+// ENABLE: kapacitor enable cpu_alert_stream
+
+// Parameters
+var info = 21
+var warn = 11
+var crit = 2
+var period = 10s
+var every = 10s
+
+// Dataframe
+var data = stream
+  |from()
+    .database('telegraf')
+    .retentionPolicy('autogen')
+    .measurement('cpu')
+    .groupBy('host')
+  |window()
+    .period(period)
+    .every(every)
+  |mean('usage_idle')
+    .as('stat')
+
+// Thresholds
+var alert = data
+  |alert()
+    .id('{{ index .Tags "host"}}/cpu_used')
+    .message('{{ .ID }}:{{ index .Fields "stat" }}')
+    .info(lambda: "stat" < info)
+    .warn(lambda: "stat" < warn)
+    .crit(lambda: "stat" < crit)
+
+// Alert
+alert
+  .log('/tmp/cpu_alert_log.txt')

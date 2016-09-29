@@ -1,0 +1,46 @@
+// cinder_vg_alert_stream
+
+// metric: cinder_used_percentage
+// available_fields: "cinder_free_capacity_gb","cinder_total_capacity_gb","cinder_used_percentage"
+
+// TELEGRAF CONFIGURATION
+// [[inputs.exec]]
+//   commands = ['python /opt/telegraf/cinder_data.py']
+//   timeout = "15s"
+//   data_format = "influx"
+
+// DEFINE: kapacitor define cinder_vg_alert_stream -type stream -tick mem/cinder_vg_alert_stream.tick -dbrp telegraf.autogen
+// ENABLE: kapacitor enable cinder_vg_alert_stream
+
+// Parameters
+var info = 69
+var warn = 79
+var crit = 89
+var period = 10s
+var every = 10s
+
+// Dataframe
+var data = stream
+  |from()
+    .database('telegraf')
+    .retentionPolicy('autogen')
+    .measurement('cinder')
+    .groupBy('host')
+  |window()
+    .period(period)
+    .every(every)
+  |mean('cinder_used_percentage')
+    .as('stat')
+
+// Thresholds
+var alert = data
+  |alert()
+    .id('{{ index .Tags "host"}}/cinder_used')
+    .message('{{ .ID }}:{{ index .Fields "stat" }}')
+    .info(lambda: "stat" > info)
+    .warn(lambda: "stat" > warn)
+    .crit(lambda: "stat" > crit)
+
+// Alert
+alert
+  .log('/tmp/cinder_alert_log.txt')
