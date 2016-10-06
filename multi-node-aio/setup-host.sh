@@ -94,7 +94,7 @@ if [[ "${PARTITION_HOST}" = true ]]; then
   mount -a
 fi
 
-cat > /etc/sources.list <<EOF
+cat > /etc/apt/sources.list <<EOF
 # Faster likely unsigned repo
 deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty main universe
 deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-updates main universe
