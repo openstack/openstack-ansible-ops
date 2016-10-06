@@ -11,10 +11,6 @@
     "logging": {
         "logging1": "110"
     },
-    "network": {
-        "network1": "120",
-        "network2": "121"
-    },
     "nova_compute": {
         "compute1": "130",
         "compute2": "131"
