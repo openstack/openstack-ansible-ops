@@ -106,12 +106,10 @@ pushd /opt/openstack-ansible
   bash ./scripts/run-playbooks.sh
 popd
 
+EXEC_DIR="$(pwd)"
 pushd /opt/openstack-ansible/playbooks
-# This is optional and only being done to give the cloud networks and an image.
-#  The tempest install will work out of the box because the deployment is setup
-#  already with all of the correct networks, devices, and other bits. If you want
-#  to test with tempest the OSA script will work out the box. Post deployment you
-#  can test with the following: `cd /opt/openstack-ansible; ./scripts/run-tempest.sh`
-openstack-ansible os-tempest-install.yml
+  if [[ -f "/usr/local/bin/openstack-ansible.rc" ]]; then
+    source /usr/local/bin/openstack-ansible.rc
+  fi
+  ansible -m script -a "${EXEC_DIR}/openstack-service-setup.sh" 'utility_all[0]'
 popd
-
