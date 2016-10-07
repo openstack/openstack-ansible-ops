@@ -1,0 +1,9 @@
+output {
+  elasticsearch {
+    hosts => {% set IP_ARR=[] %}{% for host in groups['elastic-logstash'] | union(groups['kibana']) %}{% if IP_ARR.insert(loop.index,hostvars[host]['ansible_ssh_host']) %}{% endif %}{% endfor %}[{{ IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+    sniffing => true
+    manage_template => false
+    index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+    document_type => "%{[@metadata][type]}"
+  }
+}

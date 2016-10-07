@@ -1,0 +1,40 @@
+---
+- name: install ElK stack
+  hosts: elastic-logstash
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: add Logstash to apt sources list
+      apt_repository: repo='deb http://packages.elastic.co/logstash/2.2/debian stable main' state=present
+    - name: Ensure Logstash is installed.
+      apt: name=logstash state=present update_cache=yes
+    - name: Drop Logstash conf for beats input
+      template:
+        src: templates/02-beats-input.conf.j2
+        dest: /etc/logstash/conf.d/02-beats-input.conf
+    - name: Drop Logstash conf for beats input
+      template:
+        src: templates/10-syslog-filter.conf.j2
+        dest: /etc/logstash/conf.d/10-syslog-filter.conf
+    - name: Drop Logstash conf for beats output
+      template:
+        src: templates/30-elasticsearch-output.conf.j2
+        dest: /etc/logstash/conf.d/30-elasticsearch-output.conf
+    - shell: service logstash configtest
+      register: conf_success
+    - debug: var=conf_success
+    - name: Enable and restart logstash
+      service:
+        name: "logstash"
+        enabled: true
+        state: restarted
+
+
+
+
+
+
+
+
+

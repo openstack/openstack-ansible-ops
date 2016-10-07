@@ -1,0 +1,27 @@
+---
+- name: install kibana
+  hosts: kibana
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: add Elastic search public GPG key
+      apt_key:
+        url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+        state: "present"
+    - name: add kibana repo to apt sources list
+      apt_repository: repo='deb http://packages.elastic.co/kibana/4.4/debian stable main' state=present
+    - name: Ensure kibana  is installed.
+      apt: name=kibana state=present update_cache=yes
+    - name: Drop kibana conf file
+      template:
+        src: templates/kibana.yml.j2
+        dest: /opt/kibana/config/kibana.yml 
+        mode: "u=rw,g=rw,o=rw"
+    - name: Enable and restart kibana
+      service:
+        name: "kibana"
+        enabled: true
+        state: restarted
+
+

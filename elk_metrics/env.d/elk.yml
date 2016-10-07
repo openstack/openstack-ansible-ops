@@ -1,0 +1,38 @@
+---
+component_skel:
+  elastic-logstash:
+    belongs_to:
+      - elk_all
+  kibana:
+    belongs_to:
+      - elk_all
+
+container_skel:
+  elastic-logstash_container:
+    belongs_to:
+      - elastic-logstash_containers
+    contains:
+      - elastic-logstash
+    properties:
+      container_fs_size: 150G
+  kibana_container:
+    belongs_to:
+      - kibana_containers
+    contains:
+      - kibana
+    properties:
+      container_fs_size: 10G
+
+physical_skel:
+  elastic-logstash_containers:
+    belongs_to:
+      - all_containers
+  kibana_containers:
+    belongs_to:
+      - all_containers
+  elastic-logstash_hosts:
+    belongs_to:
+      - hosts
+  kibana_hosts:
+    belongs_to:
+      - hosts

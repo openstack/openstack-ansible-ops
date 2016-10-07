@@ -1,0 +1,24 @@
+---
+- name: topbeat
+  hosts: hosts
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: add topbeat repo to apt sources list
+      apt_repository: repo='deb https://packages.elastic.co/beats/apt stable main' state=present
+    - name: add Elastic search public GPG key (same for Topbeat)
+      apt_key:
+        url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+        state: "present"
+    - name: Ensure Topbeat is installed.
+      apt: name=topbeat state=present update_cache=yes
+    - name: Drop Topbeat conf file
+      template:
+        src: templates/topbeat.yml.j2
+        dest: /etc/topbeat/topbeat.yml
+    - name: Enable and restart topbeat
+      service:
+        name: "topbeat"
+        enabled: true
+        state: restarted

@@ -1,0 +1,21 @@
+# elastic search vars
+elastic_interface: "['_eth1_', '_local_']"
+elastic_port: 9200
+cluster_name: openstack_elk
+node_name: ${HOSTNAME}
+
+
+# kibana vars
+kibana_interface: 0.0.0.0
+kibana_port: 5601
+kibana_username: kibanaadmin
+kibana_password: secrete
+
+nginx_port: 81
+server_name: server_name
+kibana_private_ip: "{{ hostvars[groups['kibana'][0]]['ansible_ssh_host'] }}"
+
+logstash_ssl_self_signed_subject: "/C=US/ST=Texas/L=San Antonio/O=IT/CN={{ server_name }}/subjectAltName=IP.1={{ elk_server_private_ip }}"
+logstash_beat_input_port: 5044
+
+
