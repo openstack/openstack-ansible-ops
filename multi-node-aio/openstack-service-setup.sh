@@ -3,6 +3,45 @@
 # Load service variables
 source openrc
 
+# Create base flavors for the new deployment
+for flavor in micro tiny mini small medium large xlarge heavy; do
+  NAME="m1.${flavor}"
+  ID="${ID:-0}"
+  RAM="${RAM:-256}"
+  DISK="${DISK:-1}"
+  VCPU="${VCPU:-1}"
+  SWAP="${SWAP:-0}"
+  EPHEMERAL="${EPHEMERAL:-0}"
+  nova flavor-delete $ID > /dev/null || echo "No Flavor with ID: [ $ID ] found to clean up"
+  nova flavor-create $NAME $ID $RAM $DISK $VCPU --swap $SWAP --is-public true --ephemeral $EPHEMERAL --rxtx-factor 1
+  let ID=ID+1
+  let RAM=RAM*2
+  if [ "$ID" -gt 5 ];then
+    let VCPU=VCPU*2
+    let DISK=DISK*2
+    let EPHEMERAL=256
+    let SWAP=4
+  elif [ "$ID" -gt 4 ];then
+    let VCPU=VCPU*2
+    let DISK=DISK*4+$DISK
+    let EPHEMERAL=$DISK/2
+    let SWAP=4
+  elif [ "$ID" -gt 3 ];then
+    let VCPU=VCPU*2
+    let DISK=DISK*4+$DISK
+    let EPHEMERAL=$DISK/3
+    let SWAP=4
+  elif [ "$ID" -gt 2 ];then
+    let VCPU=VCPU+$VCPU/2
+    let DISK=DISK*4
+    let EPHEMERAL=$DISK/3
+    let SWAP=4
+  elif [ "$ID" -gt 1 ];then
+    let VCPU=VCPU+1
+    let DISK=DISK*2+$DISK
+  fi
+done
+
 # Neutron provider network setup
 neutron net-create GATEWAY_NET \
     --router:external=True \
