@@ -77,39 +77,42 @@ write_osa_swift_proxy_confd swift-proxy_hosts swift
 write_osa_swift_storage_confd swift_hosts swift
 ### =========== END WRITE OF conf.d FILES =========== ###
 
+# Enable deploy OSA of the "${RUN_OSA}"
+RUN_OSA=${RUN_OSA:-true}
+if [[ "${RUN_OSA}" = true ]]; then
+  pushd /opt/openstack-ansible/
+    # Bootstrap ansible into the environment
+    bash ./scripts/bootstrap-ansible.sh
 
-pushd /opt/openstack-ansible/
-  # Bootstrap ansible into the environment
-  bash ./scripts/bootstrap-ansible.sh
+    # Generate the passwords for the environment
+    python ./scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
 
-  # Generate the passwords for the environment
-  python ./scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
+    # This is happening so the VMs running the infra use less storage
+    osa_user_var_add lxc_container_backing_store 'lxc_container_backing_store: dir'
 
-  # This is happening so the VMs running the infra use less storage
-  osa_user_var_add lxc_container_backing_store 'lxc_container_backing_store: dir'
+    # Tempest is being configured to use a known network
+    osa_user_var_add tempest_public_subnet_cidr 'tempest_public_subnet_cidr: 172.29.248.0/22'
 
-  # Tempest is being configured to use a known network
-  osa_user_var_add tempest_public_subnet_cidr 'tempest_public_subnet_cidr: 172.29.248.0/22'
+    # This makes running neutron in a distributed system easier and a lot less noisy
+    osa_user_var_add neutron_l2_population 'neutron_l2_population: True'
 
-  # This makes running neutron in a distributed system easier and a lot less noisy
-  osa_user_var_add neutron_l2_population 'neutron_l2_population: True'
+    # This makes the glance image store use swift instead of the file backend
+    osa_user_var_add glance_default_store 'glance_default_store: swift'
+  popd
 
-  # This makes the glance image store use swift instead of the file backend
-  osa_user_var_add glance_default_store 'glance_default_store: swift'
-popd
+  # Set the number of forks for the ansible client calls
+  export ANSIBLE_FORKS=${ANSIBLE_FORKS:-15}
 
-# Set the number of forks for the ansible client calls
-export ANSIBLE_FORKS=${ANSIBLE_FORKS:-15}
+  pushd /opt/openstack-ansible
+    export DEPLOY_AIO=true
+    bash ./scripts/run-playbooks.sh
+  popd
 
-pushd /opt/openstack-ansible
-  export DEPLOY_AIO=true
-  bash ./scripts/run-playbooks.sh
-popd
-
-EXEC_DIR="$(pwd)"
-pushd /opt/openstack-ansible/playbooks
-  if [[ -f "/usr/local/bin/openstack-ansible.rc" ]]; then
-    source /usr/local/bin/openstack-ansible.rc
-  fi
-  ansible -m script -a "${EXEC_DIR}/openstack-service-setup.sh" 'utility_all[0]'
-popd
+  EXEC_DIR="$(pwd)"
+  pushd /opt/openstack-ansible/playbooks
+    if [[ -f "/usr/local/bin/openstack-ansible.rc" ]]; then
+      source /usr/local/bin/openstack-ansible.rc
+    fi
+    ansible -m script -a "${EXEC_DIR}/openstack-service-setup.sh" 'utility_all[0]'
+  popd
+fi
