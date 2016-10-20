@@ -171,7 +171,7 @@ be easily done using the following snippet.
 .. code-block:: bash
 
     for i in $(virsh list --all --name); do virsh destroy $i; virsh undefine $i; rm /var/lib/libvirt/images/$i.img; done
-    PARTITION_HOST=false ./build.sh
+    rm ~/.ssh/known_hosts; PARTITION_HOST=false ./build.sh
 
 
 Deploying OpenStack into the environment
