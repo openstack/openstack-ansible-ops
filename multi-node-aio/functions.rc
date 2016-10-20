@@ -228,3 +228,14 @@ echo -e "Run Time = ${REPORT_OUTPUT}"
 set -e
 }
 
+# Return 1 if the second argument is a substring of the first argument, otherwise return 0
+contains() {
+    string="$1"
+    substring="$2"
+    if test "${string#*$substring}" == "$string"
+    then
+        echo 0    # $substring is not in $string
+    else
+        echo 1    # $substring is in $string
+    fi
+}

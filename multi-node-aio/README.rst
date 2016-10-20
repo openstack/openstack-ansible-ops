@@ -94,7 +94,7 @@ Notes
 
 The cobbler and pre-seed setup has been implemented using some of the awesome work originally created by James Thorne.
   * cobbler installation post - https://thornelabs.net/2015/11/26/install-and-configure-cobbler-on-ubuntu-1404.html
-  * pre-seeds -- https://github.com/jameswthorne/preseeds-rpc
+  * pre-seeds -- https://github.com/jameswthorne/preseeds
 
 
 Options
@@ -136,7 +136,7 @@ Instruct the system do all of the cobbler setup:
 Instruct the system do all of the virsh network setup:
   ``SETUP_VIRSH_NET=${SETUP_VIRSH_NET:-true}``
 
-Instruct the system to run the OSA playbooks, if you want to deploy other OSA powered cloud, you can set it to false.:
+Instruct the system to run the OSA playbooks, if you want to deploy other OSA powered cloud, you can set it to false:
   ``RUN_OSA=${RUN_OSA:-true}``
 
 

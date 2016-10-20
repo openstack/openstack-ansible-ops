@@ -143,3 +143,11 @@ done
 # Restart XinetD
 service xinetd stop
 service xinetd start
+
+# Remove the expired key and opensuse repo, no need after the cobbler being set up.
+aptkey_mesg=$(apt-key list)
+if [[ $(contains "$aptkey_mesg" "expired") -gt 0 ]]; then
+    expired_key=$(echo "$aptkey_mesg" | awk /expired/'{print $ sub(".*\/", "")}')
+    apt-key del $expired_key
+    add-apt-repository --remove "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.04/ ./"
+fi
