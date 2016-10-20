@@ -78,8 +78,7 @@ done
 # Restart services again and configure autostart
 service cobblerd restart
 service apache2 restart
-service xinetd stop
-service xinetd start
+service xinetd restart
 update-rc.d cobblerd defaults
 
 # Get ubuntu server image
