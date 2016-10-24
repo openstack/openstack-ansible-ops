@@ -18,6 +18,17 @@
   gather_facts: true
   user: root
   tasks:
+    - name: Check init system
+      command: cat /proc/1/comm
+      changed_when: false
+      register: _pid1_name
+      tags:
+        - always
+    - name: Set the name of pid1
+      set_fact:
+        pid1_name: "{{ _pid1_name.stdout }}"
+      tags:
+        - always
     - name: InfluxDB datapath bind mount
       lxc_container:
         name: "{{ inventory_hostname }}"
@@ -49,9 +60,10 @@
         state: restarted
     - name: Wait for influxdb to be ready
       wait_for:
-        host: "{{ hostvars[groups['cluster-metrics'][0]]['ansible_host'] }}"
+        host: "{{ hostvars[item]['ansible_host'] }}"
         port: "{{ influxdb_port }}"
         delay: 1
+      with_items: "{{ groups['cluster-metrics'] }}"
     - name: Create metrics DB
       shell: >
         influx -username {{ influxdb_db_root_name }}
@@ -62,6 +74,32 @@
         - "CREATE RETENTION POLICY {{ influxdb_db_retention_policy }} ON {{ influxdb_db_name }} DURATION {{ influxdb_db_retention }} REPLICATION {{ influxdb_db_replication }}"
         - "CREATE USER {{ influxdb_db_metric_user }} WITH PASSWORD '{{ influxdb_db_metric_password }}'"
         - "GRANT ALL ON {{ influxdb_db_name }} TO {{ influxdb_db_metric_user }}"
+    - name: Install git
+      apt:
+        pkg: "git"
+        state: "latest"
+    - name: Install GOLang
+      script: files/deploy_go.sh
+    - name: Download and install influx-relay
+      script: files/deploy_influxdbrelay.sh
+    - name: Drop influx relay toml file
+      template:
+        src: templates/relay.toml.j2
+        dest: /opt/influxdb-relay/relay.toml
+    - name: Drop Influx Relay upstart
+      template:
+        src: templates/influxdbrelay.conf.j2
+        dest: /etc/init/influxdbrelay.conf
+      when: pid1_name == "init"
+    - name: Drop Influx Relay service file
+      template:
+        src: templates/influxdbrelay.service.j2
+        dest: /etc/systemd/system/influxdbrelay.service
+      when:  pid1_name == "systemd"
+    - name: Enable and restart influxdb
+      service:
+        name: "influxdbrelay"
+        state: restarted
   vars_files:
     - vars.yml
 

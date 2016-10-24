@@ -23,7 +23,7 @@
   omit_hostname = false
 
 [[outputs.influxdb]]
-  urls = ["http://{{ hostvars[groups['cluster-metrics'][0]]['ansible_host'] }}:{{ influxdb_port }}"]
+  urls = ["http://{{ internal_lb_vip_address }}:{{ influxdb_port }}"]
   database = "{{ influxdb_db_name }}"
   precision = "s"
   write_consistency = "any"

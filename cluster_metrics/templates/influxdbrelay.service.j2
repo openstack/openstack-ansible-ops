@@ -1,0 +1,17 @@
+# If you modify this, please also make sure to edit init.sh
+
+[Unit]
+Description=Influx relay adds a basic high availability layer to InfluxDB.
+After=network-online.target
+
+[Service]
+User=influxdb
+Group=influxdb
+LimitNOFILE=65536
+ExecStart=/opt/influxdb-relay/bin/influxdb-relay -config /opt/influxdb-relay/relay.toml
+KillMode=control-group
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=influxd.service
