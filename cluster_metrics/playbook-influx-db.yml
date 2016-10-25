@@ -49,7 +49,7 @@
         state: restarted
     - name: Wait for influxdb to be ready
       wait_for:
-        host: "{{ hostvars[groups['cluster-metrics'][0]]['ansible_ssh_host'] }}"
+        host: "{{ hostvars[groups['cluster-metrics'][0]]['ansible_host'] }}"
         port: "{{ influxdb_port }}"
         delay: 1
     - name: Create metrics DB
