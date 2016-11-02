@@ -77,9 +77,9 @@ write_osa_swift_proxy_confd swift-proxy_hosts swift
 write_osa_swift_storage_confd swift_hosts swift
 ### =========== END WRITE OF conf.d FILES =========== ###
 
-# Enable deploy OSA of the "${RUN_OSA}"
-RUN_OSA=${RUN_OSA:-true}
-if [[ "${RUN_OSA}" = true ]]; then
+# Enable pre-config the OSA enviroment for deploying OSA.
+PRE_CONFIG_OSA=${PRE_CONFIG_OSA:-true}
+if [[ "${PRE_CONFIG_OSA}" = true ]]; then
   pushd /opt/openstack-ansible/
     # Bootstrap ansible into the environment
     bash ./scripts/bootstrap-ansible.sh
@@ -99,7 +99,11 @@ if [[ "${RUN_OSA}" = true ]]; then
     # This makes the glance image store use swift instead of the file backend
     osa_user_var_add glance_default_store 'glance_default_store: swift'
   popd
+fi
 
+# Enable deploy OSA of the "${RUN_OSA}"
+RUN_OSA=${RUN_OSA:-true}
+if [[ "${RUN_OSA}" = true ]]; then
   # Set the number of forks for the ansible client calls
   export ANSIBLE_FORKS=${ANSIBLE_FORKS:-15}
 

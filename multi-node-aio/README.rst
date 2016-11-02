@@ -136,6 +136,9 @@ Instruct the system do all of the cobbler setup:
 Instruct the system do all of the virsh network setup:
   ``SETUP_VIRSH_NET=${SETUP_VIRSH_NET:-true}``
 
+Instruct the system to pre-config the envs for running OSA playbooks:
+  ``PRE_CONFIG_OSA=${PRE_CONFIG_OSA:-true}``
+
 Instruct the system to run the OSA playbooks, if you want to deploy other OSA powered cloud, you can set it to false:
   ``RUN_OSA=${RUN_OSA:-true}``
 
