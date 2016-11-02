@@ -25,7 +25,7 @@ ssh_agent_reset
 apt-get install -y git tmux
 
 # Clone the OSA source code
-git clone https://github.com/openstack/openstack-ansible /opt/openstack-ansible || true
+git clone https://git.openstack.org/openstack/openstack-ansible /opt/openstack-ansible || true
 
 # Ensure the "/etc/openstack_deploy" exists
 mkdir_check "/etc/openstack_deploy"
