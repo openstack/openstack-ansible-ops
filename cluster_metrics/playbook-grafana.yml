@@ -53,6 +53,7 @@
       apt_repository:
         repo: "deb https://packagecloud.io/grafana/stable/debian/ wheezy main"
         state: "present"
+        update_cache: yes
     - name: Install grafana
       apt:
         pkg: "grafana"
