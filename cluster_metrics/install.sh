@@ -39,8 +39,7 @@ openstack-ansible playbook-influx-telegraf.yml --forks 100
 echo 'done!'
 
 echo 'Install Grafana'
-read GALERA_IP <<< $(lxc-ls -f | grep galera | awk '{ print $7 }')
-openstack-ansible  playbook-grafana.yml -e galera_root_user=root -e galera_address=$GALERA_IP
+openstack-ansible  playbook-grafana.yml -e galera_root_user=root -e galera_address=$galera
 echo 'done!'
 
 echo 'Install kapacitor'
