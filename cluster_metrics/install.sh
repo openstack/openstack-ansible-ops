@@ -6,6 +6,11 @@ git clone https://github.com/osic/reliability-rpc-openstack.git
 
 cd /opt/reliability-openstack-ansible-ops/cluster_metrics
 
+echo 'Create file with all the APIs and IPs asociated'
+/opt/openstack-ansible/scripts/inventory-manage.py -l | sed 's/|/ /' | tr - _ | awk '{if(NR > 2 &&$11 != "") print "export "$5"="$11}' >> /opt/openstack-ansible-ops/cluster_metrics/files/openrc_monitoring
+source /opt/openstack-ansible-ops/cluster_metrics/files/openrc_monitoring
+echo 'done!'
+
 echo 'Add the export to update the inventory file location'
 export ANSIBLE_INVENTORY=/opt/openstack-ansible/playbooks/inventory/dynamic_inventory.py
 echo 'done!'
