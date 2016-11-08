@@ -18,6 +18,10 @@
   gather_facts: true
   user: root
   tasks:
+    - name: Install ipaddr python module for MaaS
+      apt:
+        pkg: "python-ipaddr"
+        state: "latest"
     - name: Add influxdata apt-keys
       apt_key:
         url: "https://repos.influxdata.com/influxdb.key"
@@ -69,6 +73,16 @@
     - name: copy the openrc file to home directory
       shell: cp /root/openrc /home/openrc;chmod 644 /home/openrc
       when: inventory_hostname in groups['utility_all']
+    - name: copy the openrc file for MaaS
+      shell: cp /root/openrc /home/openrc-maas;chmod 644 /home/openrc-maas
+      when: inventory_hostname in groups['utility_all']
+    - name: Clone rpc-openstack MaaS
+      git: repo=https://github.com/osic/reliability-rpc-openstack.git
+           dest=/opt/rpc-openstack
+           accept_hostkey=yes
+           force=yes
+           recursive=no
+      when: inventory_hostname in groups['utility_all']
     - name: Enable and restart telegraf
       service:
         name: "telegraf"
@@ -84,6 +98,12 @@
   vars:
     commands : []
     command_plugins:
+      keystone:
+        plugin_name: "maas_ouput_parser.py"
+        command:
+          - "python /opt/telegraf/maas_ouput_parser.py keystone_api /opt/reliability-rpc-openstack/maas/plugins/keystone_api_local_check.py"
+        group: "utility_all"
+        when_group: "{{ (groups['utility_all'] | length) > 0 }}"
       cinder:
         plugin_name: "cinder_data.py"
         command:
