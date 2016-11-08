@@ -1,0 +1,75 @@
+// interface_speed_alert_stream.tick
+
+// metric: bytes_recv,bytes_sent
+// available_fields: "bytes_recv","bytes_sent"
+
+// TELEGRAF CONFIGURATION
+// [[inputs.exec]]
+//   commands = ['python /opt/telegraf/maxspeed_interface.py']
+//   timeout = "15s"
+//   data_format = "influx"
+
+// DEFINE: kapacitor define interface_speed_alert_stream.tick -type stream -tick net/net_alert_stream.tick -dbrp telegraf.autogen
+// ENABLE: kapacitor enable interface_speed_alert_stream.tick
+
+// Parameters
+
+var info = 29.0
+var warn = 39.0
+var crit = 59.0
+var unit = 1s
+
+// Dataframe
+var rawdata = stream
+  |from()
+    .database('telegraf')
+    .retentionPolicy('autogen')
+    .measurement('net')
+    .groupBy('host', 'interface')
+
+var interface_speed = stream
+  |from()
+    .database('telegraf')
+    .retentionPolicy('autogen')
+    .measurement('interface_speed')
+    .groupBy('host', 'interface')
+
+var max_speed = interface_speed
+  |mean('max_speed')
+    .as('value')
+
+var bytes_recv1 = rawdata
+  |derivative('bytes_recv')
+    .as('value')
+    .nonNegative()
+    .unit(unit)
+
+var bytes_recv = bytes_recv1
+  |mean('bytes_recv')
+    .as('value')
+
+var bytes_sent1 = rawdata
+  |derivative('bytes_sent')
+    .as('value')
+    .nonNegative()
+    .unit(unit)
+
+var bytes_sent = bytes_sent1
+  |mean('bytes_sent')
+    .as('value')
+
+var data = bytes_recv
+  |join(max_speed,bytes_sent)
+    .as('bytes_recv', 'max_speed','bytes_sent')
+
+var alert = data
+  |alert()
+    .id('{{ index .Tags "host"}}/net_stats')
+    .message('{{ .ID }}: bytes_sent:{{ index .Fields "bytes_sent.value"}} bytes_recv:{{ index .Fields "bytes_recv.value"}} max_speed:{{ index .Fields "max_speed.value" }}')
+    .info(lambda: "bytes_recv.value"+"bytes_sent.value" > "max_speed.value"*0.125*1000000.0*info)
+    .warn(lambda: "bytes_recv.value"+"bytes_sent.value" > "max_speed.value"*0.125*1000000.0*warn)
+    .crit(lambda: "bytes_recv.value"+"bytes_sent.value" > "max_speed.value"*0.125*1000000.0*crit)
+
+// Alert
+ alert
+  .log('/tmp/interface_speed_alert_log.txt')
