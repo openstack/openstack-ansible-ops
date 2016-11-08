@@ -6,6 +6,11 @@ git clone https://github.com/osic/reliability-rpc-openstack.git
 
 cd /opt/reliability-openstack-ansible-ops/cluster_metrics
 
+echo 'Create inventory file and source it'
+/opt/openstack-ansible/scripts/inventory-manage.py -l | sed 's/|/ /' | tr - _ | awk '{if(NR > 2 &&$11 != "") print "export "$5"="$11}' >> /opt/openstack-ansible-ops/cluster_metrics/files/openrc_monitoring
+source /opt/openstack-ansible-ops/cluster_metrics/files/openrc_monitoring
+echo 'done!'
+
 echo 'Add the export to update the inventory file location'
 export ANSIBLE_INVENTORY=/opt/openstack-ansible/playbooks/inventory/dynamic_inventory.py
 echo 'done!'
@@ -35,7 +40,7 @@ echo 'done!'
 
 echo 'Install Grafana'
 read GALERA_IP <<< $(lxc-ls -f | grep galera | awk '{ print $7 }')
-openstack-ansible  playbook-grafana.yml -e galera_root_user=root -e galera_address=$GALERA_IP
+openstack-ansible  playbook-grafana.yml -e galera_root_user=root -e galera_address=$galera
 echo 'done!'
 
 echo 'Install kapacitor'
