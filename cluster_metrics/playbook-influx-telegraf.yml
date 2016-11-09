@@ -101,7 +101,7 @@
       keystone:
         plugin_name: "maas_output_parser.py"
         command:
-          - "python /opt/telegraf/maas_output_parser.py keystone_api /opt/reliability-rpc-openstack/maas/plugins/keystone_api_local_check.py"
+          - "python /opt/telegraf/maas_output_parser.py keystone_api /opt/rpc-openstack/maas/plugins/keystone_api_local_check.py"
         group: "utility_all"
         when_group: "{{ (groups['utility_all'] | length) > 0 }}"
       cinder:
