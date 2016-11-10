@@ -33,7 +33,20 @@
 
 [[inputs.system]]
 
+[[inputs.conntrack]]
+  files = ["ip_conntrack_count","ip_conntrack_max",
+            "nf_conntrack_count","nf_conntrack_max"]
+  dirs = ["/proc/sys/net/ipv4/netfilter","/proc/sys/net/netfilter"]
+
+{% if commands %}
+[[inputs.exec]]
+  commands = [{{ commands | map('quote') | join (',') }}]
+  timeout = "15s"
+  data_format = "influx"
+{% endif %}
+
 {% if inventory_hostname in groups['all_containers'] %}
+
 [[inputs.net]]
 
 {% elif inventory_hostname in groups['hosts'] %}
@@ -56,12 +69,4 @@
 [[inputs.mem]]
 
 [[inputs.swap]]
-
-{%   if inventory_hostname in groups['nova_compute'] %}
-[[inputs.exec]]
-  commands = ["/opt/telegraf/kvm_virsh.py"]
-  timeout = "15s"
-  data_format = "json"
-  name_prefix = "custom_"
-{%   endif %}
 {% endif %}

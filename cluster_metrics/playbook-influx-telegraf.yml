@@ -18,6 +18,10 @@
   gather_facts: true
   user: root
   tasks:
+    - name: Install ipaddr python module for MaaS
+      apt:
+        pkg: "python-ipaddr"
+        state: "latest"
     - name: Add influxdata apt-keys
       apt_key:
         url: "https://repos.influxdata.com/influxdb.key"
@@ -31,6 +35,10 @@
       apt:
         pkg: "telegraf"
         state: "latest"
+    - name: Install Ethtool
+      apt:
+        pkg: "ethtool"
+        state: "latest"
     - name: Create telegraf plugin dir
       file:
         path: "/opt/telegraf"
@@ -38,16 +46,44 @@
         mode: "0755"
     - name: Drop telegraf plugin file(s)
       copy:
-        src: "files/{{ item }}"
-        dest: "/opt/telegraf/{{ item }}"
+        src: "files/{{ item.value.plugin_name }}"
+        dest: "/opt/telegraf/{{ item.value.plugin_name }}"
         mode: '0755'
-      with_items:
-        - kvm_virsh.py
+      with_dict: "{{ command_plugins }}"
+      when:
+        - item.value.when_group | bool
+        - inventory_hostname in groups[item.value.group]
+    - name: Add to command plugins
+      set_fact:
+        commands: "{{ commands | union(item.value.command) }}"
+      with_dict: "{{ command_plugins }}"
+      when:
+        - item.value.when_group | bool
+        - inventory_hostname in groups[item.value.group]
+      tags:
+        - always
+    - name: Copy JSON to Influx parser
+      copy:
+        src: "files/jsontoinflux.py"
+        dest: "/opt/telegraf/jsontoinflux.py"
     - name: Drop telegraf config file
       template:
         src: templates/telegraf.conf.j2
         dest: /etc/telegraf/telegraf.conf
       register: telegraf_config
+    - name: copy the openrc file to home directory
+      shell: cp /root/openrc /home/openrc;chmod 644 /home/openrc
+      when: inventory_hostname in groups['utility_all']
+    - name: copy the openrc file for MaaS
+      shell: cp /root/openrc /home/openrc-maas;chmod 644 /home/openrc-maas
+      when: inventory_hostname in groups['utility_all']
+    - name: Clone rpc-openstack MaaS
+      git: repo=https://github.com/osic/reliability-rpc-openstack.git
+           dest=/opt/rpc-openstack
+           accept_hostkey=yes
+           force=yes
+           recursive=no
+      when: inventory_hostname in groups['utility_all']
     - name: Enable and restart telegraf
       service:
         name: "telegraf"
@@ -60,6 +96,32 @@
         enabled: true
         state: started
       when: not telegraf_config | changed
+  vars:
+    commands : []
+    command_plugins:
+      keystone:
+        plugin_name: "maas_output_parser.py"
+        command:
+          - "python /opt/telegraf/maas_output_parser.py keystone_api /opt/rpc-openstack/maas/plugins/keystone_api_local_check.py"
+        group: "utility_all"
+        when_group: "{{ (groups['utility_all'] | length) > 0 }}"
+      cinder:
+        plugin_name: "cinder_data.py"
+        command:
+          - "python /opt/telegraf/cinder_data.py"
+        group: "utility_all"
+        when_group: "{{ (groups['cinder_all'] | length) > 0 }}"
+      kvm:
+        plugin_name: "kvm_virsh.py"
+        command:
+          - "python /opt/telegraf/kvm_virsh.py"
+        group: "nova_compute"
+        when_group: "{{ (groups['nova_compute'] | length) > 0 }}"
+      interface_max_speed:
+        plugin_name: "maxspeed_interface.py"
+        command:
+          - "python /opt/telegraf/maxspeed_interface.py"
+        group: "all"
+        when_group: "{{ (groups['all'] | length) > 0 }}"
   vars_files:
     - vars.yml
-
