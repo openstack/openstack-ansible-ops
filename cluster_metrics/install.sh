@@ -4,7 +4,7 @@
 cd /opt/
 git clone https://github.com/osic/reliability-rpc-openstack.git
 
-cd /opt/reliability-openstack-ansible-ops/cluster_metrics
+cd /opt/openstack-ansible-ops/cluster_metrics
 
 echo 'Create inventory file and source it'
 /opt/openstack-ansible/scripts/inventory-manage.py -l | sed 's/|/ /' | tr - _ | awk '{if(NR > 2 &&$11 != "") print "export "$5"="$11}' >> /opt/openstack-ansible-ops/cluster_metrics/files/openrc_monitoring
@@ -17,7 +17,7 @@ echo 'done!'
 
 echo 'Copy the env.d files in place'
 mkdir -p /etc/openstack_deploy/env.d/
-cp /opt/reliability-openstack-ansible-ops/cluster_metrics/etc/env.d/cluster_metrics.yml /etc/openstack_deploy/env.d/
+cp /opt/openstack-ansible-ops/cluster_metrics/etc/env.d/cluster_metrics.yml /etc/openstack_deploy/env.d/
 echo 'done!'
 
 if [[ $1 == '-e' ]] ; then
