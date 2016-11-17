@@ -37,13 +37,39 @@
             haproxy_backend_nodes: "{{ groups['cluster-metrics'] | default([]) }}"
             haproxy_ssl: "{{ haproxy_ssl }}"
             haproxy_port: 8086
-            haproxy_balance_type: tcp
+            haproxy_backend_port: 8086
+            haproxy_balance_type: http
+            haproxy_backend_options:
+              - "httpchk HEAD /ping"
+            haproxy_whitelist_networks:
+              - 192.168.0.0/16
+              - 172.16.0.0/12
+              - 10.0.0.0/8
+            haproxy_acls:
+              read_queries:
+                rule: "path_sub -i query"
+              write_queries:
+                rule: "path_sub -i write"
+                backend_name: "influxdb_relay"
+        - service:
+            haproxy_service_name: influxdb_relay
+            haproxy_backend_nodes: "{{ groups['cluster-metrics'] | default([]) }}"
+            haproxy_ssl: "{{ haproxy_ssl }}"
+            haproxy_port: 8086
+            haproxy_backend_port: 9096
+            haproxy_balance_type: http
             haproxy_backend_options:
               - tcp-check
             haproxy_whitelist_networks:
               - 192.168.0.0/16
               - 172.16.0.0/12
               - 10.0.0.0/8
+            haproxy_acls:
+              write_queries:
+                 rule: "path_sub -i write"
+              read_queries:
+                 rule: "path_sub -i query"
+                 backend_name: "influxdb"
         - service:
             haproxy_service_name: grafana
             haproxy_backend_nodes: "{{ groups['cluster-metrics'] | default([]) }}"

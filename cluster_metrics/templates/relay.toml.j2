@@ -1,0 +1,10 @@
+[[http]]
+name = "example-http"
+bind-addr = '0.0.0.0:{{ influxdb_relay_port  }}'
+output = [
+{% set i =1%}
+{%for host_name in groups['cluster-metrics'] %}
+    { name="local{{ i }}", location = "http://{{ hostvars[host_name]['ansible_host'] }}:{{ influxdb_port }}/write"},
+{%set i = i + 1%}
+{%endfor%}
+]

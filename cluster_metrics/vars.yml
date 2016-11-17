@@ -35,3 +35,6 @@ influxdb_db_metric_password: SuperDuperSecrete
 
 # Kapacitor Vars
 kapacitor_port: 9092
+
+# Influxdb Relay vars
+influxdb_relay_port: 9096
