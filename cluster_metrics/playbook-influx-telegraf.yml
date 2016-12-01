@@ -37,12 +37,37 @@
         state: directory
         mode: "0755"
     - name: Drop telegraf plugin file(s)
-      copy:
-        src: "files/{{ item }}"
-        dest: "/opt/telegraf/{{ item }}"
+      template:
+        src: "templates/telegraf-plugins/{{ item.value.plugin_name }}"
+        dest: "/opt/telegraf/{{ item.value.plugin_name }}"
         mode: '0755'
-      with_items:
-        - kvm_virsh.py
+      with_dict: "{{ command_plugins }}"
+      when:
+        - item.value.when_group | bool
+        - item.value.group == inventory_hostname or 
+          inventory_hostname in item.value.group | default([])
+    - name: Add to command plugins
+      set_fact:
+        commands: "{{ commands | union(item.value.command) }}"
+      with_dict: "{{ command_plugins }}"
+      when:
+        - item.value.when_group | bool
+        - item.value.group == inventory_hostname or 
+          inventory_hostname in item.value.group | default([])
+      tags:
+        - always
+    - name: Store my_cnf
+      slurp:
+        src: "/root/.my.cnf"
+      register: _my_cnf
+      changed_when: false
+    - name: Copy my.cnf file into telegraf home
+      copy:
+        content: "{{ _my_cnf.content | b64decode }}"
+        dest: "/root/.my.cnf"
+        mode: "0440"
+        owner: "telegraf"
+        group: "telegraf"
     - name: Drop telegraf config file
       template:
         src: templates/telegraf.conf.j2
@@ -62,4 +87,14 @@
       when: not telegraf_config | changed
   vars_files:
     - vars.yml
-
+  vars:
+    commands : []
+    command_plugins:
+      ironic:
+        plugin_name: "ironic_nodes.py"
+        command:
+          - "python /opt/telegraf/ironic_nodes.py"
+        group: "{{ groups['utility_all'][0] }}"
+        when_group: "{{ (groups['ironic_api'] | length) > 0 }}"
+    influx_telegraf_targets:
+      - "{{ influxdb_host|default(internal_lb_vip_address) }}:{{ influxdb_port }}"

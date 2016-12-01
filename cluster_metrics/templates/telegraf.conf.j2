@@ -23,7 +23,7 @@
   omit_hostname = false
 
 [[outputs.influxdb]]
-  urls = ["http://{{ internal_lb_vip_address }}:{{ influxdb_port }}"]
+  urls = [{{ influx_telegraf_targets | map('quote') | join(',') }}]
   database = "{{ influxdb_db_name }}"
   precision = "s"
   write_consistency = "any"
@@ -32,6 +32,13 @@
 [[inputs.processes]]
 
 [[inputs.system]]
+
+{%   if commands %}
+[[inputs.exec]]
+  commands = [{{ commands | map('quote') | join(',') }}]
+  timeout = "15s"
+  data_format = "influx"
+{%   endif %}
 
 {% if inventory_hostname in groups['all_containers'] %}
 [[inputs.net]]
@@ -57,11 +64,5 @@
 
 [[inputs.swap]]
 
-{%   if inventory_hostname in groups['nova_compute'] %}
-[[inputs.exec]]
-  commands = ["/opt/telegraf/kvm_virsh.py"]
-  timeout = "15s"
-  data_format = "json"
-  name_prefix = "custom_"
-{%   endif %}
 {% endif %}
+

@@ -54,19 +54,25 @@ Install InfluxDB
 
 Install Influx Telegraf
 
+If you wish to install telegraf and point it at a specific target, or list of targets, set the ``influx_telegraf_targets``
+variable in the ``user_variables.yml`` file as a list containing all targets that telegraf should ship metrics to.
+
 .. code-block:: bash
 
     openstack-ansible playbook-influx-telegraf.yml --forks 100
 
 Install grafana
 
-If you're proxy'ing grafana you will need to provide the full ``root_path`` when you run the playbook add the following ``-e grafana_root_url='https://cloud.something:8443/grafana/'``
+If you're proxy'ing grafana you will need to provide the full ``root_path`` when you run the playbook add the following
+``-e grafana_root_url='https://cloud.something:8443/grafana/'``
 
 .. code-block:: bash
 
     openstack-ansible playbook-grafana.yml -e galera_root_user=root -e galera_address='127.0.0.1'
 
-Once that last playbook is completed you will have a functioning InfluxDB, Telegraf, and Grafana metric collection system active and collecting metrics. Grafana will need some setup, however functional dash boards have been provided in the ``grafana-dashboards`` directory.
+Once that last playbook is completed you will have a functioning InfluxDB, Telegraf, and Grafana metric collection system
+active and collecting metrics. Grafana will need some setup, however functional dashboards have been provided in the
+``grafana-dashboards`` directory.
 
 Install Kapacitor
 
