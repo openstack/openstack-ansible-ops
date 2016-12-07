@@ -5,13 +5,26 @@
   node_type = "physical_host"
 {% endif %}
 
+{%   set run_commands = [] %}
+{%   for key, value in command_plugins.items() %}
+{%     if value.when_group | bool and (value.group == inventory_hostname or inventory_hostname in value.group | default([])) %}
+{%       set _ = run_commands.extend(value.command) %}
+{%     endif %}
+{%   endfor %}
+
+{# The run_int adds padding to the interval so that plugins being added to the system have #}
+{#  enough time to execute. Every added plugin will add 8 seconds to the interval with a #}
+{#  default of 24. This value is later used as the flush interval which needs to be 2x the agent. #}
+{% set run_int = run_commands | length %}
+{% set interval = (run_int < 1 | ternary(0, run_int * 8)) + 24 %}
+
 [agent]
-  interval = "24s"
+  interval = "{{ interval }}s"
   round_interval = false
   metric_batch_size = 1024
   metric_buffer_limit = 10240
   collection_jitter = "8s"
-  flush_interval = "48s"
+  flush_interval = "{{ interval * 2 }}s"
   flush_jitter = "8s"
   debug = false
   quiet = true
@@ -33,10 +46,17 @@
 
 [[inputs.system]]
 
-{%   if commands %}
+{%   set run_commands = [] %}
+{%   for key, value in command_plugins.items() %}
+{%     if value.when_group | bool and (value.group == inventory_hostname or inventory_hostname in value.group | default([])) %}
+{%       set _ = run_commands.extend(value.command) %}
+{%     endif %}
+{%   endfor %}
+
+{%   if run_commands %}
 [[inputs.exec]]
-  commands = [{{ commands | map('quote') | join(',') }}]
-  timeout = "15s"
+  commands = [{{ run_commands | map('quote') | join(',') }}]
+  timeout = "{{ (run_commands | length) * 8 }}s"
   data_format = "influx"
 {%   endif %}
 
