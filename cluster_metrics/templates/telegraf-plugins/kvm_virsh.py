@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import json
 import libvirt
 import socket
 
@@ -15,9 +14,14 @@ try:
             domain
         ).maxVcpus()
     return_data['kvm_host_id'] = abs(hash(socket.getfqdn()))
-except Exception:
-    raise SystemExit('Plugin failure')
+except Exception as exp:
+    raise SystemExit('Plugin failure -- Reason: "%s"' % exp)
 else:
-    print(json.dumps(return_data))
+    line_data = 'kvm '
+    for key, value in return_data.items():
+        line_data += '%s=%s,' % (key.replace(' ', '_'), value)
+    else:
+        line_data = line_data.rstrip(',')
+    print(line_data)
 finally:
     conn.close()
