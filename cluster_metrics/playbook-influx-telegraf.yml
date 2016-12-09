@@ -98,7 +98,11 @@
           - "python /opt/telegraf/kvm_virsh.py"
         group: "{{ groups['nova_compute'] }}"
         when_group: "{{ (groups['nova_compute'] | length) > 0 and (nova_virt_type | default('qemu') in ['kvm', 'qemu']) }}"
-
-
+      cinder_pools_usage:
+        plugin_name: "cinder_pools_usage.py"
+        command:
+          - "python /opt/telegraf/cinder_pools_usage.py"
+        group: "{{ groups['utility_all'][0] }}"
+        when_group: "{{ (groups['cinder_volumes'] | length) > 0 }}"
     influx_telegraf_targets:
       - "{{ influxdb_host|default(internal_lb_vip_address) }}:{{ influxdb_port }}"
