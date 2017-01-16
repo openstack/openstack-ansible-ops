@@ -17,6 +17,9 @@ set -eu
 # Load all functions
 source functions.rc
 
+# The default image for VMs, change it to 16.04 if you want to use xenial as operation system.
+DEFAULT_IMAGE="${DEFAULT_IMAGE:-"$(lsb_release -sd | awk '{print $2}')"}"
+
 # Install cobbler
 wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.04/Release.key | apt-key add -
 add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.04/ ./"
@@ -58,7 +61,11 @@ chown www-data /var/lib/cobbler/webui_sessions
 cp -v templates/dhcp.template /etc/cobbler/dhcp.template
 
 # Create a trusty sources file
-cp -v templates/trusty-sources.list /var/www/html/trusty-sources.list
+if [[ "14.04.4" == $DEFAULT_IMAGE ]]; then
+  cp -v templates/trusty-sources.list /var/www/html/trusty-sources.list
+else
+  cp -v templates/xenial-sources.list /var/www/html/xenial-sources.list
+fi
 
 # Set the default preseed device name.
 #  This is being set because sda is on hosts, vda is kvm, xvda is xen.
@@ -81,29 +88,32 @@ service apache2 restart
 service xinetd restart
 update-rc.d cobblerd defaults
 
+# Update Cobbler Signatures
+cobbler signature update
+
 # Get ubuntu server image
 mkdir_check "/var/cache/iso"
 pushd /var/cache/iso
-  if [ -f "/var/cache/iso/ubuntu-14.04.4-server-amd64.iso" ]; then
-    rm /var/cache/iso/ubuntu-14.04.4-server-amd64.iso
+  if [ -f "/var/cache/iso/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso" ]; then
+    rm /var/cache/iso/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso
   fi
-  wget http://releases.ubuntu.com/trusty/ubuntu-14.04.4-server-amd64.iso
+  wget http://releases.ubuntu.com/"${DEFAULT_IMAGE:0:5}"/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso
 popd
 
 # import cobbler image
-if ! cobbler distro list | grep -qw "ubuntu-14.04.4-server-x86_64"; then
+if ! cobbler distro list | grep -qw "ubuntu-"${DEFAULT_IMAGE}"-server-x86_64"; then
   mkdir_check "/mnt/iso"
-  mount -o loop /var/cache/iso/ubuntu-14.04.4-server-amd64.iso /mnt/iso
-  cobbler import --name=ubuntu-14.04.4-server-amd64 --path=/mnt/iso
+  mount -o loop /var/cache/iso/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso /mnt/iso
+  cobbler import --name=ubuntu-"${DEFAULT_IMAGE}"-server-amd64 --path=/mnt/iso
   umount /mnt/iso
 fi
 
 # Create cobbler profile
-for seed_file in /var/lib/cobbler/kickstarts/ubuntu*14.04*.seed; do
+for seed_file in /var/lib/cobbler/kickstarts/ubuntu*"${DEFAULT_IMAGE:0:5}"*.seed; do
   if ! cobbler profile list | grep -qw "${seed_file##*'/'}"; then
     cobbler profile add \
       --name "${seed_file##*'/'}" \
-      --distro ubuntu-14.04.4-server-x86_64 \
+      --distro ubuntu-"${DEFAULT_IMAGE}"-server-x86_64 \
       --kickstart "${seed_file}"
   fi
 done
@@ -114,8 +124,6 @@ cobbler sync
 # Get Loaders
 cobbler get-loaders
 
-# Update Cobbler Signatures
-cobbler signature update
 
 # Create cobbler systems
 for node_type in $(get_all_types); do
@@ -127,9 +135,9 @@ for node_type in $(get_all_types); do
     echo "adding node ${node%%':'*} from the cobbler system"
     cobbler system add \
       --name="${node%%':'*}" \
-      --profile="ubuntu-server-14.04-unattended-cobbler-${node_type}.seed" \
+      --profile="ubuntu-server-"${DEFAULT_IMAGE:0:5}"-unattended-cobbler-${node_type}.seed" \
       --hostname="${node%%":"*}.openstackci.local" \
-      --kopts="interface=${DEFAULT_NETWORK}" \
+      --kopts="interface=${DEFAULT_NETWORK} net.ifnames=0 biosdevname=0" \
       --interface="${DEFAULT_NETWORK}" \
       --mac="52:54:00:bd:81:${node:(-2)}" \
       --ip-address="10.0.0.${node#*":"}" \
@@ -139,6 +147,9 @@ for node_type in $(get_all_types); do
       --static=1
   done
 done
+
+# sync cobbler
+cobbler sync
 
 # Restart XinetD
 service xinetd stop

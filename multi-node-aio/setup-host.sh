@@ -108,6 +108,20 @@ deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-backports main universe
 deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-security main universe
 EOF
 
+cat > ~/sources.list <<EOF
+# Faster likely unsigned repo
+deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial main universe
+deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-updates main universe
+deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-backports main universe
+deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-security main universe
+
+# i386 comes from the global known repo. This is slower and so it is only used for i386 packages
+deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial main universe
+deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-updates main universe
+deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-backports main universe
+deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-security main universe
+EOF
+
 # Allow apt repos to be UnAuthenticated
 cat > /etc/apt/apt.conf.d/00-nokey <<EOF
 APT { Get { AllowUnauthenticated "1"; }; };
