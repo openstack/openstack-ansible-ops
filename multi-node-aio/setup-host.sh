@@ -108,7 +108,7 @@ deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-backports main universe
 deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-security main universe
 EOF
 
-cat > ~/sources.list <<EOF
+cat > /tmp/sources.list <<EOF
 # Faster likely unsigned repo
 deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial main universe
 deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-updates main universe
