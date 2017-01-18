@@ -142,6 +142,9 @@ Instruct the system to pre-config the envs for running OSA playbooks:
 Instruct the system to run the OSA playbooks, if you want to deploy other OSA powered cloud, you can set it to false:
   ``RUN_OSA=${RUN_OSA:-true}``
 
+Instruct the VM to use the selected image, eg. ubuntu xenial:
+  ``DEFAULT_IMAGE=${DEFAULT_IMAGE:-16.04}``
+
 
 Re-kicking the VMs
 ------------------
