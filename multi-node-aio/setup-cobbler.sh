@@ -74,6 +74,9 @@ DEVICE_NAME="${DEVICE_NAME:-vda}"
 # This is set to instruct the preseed what the default network is expected to be
 DEFAULT_NETWORK="${DEFAULT_NETWORK:-eth0}"
 
+# Set SSH key to root user's public key
+SSHKEY="${SSHKEY:-$(cat /root/.ssh/id_rsa.pub)}"
+
 # Template the seed files
 for seed_file in $(ls -1 templates/pre-seeds); do
   cp -v "templates/pre-seeds/${seed_file}" "/var/lib/cobbler/kickstarts/${seed_file#*'/'}"
