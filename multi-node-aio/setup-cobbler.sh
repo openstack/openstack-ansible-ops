@@ -94,13 +94,22 @@ update-rc.d cobblerd defaults
 # Update Cobbler Signatures
 cobbler signature update
 
-# Get ubuntu server image
+# Get ubuntu server image md5 hash file
+wget -O /tmp/MD5SUM5 /tmp/MD5SUM5 http://releases.ubuntu.com/"${DEFAULT_IMAGE:0:5}"/MD5SUMS
+
+# Get ubuntu server image, if the server image exists, compare the md5, rm and download new image if the hash is not
+# the same.
 mkdir_check "/var/cache/iso"
 pushd /var/cache/iso
   if [ -f "/var/cache/iso/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso" ]; then
-    rm /var/cache/iso/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso
+    md5=`md5sum ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso | awk '{ print $1 }'`
+    if ! grep ${md5} /tmp/MD5SUMS &>/dev/null ; then
+      rm /var/cache/iso/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso
+      wget http://releases.ubuntu.com/"${DEFAULT_IMAGE:0:5}"/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso
+    fi
+  else
+    wget http://releases.ubuntu.com/"${DEFAULT_IMAGE:0:5}"/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso
   fi
-  wget http://releases.ubuntu.com/"${DEFAULT_IMAGE:0:5}"/ubuntu-"${DEFAULT_IMAGE}"-server-amd64.iso
 popd
 
 # import cobbler image
