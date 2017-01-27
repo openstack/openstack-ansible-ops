@@ -210,7 +210,7 @@ tasksel tasksel/first multiselect openssh-server
 # Whether to upgrade packages after debootstrap.
 # Allowed values: none, safe-upgrade, full-upgrade
 d-i pkgsel/upgrade select none
-d-i pkgsel/include string bridge-utils ethtool ifenslave lvm2 openssh-server python2.7 vim vlan
+d-i pkgsel/include string bridge-utils ethtool ifenslave lvm2 openssh-server python vim vlan
 # Policy for applying updates. May be "none" (no automatic updates),
 # "unattended-upgrades" (install security updates automatically), or
 # "landscape" (manage system with Landscape).
