@@ -1,0 +1,63 @@
+---
+# Copyright 2016, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Upgrade environment/inventory configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  user: root
+  tasks:
+      - name: Create an old copy of openstack_deploy
+        copy:
+          src: "/etc/openstack_deploy/"
+          dest: "/etc/openstack_deploy.NEWTON/"
+          force: no
+
+      - name: Retrieve differences
+        shell: rsync -avun "{{ repo_root_dir }}/playbooks/inventory/env.d/" "/etc/openstack_deploy/env.d/" | grep "yml$"
+        failed_when: false
+        register: diff_result
+
+      - name: Copy new env.d files into place
+        copy:
+            src: "{{ repo_root_dir }}/playbooks/inventory/env.d/{{ item }}"
+            dest: "/etc/openstack_deploy/env.d/{{ item }}"
+            force: no
+        with_items:
+            - "{{ diff_result.stdout_lines }}"
+        when: diff_result.stdout != ""
+
+      - name: Check result for emptiness
+        debug: msg="All new env.d files are placed in the stock repo. No new changes"
+        when: diff_result.stdout == ""
+
+      - name: Update OpenStack variable names
+        command: "{{ playbook_dir }}/../scripts/migrate_openstack_vars.py {{ item }} {{ (item | basename)[:-4] }}"
+        args:
+            creates: "/etc/openstack_deploy.NEWTON/VARS_MIGRATED_{{ (item | basename)[:-4] }}"
+        with_fileglob:
+          - "/etc/openstack_deploy/user_*.yml"
+
+      - name: Write vars required for upgrade from Mitaka
+        lineinfile:
+          dest: /etc/openstack_deploy/user_variables.yml
+          regexp: "^{{ item.key }}"
+          line: "{{ item.key }}: {{ item.value }}"
+          state: present
+        with_items:
+          - key: "default_bind_mount_logs"
+            value: false
+  vars:
+      repo_root_dir: "{{ osa_playbook_dir }}/"
