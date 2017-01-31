@@ -60,7 +60,7 @@ chown www-data /var/lib/cobbler/webui_sessions
 #  when templated replace \$ with $
 cp -v templates/dhcp.template /etc/cobbler/dhcp.template
 
-# Create a trusty sources file
+# Create a sources.list file
 if [[ "14.04.4" == $DEFAULT_IMAGE ]]; then
   cp -v templates/trusty-sources.list /var/www/html/trusty-sources.list
 else

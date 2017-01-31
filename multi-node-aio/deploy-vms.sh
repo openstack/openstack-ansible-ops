@@ -54,6 +54,9 @@ for i in $(apt-key list | awk '/pub/ {print $2}' | awk -F'/' '{print $2}'); do
   apt-key export "$i" > "/tmp/keys/$i"
 done
 
+# Get the ubuntu release version from VMs.
+RELEASE_VERSION=`ssh -q -o StrictHostKeyChecking=no 10.0.0.100 "lsb_release -sr"`
+
 # Ensure that all running VMs have an updated apt-cache with keys
 for node in $(get_all_hosts); do
   ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mkdir -p /tmp/keys"
@@ -62,7 +65,7 @@ for node in $(get_all_hosts); do
       scp "$i" "10.0.0.${node#*":"}:$i"
     fi
   done
-  if [[ "14.04" != "$(lsb_release -sr)" ]]; then
+  if [[ "14.04" != "${RELEASE_VERSION:0:5}" ]]; then
     ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mv /tmp/sources.list /etc/apt/sources.list"
   fi
   ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "(for i in /tmp/keys/*; do \
