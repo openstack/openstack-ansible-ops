@@ -1,0 +1,71 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Nova compute fixes
+  hosts: "nova_compute"
+  gather_facts: false
+  user: root
+  vars:
+    nova_system_user_name: nova
+    nova_system_home_folder: "/var/lib/{{ nova_system_user_name }}"
+    nova_libvirt_save_path: "{{ nova_system_home_folder }}/save"
+    nova_qemu_user: libvirt-qemu
+    nova_qemu_group: kvm
+  tasks:
+    - name: Check the state of the qemu save directory
+      stat:
+        path: "/var/lib/libvirt/qemu/save"
+      failed_when: false
+      register: _qemu_save_dir
+
+    - name: Check the state of the nova save directory
+      stat:
+        path: "{{ nova_libvirt_save_path }}"
+      failed_when: false
+      register: _nova_save_dir
+
+    - name: Create nova save directory
+      file:
+        dest: "{{ nova_libvirt_save_path }}"
+        state: "directory"
+        owner: "nova"
+        group: "nova"
+      when: not _nova_save_dir.stat.exists | bool
+
+    - name: Index saved qemu items
+      command: "ls -1 /var/lib/libvirt/qemu/save"
+      changed_when: false
+      register: _qemu_save_items
+
+    - name: Move the existing save directory to nova_libvirt_save_path
+      shell: "mv /var/lib/libvirt/qemu/save/{{ item }} {{ nova_libvirt_save_path }}/{{ item }}"
+      with_items: "{{ _qemu_save_items.stdout_lines }}"
+      when:
+        - _qemu_save_dir.stat.isdir | bool
+        - _qemu_save_items.stdout_lines | length > 0
+
+    - name: Remove qemu save directory
+      file:
+        dest: "/var/lib/libvirt/qemu/save"
+        state: "absent"
+      when: _qemu_save_dir.stat.isdir | bool
+
+    - name: Symlink qemu save dir to nova_libvirt_save_path
+      file:
+        src: "{{ nova_libvirt_save_path }}"
+        dest: "/var/lib/libvirt/qemu/save"
+        state: link
+        owner: "{{ nova_qemu_user }}"
+        group: "{{ nova_qemu_group }}"
