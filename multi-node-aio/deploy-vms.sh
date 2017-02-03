@@ -37,7 +37,7 @@ done
 # Populate network configurations based on node type
 for node_type in $(get_all_types); do
   for node in $(get_host_type ${node_type}); do
-    sed "s/__COUNT__/${node#*":"}/g" "templates/network-interfaces/vm.openstackci.local-bonded-bridges.cfg" > "/var/www/html/osa-${node%%":"*}.openstackci.local-bridges.cfg"
+    sed -e "s/__COUNT__/${node#*":"}/g" -e "s/__NETWORK_BASE__/${NETWORK_BASE}/g" "templates/network-interfaces/vm.openstackci.local-bonded-bridges.cfg" > "/var/www/html/osa-${node%%":"*}.openstackci.local-bridges.cfg"
   done
 done
 
@@ -74,4 +74,3 @@ for node in $(get_all_hosts); do
     apt-get clean; \
     apt-get update"
 done
-

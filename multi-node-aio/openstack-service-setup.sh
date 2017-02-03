@@ -3,6 +3,13 @@
 # Load service variables
 source openrc
 
+# bring in variable definitions if there is a variables.sh file
+[[ -f variables.sh ]] && source variables.sh
+
+# Provide defaults for unset variables
+# Set first two octets of network used for containers, storage, etc
+NETWORK_BASE=${NETWORK_BASE:-172.29}
+
 # Create base flavors for the new deployment
 for flavor in micro tiny mini small medium large xlarge heavy; do
   NAME="m1.${flavor}"
@@ -48,10 +55,10 @@ neutron net-create GATEWAY_NET \
     --provider:physical_network=flat \
     --provider:network_type=flat
 
-neutron subnet-create GATEWAY_NET 172.29.248.0/22 \
+neutron subnet-create GATEWAY_NET ${NETWORK_BASE}.248.0/22 \
     --name GATEWAY_NET_SUBNET \
-    --gateway 172.29.248.1 \
-    --allocation-pool start=172.29.248.201,end=172.29.248.255 \
+    --gateway ${NETWORK_BASE}.248.1 \
+    --allocation-pool start=${NETWORK_BASE}.248.201,end=${NETWORK_BASE}.248.255 \
     --dns-nameservers list=true 8.8.4.4 8.8.8.8
 
 # Neutron private network setup
