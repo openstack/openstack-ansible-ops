@@ -37,7 +37,7 @@ DEVNULL = open(os.devnull, 'w')
 
 # load the yaml file
 with io.open(filename, 'rb') as f:
-    roles = yaml.load(f)
+    roles = yaml.safe_load(f)
 
 role_names = []
 role_dict = {}
@@ -87,7 +87,7 @@ for role in role_names:
         # Try to read the dependencies from the role's meta/main.yml
         try:
             with io.open(os.path.join(role, "meta", "main.yml")) as f:
-                y = yaml.load(f)
+                y = yaml.safe_load(f)
             for dep in y['dependencies']:
                 try:
                     dep = dep['role']
