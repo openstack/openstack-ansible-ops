@@ -70,7 +70,7 @@ target_name = 'openstack-ansible-' + role_name
 title = 'OpenStack-Ansible Documentation: ' + role_name + 'role'
 
 # The link to the browsable source code (for the left hand menu)
-oslosphinx_cgit_link = 'http://git.openstack.org/cgit/openstack/' + target_name
+oslosphinx_cgit_link = 'https://git.openstack.org/cgit/openstack/' + target_name
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -89,7 +89,7 @@ version = version_info.canonical_version_string()
 #           Automatically extracted from git log.
 #   bug_tag: Tag for categorizing the bug. Must be set manually.
 # These variables are passed to the logabug code via html_context.
-giturl = ("http://git.openstack.org/cgit/openstack/{0}"
+giturl = ("https://git.openstack.org/cgit/openstack/{0}"
           "/tree/doc/source").format(target_name)
 git_cmd = "/usr/bin/git log | head -n1 | cut -f2 -d' '"
 gitsha = os.popen(git_cmd).read().strip('\n')
