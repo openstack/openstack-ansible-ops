@@ -1,0 +1,101 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# module: tftpboot_configure/tasks/configure
+# description: Configure tftpboot_configure
+
+- name: Create pxeboot directories
+  file:
+    path: "{{ atftpd_path }}/{{ item }}"
+    state: directory
+    owner: "{{ atftp_user }}"
+    group: "{{ atftp_group }}"
+  with_items:
+  - images
+  - pxelinux.cfg
+
+- name: Create pxeboot directories for distributions
+  file:
+    path: "{{ atftpd_path }}/images/{{ item }}/"
+    state: directory
+    owner: "{{ atftp_user }}"
+    group: "{{ atftp_group }}"
+  with_items: "{{ tftp_distro }}"
+
+- name: Create apache directories for preseed
+  file:
+    path: "{{ preseed_path }}"
+    state: directory
+
+- name: Create the preseed files
+  template:
+    src: "{{ item.preseed_file }}.j2"
+    dest: "{{ preseed_path }}/{{ item.preseed_file }}"
+  with_items: "{{ server_list }}"
+
+- name: Pull down boot kernel and initrd - create download directory -{{ tftp_distro }}-
+  file:
+    path: "/var/lib/netboot/{{ item }}"
+    mode: 0644
+    state: directory
+    owner: "{{ atftp_user }}"
+    group: "{{ atftp_group }}"
+  with_items: "{{ tftp_distro }}"
+
+- name: Pull down boot kernel and initrd - download -"{{ tftp_distro }}"- releases -"{{ tftp_files }}"- files and place in /var/lib/netboot/
+  get_url:
+    url: "http://{{ tftp_mirror }}/ubuntu/dists/{{ item[0] }}-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/{{ item[1] }}"
+    dest: /var/lib/netboot/{{ item[0] }}
+    mode: 0644
+    owner: "{{ atftp_user }}"
+    group: "{{ atftp_group }}"
+  with_nested:
+    - "{{ tftp_distro }}"
+    - "{{ tftp_files }}"
+
+- name: Create hard link to our boot images in the distribution folder
+  file:
+    src: "/var/lib/netboot/{{ item[0] }}/{{ item[1] }}"
+    dest: "{{ atftpd_path }}/images/{{ item[0] }}/{{ item[1] }}"
+    state: hard
+  with_nested:
+    - "{{ tftp_distro }}"
+    - "{{ tftp_files }}"
+
+- name: Copy pxe boot files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ atftpd_path }}"
+    owner: "{{ atftp_user }}"
+    group: "{{ atftp_group }}"
+  with_items:
+    - memdisk
+    - menu.c32
+    - pxelinux.0
+
+- name: Create a template for each of our defined servers
+  template:
+    src: pxelinux.j2
+    dest: "{{ tftp_source }}/01-{{ item.hwaddr | regex_replace(':', '-') }}"
+    owner: "{{ atftp_user }}"
+    group: "{{ atftp_group }}"
+    follow: yes
+  with_items: "{{ server_list }}"
+  when: item.distro is defined
+
+- name: Create our default template for menu
+  template:
+    src: default_pxelinux.j2
+    dest: "{{ atftpd_path }}/pxelinux.cfg/default"
+    owner: "{{ atftp_user }}"
+    group: "{{ atftp_group }}"
