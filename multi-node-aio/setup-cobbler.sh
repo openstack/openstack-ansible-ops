@@ -20,6 +20,15 @@ source functions.rc
 # The default image for VMs, change it to 16.04 if you want to use xenial as operation system.
 DEFAULT_IMAGE="${DEFAULT_IMAGE:-"$(lsb_release -sd | awk '{print $2}')"}"
 
+# The default kernel for Image, leave it empty will install the lastest kernel.
+DEFAULT_KERNEL="${DEFAULT_KERNEL:-}"
+
+if [ -z "$DEFAULT_KERNEL" ]; then
+  DEFAULT_KERNEL=linux-image-generic
+else
+  DEFAULT_KERNEL="linux-image-$DEFAULT_KERNEL-generic"
+fi
+
 # Install cobbler
 wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.04/Release.key | apt-key add -
 add-apt-repository "deb http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.04/ ./"
@@ -83,6 +92,7 @@ for seed_file in $(ls -1 templates/pre-seeds); do
   sed -i "s|__DEVICE_NAME__|${DEVICE_NAME}|g" "/var/lib/cobbler/kickstarts/${seed_file#*'/'}"
   sed -i "s|__SSHKEY__|${SSHKEY}|g" "/var/lib/cobbler/kickstarts/${seed_file#*'/'}"
   sed -i "s|__DEFAULT_NETWORK__|${DEFAULT_NETWORK}|g" "/var/lib/cobbler/kickstarts/${seed_file#*'/'}"
+  sed -i "s|__DEFAULT_KERNEL__|${DEFAULT_KERNEL}|g" "/var/lib/cobbler/kickstarts/${seed_file#*'/'}"
 done
 
 # Restart services again and configure autostart

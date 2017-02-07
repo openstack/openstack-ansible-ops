@@ -22,6 +22,9 @@
 # Note: options passed to the installer will be added automatically.
 d-i debian-installer/add-kernel-opts string $kernel_options_post
 
+### Base system installation
+d-i base-installer/kernel/image string __DEFAULT_KERNEL__
+
 #############
 #
 # Networking

@@ -145,6 +145,8 @@ Instruct the system to run the OSA playbooks, if you want to deploy other OSA po
 Instruct the VM to use the selected image, eg. ubuntu xenial:
   ``DEFAULT_IMAGE=${DEFAULT_IMAGE:-16.04}``
 
+Install the specified kernel, eg 3.13.0-34 if you want to deploy Juno release.
+  ``DEFAULT_KERNEL=${DEFAULT_KERNEL:-3.13.0-34}``
 
 Re-kicking the VMs
 ------------------
