@@ -18,6 +18,13 @@ MAX_RETRIES=${MAX_RETRIES:-5}
 # Load all functions
 source functions.rc
 
+# bring in variable definitions if there is a variables.sh file
+[[ -f variables.sh ]] && source variables.sh
+
+# Provide defaults for unset variables
+# Set first two octets of network used for containers, storage, etc
+NETWORK_BASE=${NETWORK_BASE:-172.29}
+
 # Reset the ssh-agent service to remove potential key issues
 ssh_agent_reset
 
@@ -46,7 +53,7 @@ ansible_static_inventory "/opt/ansible-static-inventory.ini"
 
 # Create the OpenStack User Config
 HOSTIP="$(ip route get 1 | awk '{print $NF;exit}')"
-sed "s/__HOSTIP__/${HOSTIP}/g" templates/openstack_user_config.yml > /etc/openstack_deploy/openstack_user_config.yml
+sed -e "s/__HOSTIP__/${HOSTIP}/g" -e "s/__NETWORK_BASE__/${NETWORK_BASE}/g" templates/openstack_user_config.yml > /etc/openstack_deploy/openstack_user_config.yml
 
 # Create the swift config: function group_name host_type
 cp -v templates/osa-swift.yml /etc/openstack_deploy/conf.d/swift.yml
@@ -91,7 +98,7 @@ if [[ "${PRE_CONFIG_OSA}" = true ]]; then
     osa_user_var_add lxc_container_backing_store 'lxc_container_backing_store: dir'
 
     # Tempest is being configured to use a known network
-    osa_user_var_add tempest_public_subnet_cidr 'tempest_public_subnet_cidr: 172.29.248.0/22'
+    osa_user_var_add tempest_public_subnet_cidr 'tempest_public_subnet_cidr: '${NETWORK_BASE}'.248.0/22'
 
     # This makes running neutron in a distributed system easier and a lot less noisy
     osa_user_var_add neutron_l2_population 'neutron_l2_population: True'
@@ -117,6 +124,6 @@ if [[ "${RUN_OSA}" = true ]]; then
     if [[ -f "/usr/local/bin/openstack-ansible.rc" ]]; then
       source /usr/local/bin/openstack-ansible.rc
     fi
-    ansible -m script -a "${EXEC_DIR}/openstack-service-setup.sh" 'utility_all[0]'
+    ansible -m script -a "${EXEC_DIR}/openstack-service-setup.sh ${NETWORK_BASE}" 'utility_all[0]'
   popd
 fi

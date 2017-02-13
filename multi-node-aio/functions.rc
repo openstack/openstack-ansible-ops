@@ -115,7 +115,7 @@ echo "---" >> ${CONFD_FILE}
 echo "$1:" >> ${CONFD_FILE}
 for node in $(get_host_type ${2}); do
 echo "  ${node%%':'*}:" >> ${CONFD_FILE}
-echo "    ip: 172.29.236.${node#*":"}" >> ${CONFD_FILE}
+echo "    ip: ${NETWORK_BASE}.236.${node#*":"}" >> ${CONFD_FILE}
 done
 }
 
@@ -126,7 +126,7 @@ echo "---" >> ${CONFD_FILE}
 echo "$1:" >> ${CONFD_FILE}
 for node in $(get_host_type ${2}); do
 echo "  ${node%%':'*}:" >> ${CONFD_FILE}
-echo "    ip: 172.29.236.${node#*":"}" >> ${CONFD_FILE}
+echo "    ip: ${NETWORK_BASE}.236.${node#*":"}" >> ${CONFD_FILE}
 cat >> ${CONFD_FILE} <<EOF
     container_vars:
       cinder_backends:
@@ -135,7 +135,7 @@ cat >> ${CONFD_FILE} <<EOF
           volume_group: cinder-volumes
           volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
           volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: "172.29.236.${node#*":"}"
+          iscsi_ip_address: "${NETWORK_BASE}.236.${node#*":"}"
 EOF
 done
 }
@@ -147,7 +147,7 @@ echo "---" >> ${CONFD_FILE}
 echo "$1:" >> ${CONFD_FILE}
 for node in $(get_host_type ${2}); do
 echo "  ${node%%':'*}:" >> ${CONFD_FILE}
-echo "    ip: 172.29.236.${node#*":"}" >> ${CONFD_FILE}
+echo "    ip: ${NETWORK_BASE}.236.${node#*":"}" >> ${CONFD_FILE}
 cat >> ${CONFD_FILE} <<EOF
     container_vars:
       swift_proxy_vars:
@@ -166,7 +166,7 @@ echo "---" >> ${CONFD_FILE}
 echo "$1:" >> ${CONFD_FILE}
 for node in $(get_host_type ${2}); do
 echo "  ${node%%':'*}:" >> ${CONFD_FILE}
-echo "    ip: 172.29.236.${node#*":"}" >> ${CONFD_FILE}
+echo "    ip: ${NETWORK_BASE}.236.${node#*":"}" >> ${CONFD_FILE}
 cat >> ${CONFD_FILE} <<EOF
     container_vars:
       swift_vars:

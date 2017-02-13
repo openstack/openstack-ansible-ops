@@ -46,6 +46,10 @@ fi
 
 # create kvm bridges
 cp -v templates/kvm-bonded-bridges.cfg /etc/network/interfaces.d/kvm-bridges.cfg
+
+# set network address
+sed -i "s|__NETWORK_BASE__|${NETWORK_BASE}|g" /etc/network/interfaces.d/kvm-bridges.cfg
+
 for i in $(awk '/iface/ {print $2}' /etc/network/interfaces.d/kvm-bridges.cfg); do
   ifup $i
 done
