@@ -61,7 +61,7 @@ chown www-data /var/lib/cobbler/webui_sessions
 cp -v templates/dhcp.template /etc/cobbler/dhcp.template
 
 # Create a sources.list file
-if [[ "14.04.4" == $DEFAULT_IMAGE ]]; then
+if [[ $DEFAULT_IMAGE == "14.04."* ]]; then
   cp -v templates/trusty-sources.list /var/www/html/trusty-sources.list
 else
   cp -v templates/xenial-sources.list /var/www/html/xenial-sources.list
