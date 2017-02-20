@@ -105,6 +105,27 @@ if [[ "${PRE_CONFIG_OSA}" = true ]]; then
 
     # This makes the glance image store use swift instead of the file backend
     osa_user_var_add glance_default_store 'glance_default_store: swift'
+
+    # Propagate host proxy settings (if set) into /etc/environment in the targets
+    if [ -n "$http_proxy" ]; then
+      osa_user_var_add proxy_env_url 'proxy_env_url: '${http_proxy}
+      osa_user_var_add no_proxy_env 'no_proxy_env: "localhost,127.0.0.1,{{ internal_lb_vip_address }},{{ external_lb_vip_address }},{% for host in groups['\''all_containers'\''] %}{{ hostvars[host]['\''container_address'\''] }}{% if not loop.last %},{% endif %}{% endfor %}"'
+      osa_user_var_add global_environment_variables 'global_environment_variables:'
+      osa_user_var_add '  HTTP_PROXY:' '  HTTP_PROXY: "{{ proxy_env_url }}"'
+      osa_user_var_add '  HTTPS_PROXY:' '  HTTPS_PROXY: "{{ proxy_env_url }}"'
+      osa_user_var_add '  NO_PROXY:' '  NO_PROXY: "{{ no_proxy_env }}"'
+      osa_user_var_add '  http_proxy:' '  http_proxy: "{{ proxy_env_url }}"'
+      osa_user_var_add '  https_proxy:' '  https_proxy: "{{ proxy_env_url }}"'
+      osa_user_var_add '  no_proxy:' '  no_proxy: "{{ no_proxy_env }}"'
+      # Propagate proxy setting to glance api conf. Note the unusual format - instead of the typical
+      #   http_proxy=http://proxy.example.com ; https_proxy=http://proxy.example.com
+      # it uses
+      #   http:proxy.example.com, https:proxy.example.com
+      #
+      osa_user_var_add glance_glance_api_conf_overrides 'glance_glance_api_conf_overrides:'
+      osa_user_var_add '  glance_store' '  glance_store:'
+      osa_user_var_add '    http_proxy_information' "    http_proxy_information: \"http:${http_proxy#http://}, https:${http_proxy#http://}\""
+    fi
   popd
 fi
 
