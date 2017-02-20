@@ -9,3 +9,36 @@ DNS_NAMESERVER=8.8.8.8
 # set up then this script will override these. This option allows for the override to be
 # disabled.
 OVERRIDE_SOURCES=true
+
+# What branch of Openstack-Ansible are we deploying from
+OSA_BRANCH=master
+
+# What is the default disk device name
+DEVICE_NAME=vda
+
+# What default network device should we use for Cobbler
+DEFAULT_NETWORK=eth0
+
+# What is the default virtual machine disk size in GB
+VM_DISK_SIZE=252
+
+# Do we want to do all the required host setup
+SETUP_HOST=true
+
+# Do we want to do disk partitioning or is there a partition ready to use
+PARTITION_HOST=true
+
+# Do we want to set up networking on the host for Virsh
+SETUP_VIRSH_NET=true
+
+# When the virtual machines are re-kicked do we format them
+VM_IMAGE_CREATE=true
+
+# Should we run the deploy Openstack-Ansible script at the end of the build script
+DEPLOY_OSA=true
+
+# Should we pre-configure the environment before we deploy OpenStack-Ansible
+PRE_CONFIG_OSA=true
+
+# Should we run the final deploy of OpenStack-Ansible
+RUN_OSA=true

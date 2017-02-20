@@ -17,6 +17,9 @@ set -eu
 # Load all functions
 source functions.rc
 
+# bring in variable definitions if there is a variables.sh file
+[[ -f variables.sh ]] && source variables.sh
+
 # Remove the default libvirt networks
 if virsh net-list |  grep -qw "default"; then
   virsh net-autostart default --disable
