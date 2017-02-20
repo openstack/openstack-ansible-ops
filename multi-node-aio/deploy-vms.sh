@@ -17,6 +17,9 @@ set -eu
 # Load all functions
 source functions.rc
 
+# bring in variable definitions if there is a variables.sh file
+[[ -f variables.sh ]] && source variables.sh
+
 # Reset the ssh-agent service to remove potential key issues
 ssh_agent_reset
 
