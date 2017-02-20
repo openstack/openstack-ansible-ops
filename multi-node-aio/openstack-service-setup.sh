@@ -59,7 +59,7 @@ neutron subnet-create GATEWAY_NET ${NETWORK_BASE}.248.0/22 \
     --name GATEWAY_NET_SUBNET \
     --gateway ${NETWORK_BASE}.248.1 \
     --allocation-pool start=${NETWORK_BASE}.248.201,end=${NETWORK_BASE}.248.255 \
-    --dns-nameservers list=true 8.8.4.4 8.8.8.8
+    --dns-nameservers list=true ${DNS_NAMESERVER}
 
 # Neutron private network setup
 neutron net-create PRIVATE_NET \

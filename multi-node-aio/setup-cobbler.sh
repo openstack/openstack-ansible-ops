@@ -17,6 +17,9 @@ set -eu
 # Load all functions
 source functions.rc
 
+# bring in variable definitions if there is a variables.sh file
+[[ -f variables.sh ]] && source variables.sh
+
 # The default image for VMs, change it to 16.04 if you want to use xenial as operation system.
 DEFAULT_IMAGE="${DEFAULT_IMAGE:-"$(lsb_release -sd | awk '{print $2}')"}"
 
@@ -58,7 +61,9 @@ mkdir_check "/tftpboot"
 chown www-data /var/lib/cobbler/webui_sessions
 
 #  when templated replace \$ with $
+# Copy dhcp template and replace with DNS var
 cp -v templates/dhcp.template /etc/cobbler/dhcp.template
+sed -i "s|__DNS_NAMESERVER__|${DNS_NAMESERVER}|g" /etc/cobbler/dhcp.template
 
 # Create a sources.list file
 if [[ $DEFAULT_IMAGE == "14.04."* ]]; then
@@ -155,7 +160,7 @@ for node_type in $(get_all_types); do
       --ip-address="10.0.0.${node#*":"}" \
       --subnet=255.255.255.0 \
       --gateway=10.0.0.200 \
-      --name-servers=8.8.8.8 8.8.4.4 \
+      --name-servers="${DNS_NAMESERVER}" \
       --static=1
   done
 done
