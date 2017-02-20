@@ -17,6 +17,9 @@ set -eu
 # Load all functions
 source functions.rc
 
+# bring in variable definitions if there is a variables.sh file
+[[ -f variables.sh ]] && source variables.sh
+
 # Make the rekick function part of the main general shell
 declare -f rekick_vms | tee /root/.functions.rc
 declare -f ssh_agent_reset | tee -a /root/.functions.rc
@@ -98,33 +101,38 @@ if [[ "${PARTITION_HOST}" = true ]]; then
   mount -a
 fi
 
-cat > /etc/apt/sources.list <<EOF
-# Faster likely unsigned repo
-deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty main universe
-deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-updates main universe
-deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-backports main universe
-deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-security main universe
+# Set the default OVERRIDE_SOURCES var
+OVERRIDE_SOURCES=${OVERRIDE_SOURCES:-true}
+if ( "${OVERRIDE_SOURCES}" == true )
+then
+  cat > /etc/apt/sources.list <<EOF
+  # Faster likely unsigned repo
+  deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty main universe
+  deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-updates main universe
+  deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-backports main universe
+  deb [arch=amd64] http://mirror.rackspace.com/ubuntu trusty-security main universe
 
-# i386 comes from the global known repo. This is slower and so it is only used for i386 packages
-deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty main universe
-deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-updates main universe
-deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-backports main universe
-deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-security main universe
-EOF
+  # i386 comes from the global known repo. This is slower and so it is only used for i386 packages
+  deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty main universe
+  deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-updates main universe
+  deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-backports main universe
+  deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-security main universe
+  EOF
 
-cat > /tmp/sources.list <<EOF
-# Faster likely unsigned repo
-deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial main universe
-deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-updates main universe
-deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-backports main universe
-deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-security main universe
+  cat > /tmp/sources.list <<EOF
+  # Faster likely unsigned repo
+  deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial main universe
+  deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-updates main universe
+  deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-backports main universe
+  deb [arch=amd64] http://mirror.rackspace.com/ubuntu xenial-security main universe
 
-# i386 comes from the global known repo. This is slower and so it is only used for i386 packages
-deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial main universe
-deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-updates main universe
-deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-backports main universe
-deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-security main universe
-EOF
+  # i386 comes from the global known repo. This is slower and so it is only used for i386 packages
+  deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial main universe
+  deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-updates main universe
+  deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-backports main universe
+  deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-security main universe
+  EOF
+fi
 
 # Allow apt repos to be UnAuthenticated
 cat > /etc/apt/apt.conf.d/00-nokey <<EOF
