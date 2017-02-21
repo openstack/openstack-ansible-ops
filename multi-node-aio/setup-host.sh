@@ -117,7 +117,7 @@ then
   deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-updates main universe
   deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-backports main universe
   deb [arch=i386] http://archive.ubuntu.com/ubuntu trusty-security main universe
-  EOF
+EOF
 
   cat > /tmp/sources.list <<EOF
   # Faster likely unsigned repo
@@ -131,7 +131,7 @@ then
   deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-updates main universe
   deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-backports main universe
   deb [arch=i386] http://archive.ubuntu.com/ubuntu xenial-security main universe
-  EOF
+EOF
 fi
 
 # Allow apt repos to be UnAuthenticated
