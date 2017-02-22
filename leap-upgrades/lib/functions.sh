@@ -144,7 +144,12 @@ function pre_flight {
     # If the lxc backend store was not set halt and instruct the user to set it. In Juno we did more to detect the backend storage
     #  size than we do in later releases. While the auto-detection should still work it's best to have the deployer set the value
     #  desired before moving forward.
-    if ! grep -qwrn "^lxc_container_backing_store" /etc/{rpc,openstack}_deploy; then
+    if [[ -d "/etc/rpc_deploy" ]]; then
+      CONFIG_DIR="/etc/rpc_deploy"
+    else
+      CONFIG_DIR="/etc/openstack_deploy"
+    fi
+    if ! grep -qwrn "^lxc_container_backing_store" $CONFIG_DIR; then
       failure "ERROR: 'lxc_container_backing_store' is unset leading to an ambiguous container backend store."
       failure "Before continuing please set the 'lxc_container_backing_store' in your user_variables.yml file."
       failure "Valid options are 'dir', 'lvm', and 'overlayfs'".
@@ -164,8 +169,8 @@ function pre_flight {
     if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "9.0.1"; then
       wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
       rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
-      python /opt/get-pip.py --constraint "${SYSTEM_PATH}/upgrade-requirements.txt" --force-reinstall --upgrade --isolated
-      python /opt/get-pip.py --requirement "${SYSTEM_PATH}/upgrade-requirements.txt" --upgrade --isolated
+      python /opt/get-pip.py --constraint "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --force-reinstall --upgrade --isolated
+      pip install --requirement "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --upgrade --isolated
     fi
 
     if [[ -d "/opt/ansible-runtime" ]]; then
