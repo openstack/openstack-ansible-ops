@@ -224,7 +224,7 @@ function clone_release {
     #  Enter the clone directory and checkout the given branch, If the given checkout has an
     #  "ignore-changes.marker" file present the checkout will be skipped.
     pushd "/opt/leap42/openstack-ansible-$1"
-      if [[ -f "ignore-changes.marker" ]]; then
+      if [[ ! -f "ignore-changes.marker" ]]; then
         git clean -qfdx
         git fetch --all
         git checkout "$1"
