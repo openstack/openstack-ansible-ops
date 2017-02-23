@@ -299,7 +299,8 @@ EOC)
 
 function get_venv {
   # Attempt to prefetch a venv archive before building it.
-  if ! wget "${VENV_URL}/openstack-ansible-$1.tgz" "/opt/leap42/venvs/openstack-ansible-$1.tgz" > /dev/null; then
+  if ! wget "${VENV_URL}/openstack-ansible-$1.tgz" -O "/opt/leap42/venvs/openstack-ansible-$1.tgz";  then
+    rm "/opt/leap42/venvs/openstack-ansible-$1.tgz"
     build_venv "$1"
   else
     run_venv_prep "$1"
