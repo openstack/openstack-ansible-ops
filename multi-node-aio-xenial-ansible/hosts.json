@@ -1,0 +1,23 @@
+{
+    "cinder": {
+        "cinder1": "140",
+        "cinder2": "141"
+    },
+    "infra": {
+        "infra1": "100",
+        "infra2": "101",
+        "infra3": "102"
+    },
+    "logging": {
+        "logging1": "110"
+    },
+    "nova_compute": {
+        "compute1": "130",
+        "compute2": "131"
+    },
+    "swift": {
+        "swift1": "150",
+        "swift2": "151",
+        "swift3": "152"
+    }
+}
