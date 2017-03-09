@@ -20,10 +20,6 @@ source functions.rc
 # bring in variable definitions if there is a variables.sh file
 [[ -f variables.sh ]] && source variables.sh
 
-# Provide defaults for unset variables
-# Set first two octets of network used for containers, storage, etc
-NETWORK_BASE=${NETWORK_BASE:-172.29}
-
 # Instruct the system do all of the require host setup
 SETUP_HOST=${SETUP_HOST:-true}
 [[ "${SETUP_HOST}" = true ]] && source setup-host.sh
