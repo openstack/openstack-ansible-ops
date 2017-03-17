@@ -24,11 +24,7 @@ source functions.rc
 DEFAULT_IMAGE="${DEFAULT_IMAGE:-"$(lsb_release -sd | awk '{print $2}')"}"
 
 # The default kernel for Image, leave it empty will install the lastest kernel.
-DEFAULT_KERNEL="${DEFAULT_KERNEL:-}"
-
-if [ -n "$DEFAULT_KERNEL" ]; then
-  DEFAULT_KERNEL="linux-image-$DEFAULT_KERNEL-generic"
-fi
+DEFAULT_KERNEL="${DEFAULT_KERNEL:-linux-image-extra-4.4.0-67-generic}"
 
 # Install cobbler
 wget -qO - http://download.opensuse.org/repositories/home:/libertas-ict:/cobbler26/xUbuntu_14.04/Release.key | apt-key add -
