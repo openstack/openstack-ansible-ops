@@ -17,10 +17,14 @@
 
 import argparse
 import json
+import logging
 import os
 import subprocess
 import sys
 import time
+
+logger = logging.getLogger(__name__)
+
 
 CONF_DIR = os.path.join('/', 'etc', 'openstack_deploy')
 INVENTORY_FILE = os.path.join(CONF_DIR, 'openstack_inventory.json')
@@ -31,6 +35,25 @@ STOP_TEMPLATE = 'ansible -i inventory -m shell -a\
         "lxc-stop -n {container}" {host}'
 START_TEMPLATE = 'ansible -i inventory -m shell -a\
         "lxc-start -dn {container}" {host}'
+
+
+def configure_logging():
+    logger.setLevel(logging.INFO)
+    console = logging.StreamHandler()
+    logfile = logging.FileHandler('/var/log/rolling_restart.log', 'a')
+
+    console.setLevel(logging.INFO)
+    logfile.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    # Make sure we're using UTC for everything.
+    formatter.converter = time.gmtime
+
+    console.setFormatter(formatter)
+    logfile.setFormatter(formatter)
+
+    logger.addHandler(console)
+    logger.addHandler(logfile)
 
 
 def args(arg_list):
@@ -100,24 +123,31 @@ def rolling_restart(containers, inventory, wait=120):
     wait is the number of seconds to wait between stopping and starting a
     container
     """
+    # Grab a handle to /dev/null so we don't pollute console output with
+    # Ansible stuff
+    FNULL = open(os.devnull, 'w')
     for container in containers:
         host = inventory['_meta']['hostvars'][container]['physical_host']
 
         stop_cmd = STOP_TEMPLATE.format(container=container, host=host)
-        print("Stopping {container}".format(container=container))
-        subprocess.check_call(stop_cmd, shell=True)
+        logger.info(("Stopping {container}".format(container=container)))
+        subprocess.check_call(stop_cmd, shell=True, stdout=FNULL,
+                              stderr=subprocess.STDOUT)
 
         time.sleep(wait)
 
         start_cmd = START_TEMPLATE.format(container=container, host=host)
-        subprocess.check_call(start_cmd, shell=True)
-        print("Started {container}".format(container=container))
+        subprocess.check_call(start_cmd, shell=True, stdout=FNULL,
+                              stderr=subprocess.STDOUT)
+        logger.info("Started {container}".format(container=container))
 
 
 def main():
     all_args = args(sys.argv[1:])
     service = all_args['service']
     wait = all_args['wait']
+
+    configure_logging()
 
     inventory = read_inventory(INVENTORY_FILE)
     containers = get_containers(service, inventory)

@@ -21,9 +21,33 @@ from keystoneauth1 import session
 from keystoneauth1.exceptions.connection import ConnectFailure
 from keystoneauth1.exceptions.http import InternalServerError
 from keystoneclient.v3 import client
+import logging
 import os
 import sys
 import time
+
+logger = logging.getLogger(__name__)
+
+
+def configure_logging():
+    logger.setLevel(logging.INFO)
+    console = logging.StreamHandler()
+    logfile = logging.FileHandler('/var/log/keystone_query.log', 'a')
+
+    console.setLevel(logging.INFO)
+    logfile.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    # Make sure we're using UTC for everything.
+    formatter.converter = time.gmtime
+
+    console.setFormatter(formatter)
+    logfile.setFormatter(formatter)
+
+    logger.addHandler(console)
+    logger.addHandler(logfile)
+
+configure_logging()
 
 auth_url = os.environ['OS_AUTH_URL']
 password = os.environ['OS_PASSWORD']
@@ -50,11 +74,11 @@ try:
             if disconnected:
                 dis_delta = end_time - disconnected
                 disconnected = None
-                print("Reconnect {}s".format(dis_delta.total_seconds()))
+                logger.info("Reconnect {}s".format(dis_delta.total_seconds()))
 
             delta = end_time - start_time
 
-            print("New list: {]s.".format(delta.total_seconds()))
+            logger.info("New list: {}s.".format(delta.total_seconds()))
         except (ConnectFailure, InternalServerError):
             if not disconnected:
                 disconnected = datetime.datetime.now()
