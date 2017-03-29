@@ -12,6 +12,20 @@ ExecStart=/opt/influxdb-relay/bin/influxdb-relay -config /opt/influxdb-relay/rel
 KillMode=control-group
 Restart=on-failure
 
+# Give a reasonable amount of time for the server to start up/shut down
+TimeoutSec=300
+Restart=on-failure
+RestartSec=150
+
+# This creates a specific slice which all services will operate from
+#  The accounting options give us the ability to see resource usage through
+#  the `systemd-cgtop` command.
+Slice=influxdbrelay.slice
+CPUAccounting=true
+BlockIOAccounting=true
+MemoryAccounting=false
+TasksAccounting=true
+
 [Install]
 WantedBy=multi-user.target
 Alias=influxd.service
