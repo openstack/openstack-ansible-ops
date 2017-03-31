@@ -34,12 +34,15 @@ done
 # Ensure that all running VMs have an updated apt-cache with keys
 # and copy our http proxy settings into each VM (in the environment and apt.conf)
 for node in $(get_all_hosts); do
-  ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mkdir -p /tmp/keys; \
-    echo \"http_proxy=$http_proxy\" >> /etc/environment; \
-    echo \"https_proxy=$https_proxy\" >> /etc/environment; \
-    echo \"no_proxy=localhost,127.0.0.1,10.0.0.200\" >> /etc/environment; \
-    echo \"Acquire::http::Proxy \\\"$http_proxy\\\";\" >> /etc/apt/apt.conf"
-
+  if [ ! -z ${http_proxy+x} ]; then
+    ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mkdir -p /tmp/keys; \
+      echo \"http_proxy=$http_proxy\" >> /etc/environment; \
+      echo \"https_proxy=$https_proxy\" >> /etc/environment; \
+      echo \"no_proxy=localhost,127.0.0.1,10.0.0.200\" >> /etc/environment; \
+      echo \"Acquire::http::Proxy \\\"$http_proxy\\\";\" >> /etc/apt/apt.conf"
+  else
+    ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mkdir -p /tmp/keys"
+  fi
   for i in /etc/apt/apt.conf.d/00-nokey /etc/apt/sources.list /etc/apt/sources.list.d/* /tmp/keys/*; do
     if [[ -f "$i" ]]; then
       scp "$i" "10.0.0.${node#*":"}:$i"
