@@ -79,3 +79,29 @@ Install Kapacitor
 .. code-block:: bash
 
    openstack-ansible playbook-kapacitor.yml
+
+
+OpenStack Swift PRoxy Server Dashboard
+--------------------------------------
+
+Once the telegraf daemon is installed onto each host, the Swift
+proxy-server can be instructed to forward statsd metrics to telegraf.
+The following configuration enabled the metric generation and need to
+be added to the ``user_variables.yml``:
+
+.. code-block:: yaml
+
+    swift_proxy_server_conf_overrides:
+      DEFAULT:
+        log_statsd_default_sample_rate: 10
+        log_statsd_metric_prefix: "{{ inventory_hostname }}.swift"
+        log_statsd_host: localhost
+        log_statsd_port: 8125
+
+
+Rewrite the swift proxy server configuration with :
+
+.. code-block:: bash
+
+     cd /opt/openstack-ansible/playbooks
+     openstack-ansible os-swift-setup.yml --tags swift-config --forks 2

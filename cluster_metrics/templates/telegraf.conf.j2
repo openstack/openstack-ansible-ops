@@ -68,6 +68,15 @@
 {% if inventory_hostname in groups['all_containers'] %}
 [[inputs.net]]
 
+{% if inventory_hostname in groups['swift-proxy_containers'] %}
+[[inputs.statsd]]
+  service_address = ":8125"
+  metric_separator = "."
+  templates = [
+    "*.swift.proxy-server.*.*.*.* host.measurement.measurement.measurement.method.returncode.field*",
+    "*.swift.proxy-server.*.policy.*.*.*.* host.measurement.measurement.measurement.measurement.measurement.method.returncode.field*",
+  ]
+
 {% elif inventory_hostname in groups['hosts'] %}
 [[inputs.cpu]]
   percpu = true
