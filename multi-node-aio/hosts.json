@@ -3,21 +3,24 @@
         "infra1": "100",
         "infra2": "101",
         "infra3": "102"
-    },
-    "logging": {
-        "logging1": "110"
-    },
-    "nova_compute": {
-        "compute1": "120",
-        "compute2": "121"
-    },
-    "cinder": {
-        "cinder1": "130",
-        "cinder2": "131"
-    },
-    "swift": {
-        "swift1": "140",
-        "swift2": "141",
-        "swift3": "142"
-    }
+   },
+   "logging": {
+       "logging1": "110"
+   },
+   "nova_compute": {
+       "compute1": "120",
+       "compute2": "121"
+   },
+   "cinder": {
+       "cinder1": "130",
+       "cinder2": "131"
+   },
+   "swift": {
+       "swift1": "140",
+       "swift2": "141",
+       "swift3": "142"
+   },
+   "deploy": {
+       "deploy1":"150"
+   }
 }

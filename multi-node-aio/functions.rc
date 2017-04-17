@@ -239,3 +239,16 @@ contains() {
         echo 1    # $substring is in $string
     fi
 }
+
+# Return all service ports
+function get_osad_ports {
+python <<EOL
+import yaml
+with open('haproxy_config.yml') as f:
+    x = yaml.safe_load(f.read())
+    for i in x['haproxy_default_services']:
+        y = i['service'].get('haproxy_port')
+        if isinstance(y, int):
+            print y
+EOL
+}

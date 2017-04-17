@@ -11,7 +11,7 @@ used_ips:
   - "__NETWORK_BASE__.248.0,__NETWORK_BASE__.248.200"
 
 global_overrides:
-  internal_lb_vip_address: __NETWORK_BASE__.236.200
+  internal_lb_vip_address: __NETWORK_BASE__.236.150
   # The external IP is quoted simply to ensure that the .aio file can be used as input
   # dynamic inventory testing.
   external_lb_vip_address: "__HOSTIP__"
@@ -72,4 +72,4 @@ global_overrides:
 
 haproxy_hosts:
   loadbalancer1:
-    ip: __NETWORK_BASE__.236.200
+    ip: __NETWORK_BASE__.236.150
