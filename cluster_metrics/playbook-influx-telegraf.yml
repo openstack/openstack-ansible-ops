@@ -85,24 +85,24 @@
         command:
           - "python /opt/telegraf/ironic_nodes.py"
         group: "{{ groups['utility_all'][0] }}"
-        when_group: "{{ (groups['ironic_api'] | length) > 0 }}"
+        when_group: "{{ (groups['ironic_api'] | default([]) | length) > 0 }}"
       vm_quota:
         plugin_name: "vm_quota.py"
         command:
           - "python /opt/telegraf/vm_quota.py"
         group: "{{ groups['utility_all'][0] }}"
-        when_group: "{{ (groups['nova_compute'] | length) > 0 }}"
+        when_group: "{{ (groups['nova_compute'] | default([]) | length) > 0 }}"
       kvm:
         plugin_name: "kvm_virsh.py"
         command:
           - "python /opt/telegraf/kvm_virsh.py"
         group: "{{ groups['nova_compute'] }}"
-        when_group: "{{ (groups['nova_compute'] | length) > 0 and (nova_virt_type | default('qemu') in ['kvm', 'qemu']) }}"
+        when_group: "{{ (groups['nova_compute'] | default([]) | length) > 0 and (nova_virt_type | default('qemu') in ['kvm', 'qemu']) }}"
       cinder_pools_usage:
         plugin_name: "cinder_pools_usage.py"
         command:
           - "python /opt/telegraf/cinder_pools_usage.py"
         group: "{{ groups['utility_all'][0] }}"
-        when_group: "{{ (groups['cinder_volumes'] | length) > 0 }}"
+        when_group: "{{ (groups['cinder_volumes'] | default([]) | length) > 0 }}"
     influx_telegraf_targets:
       - "{{ influxdb_host|default(internal_lb_vip_address) }}:{{ influxdb_port }}"
