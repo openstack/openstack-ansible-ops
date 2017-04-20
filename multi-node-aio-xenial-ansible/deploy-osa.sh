@@ -107,7 +107,7 @@ if [[ "${PRE_CONFIG_OSA}" = true ]]; then
     osa_user_var_add glance_default_store 'glance_default_store: swift'
 
     # Propagate host proxy settings (if set) into /etc/environment in the targets
-    if [ -n "$http_proxy" ]; then
+    if [ ! -z ${http_proxy+x} ]; then
       osa_user_var_add proxy_env_url 'proxy_env_url: '${http_proxy}
       osa_user_var_add no_proxy_env 'no_proxy_env: "localhost,127.0.0.1,{{ internal_lb_vip_address }},{{ external_lb_vip_address }},{% for host in groups['\''all_containers'\''] %}{{ hostvars[host]['\''container_address'\''] }}{% if not loop.last %},{% endif %}{% endfor %}"'
       osa_user_var_add global_environment_variables 'global_environment_variables:'
