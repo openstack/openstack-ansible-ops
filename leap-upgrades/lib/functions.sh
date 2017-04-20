@@ -281,9 +281,23 @@ function build_venv {
 import json
 packages = json.loads("""$PKG_DUMP""")
 remote_packages = packages[0]['remote_packages']
-print(' '.join([i for i in remote_packages if 'openstack' in i]))
+print(' '.join([i for i in remote_packages if 'openstack' in i and 'tempest' not in i]))
 EOC)
-      pip install --isolated $PACKAGES
+      REQUIREMENTS=($(python <<EOC
+import json
+packages = json.loads("""$PKG_DUMP""")
+remote_package_parts = packages[0]['remote_package_parts']
+requirements = filter(lambda package: package['name'] == 'requirements', remote_package_parts)
+print(requirements[0]['url'])
+print(requirements[0]['version'])
+EOC))
+
+      git clone ${REQUIREMENTS[0]} "/opt/leap42/openstack-ansible-$1/requirements"
+      pushd "/opt/leap42/openstack-ansible-$1/requirements"
+        git checkout ${REQUIREMENTS[1]}
+      popd
+
+      pip install --isolated $PACKAGES --constraint "/opt/leap42/openstack-ansible-$1/requirements/upper-constraints.txt"
       deactivate
 
       # Create venv archive
