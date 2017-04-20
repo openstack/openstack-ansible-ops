@@ -38,4 +38,4 @@ DEPLOY_VMS=${DEPLOY_VMS:-true}
 
 # Instruct the system to deploy OpenStack Ansible
 DEPLOY_OSA=${DEPLOY_OSA:-true}
-[[ "${DEPLOY_OSA}" = true ]] && source deploy-osa.sh
+[[ "${DEPLOY_OSA}" = true ]] && source config-deploy-node.sh

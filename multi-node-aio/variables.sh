@@ -42,3 +42,6 @@ PRE_CONFIG_OSA="${PRE_CONFIG_OSA:-true}"
 
 # Should we run the final deploy of OpenStack-Ansible
 RUN_OSA="${RUN_OSA:-true}"
+
+# Default service ports
+OSA_PORTS="${OSA_PORTS:-6080 6082 443 80}"
