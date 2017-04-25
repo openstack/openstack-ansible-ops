@@ -45,3 +45,6 @@ RUN_OSA="${RUN_OSA:-true}"
 
 # Default service ports
 OSA_PORTS="${OSA_PORTS:-6080 6082 443 80}"
+
+# Should we configure prerouting of service ports after deployment
+CONFIG_PREROUTING="${CONFIG_PREROUTING:-true}"
