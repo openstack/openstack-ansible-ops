@@ -148,6 +148,9 @@ Instruct the VM to use the selected image, eg. ubuntu xenial:
 Install the specified kernel, eg 3.13.0-34 if you want to deploy Juno release.
   ``DEFAULT_KERNEL=${DEFAULT_KERNEL:-3.13.0-34}``
 
+Configure the prerouting iptable rules after the OSA deployment
+  ``CONFIG_PREROUTING="${CONFIG_PREROUTING:-true}``
+
 Re-kicking the VMs
 ------------------
 
