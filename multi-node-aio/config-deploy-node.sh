@@ -19,12 +19,13 @@ if [[ "${DEPLOY_OSA}" = true ]]; then
 fi
 
 if [[ "${CONFIG_PREROUTING}" = true ]]; then
+  EXTERNAL_IP="$(ip route get 1 | awk '{print $NF;exit}')"
   # Add 2222 rules to iptables for ssh directly into deployment node.
-  iptables_filter_rule_add nat 'PREROUTING -p tcp --dport 2222 -j DNAT --to 10.0.0.150:22'
+  iptables_filter_rule_add nat "PREROUTING -p tcp -d ${EXTERNAL_IP} --dport 2222 -j DNAT --to 10.0.0.150:22"
 
   scp -o StrictHostKeyChecking=no deploy1:/opt/openstack-ansible/playbooks/vars/configs/haproxy_config.yml .
   PORTS="$(get_osad_ports) $OSA_PORTS"
   for port in $PORTS ; do
-    iptables_filter_rule_add nat "PREROUTING -p tcp --dport ${port} -j DNAT --to 10.0.0.150:${port}"
+    iptables_filter_rule_add nat "PREROUTING -p tcp -d ${EXTERNAL_IP} --dport ${port} -j DNAT --to 10.0.0.150:${port}"
   done
 fi
