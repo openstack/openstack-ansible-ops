@@ -36,7 +36,7 @@
   omit_hostname = false
 
 [[outputs.influxdb]]
-  urls = [{{ influx_telegraf_targets | map('quote') | join(',') }}]
+  urls = ["{{ influx_telegraf_targets | map('quote') | join(',') }}"]
   database = "{{ influxdb_db_name }}"
   precision = "s"
   write_consistency = "any"

@@ -46,18 +46,6 @@
         - item.value.when_group | bool
         - item.value.group == inventory_hostname or
           inventory_hostname in item.value.group | default([])
-    - name: Store my_cnf
-      slurp:
-        src: "/root/.my.cnf"
-      register: _my_cnf
-      changed_when: false
-    - name: Copy my.cnf file into telegraf home
-      copy:
-        content: "{{ _my_cnf.content | b64decode }}"
-        dest: "/root/.my.cnf"
-        mode: "0440"
-        owner: "telegraf"
-        group: "telegraf"
     - name: Drop telegraf config file
       template:
         src: templates/telegraf.conf.j2
@@ -86,12 +74,6 @@
           - "python /opt/telegraf/ironic_nodes.py"
         group: "{{ groups['utility_all'][0] }}"
         when_group: "{{ (groups['ironic_api'] | default([]) | length) > 0 }}"
-      vm_quota:
-        plugin_name: "vm_quota.py"
-        command:
-          - "python /opt/telegraf/vm_quota.py"
-        group: "{{ groups['utility_all'][0] }}"
-        when_group: "{{ (groups['nova_compute'] | default([]) | length) > 0 }}"
       kvm:
         plugin_name: "kvm_virsh.py"
         command:
@@ -105,4 +87,4 @@
         group: "{{ groups['utility_all'][0] }}"
         when_group: "{{ (groups['cinder_volumes'] | default([]) | length) > 0 }}"
     influx_telegraf_targets:
-      - "{{ influxdb_host|default(internal_lb_vip_address) }}:{{ influxdb_port }}"
+      - "{{ influxdb_protocol|default('http') }}://{{ influxdb_host|default(internal_lb_vip_address) }}:{{ influxdb_port }}"
