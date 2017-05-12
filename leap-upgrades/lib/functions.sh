@@ -27,24 +27,38 @@ function failure {
   echo -e '[!]'"\t\033[1;31m${1}\033[0m"
 }
 
+function debug {
+  if [[ $DEBUG == "TRUE" ]]; then
+    echo -e "${1}" >> $DEBUG_PATH
+  fi
+}
+
 function tag_leap_success {
   notice "LEAP ${1} success"
   touch "/opt/leap42/openstack-ansible-${1}.leap"
+  debug "LEAP ${1} marked as success"
 }
 
 function run_lock {
+
   set +e
   run_item="${RUN_TASKS[$1]}"
-  file_part="$(echo ${run_item} | sed 's/\s/-/g')"
+  file_part="$(echo ${run_item} | cut -f 1 -d ' ' | xargs basename)"
+  other_args="$(echo ${run_item} | cut -f 2- -d ' ' -s | sed 's/[^[:alnum:]_]/-/g')"
+  debug "Run_lock on $run_item"
 
   if [ ! -d  "/etc/openstack_deploy/upgrade-leap" ]; then
       mkdir -p "/etc/openstack_deploy/upgrade-leap"
   fi
 
-  upgrade_marker_file=$(basename "${file_part}")
+  upgrade_marker_file=${file_part}${other_args}
   upgrade_marker="/etc/openstack_deploy/upgrade-leap/$upgrade_marker_file.complete"
+  debug "Upgrade marker is $upgrade_marker"
 
   if [ ! -f "$upgrade_marker" ];then
+    debug "Upgrade marker file not found for this run item."
+    debug "Will run openstack-ansible $2"
+
     # note(sigmavirus24): use eval so that we properly turn strings like
     # "/tmp/fix_container_interfaces.yml || true"
     # into a command, otherwise we'll get an error that there's no playbook
@@ -54,8 +68,8 @@ function run_lock {
     notice "Ran: $run_item"
 
     if [ "$playbook_status" == "0" ];then
-      RUN_TASKS=("${RUN_TASKS[@]/$run_item}")
       touch "${upgrade_marker}"
+      unset RUN_TASKS[$1]
       notice "$run_item has been marked as success at ${upgrade_marker}"
     else
       FAILURES_LIST=$(seq $1 $((${#RUN_TASKS[@]} - 1)))
@@ -77,6 +91,7 @@ function run_lock {
       exit 99
     fi
   else
+    debug "Upgrade marker file found for this run item."
     RUN_TASKS=("${RUN_TASKS[@]/$run_item.*}")
   fi
   set -e
@@ -113,13 +128,92 @@ function system_bootstrap {
     popd
 }
 
+function validate_upgrade_input {
+
+    echo
+    warning "Please enter the source series to upgrade from."
+    notice "JUNO, KILO or LIBERTY"
+    read -p 'Enter "JUNO", "KILO", or "LIBERTY" to continue: ' UPGRADE_FROM
+    export INPUT_UPGRADE_FROM=${UPGRADE_FROM}
+
+    if [[ ${INPUT_UPGRADE_FROM} == ${CODE_UPGRADE_FROM} ]]; then
+      notice "Running LEAP Upgrade from ${CODE_UPGRADE_FROM} to NEWTON"
+    else
+      notice "Asking to upgrade a ${INPUT_UPGRADE_FROM}, but code is to ${CODE_UPGRADE_FROM}"
+      read -p 'Are you sure? Enter "YES" to continue:' RUSURE
+      if [[ "${RUSURE}" != "YES" ]]; then
+          notice "Quitting..."
+          exit 99
+      fi
+      # We should let the user decide if he passes through the checks
+      export CODE_UPGRADE_FROM=${INPUT_UPGRADE_FROM}
+    fi
+}
+
+function discover_code_version {
+    if [[ ! -f "/etc/openstack-release" ]]; then
+        export CODE_UPGRADE_FROM="JUNO"
+        notice "You seem to be running Juno"
+    else
+        source /etc/openstack-release
+        case "${DISTRIB_RELEASE%%.*}" in
+            '11')
+                export CODE_UPGRADE_FROM="KILO"
+                notice "You seem to be running Kilo"
+            ;;
+            '12')
+                export CODE_UPGRADE_FROM="LIBERTY"
+                notice "You seem to be running Liberty"
+            ;;
+            '13')
+                export CODE_UPGRADE_FROM="MITAKA"
+                notice "You seem to be running Mitaka"
+            ;;
+            '14')
+                export CODE_UPGRADE_FROM="NEWTON"
+                notice "You seem to be running Newton"
+            ;;
+        esac
+    fi
+}
+
+function set_upgrade_vars {
+  notice "Setting up vars for the LEAP"
+  case "${CODE_UPGRADE_FROM}" in
+  JUNO)
+    export RELEASE="${JUNO_RELEASE}"
+    export UPGRADES_TO_TODOLIST="KILO LIBERTY MITAKA NEWTON"
+    export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/rpc_deployment/inventory"
+    export CONFIG_DIR="/etc/rpc_deploy"
+  ;;
+  KILO)
+    export RELEASE="${KILO_RELEASE}"
+    export UPGRADES_TO_TODOLIST="LIBERTY MITAKA NEWTON"
+    export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/playbooks/inventory"
+    export CONFIG_DIR="/etc/openstack_deploy"
+  ;;
+  LIBERTY)
+    export RELEASE="${LIBERTY_RELEASE}"
+    export UPGRADES_TO_TODOLIST="MITAKA NEWTON"
+    export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/playbooks/inventory"
+    export CONFIG_DIR="/etc/openstack_deploy"
+  ;;
+  MITAKA)
+    export RELEASE="${MITAKA_RELEASE}"
+    export UPGRADES_TO_TODOLIST="NEWTON"
+    export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/playbooks/inventory"
+    export CONFIG_DIR="/etc/openstack_deploy"
+  ;;
+  esac
+}
+
 function pre_flight {
     ## Pre-flight Check ----------------------------------------------------------
     # Clear the screen and make sure the user understands whats happening.
     clear
 
     # Notify the user.
-    warning "This script will perform a LEAP upgrade from Juno to Newton."
+    warning "This script will perform a LEAP upgrade to Newton."
     warning "Once you start the upgrade there's no going back."
     warning "**Note, this is an OFFLINE upgrade**"
     notice "If you want to run the upgrade in parts please exit this script to do so."
@@ -130,29 +224,33 @@ function pre_flight {
     if [ "${UPGRADE}" == "YES" ]; then
       notice "Running LEAP Upgrade"
     else
+      notice "Exiting, input wasn't YES"
       exit 99
     fi
 
-    mkdir -p /opt/leap42/venvs
+    discover_code_version
 
-    pushd /opt/leap42
-      # Using this lookup plugin because it allows us to compile exact service releaes and build a complete venv from it
-      wget https://raw.githubusercontent.com/openstack/openstack-ansible-plugins/e069d558b3d6ae8fc505d406b13a3fb66201a9c7/lookup/py_pkgs.py -O py_pkgs.py
-      chmod +x py_pkgs.py
-    popd
+    if [ "${VALIDATE_UPGRADE_INPUT}" == "TRUE" ]; then
+        validate_upgrade_input
+    fi
+
+    set_upgrade_vars
+
+    mkdir -p /opt/leap42/venvs
 
     # If the lxc backend store was not set halt and instruct the user to set it. In Juno we did more to detect the backend storage
     #  size than we do in later releases. While the auto-detection should still work it's best to have the deployer set the value
     #  desired before moving forward.
-    if [[ -d "/etc/rpc_deploy" ]]; then
-      CONFIG_DIR="/etc/rpc_deploy"
-    else
-      CONFIG_DIR="/etc/openstack_deploy"
-    fi
     if ! grep -qwrn "^lxc_container_backing_store" $CONFIG_DIR; then
       failure "ERROR: 'lxc_container_backing_store' is unset leading to an ambiguous container backend store."
       failure "Before continuing please set the 'lxc_container_backing_store' in your user_variables.yml file."
       failure "Valid options are 'dir', 'lvm', and 'overlayfs'".
+      exit 99
+    fi
+
+    if ! grep -qwrn "^neutron_legacy_ha_tool_enabled" $CONFIG_DIR; then
+      failure "ERROR: 'neutron_legacy_ha_tool_enabled' is unset leading to an ambiguous l3ha handling."
+      failure "Before continuing please set the 'neutron_legacy_ha_tool_enabled' in your user_variables.yml file."
       exit 99
     fi
 
@@ -161,6 +259,14 @@ function pre_flight {
       failure "The trusty backports repo has not been enabled on this host."
       exit 99
     fi
+
+    # Don't run this over and over again if the variables above are not set!
+    pushd /opt/leap42
+      # Using this lookup plugin because it allows us to compile exact service releaes and build a complete venv from it
+      wget https://raw.githubusercontent.com/openstack/openstack-ansible-plugins/e069d558b3d6ae8fc505d406b13a3fb66201a9c7/lookup/py_pkgs.py -O py_pkgs.py
+      chmod +x py_pkgs.py
+    popd
+
     apt-get update > /dev/null
     apt-get -y install liberasurecode-dev > /dev/null
 
@@ -203,6 +309,7 @@ function run_items {
       pushd ${PB_DIR}
         # Run the tasks in order
         for item in ${!RUN_TASKS[@]}; do
+          debug "Run_items of ${item}: ${RUN_TASKS[$item]}. Starting run_lock"
           run_lock $item "${RUN_TASKS[$item]}"
         done
       popd

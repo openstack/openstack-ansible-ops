@@ -25,6 +25,7 @@
       args:
         executable: /bin/bash
 
+# TODO: Improve l2 convergence too.
 - name: Remove the reminent neutron agent containers
   hosts: "neutron_agent[0]"
   gather_facts: false

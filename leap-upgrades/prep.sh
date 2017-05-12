@@ -18,7 +18,7 @@
 #   root@HOSTNAME:/opt/openstack-ansible# echo "YES" | bash scripts/run-upgrade.sh
 
 ## Shell Opts ----------------------------------------------------------------
-set -e -u -v
+set -e -u
 
 ## Main ----------------------------------------------------------------------
 source lib/vars.sh
@@ -60,16 +60,9 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
 fi
 
 RUN_TASKS=()
+
 RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-backup.yml")
-
-if [[ -d "/etc/rpc_deploy" ]]; then
-  RELEASE="${JUNO_RELEASE}"
-  export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/rpc_deployment/inventory"
-else
-  RELEASE="${NEWTON_RELEASE}"
-  export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/playbooks/inventory"
-fi
 
 # temp upgrade ansible is used to ensure 1.9.x compat.
 PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"

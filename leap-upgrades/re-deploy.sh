@@ -18,33 +18,43 @@
 #   root@HOSTNAME:/opt/openstack-ansible# echo "YES" | bash scripts/run-upgrade.sh
 
 ## Shell Opts ----------------------------------------------------------------
-set -e -u -v
+set -e -u
 
 ## Main ----------------------------------------------------------------------
 source lib/vars.sh
 source lib/functions.sh
 
 ### Run the redeploy tasks
-# Forget about the old Juno neutron agent container in inventory.
+# Forget about the old neutron agent container in inventory.
 #  This is done to maximize uptime by leaving the old systems in
 #  place while the redeployment work is going on.
-SCRIPTS_PATH="/opt/leap42/openstack-ansible-${NEWTON_RELEASE}/scripts" \
-  MAIN_PATH="/opt/leap42/openstack-ansible-${NEWTON_RELEASE}" \
-    ${UPGRADE_UTILS}/neutron-container-forget.sh
+# TODO(evrardjp): Move this to a playbook, this way it will follow the
+# RUN_TASKS model
+
+if [ ! -f /etc/openstack_deploy/upgrade-leap/neutron-container-forget.complete ];then
+  SCRIPTS_PATH="/opt/leap42/openstack-ansible-${NEWTON_RELEASE}/scripts" \
+    MAIN_PATH="/opt/leap42/openstack-ansible-${NEWTON_RELEASE}" \
+      ${UPGRADE_UTILS}/neutron-container-forget.sh
+  touch /etc/openstack_deploy/upgrade-leap/neutron-container-forget.complete
+fi
 
 link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 RUN_TASKS=()
+# Ensure the same pip everywhere, even if requirement met or above
 RUN_TASKS+=("${UPGRADE_UTILS}/pip-unify.yml -e release_version=\"${NEWTON_RELEASE}\"")
 
 RUN_TASKS+=("${UPGRADE_UTILS}/db-stop.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/ansible_fact_cleanup.yml")
+# Physical host cleanup
 RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml")
+# Permissions for qemu save, because physical host cleanup
 RUN_TASKS+=("${UPGRADE_UTILS}/nova-libvirt-fix.yml")
 
 RUN_TASKS+=("lxc-hosts-setup.yml")
 RUN_TASKS+=("lxc-containers-create.yml")
 
 RUN_TASKS+=("setup-infrastructure.yml")
+# MariaDB sync for major maria upgrades and cluster schema sync
 RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
 
 RUN_TASKS+=("os-keystone-install.yml")

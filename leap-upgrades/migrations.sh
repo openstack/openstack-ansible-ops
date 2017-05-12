@@ -18,7 +18,7 @@
 #   root@HOSTNAME:/opt/openstack-ansible# echo "YES" | bash scripts/run-upgrade.sh
 
 ## Shell Opts ----------------------------------------------------------------
-set -e -u -v
+set -e -u
 
 ## Main ----------------------------------------------------------------------
 source lib/vars.sh
