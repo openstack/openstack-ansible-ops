@@ -15,6 +15,7 @@
 #
 # (c) 2017, Nolan Brubaker <nolan.brubaker@rackspace.com>
 
+import argparse
 import datetime
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
@@ -57,31 +58,148 @@ def configure_logging(service):
     logger.addHandler(logfile)
 
 
-def keystone_test(logger):
-    configure_logging('keystone')
+class ServiceTest(object):
+    def pre_test(self, *args, **kwargs):
+        """Any actions that need to be taken before starting the timer
 
-    auth_url = os.environ['OS_AUTH_URL']
-    password = os.environ['OS_PASSWORD']
+        These actions will run inside the test loop, but before marking a
+        start time.
 
-    auth = v3.Password(auth_url=auth_url, username="admin",
-                       password=password, project_name="admin",
-                       user_domain_id="default", project_domain_id="default")
-    sess = session.Session(auth=auth)
-    keystone = key_client.Client(session=sess)
-    test_list = keystone.projects.list()
-    if test_list:
-        msg = "New project list."
-    else:
-        msg = "Failed to get project list"
-    return msg
+        This might include creating a local resource, such as a file to upload
+        to Glance, Cinder, or Swift.
+
+        """
+        raise NotImplementedError
+
+    def run(self):
+        """Run the main test, within the timing window.
+
+        This test run should actually create and query a resource.
+        """
+        raise NotImplementedError
+
+    def post_test(self):
+        """Any post-test clean up work that needs to be done and not timed."""
+        raise NotImplementedError
+
+    def configure_logger(self, logger):
+        """Configure a stream and file log for a given service
+
+        :param: service - name of service for log file.
+                generates `/var/log/{service_name}_query.log`
+        :param: logger - logger to be configure for the test.
+                Filename will be based on the test's `service_name`
+                property
+        """
+        logger.setLevel(logging.INFO)
+        console = logging.StreamHandler()
+        filename = '/var/log/{}_rolling.log'.format(self.service_name)
+        logfile = logging.FileHandler(filename, 'a')
+
+        console.setLevel(logging.INFO)
+        logfile.setLevel(logging.INFO)
+
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s')
+        # Make sure we're using UTC for everything.
+        formatter.converter = time.gmtime
+
+        console.setFormatter(formatter)
+        logfile.setFormatter(formatter)
+
+        logger.addHandler(console)
+        logger.addHandler(logfile)
+
+    # This is useful to a lot of tests, so implement it here for re-use
+    def get_session(self):
+        auth_url = os.environ['OS_AUTH_URL']
+        password = os.environ['OS_PASSWORD']
+        auth = v3.Password(auth_url=auth_url, username="admin",
+                           password=password, project_name="admin",
+                           user_domain_id="default",
+                           project_domain_id="default")
+        sess = session.Session(auth=auth)
+        return sess
+
+    def get_keystone_client(self, session):
+        return key_client.Client(session=session)
 
 
-def test_loop(test_function):
+class KeystoneTest(ServiceTest):
+    service_name = 'keystone'
+    description = 'Obtain a token then a project list to validate it worked'
+
+    def run(self):
+
+        auth_url = os.environ['OS_AUTH_URL']
+        password = os.environ['OS_PASSWORD']
+
+        auth = v3.Password(auth_url=auth_url, username="admin",
+                           password=password, project_name="admin",
+                           user_domain_id="default",
+                           project_domain_id="default")
+
+        sess = session.Session(auth=auth)
+        keystone = key_client.Client(session=sess)
+        test_list = keystone.projects.list()
+        if test_list:
+            msg = "New project list."
+        else:
+            msg = "Failed to get project list"
+        return msg
+
+
+class GlanceTest(ServiceTest):
+    service_name = 'glance'
+    description = 'Upload and delete a 1MB file'
+
+    def pre_test(self):
+        # make a bogus file to give to glance.
+        self.temp_file = tempfile.TemporaryFile()
+        self.temp_file.write(os.urandom(1024 * 1024))
+        self.temp_file.seek(0)
+
+    def run(self):
+        sess = self.get_session()
+        keystone = self.get_keystone_client(sess)
+        endpoint = self.get_glance_endpoint(keystone)
+
+        glance = Client(version='2', endpoint=endpoint, session=sess)
+        image = glance.images.create(name="Rolling test",
+                                     disk_format="raw",
+                                     container_format="bare")
+        try:
+            glance.images.upload(image.id, self.temp_file)
+        except exc.HTTPInternalServerError:
+            # TODO: set msg and error type instead.
+            logger.error("Failed to upload")
+            return
+        finally:
+            glance.images.delete(image.id)
+            self.temp_file.close()
+
+        msg = "Image created and deleted."
+        return msg
+
+    def get_glance_endpoint(self, keystone):
+        """Get the glance admin endpoint
+
+        Because we don't want to set up SSL handling, use the plain HTTP
+        endpoints.
+        """
+        service_id = keystone.services.find(name='glance')
+        glance_endpoint = keystone.endpoints.list(service=service_id,
+                                                  interface='admin')[0]
+        # The glance client wants the URL, not the keystone object
+        return glance_endpoint.url
+
+
+def test_loop(test):
     """Main loop to execute tests
 
     Executes and times interactions with OpenStack services to gather timing
     data.
-    :param: test_function - function object that performs some action
+    :param: test - on object that performs some action
             against an OpenStack service API.
     """
     disconnected = None
@@ -97,10 +215,16 @@ def test_loop(test_function):
                 # Pause for a bit so we're not generating more data than we
                 # can handle
                 time.sleep(1)
+
+                try:
+                    test.pre_test()
+                except NotImplementedError:
+                    pass
+
                 start_time = datetime.datetime.now()
 
                 # Let the test function report it's own errors
-                msg = test_function(logger)
+                msg = test.run()
 
                 end_time = datetime.datetime.now()
 
@@ -112,7 +236,13 @@ def test_loop(test_function):
 
                 delta = end_time - start_time
 
-                logger.info("{}s {}s.".format(msg, delta.total_seconds()))
+                logger.info("{} {}".format(msg, delta.total_seconds()))
+
+                try:
+                    test.post_test()
+                except NotImplementedError:
+                    pass
+
             except (exc_list):
                 if not disconnected:
                     disconnected = datetime.datetime.now()
@@ -120,62 +250,45 @@ def test_loop(test_function):
         sys.exit()
 
 
-def get_session():
-    auth_url = os.environ['OS_AUTH_URL']
-    password = os.environ['OS_PASSWORD']
-    auth = v3.Password(auth_url=auth_url, username="admin",
-                       password=password, project_name="admin",
-                       user_domain_id="default",
-                       project_domain_id="default")
-    sess = session.Session(auth=auth)
-    return sess
+available_tests = {
+    'keystone': KeystoneTest,
+    'glance': GlanceTest,
+}
 
 
-def get_keystone_client(session):
-    return key_client.Client(session=session)
+def args(arg_list):
+
+    parser = argparse.ArgumentParser(
+        usage='%(prog)s',
+        description='OpenStack activity simulators',
+    )
+
+    parser.add_argument(
+        'test',
+        help=("Name of test to execute, 'list' for a list of available"
+              " tests")
+    )
+    return parser.parse_args(arg_list)
 
 
-def get_glance_endpoint(keystone):
-    """Get the glance admin endpoint
+def find_test(test_name):
+    if test_name in available_tests:
+        return available_tests[test_name]
+    elif test_name == "list":
+        for key, test_class in available_tests.items():
+            print("{} -> {}".format(key, test_class.description))
+        sys.exit()
+    else:
+        print("Test named {} not found.".format(test_name))
+        sys.exit()
 
-    Because we don't want to set up SSL handling, use the plain HTTP
-    endpoints.
-    """
-    service_id = keystone.services.find(name='glance')
-    glance_endpoint = keystone.endpoints.list(service=service_id,
-                                              interface='admin')[0]
-    # The glance client wants the URL, not the keystone object
-    return glance_endpoint.url
-
-
-def glance_test(logger):
-    configure_logging('glance')
-    # make a bogus file to give to glance.
-
-    sess = get_session()
-    keystone = get_keystone_client(sess)
-    endpoint = get_glance_endpoint(keystone)
-
-    temp_file = tempfile.TemporaryFile()
-    temp_file.write(os.urandom(1024 * 1024))
-    temp_file.seek(0)
-
-    glance = Client(version='2', endpoint=endpoint, session=sess)
-    image = glance.images.create(name="Rolling test",
-                                 disk_format="raw",
-                                 container_format="bare")
-    try:
-        glance.images.upload(image.id, temp_file)
-    except exc.HTTPInternalServerError:
-        # TODO: set msg and error type instead.
-        logger.error("Failed to upload")
-        return
-    finally:
-        glance.images.delete(image.id)
-        temp_file.close()
-
-    msg = "Image created and deleted."
-    return msg
 
 if __name__ == "__main__":
-    test_loop(glance_test)
+    all_args = args(sys.argv[1:])
+
+    target_test_class = find_test(all_args.test)
+
+    target_test = target_test_class()
+    target_test.configure_logger(logger)
+
+    test_loop(target_test)
