@@ -25,6 +25,7 @@ from keystoneauth1.exceptions.http import InternalServerError
 from keystoneclient.v3 import client as key_client
 import logging
 import os
+import signal
 import sys
 import time
 from glanceclient import Client
@@ -145,7 +146,7 @@ class KeystoneTest(ServiceTest):
         # the test_loop function
         try:
             keystone.projects.list()
-            msg = "Project lest retrieved"
+            msg = "Project list retrieved"
         except InternalServerError:
             msg = "Failed to get project list"
         return msg
@@ -196,23 +197,38 @@ class GlanceTest(ServiceTest):
         return glance_endpoint.url
 
 
-def test_loop(test):
-    """Main loop to execute tests
+class TestRunner(object):
+    """Run a test in a loop, with the option to gracefully exit"""
+    stop_now = False
 
-    Executes and times interactions with OpenStack services to gather timing
-    data.
-    :param: test - on object that performs some action
-            against an OpenStack service API.
-    """
-    disconnected = None
-    # Has to be a tuple for python syntax reasons.
-    # This is currently the set needed for glance; should probably
-    # provide some way of letting a test say which exceptions should
-    # be caught for a service.
-    exc_list = (ConnectFailure, InternalServerError, BadGateway,
-                glance_exc.CommunicationError,
-                glance_exc.HTTPInternalServerError)
-    try:
+    def __init__(self):
+        signal.signal(signal.SIGINT, self.prep_exit)
+        signal.signal(signal.SIGTERM, self.prep_exit)
+
+    def prep_exit(self, signum, frame):
+        self.stop_now = True
+        logger.info("Received signal, stopping")
+
+    def test_loop(self, test):
+        """Main loop to execute tests
+
+        Executes and times interactions with OpenStack services to gather
+        timing data.
+
+        Execution can be ended by sending SIGINT or SIGTERM and the running
+        test will finish.
+
+        :param: test - on object that performs some action
+                against an OpenStack service API.
+        """
+        disconnected = None
+        # Has to be a tuple for python syntax reasons.
+        # This is currently the set needed for glance; should probably
+        # provide some way of letting a test say which exceptions should
+        # be caught for a service.
+        exc_list = (ConnectFailure, InternalServerError, BadGateway,
+                    glance_exc.CommunicationError,
+                    glance_exc.HTTPInternalServerError)
         while True:
             try:
                 # Pause for a bit so we're not generating more data than we
@@ -249,8 +265,9 @@ def test_loop(test):
             except (exc_list):
                 if not disconnected:
                     disconnected = datetime.datetime.now()
-    except KeyboardInterrupt:
-        sys.exit()
+
+            if self.stop_now:
+                sys.exit()
 
 
 available_tests = {
@@ -294,4 +311,6 @@ if __name__ == "__main__":
     target_test = target_test_class()
     target_test.configure_logger(logger)
 
-    test_loop(target_test)
+    runner = TestRunner()
+
+    runner.test_loop(target_test)
