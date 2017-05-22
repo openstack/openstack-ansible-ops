@@ -22,7 +22,7 @@ source functions.rc
 
 # Provide defaults for unset variables
 # Set first two octets of network used for containers, storage, etc
-NETWORK_BASE=${NETWORK_BASE:-172.29}
+NETWORK_BASE=${NETWORK_BASE:-10.29}
 
 # Instruct the system do all of the require host setup
 SETUP_HOST=${SETUP_HOST:-true}
