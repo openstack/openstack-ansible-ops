@@ -15,13 +15,12 @@
 #
 # (c) 2017, Nolan Brubaker <nolan.brubaker@rackspace.com>
 
+# Necessary for accurate failure rate calculation
+from __future__ import division
 import argparse
 import datetime
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
-from keystoneauth1.exceptions.connection import ConnectFailure
-from keystoneauth1.exceptions.http import BadGateway
-from keystoneauth1.exceptions.http import InternalServerError
 from keystoneclient.v3 import client as key_client
 import logging
 import os
@@ -29,7 +28,6 @@ import signal
 import sys
 import time
 from glanceclient import Client
-from glanceclient import exc as glance_exc
 import tempfile
 
 logger = logging.getLogger(__name__)
@@ -142,13 +140,8 @@ class KeystoneTest(ServiceTest):
 
         sess = session.Session(auth=auth)
         keystone = key_client.Client(session=sess)
-        # Only catch the 500 errors; let connection failures be handled by
-        # the test_loop function
-        try:
-            keystone.projects.list()
-            msg = "Project list retrieved"
-        except InternalServerError:
-            msg = "Failed to get project list"
+        keystone.projects.list()
+        msg = "Project list retrieved"
         return msg
 
 
@@ -171,15 +164,9 @@ class GlanceTest(ServiceTest):
         image = glance.images.create(name="Rolling test",
                                      disk_format="raw",
                                      container_format="bare")
-        try:
-            glance.images.upload(image.id, self.temp_file)
-        except glance_exc.HTTPInternalServerError:
-            # TODO: set msg and error type instead.
-            logger.error("Failed to upload")
-            return
-        finally:
-            glance.images.delete(image.id)
-            self.temp_file.close()
+        glance.images.upload(image.id, self.temp_file)
+        glance.images.delete(image.id)
+        self.temp_file.close()
 
         msg = "Image created and deleted."
         return msg
@@ -204,10 +191,17 @@ class TestRunner(object):
     def __init__(self):
         signal.signal(signal.SIGINT, self.prep_exit)
         signal.signal(signal.SIGTERM, self.prep_exit)
+        self.failures = 0
+        self.attempts = 0
 
     def prep_exit(self, signum, frame):
         self.stop_now = True
         logger.info("Received signal, stopping")
+
+    def write_summary(self):
+        percentage = (self.failures / self.attempts) * 100
+        # Display minimum of 2 digits, but don't use decimals.
+        logger.info("%2.0f%% failure rate", percentage)
 
     def test_loop(self, test):
         """Main loop to execute tests
@@ -222,14 +216,8 @@ class TestRunner(object):
                 against an OpenStack service API.
         """
         disconnected = None
-        # Has to be a tuple for python syntax reasons.
-        # This is currently the set needed for glance; should probably
-        # provide some way of letting a test say which exceptions should
-        # be caught for a service.
-        exc_list = (ConnectFailure, InternalServerError, BadGateway,
-                    glance_exc.CommunicationError,
-                    glance_exc.HTTPInternalServerError)
         while True:
+            self.attempts += 1
             try:
                 # Pause for a bit so we're not generating more data than we
                 # can handle
@@ -262,11 +250,19 @@ class TestRunner(object):
                 except NotImplementedError:
                     pass
 
-            except (exc_list):
+            # Catch all exceptions not handled by the tests themselves,
+            # since we want to keep the loop running until explicitly stopped
+            except Exception as e:
+                self.failures += 1
                 if not disconnected:
                     disconnected = datetime.datetime.now()
+                # OpenStack API exceptions put their info in the 'details'
+                # attribute; 'message' is the standard one.
+                error_msg = getattr(e, 'details', e.message)
+                logger.error("%s", error_msg)
 
             if self.stop_now:
+                self.write_summary()
                 sys.exit()
 
 
