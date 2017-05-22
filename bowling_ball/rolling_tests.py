@@ -28,7 +28,7 @@ import os
 import sys
 import time
 from glanceclient import Client
-from glanceclient import exc
+from glanceclient import exc as glance_exc
 import tempfile
 
 logger = logging.getLogger(__name__)
@@ -141,10 +141,12 @@ class KeystoneTest(ServiceTest):
 
         sess = session.Session(auth=auth)
         keystone = key_client.Client(session=sess)
-        test_list = keystone.projects.list()
-        if test_list:
-            msg = "New project list."
-        else:
+        # Only catch the 500 errors; let connection failures be handled by
+        # the test_loop function
+        try:
+            keystone.projects.list()
+            msg = "Project lest retrieved"
+        except InternalServerError:
             msg = "Failed to get project list"
         return msg
 
@@ -170,7 +172,7 @@ class GlanceTest(ServiceTest):
                                      container_format="bare")
         try:
             glance.images.upload(image.id, self.temp_file)
-        except exc.HTTPInternalServerError:
+        except glance_exc.HTTPInternalServerError:
             # TODO: set msg and error type instead.
             logger.error("Failed to upload")
             return
@@ -208,7 +210,8 @@ def test_loop(test):
     # provide some way of letting a test say which exceptions should
     # be caught for a service.
     exc_list = (ConnectFailure, InternalServerError, BadGateway,
-                exc.CommunicationError, exc.HTTPInternalServerError)
+                glance_exc.CommunicationError,
+                glance_exc.HTTPInternalServerError)
     try:
         while True:
             try:
