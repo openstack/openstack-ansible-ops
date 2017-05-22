@@ -76,6 +76,11 @@
       args:
         executable: /bin/bash
 
+    - name: apt-get install libssl-dev
+      apt:
+        name: libssl-dev
+        update_cache: yes
+
     - name: Re-install pip packaging requirements
       raw: |
         /usr/bin/python /opt/get-pip.py \

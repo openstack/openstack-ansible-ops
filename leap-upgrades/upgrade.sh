@@ -18,7 +18,7 @@
 #   root@HOSTNAME:/opt/openstack-ansible# echo "YES" | bash scripts/run-upgrade.sh
 
 ## Shell Opts ----------------------------------------------------------------
-set -e -u -v
+set -e -u
 
 ## Main ----------------------------------------------------------------------
 source lib/vars.sh
@@ -28,8 +28,8 @@ source lib/functions.sh
 # Run tasks
 UPGRADE_SCRIPTS="${UPGRADE_UTILS}-kilo/scripts"
 # If the kilo leap has been accomplished, skip.
-if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
-  notice 'Running kilo leap'
+if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]] && [[ "${UPGRADES_TO_TODOLIST}" =~ .*KILO.* ]]; then
+  notice 'Leaping to Kilo'
   link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   pushd "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
     if [[ -d "/etc/rpc_deploy" ]]; then
@@ -74,8 +74,8 @@ fi
 
 ### Liberty System migration
 # Run tasks
-if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
-  notice 'Running liberty leap'
+if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]] && [[ "${UPGRADES_TO_TODOLIST}" =~ .*LIBERTY.*  ]]; then
+  notice 'Leaping to liberty'
   link_release "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-liberty/playbooks"
   RUN_TASKS=()
@@ -91,8 +91,8 @@ fi
 
 ### Mitaka System migration
 # Run tasks
-if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap" ]]; then
-  notice 'Running mitaka leap'
+if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap" ]] && [[ "${UPGRADES_TO_TODOLIST}" =~ .*MITAKA.* ]]; then
+  notice 'Leaping to Mitaka'
   link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-mitaka/playbooks"
   RUN_TASKS=()
@@ -109,7 +109,7 @@ fi
 
 ### Newton Deploy
 # Run tasks
-if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap" ]]; then
+if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap" ]] && [[ "${UPGRADES_TO_TODOLIST}" =~ .*NEWTON*  ]]; then
   notice 'Running newton leap'
   link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-newton/playbooks"

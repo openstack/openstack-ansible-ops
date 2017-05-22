@@ -1,13 +1,13 @@
 # OpenStack-Ansible leap upgrade
 
-## Jump upgrade from OpenStack Juno to Newton using OpenStack-Ansible
+## Jump upgrade using OpenStack-Ansible for Ubuntu 14.04
 
 ==**This currently a POC**==
 
 ### Uses
 
 This utility can be used to upgrade any OpenStack-Ansible deployment running
-Juno to the latest Newton release. The process will upgrade the OSA system
+Juno / Kilo to the Newton release 14.2.3. The process will upgrade the system
 components, sync the database through the various releases, and then deploy
 OSA using the Newton release. While this method will help a deployment skip
 several releases deployers should be aware that skipping releases is not
@@ -19,7 +19,7 @@ the shortest possible time while maintaining data-integrity.
 
 #### Requirements
 
-  * **You must** have a Juno based OpenStack cloud as deployed by
+  * **You must** have a Juno/Kilo based OpenStack cloud as deployed by
     OpenStack-Ansible.
   * If you are running cinder-volume with LVM in an LXC container **you must**
     migrate the cinder-volume service to the physical host.
@@ -61,7 +61,7 @@ Newton.
 
 ----
 
-### Setting up a Test environment.
+### Example leap with a multi-node juno environment.
 
 Testing on a multi-node environment can be accomplished using the
 https://github.com/openstack/openstack-ansible-ops/tree/master/multi-node-aio
@@ -76,7 +76,7 @@ very well for development. To run the deployment execute the following commands
   * Start the deployment w/ ubuntu 14.04.2 to ensure the deployment version is
     limited in terms of package availability.
 
-#### Process
+#### Setup a multi-node AIO
 
 Clone the ops tooling and change directory to the multi-node-aio tooling
 
@@ -94,12 +94,16 @@ setup-virsh-net.sh
 deploy-vms.sh
 ```
 
+#### Deploy an example Juno config
+
 After the environment has been deployed clone the RPC configurations which support Juno
 based clouds.
 
 ``` bash
 git clone https://github.com/os-cloud/leapfrog-juno-config /etc/rpc_deploy
 ```
+
+#### Deploy Juno
 
 Now clone the Juno playbooks into place.
 
@@ -117,6 +121,8 @@ cd rpc_deployment
 openstack-ansible playbooks/haproxy-install.yml
 openstack-ansible playbooks/setup-everything.yml
 ```
+
+#### Test your Juno cloud
 
 To test the cloud's functionality you can execute the OpenStack resource test script located in the scripts directory
 of the playbooks cloned earlier.
@@ -143,3 +149,7 @@ Once the cloud is operational it's recommended that images be created so that th
 reverted to a previous state should there ever be a need. See
 https://github.com/openstack/openstack-ansible-ops/tree/master/multi-node-aio#snapshotting-an-environment-before-major-testing
 for more on creating snapshots.
+
+#### Run the leapfrog
+
+See the "Process" part on the top of the page
