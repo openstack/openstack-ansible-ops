@@ -39,5 +39,5 @@
         "update image_locations set value=replace(value, '{{ keystone_service_port }}/v2.0/', '{{ keystone_service_port }}/v3/')
          where value like 'swift%{{ internal_lb_vip_address }}:{{ keystone_service_port }}/v2.0/%' and status='active';" glance
       when:
-        - "{{ glance_swift_store_auth_version | default(3) }} == 3"
+        - "(glance_swift_store_auth_version | default(3)) == 3"
 
