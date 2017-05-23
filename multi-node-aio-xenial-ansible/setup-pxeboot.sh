@@ -20,6 +20,9 @@ source functions.rc
 # bring in variable definitions if there is a variables.sh file
 [[ -f variables.sh ]] && source variables.sh
 
+# set up ssh key in case setup-infra is not run
+SSHKEY=${SSHKEY:-$(cat /root/.ssh/id_rsa.pub)}
+
 # Use Ansible to install and configure a DHCP server, TFTP server and Apache
 # so we can PXEboot all the VMs
 ansible-playbook -v -i inventory create_pxeboot_server.yml --extra-vars \

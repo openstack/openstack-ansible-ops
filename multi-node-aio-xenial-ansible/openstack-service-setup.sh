@@ -8,7 +8,7 @@ source openrc
 
 # Provide defaults for unset variables
 # Set first two octets of network used for containers, storage, etc
-NETWORK_BASE=${NETWORK_BASE:-172.29}
+NETWORK_BASE=${NETWORK_BASE:-10.29}
 
 # Create base flavors for the new deployment
 for flavor in micro tiny mini small medium large xlarge heavy; do
