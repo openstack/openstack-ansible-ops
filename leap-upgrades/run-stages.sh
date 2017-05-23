@@ -31,6 +31,6 @@ source migrations.sh
 source re-deploy.sh
 
 echo -e "\n====================================================="
-notice "All Leaps successful."
+notice "All OpenStack-Ansible Leaps successful."
 echo -e "=====================================================\n"
 exit 0

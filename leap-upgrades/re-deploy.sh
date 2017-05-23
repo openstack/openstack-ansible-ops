@@ -89,5 +89,10 @@ RUN_TASKS+=("os-magnum-install.yml")
 RUN_TASKS+=("os-sahara-install.yml")
 
 RUN_TASKS+=("${UPGRADE_UTILS}/post-redeploy-cleanup.yml")
+# Loads a shell script that can be used to modify
+# the RUN_TASKS behavior.
+if [ ! -z ${REDEPLOY_EXTRA_SCRIPT} ]; then
+  source ${REDEPLOY_EXTRA_SCRIPT}
+fi
 run_items "/opt/openstack-ansible"
 ### Run the redeploy tasks
