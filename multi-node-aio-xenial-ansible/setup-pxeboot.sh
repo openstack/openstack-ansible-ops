@@ -30,8 +30,10 @@ ansible-playbook -v -i inventory create_pxeboot_server.yml --extra-vars \
 sed -i 's/^INTERFACES.*/INTERFACES="br-dhcp"/g' /etc/default/isc-dhcp-server
 
 # Ensure the services are (re)started
-service isc-dhcp-server restart
-service atftpd restart
+systemctl enable isc-dhcp-server
+systemctl enable atftpd
+systemctl start isc-dhcp-server
+systemctl start atftpd
 
 # Create a xenial sources file for the VMs to download
 cp -v templates/xenial-sources.list /var/www/html/xenial-sources.list
