@@ -20,6 +20,10 @@
   vars:
     pip_upstream_url: "https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py"
     pip_validate_certs: true
+    python_apt_packages:
+      - libssl-dev
+      - libffi-dev
+      - python-dev
   tasks:
     - name: "Copy global requirements"
       copy:
@@ -49,7 +53,9 @@
         dest: "/opt/get-pip.py"
         force: "yes"
         validate_certs: "{{ pip_validate_certs }}"
-      when: get_pip | failed
+      when:
+        - get_pip | failed
+        - pip_fallback_url is defined
       register: get_pip_fallback
       until: get_pip_fallback | success
       retries: 5
@@ -78,7 +84,7 @@
 
     - name: apt-get install libssl-dev
       apt:
-        name: libssl-dev
+        name: "{{ python_apt_packages }}"
         update_cache: yes
 
     - name: Re-install pip packaging requirements
