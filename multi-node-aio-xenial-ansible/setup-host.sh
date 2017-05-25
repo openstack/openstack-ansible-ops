@@ -42,7 +42,8 @@ fi
 
 # Install basic packages known to be needed
 apt-get update && apt-get install -y bridge-utils ifenslave libvirt-bin lvm2 openssh-server python2.7 qemu-kvm ansible virtinst virt-manager \
-                                     vlan software-properties-common python-software-properties python-netaddr ntp qemu-utils lxc1 virtualenv
+                                     vlan software-properties-common python-software-properties python-netaddr ntp qemu-utils lxc1 virtualenv \
+                                     iptables-persistent
 
 if ! grep "^source.*cfg$" /etc/network/interfaces; then
   echo 'source /etc/network/interfaces.d/*.cfg' | tee -a /etc/network/interfaces
@@ -87,6 +88,11 @@ iptables_filter_rule_add mangle 'POSTROUTING -s 10.0.0.0/24 -o br-dhcp -p udp -m
 
 # To ensure ssh checksum are always correct
 iptables_filter_rule_add mangle 'POSTROUTING -p tcp -j CHECKSUM --checksum-fill'
+
+# save the iptables rules
+systemctl enable netfilter-persistent
+systemctl start netfilter-persistent
+invoke-rc.d netfilter-persistent save
 
 # Enable partitioning of the "${DATA_DISK_DEVICE}"
 PARTITION_HOST=${PARTITION_HOST:-false}

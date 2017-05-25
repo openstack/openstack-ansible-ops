@@ -252,3 +252,4 @@ with open('haproxy_config.yml') as f:
             print y
 EOL
 }
+
