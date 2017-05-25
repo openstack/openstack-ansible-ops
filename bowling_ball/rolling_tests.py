@@ -33,30 +33,6 @@ import tempfile
 logger = logging.getLogger(__name__)
 
 
-def configure_logging(service):
-    """Configure a stream and file log for a given service
-
-    :param: service - name of service for log file.
-            generates `/var/log/{service_name}_query.log`
-    """
-    logger.setLevel(logging.INFO)
-    console = logging.StreamHandler()
-    logfile = logging.FileHandler('/var/log/keystone_query.log', 'a')
-
-    console.setLevel(logging.INFO)
-    logfile.setLevel(logging.INFO)
-
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    # Make sure we're using UTC for everything.
-    formatter.converter = time.gmtime
-
-    console.setFormatter(formatter)
-    logfile.setFormatter(formatter)
-
-    logger.addHandler(console)
-    logger.addHandler(logfile)
-
-
 class ServiceTest(object):
     def pre_test(self, *args, **kwargs):
         """Any actions that need to be taken before starting the timer
@@ -81,7 +57,7 @@ class ServiceTest(object):
         """Any post-test clean up work that needs to be done and not timed."""
         raise NotImplementedError
 
-    def configure_logger(self, logger):
+    def configure_logger(self, logger, console_logging=False):
         """Configure a stream and file log for a given service
 
         :param: service - name of service for log file.
@@ -89,13 +65,13 @@ class ServiceTest(object):
         :param: logger - logger to be configure for the test.
                 Filename will be based on the test's `service_name`
                 property
+        :param: console_logging - flag controlling whether or not a console
+                logger is used
         """
         logger.setLevel(logging.INFO)
-        console = logging.StreamHandler()
         filename = '/var/log/{}_rolling.log'.format(self.service_name)
         logfile = logging.FileHandler(filename, 'a')
 
-        console.setLevel(logging.INFO)
         logfile.setLevel(logging.INFO)
 
         formatter = logging.Formatter(
@@ -103,11 +79,15 @@ class ServiceTest(object):
         # Make sure we're using UTC for everything.
         formatter.converter = time.gmtime
 
-        console.setFormatter(formatter)
         logfile.setFormatter(formatter)
 
-        logger.addHandler(console)
         logger.addHandler(logfile)
+
+        if console_logging:
+            console = logging.StreamHandler()
+            console.setLevel(logging.INFO)
+            console.setFormatter(formatter)
+            logger.addHandler(console)
 
     # This is useful to a lot of tests, so implement it here for re-use
     def get_session(self):
@@ -201,7 +181,12 @@ class TestRunner(object):
     def write_summary(self):
         percentage = (self.failures / self.attempts) * 100
         # Display minimum of 2 digits, but don't use decimals.
-        logger.info("%2.0f%% failure rate", percentage)
+        percent_str = "%2.0f" % percentage
+
+        logger.info("%s%% failure rate", percent_str)
+
+        # Output to stdout for use by other programs
+        print(percent_str)
 
     def test_loop(self, test):
         """Main loop to execute tests
@@ -276,7 +261,8 @@ def args(arg_list):
 
     parser = argparse.ArgumentParser(
         usage='%(prog)s',
-        description='OpenStack activity simulators',
+        description=('OpenStack activity simulators. Returns percentage of '
+                     'failed attempts at creating/deleting resources.'),
     )
 
     parser.add_argument(
@@ -284,6 +270,14 @@ def args(arg_list):
         help=("Name of test to execute, 'list' for a list of available"
               " tests")
     )
+
+    parser.add_argument(
+        '-c',
+        '--console',
+        help=("Log output to the console for interactive viewing"),
+        action='store_true',
+    )
+
     return parser.parse_args(arg_list)
 
 
@@ -305,7 +299,7 @@ if __name__ == "__main__":
     target_test_class = find_test(all_args.test)
 
     target_test = target_test_class()
-    target_test.configure_logger(logger)
+    target_test.configure_logger(logger, console_logging=all_args.console)
 
     runner = TestRunner()
 
