@@ -24,10 +24,12 @@ from keystoneauth1 import session
 from keystoneclient.v3 import client as key_client
 import logging
 import os
+from openstack import connection
+from openstack import profile
 import signal
 import sys
 import time
-from glanceclient import Client
+import glanceclient
 import tempfile
 
 logger = logging.getLogger(__name__)
@@ -103,6 +105,23 @@ class ServiceTest(object):
     def get_keystone_client(self, session):
         return key_client.Client(session=session)
 
+    def get_connection(self):
+        """Get an OpenStackSDK connection"""
+        auth_url = os.environ['OS_AUTH_URL']
+        password = os.environ['OS_PASSWORD']
+
+        prof = profile.Profile()
+        prof.set_interface(profile.Profile.ALL, 'admin')
+
+        conn = connection.Connection(auth_url=auth_url,
+                                     username='admin',
+                                     password=password,
+                                     project_name='admin',
+                                     user_domain_id='default',
+                                     project_domain_id='default',
+                                     profile=prof)
+        return conn
+
 
 class KeystoneTest(ServiceTest):
     service_name = 'keystone'
@@ -140,7 +159,8 @@ class GlanceTest(ServiceTest):
         keystone = self.get_keystone_client(sess)
         endpoint = self.get_glance_endpoint(keystone)
 
-        glance = Client(version='2', endpoint=endpoint, session=sess)
+        glance = glanceclient.Client(version='2',
+                                     endpoint=endpoint, session=sess)
         image = glance.images.create(name="Rolling test",
                                      disk_format="raw",
                                      container_format="bare")
@@ -162,6 +182,25 @@ class GlanceTest(ServiceTest):
                                                   interface='admin')[0]
         # The glance client wants the URL, not the keystone object
         return glance_endpoint.url
+
+
+class NovaTest(ServiceTest):
+    service_name = 'nova'
+    description = 'Query for a list of flavors'
+
+    def run(self):
+
+        conn = self.get_connection()
+
+        # Have to iterate over the generator returned to actually
+        # see the flavors
+        flavors = [flavor for flavor in conn.compute.flavors()]
+
+        msg = 'API reached, no flavors found'
+        if flavors:
+            msg = 'Flavor list received'
+
+        return msg
 
 
 class TestRunner(object):
@@ -254,6 +293,7 @@ class TestRunner(object):
 available_tests = {
     'keystone': KeystoneTest,
     'glance': GlanceTest,
+    'nova': NovaTest,
 }
 
 
