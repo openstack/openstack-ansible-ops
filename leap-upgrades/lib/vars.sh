@@ -27,7 +27,7 @@ export NEWTON_RELEASE="${NEWTON_RELEASE:-14.2.3}"  # commit used due to packagin
 
 ## Environment Vars ------------------------------------------------------------------
 export MAIN_PATH="${MAIN_PATH:-/opt/openstack-ansible}"
-export SYSTEM_PATH="$(dirname $(readlink -f $0))"
+export SYSTEM_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../ && pwd )"
 export UPGRADE_UTILS="${UPGRADE_UTILS:-${SYSTEM_PATH}/upgrade-utilities}"
 
 # If the the OpenStack-Ansible system venvs have already been built elsewhere and can be downloaded

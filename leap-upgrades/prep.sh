@@ -59,16 +59,20 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
   touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap"
 fi
 
-RUN_TASKS=()
 
-RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
-RUN_TASKS+=("${UPGRADE_UTILS}/db-backup.yml")
+if [[ ! -f "/opt/leap42/openstack-ansible-prep-finalsteps.leap" ]]; then
+    RUN_TASKS=()
 
-# temp upgrade ansible is used to ensure 1.9.x compat.
-PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
-run_items "/opt/leap42/openstack-ansible-${RELEASE}"
-deactivate
-unset ANSIBLE_INVENTORY
+    RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
+    RUN_TASKS+=("${UPGRADE_UTILS}/db-backup.yml")
 
-link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
-system_bootstrap "/opt/openstack-ansible"
+    # temp upgrade ansible is used to ensure 1.9.x compat.
+    PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
+    run_items "/opt/leap42/openstack-ansible-${RELEASE}"
+    deactivate
+    unset ANSIBLE_INVENTORY
+
+    link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+    system_bootstrap "/opt/openstack-ansible"
+    touch "/opt/leap42/openstack-ansible-prep-finalsteps.leap"
+fi

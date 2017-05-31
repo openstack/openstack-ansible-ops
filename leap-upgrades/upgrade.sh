@@ -124,10 +124,12 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap" ]] && [[ "${UP
 fi
 
 ### Run host upgrade
-notice 'Running host upgrade'
-link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
-RUN_TASKS=()
-RUN_TASKS+=("${UPGRADE_UTILS}/pip-conf-purge.yml")
-RUN_TASKS+=("openstack-hosts-setup.yml")
-run_items "/opt/openstack-ansible"
-### Run host upgrade
+if [[ ! -f "/opt/leap42/openstack-ansible-upgrade-hostupgrade.leap" ]]; then
+    notice 'Running host upgrade'
+    link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+    RUN_TASKS=()
+    RUN_TASKS+=("${UPGRADE_UTILS}/pip-conf-purge.yml")
+    RUN_TASKS+=("openstack-hosts-setup.yml")
+    run_items "/opt/openstack-ansible"
+    tag_leap_success "upgrade-hostupgrade"
+fi

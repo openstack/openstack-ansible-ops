@@ -204,6 +204,12 @@ function set_upgrade_vars {
     export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/playbooks/inventory"
     export CONFIG_DIR="/etc/openstack_deploy"
   ;;
+  NEWTON)
+    export RELEASE="${NEWTON_RELEASE}"
+    export UPGRADES_TO_TODOLIST=""
+    export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/playbooks/inventory"
+    export CONFIG_DIR="/etc/openstack_deploy"
+  ;;
   esac
 }
 
@@ -262,33 +268,36 @@ function pre_flight {
       exit 99
     fi
 
-    # Don't run this over and over again if the variables above are not set!
-    pushd /opt/leap42
-      # Using this lookup plugin because it allows us to compile exact service releaes and build a complete venv from it
-      wget https://raw.githubusercontent.com/openstack/openstack-ansible-plugins/e069d558b3d6ae8fc505d406b13a3fb66201a9c7/lookup/py_pkgs.py -O py_pkgs.py
-      chmod +x py_pkgs.py
-    popd
+    if [[ ! -f /opt/leap42/rebootstrap-ansible ]]; then
+        # Don't run this over and over again if the variables above are not set!
+        pushd /opt/leap42
+          # Using this lookup plugin because it allows us to compile exact service releaes and build a complete venv from it
+          wget https://raw.githubusercontent.com/openstack/openstack-ansible-plugins/e069d558b3d6ae8fc505d406b13a3fb66201a9c7/lookup/py_pkgs.py -O py_pkgs.py
+          chmod +x py_pkgs.py
+        popd
 
-    apt-get update > /dev/null
-    apt-get -y install liberasurecode-dev > /dev/null
+        apt-get update > /dev/null
+        apt-get -y install liberasurecode-dev > /dev/null
 
-    # Upgrade pip if it's needed. This will re-install pip using the constraints and then
-    #  re-install all of the remaining requirements as needed.
-    if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "9.0.1"; then
-      wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
-      rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
-      python /opt/get-pip.py --constraint "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --force-reinstall --upgrade --isolated
-      pip install --requirement "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --upgrade --isolated
+        # Upgrade pip if it's needed. This will re-install pip using the constraints and then
+        #  re-install all of the remaining requirements as needed.
+        if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "9.0.1"; then
+          wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
+          rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
+          python /opt/get-pip.py --constraint "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --force-reinstall --upgrade --isolated
+          pip install --requirement "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --upgrade --isolated
+        fi
+
+        if [[ -d "/opt/ansible-runtime" ]]; then
+          rm -rf "/opt/ansible-runtime"
+        fi
+
+        virtualenv /opt/ansible-runtime
+        PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
+        pip install "ansible==1.9.3" "netaddr>=0.7.12,<=0.7.13" --force-reinstall --upgrade --isolated
+        deactivate
+        touch /opt/leap42/rebootstrap-ansible
     fi
-
-    if [[ -d "/opt/ansible-runtime" ]]; then
-      rm -rf "/opt/ansible-runtime"
-    fi
-
-    virtualenv /opt/ansible-runtime
-    PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
-    pip install "ansible==1.9.3" "netaddr>=0.7.12,<=0.7.13" --force-reinstall --upgrade --isolated
-    deactivate
 }
 
 function run_items {
