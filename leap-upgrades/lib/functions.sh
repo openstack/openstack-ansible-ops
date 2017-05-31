@@ -220,12 +220,14 @@ function pre_flight {
     warning "Are you ready to perform this upgrade now?"
 
     # Confirm the user is ready to upgrade.
-    read -p 'Enter "YES" to continue or anything else to quit: ' UPGRADE
-    if [ "${UPGRADE}" == "YES" ]; then
-      notice "Running LEAP Upgrade"
-    else
-      notice "Exiting, input wasn't YES"
-      exit 99
+    if [[ "${VALIDATE_UPGRADE_INPUT}" == "TRUE" ]]; then
+        read -p 'Enter "YES" to continue or anything else to quit: ' UPGRADE
+        if [ "${UPGRADE}" == "YES" ]; then
+            notice "Running LEAP Upgrade"
+        else
+            notice "Exiting, input wasn't YES"
+            exit 99
+        fi
     fi
 
     discover_code_version
