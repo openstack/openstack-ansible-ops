@@ -59,6 +59,9 @@ class ServiceTest(object):
         """Any post-test clean up work that needs to be done and not timed."""
         raise NotImplementedError
 
+    def __init__(self):
+        self.get_connection()
+
     def configure_logger(self, logger, console_logging=False):
         """Configure a stream and file log for a given service
 
@@ -120,7 +123,24 @@ class ServiceTest(object):
                                      user_domain_id='default',
                                      project_domain_id='default',
                                      profile=prof)
+        self.conn = conn
+
         return conn
+
+    def get_objects(self, service, name):
+        """Retrieve some sort of object from OpenStack APIs
+
+        This applies to high level concepts like 'flavors', 'networks',
+        'subnets', etc.
+
+        :params: service - an openstack service corresponding to the OpenStack
+            SDK module used, such as 'compute', 'network', etc.
+        :param: name - name of a type of object, such as a 'network',
+            'server', 'volume', etc owned by an OpenStack service
+        """
+
+        objs = [obj for obj in getattr(getattr(self.conn, service), name)()]
+        return objs
 
 
 class KeystoneTest(ServiceTest):
@@ -199,6 +219,20 @@ class NovaTest(ServiceTest):
         msg = 'API reached, no flavors found'
         if flavors:
             msg = 'Flavor list received'
+
+        return msg
+
+
+class NeutronTest(ServiceTest):
+    service_name = 'neutron'
+    description = 'Query for a list of networks'
+
+    def run(self):
+        networks = self.get_objects('network', 'networks')
+
+        msg = 'API reached, no networks found'
+        if networks:
+            msg = 'Network list received'
 
         return msg
 
@@ -294,6 +328,7 @@ available_tests = {
     'keystone': KeystoneTest,
     'glance': GlanceTest,
     'nova': NovaTest,
+    'neutron': NeutronTest
 }
 
 
