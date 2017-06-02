@@ -148,19 +148,12 @@ class KeystoneTest(ServiceTest):
     description = 'Obtain a token then a project list to validate it worked'
 
     def run(self):
+        self.get_connection()
 
-        auth_url = os.environ['OS_AUTH_URL']
-        password = os.environ['OS_PASSWORD']
-
-        auth = v3.Password(auth_url=auth_url, username="admin",
-                           password=password, project_name="admin",
-                           user_domain_id="default",
-                           project_domain_id="default")
-
-        sess = session.Session(auth=auth)
-        keystone = key_client.Client(session=sess)
-        keystone.projects.list()
-        msg = "Project list retrieved"
+        projects = self.get_objects('identity', 'projects')
+        msg = "API reached, no projects found."
+        if projects:
+            msg = "Project list retrieved"
         return msg
 
 
