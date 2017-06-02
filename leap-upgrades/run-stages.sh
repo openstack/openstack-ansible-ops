@@ -33,4 +33,3 @@ source re-deploy.sh
 echo -e "\n====================================================="
 notice "All OpenStack-Ansible Leaps successful."
 echo -e "=====================================================\n"
-exit 0
