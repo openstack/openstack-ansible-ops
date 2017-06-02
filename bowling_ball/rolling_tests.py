@@ -19,9 +19,6 @@
 from __future__ import division
 import argparse
 import datetime
-from keystoneauth1.identity import v3
-from keystoneauth1 import session
-from keystoneclient.v3 import client as key_client
 import logging
 import os
 from openstack import connection
@@ -29,7 +26,6 @@ from openstack import profile
 import signal
 import sys
 import time
-import glanceclient
 import tempfile
 
 logger = logging.getLogger(__name__)
@@ -94,20 +90,6 @@ class ServiceTest(object):
             console.setFormatter(formatter)
             logger.addHandler(console)
 
-    # This is useful to a lot of tests, so implement it here for re-use
-    def get_session(self):
-        auth_url = os.environ['OS_AUTH_URL']
-        password = os.environ['OS_PASSWORD']
-        auth = v3.Password(auth_url=auth_url, username="admin",
-                           password=password, project_name="admin",
-                           user_domain_id="default",
-                           project_domain_id="default")
-        sess = session.Session(auth=auth)
-        return sess
-
-    def get_keystone_client(self, session):
-        return key_client.Client(session=session)
-
     def get_connection(self):
         """Get an OpenStackSDK connection"""
         auth_url = os.environ['OS_AUTH_URL']
@@ -168,33 +150,25 @@ class GlanceTest(ServiceTest):
         self.temp_file.seek(0)
 
     def run(self):
-        sess = self.get_session()
-        keystone = self.get_keystone_client(sess)
-        endpoint = self.get_glance_endpoint(keystone)
+        self.get_connection()
 
-        glance = glanceclient.Client(version='2',
-                                     endpoint=endpoint, session=sess)
-        image = glance.images.create(name="Rolling test",
-                                     disk_format="raw",
-                                     container_format="bare")
-        glance.images.upload(image.id, self.temp_file)
-        glance.images.delete(image.id)
+        image_attrs = {
+            'name': 'Rolling test',
+            'disk_format': 'raw',
+            'container_format': 'bare',
+            'data': self.temp_file,
+            'visibility': 'public',
+        }
+
+        self.conn.image.upload_image(**image_attrs)
+
+        image = self.conn.image.find_image('Rolling test')
+        self.conn.image.delete_image(image, ignore_missing=False)
+
         self.temp_file.close()
 
         msg = "Image created and deleted."
         return msg
-
-    def get_glance_endpoint(self, keystone):
-        """Get the glance admin endpoint
-
-        Because we don't want to set up SSL handling, use the plain HTTP
-        endpoints.
-        """
-        service_id = keystone.services.find(name='glance')
-        glance_endpoint = keystone.endpoints.list(service=service_id,
-                                                  interface='admin')[0]
-        # The glance client wants the URL, not the keystone object
-        return glance_endpoint.url
 
 
 class NovaTest(ServiceTest):
