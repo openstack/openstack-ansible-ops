@@ -237,6 +237,20 @@ class NeutronTest(ServiceTest):
         return msg
 
 
+class CinderTest(ServiceTest):
+    service_name = 'cinder'
+    description = 'Query for a list of volumes'
+
+    def run(self):
+        volumes = self.get_objects('block_store', 'volumes')
+
+        msg = 'API reached, no volumes found'
+        if volumes:
+            msg = 'Volume list received'
+
+        return msg
+
+
 class TestRunner(object):
     """Run a test in a loop, with the option to gracefully exit"""
     stop_now = False
@@ -328,7 +342,8 @@ available_tests = {
     'keystone': KeystoneTest,
     'glance': GlanceTest,
     'nova': NovaTest,
-    'neutron': NeutronTest
+    'neutron': NeutronTest,
+    'cinder': CinderTest,
 }
 
 
