@@ -218,6 +218,20 @@ class CinderTest(ServiceTest):
         return msg
 
 
+class SwiftTest(ServiceTest):
+    service_name = 'swift'
+    description = 'Query for a list of containers'
+
+    def run(self):
+        containers = self.get_objects('object_store', 'containers')
+
+        msg = 'API reached, no containers found'
+        if containers:
+            msg = 'Container list received'
+
+        return msg
+
+
 class TestRunner(object):
     """Run a test in a loop, with the option to gracefully exit"""
     stop_now = False
@@ -311,6 +325,7 @@ available_tests = {
     'nova': NovaTest,
     'neutron': NeutronTest,
     'cinder': CinderTest,
+    'swift': SwiftTest,
 }
 
 
