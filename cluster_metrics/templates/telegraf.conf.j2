@@ -42,6 +42,12 @@
   write_consistency = "any"
   timeout = "5s"
 
+{% if outputs_prometheus_client is defined %}
+[[outputs.prometheus_client]]
+  listen = "{{ outputs_prometheus_client_listen | default(':9126') }}"
+  expiration_interval = "{{ outputs_prometheus_client_expiration_interval | default('60s') }}"
+{% endif %}
+
 [[inputs.processes]]
 
 [[inputs.system]]

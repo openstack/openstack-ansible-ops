@@ -38,3 +38,8 @@ kapacitor_port: 9092
 
 # Influxdb Relay vars
 influxdb_relay_port: 9096
+
+# Prometheus Client Outputs Plugin
+#outputs_prometheus_client: true
+#outputs_prometheus_client_listen: ":9126"
+#outputs_prometheus_client_expiration_interval: "60s"
