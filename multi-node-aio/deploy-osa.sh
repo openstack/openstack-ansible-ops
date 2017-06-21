@@ -98,7 +98,7 @@ if [[ "${PRE_CONFIG_OSA}" = true ]]; then
     osa_user_var_add lxc_container_backing_store 'lxc_container_backing_store: dir'
 
     # Tempest is being configured to use a known network
-    osa_user_var_add tempest_public_subnet_cidr 'tempest_public_subnet_cidr: '${NETWORK_BASE}'.248.0/22'
+    osa_user_var_add tempest_public_subnet_cidr 'tempest_public_subnet_cidr: '${NETWORK_BASE}'.248.0/26'
 
     # This makes running neutron in a distributed system easier and a lot less noisy
     osa_user_var_add neutron_l2_population 'neutron_l2_population: True'
