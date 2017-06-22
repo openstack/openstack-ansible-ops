@@ -12,37 +12,58 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Note:
+# This file is maintained in the openstack-ansible-tests repository.
+# https://git.openstack.org/cgit/openstack/openstack-ansible-tests/tree/run_tests.sh
+# If you need to modify this file, update the one in the openstack-ansible-tests
+# repository and then update this file as well. The purpose of this file is to
+# prepare the host and then execute all the tox tests.
+#
 
-set -euov
+## Shell Opts ----------------------------------------------------------------
+set -xeu
 
-FUNCTIONAL_TEST=${FUNCTIONAL_TEST:-true}
+## Vars ----------------------------------------------------------------------
 
-# Prepare Ubuntu 14.04 and 16.04 hosts
-if [ "$(which apt-get)" ]; then
-  apt-get install -y build-essential python2.7 python-dev git-core libssl-dev libffi-dev
-fi
+export WORKING_DIR=${WORKING_DIR:-$(pwd)}
 
-# Prepare CentOS and Red Hat Enterprise Linux 7 hosts
-if [ "$(which yum)" ]; then
-  yum -y install libffi-devel openssl-devel git python-devel "@Development Tools"
-fi
+## Main ----------------------------------------------------------------------
 
-# Download and install pip
-if [ ! "$(which pip)" ]; then
-  curl --silent --show-error --retry 5 \
-    https://bootstrap.pypa.io/get-pip.py | sudo python2.7
-fi
+source /etc/os-release || source /usr/lib/os-release
 
-# install tox
-pip install tox
+install_pkg_deps() {
+    pkg_deps="git"
 
-# run through each tox env and execute the test
-for tox_env in $(awk -F= '/envlist/ {print $2}' tox.ini | sed 's/,/ /g'); do
-  if [ "${tox_env}" == "ansible-functional" ]; then
-    if ${FUNCTIONAL_TEST}; then
-      tox -e ${tox_env}
+    case ${ID,,} in
+        *suse*) pkg_mgr_cmd="zypper -n in" ;;
+        centos|rhel) pkg_mgr_cmd="yum install -y" ;;
+        fedora) pkg_mgr_cmd="dnf -y install" ;;
+        ubuntu|debian) pkg_mgr_cmd="apt-get install -y" ;;
+        *) echo "unsupported distribution: ${ID,,}"; exit 1 ;;
+    esac
+
+    eval sudo $pkg_mgr_cmd $pkg_deps
+}
+
+git_clone_repo() {
+    if [[ ! -d tests/common ]]; then
+        # The tests repo doesn't need a clone, we can just
+        # symlink it.
+        if [[ "$(basename ${WORKING_DIR})" == "openstack-ansible-tests" ]]; then
+            ln -s ${WORKING_DIR} ${WORKING_DIR}/tests/common
+        else
+            git clone \
+                https://git.openstack.org/openstack/openstack-ansible-tests \
+                tests/common
+        fi
     fi
-  else
-    tox -e ${tox_env}
-  fi
-done
+}
+
+install_pkg_deps
+
+git_clone_repo
+
+# start executing the main test script
+source tests/common/run_tests_common.sh
+

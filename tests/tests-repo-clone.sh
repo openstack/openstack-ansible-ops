@@ -34,27 +34,38 @@ export TESTING_HOME=${TESTING_HOME:-$HOME}
 export WORKING_DIR=${WORKING_DIR:-$(pwd)}
 export CLONE_UPGRADE_TESTS=${CLONE_UPGRADE_TESTS:-no}
 
-## Main ----------------------------------------------------------------------
+## Functions -----------------------------------------------------------------
+
+function create_tests_clonemap {
 
 # Prepare the clonemap for zuul-cloner to use
-# This is placed here instead of inside the conditional
-# to prevent indentation problems.
 cat > ${TESTING_HOME}/tests-clonemap.yaml << EOF
 clonemap:
   - name: openstack/openstack-ansible-tests
     dest: ${WORKING_DIR}/tests/common
 EOF
 
+}
+
+## Main ----------------------------------------------------------------------
+
 # If zuul-cloner is present, use it so that we
 # also include any dependent patches from the
 # tests repo noted in the commit message.
 if [[ -x /usr/zuul-env/bin/zuul-cloner ]]; then
 
+    # Prepare the clonemap for zuul-cloner to use
+    create_tests_clonemap
+
+    # Execute the clone
     /usr/zuul-env/bin/zuul-cloner \
         --cache-dir /opt/git \
         --map ${TESTING_HOME}/tests-clonemap.yaml \
         git://git.openstack.org \
         openstack/openstack-ansible-tests
+
+    # Clean up the clonemap.
+    rm -f ${TESTING_HOME}/tests-clonemap.yaml
 
 # Alternatively, use a simple git-clone. We do
 # not re-clone if the directory exists already
@@ -72,9 +83,6 @@ elif [[ ! -d tests/common ]]; then
             ${WORKING_DIR}/tests/common
     fi
 fi
-
-# Clean up the clonemap.
-rm -f ${TESTING_HOME}/tests-clonemap.yaml
 
 # If this test set includes an upgrade test, the
 # previous stable release tests repo must also be
