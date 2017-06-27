@@ -1,8 +1,8 @@
 <domain type='kvm'>
   <name>__NODE__.openstackci.local</name>
-  <memory unit='GiB'>1</memory>
-  <currentMemory unit='GiB'>1</currentMemory>
-  <vcpu placement='static'>1</vcpu>
+  <memory unit='GiB'>4</memory>
+  <currentMemory unit='GiB'>4</currentMemory>
+  <vcpu placement='static'>4</vcpu>
   <resource>
     <partition>/machine</partition>
   </resource>
