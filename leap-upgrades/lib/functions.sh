@@ -262,12 +262,6 @@ function pre_flight {
       exit 99
     fi
 
-    # Install liberasurecode-dev which will be used in the venv creation process
-    if ! grep -n ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -qw "backports"; then
-      failure "The trusty backports repo has not been enabled on this host."
-      exit 99
-    fi
-
     if [[ ! -f /opt/leap42/rebootstrap-ansible ]]; then
         # Don't run this over and over again if the variables above are not set!
         pushd /opt/leap42
@@ -275,9 +269,6 @@ function pre_flight {
           wget https://raw.githubusercontent.com/openstack/openstack-ansible-plugins/e069d558b3d6ae8fc505d406b13a3fb66201a9c7/lookup/py_pkgs.py -O py_pkgs.py
           chmod +x py_pkgs.py
         popd
-
-        apt-get update > /dev/null
-        apt-get -y install liberasurecode-dev > /dev/null
 
         # Upgrade pip if it's needed. This will re-install pip using the constraints and then
         #  re-install all of the remaining requirements as needed.
@@ -381,6 +372,18 @@ function run_venv_prep {
 }
 
 function build_venv {
+    # Building venv requires to be able to install liberasurecode-dev for swift.
+    # It should be found in backports or UCA.
+    apt-get update > /dev/null
+
+    # Install liberasurecode-dev which will be used in the venv creation process
+    if ! apt-cache search liberasurecode-dev | grep liberasurecode-dev; then
+      failure "Can't install liberasurecode-dev. Enable trusty backports or UCA on this host."
+      exit 99
+    fi
+
+    apt-get -y install liberasurecode-dev > /dev/null
+
     ### The venv build is done using a modern version of the py_pkgs plugin which collects all versions of
     ###  the OpenStack components from a given release. This creates 1 large venv per migratory release.
     # If the venv archive exists delete it.
