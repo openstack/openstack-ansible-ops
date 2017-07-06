@@ -293,4 +293,4 @@ d-i preseed/late_command string \
 #############
 
 # Reboot after the install is finished.
-finish-install finish-install/reboot_in_progress note
+d-i finish-install/reboot_in_progress note
