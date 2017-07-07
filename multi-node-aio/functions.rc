@@ -246,7 +246,9 @@ python <<EOL
 import yaml
 with open('haproxy_config.yml') as f:
     x = yaml.safe_load(f.read())
-    for i in x['haproxy_default_services']:
+    haproxy_services = (x.get('haproxy_default_services')
+                        or x.get('haproxy_service_configs'))
+    for i in haproxy_services:
         y = i['service'].get('haproxy_port')
         if isinstance(y, int):
             print y
