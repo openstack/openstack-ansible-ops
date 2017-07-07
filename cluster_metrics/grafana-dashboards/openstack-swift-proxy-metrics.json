@@ -94,7 +94,7 @@
               "hide": false,
               "measurement": "swift.proxy-server.account",
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.account\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND \"returncode\" = '200' AND $timeFilter GROUP BY host, time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.account\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND \"returncode\" = '200' AND $timeFilter GROUP BY host, time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -218,7 +218,7 @@
               ],
               "measurement": "swift.proxy-server.account",
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.account\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND \"returncode\" = '204' AND $timeFilter GROUP BY host, time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.account\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND \"returncode\" = '204' AND $timeFilter GROUP BY host, time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -349,7 +349,7 @@
               "hide": false,
               "measurement": "swift.proxy-server.container",
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.container\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND \"returncode\" = '200' AND $timeFilter GROUP BY host, time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.container\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND \"returncode\" = '200' AND $timeFilter GROUP BY host, time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -474,7 +474,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.container\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND \"returncode\" = '204' AND $timeFilter GROUP BY host, time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.container\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND \"returncode\" = '204' AND $timeFilter GROUP BY host, time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -591,7 +591,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'PUT' AND \"returncode\" = '201' AND $timeFilter GROUP BY host, time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'PUT' AND \"returncode\" = '201' AND $timeFilter GROUP BY host, time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -697,7 +697,7 @@
               ],
               "hide": false,
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s)  FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'DELETE' AND \"returncode\" = '204' AND $timeFilter GROUP BY host, time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'DELETE' AND \"returncode\" = '204' AND $timeFilter GROUP BY host, time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -802,7 +802,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND \"returncode\" = '200' AND $timeFilter GROUP BY host, time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND \"returncode\" = '200' AND $timeFilter GROUP BY host, time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -907,7 +907,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s)  FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND \"returncode\" = '200' AND $timeFilter GROUP BY host,time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND \"returncode\" = '200' AND $timeFilter GROUP BY host,time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -1622,12 +1622,13 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "-- Mixed --",
+          "datasource": "${DS_INFLUXDB}",
           "editable": true,
           "error": false,
           "fill": 1,
           "grid": {},
           "id": 24,
+          "interval": ">15s",
           "legend": {
             "alignAsTable": true,
             "avg": true,
@@ -1655,8 +1656,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "alias": "GET-HEAD Aggregates",
-              "datasource": "${DS_INFLUXDB}",
+              "alias": "GET RPS",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -1674,7 +1674,7 @@
               ],
               "hide": false,
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s)  FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND (\"method\" = 'GET' OR \"method\" = 'HEAD') AND $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND $timeFilter GROUP BY time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -1694,6 +1694,44 @@
               ],
               "tags": [],
               "target": ""
+            },
+            {
+              "alias": "HEAD RPS",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "policy": "default",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND $timeFilter GROUP BY time($interval) fill(null)",
+              "rawQuery": true,
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
             }
           ],
           "thresholds": [],
@@ -1741,6 +1779,7 @@
           "fill": 1,
           "grid": {},
           "id": 37,
+          "interval": ">15s",
           "legend": {
             "alignAsTable": true,
             "avg": true,
@@ -1786,7 +1825,7 @@
               ],
               "hide": false,
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND $timeFilter GROUP BY time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -1812,7 +1851,7 @@
               "groupBy": [
                 {
                   "params": [
-                    "$__interval"
+                    "$interval"
                   ],
                   "type": "time"
                 },
@@ -1825,7 +1864,7 @@
               ],
               "hide": false,
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s)  FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND $timeFilter GROUP BY time($interval) fill(null)",
               "rawQuery": true,
               "refId": "B",
               "resultFormat": "time_series",
@@ -1903,6 +1942,7 @@
           "fill": 1,
           "grid": {},
           "id": 25,
+          "interval": ">15s",
           "legend": {
             "alignAsTable": true,
             "avg": true,
@@ -1945,7 +1985,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND (\"method\" = 'PUT' OR \"method\" = 'DELETE') AND $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND (\"method\" = 'PUT' OR \"method\" = 'DELETE') AND $timeFilter GROUP BY time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -2011,6 +2051,7 @@
           "fill": 1,
           "grid": {},
           "id": 38,
+          "interval": ">15s",
           "legend": {
             "alignAsTable": true,
             "avg": true,
@@ -2053,7 +2094,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'PUT' AND $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'PUT' AND $timeFilter GROUP BY time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -2079,7 +2120,7 @@
               "groupBy": [
                 {
                   "params": [
-                    "$__interval"
+                    "$interval"
                   ],
                   "type": "time"
                 },
@@ -2091,7 +2132,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'DELETE' AND $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'DELETE' AND $timeFilter GROUP BY time($interval) fill(null)",
               "rawQuery": true,
               "refId": "B",
               "resultFormat": "time_series",
@@ -2208,7 +2249,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s)  FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'DELETE' AND \"returncode\" = '404' AND $timeFilter GROUP BY host,time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'DELETE' AND \"returncode\" = '404' AND $timeFilter GROUP BY host,time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -2314,7 +2355,7 @@
               ],
               "hide": false,
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s)  FROM \"swift.proxy-server.container\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND (\"returncode\" = '404' OR \"returncode\" = '499') AND $timeFilter GROUP BY time($interval) fill(0)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.container\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'GET' AND (\"returncode\" = '404' OR \"returncode\" = '499') AND $timeFilter GROUP BY time($interval) fill(0)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -2419,7 +2460,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND \"returncode\" = '404' AND $timeFilter GROUP BY host,time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'HEAD' AND \"returncode\" = '404' AND $timeFilter GROUP BY host,time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -2524,7 +2565,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'PUT' AND \"returncode\" = '503' AND $timeFilter GROUP BY host,time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'PUT' AND \"returncode\" = '503' AND $timeFilter GROUP BY host,time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -2629,7 +2670,7 @@
                 }
               ],
               "policy": "default",
-              "query": "SELECT non_negative_derivative(mean(\"timing_count\"),1s) FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'DELETE' AND \"returncode\" = '503' AND $timeFilter GROUP BY host,time($interval) fill(null)",
+              "query": "SELECT mean(\"timing_count\") FROM \"swift.proxy-server.object\" WHERE \"metric_type\" = 'timing' AND \"method\" = 'DELETE' AND \"returncode\" = '503' AND $timeFilter GROUP BY host,time($interval) fill(null)",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -2732,5 +2773,5 @@
   },
   "timezone": "browser",
   "title": "OpenStack Swift Proxy Server Metrics",
-  "version": 4
+  "version": 3
 }
