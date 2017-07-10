@@ -18,9 +18,9 @@
   gather_facts: false
   user: root
   tasks:
-    - name: Search for and destroy reminent RPC grouped containers
+    - name: Search for old containers not yet deleted
       shell: >-
-        lxc-ls -f | awk '/rpc/ {print $1}' | xargs -n 1 lxc-destroy -fn
+        while read line; do lxc-destroy -fn $line; done < /etc/openstack_deploy/leapfrog_remove_remaining_old_containers
       failed_when: false
       args:
         executable: /bin/bash

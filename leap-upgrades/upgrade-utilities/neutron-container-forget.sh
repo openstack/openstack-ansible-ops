@@ -36,6 +36,7 @@ pushd ${MAIN_PATH}/playbooks
   REMOVED_CONTAINERS+="$(get_inv_items 'neutron_agent' | awk '{print $2}') "
 
   for i in ${REMOVED_CONTAINERS};do
+    echo "$i" >> /etc/openstack_deploy/leapfrog_remove_remaining_old_containers
     remove_inv_items $i
   done
 
