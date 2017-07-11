@@ -91,7 +91,7 @@ RUN_TASKS+=("os-sahara-install.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/post-redeploy-cleanup.yml")
 # Loads a shell script that can be used to modify
 # the RUN_TASKS behavior.
-if [[ ! -z ${REDEPLOY_EXTRA_SCRIPT} ]]; then
+if [[ ${REDEPLOY_EXTRA_SCRIPT:-} ]]; then
     notice "Running extra script before re-deploy"
     source ${REDEPLOY_EXTRA_SCRIPT}
 fi
