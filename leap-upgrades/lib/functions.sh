@@ -151,7 +151,16 @@ function validate_upgrade_input {
 }
 
 function discover_code_version {
-    if [[ ! -f "/etc/openstack-release" ]]; then
+    # If there is no release file present, then try to find one
+    # from the infra node.
+    if [[ ! -f "/etc/openstack-release" && ! -f "/etc/rpc-release" ]]; then
+        get_openstack_release_file
+    fi
+
+    if [[ ! -f "/etc/openstack-release" && ! -f "/etc/rpc-release" ]]; then
+        failure "No release file could be found."
+        exit 99
+    elif [[ ! -f "/etc/openstack-release" && -f "/etc/rpc-release" ]]; then
         export CODE_UPGRADE_FROM="JUNO"
         notice "You seem to be running Juno"
     else
@@ -175,6 +184,34 @@ function discover_code_version {
             ;;
         esac
     fi
+}
+
+function get_openstack_release_file {
+  notice "Getting openstack release file from infra1 if it exists"
+  # Get openstack_user_config.yml file path
+  USER_CONFIG_FILE=$(find /etc/ -name '*_user_config.yml' -o -name 'os-infra_hosts.yml')
+  # Get IP of os_infra node
+  INFRA_IP=$(sed -n -e '/infra_hosts/, /ip:/ p' ${USER_CONFIG_FILE} | awk '/ip:/ {print $2; exit}')
+  if [[ -z "${INFRA_IP}" ]]; then
+      failure "Could not find infra ip to get openstack-release file. Exiting.."
+      exit 99
+  fi
+  # Get the release file from the infra node.
+  set +e
+  errmsg=$(scp -o StrictHostKeyChecking=no root@${INFRA_IP}:/etc/openstack-release /etc/openstack-release 2>&1)
+  if [[ $? -ne 0 ]]; then
+      if echo "${errmsg}" | grep -v 'scp: /etc/openstack-release: No such file or directory'; then
+          failure "Fetching '/etc/openstack-release' failed with the error '${errmsg}'"
+          exit 99
+      fi
+      notice "An error occurred trying to scp the /etc/openstack-release file from the infra node, checking for /etc/rpc-release..."
+      scp -o StrictHostKeyChecking=no root@${INFRA_IP}:/etc/rpc-release /etc/rpc-release
+      if [[ $? -ne 0 ]]; then
+          notice "An error occurred trying to scp the /etc/rpc-release file from the infra node. Could not find release file. Exiting."
+          exit 99
+      fi
+  fi
+  set -e
 }
 
 function set_upgrade_vars {
