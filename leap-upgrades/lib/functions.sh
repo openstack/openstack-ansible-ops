@@ -270,14 +270,15 @@ function pre_flight {
           chmod +x py_pkgs.py
         popd
 
-        # Upgrade pip if it's needed. This will re-install pip using the constraints and then
-        #  re-install all of the remaining requirements as needed.
+        # Upgrade pip if it's needed. This will re-install pip using the constraints
         if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "9.0.1"; then
           wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
           rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
           python /opt/get-pip.py --constraint "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --force-reinstall --upgrade --isolated
-          pip install --requirement "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --upgrade --isolated
         fi
+
+        # Ensure all of the required packages are installed
+        pip install --requirement "${SYSTEM_PATH}/lib/upgrade-requirements.txt" --upgrade --isolated
 
         if [[ -d "/opt/ansible-runtime" ]]; then
           rm -rf "/opt/ansible-runtime"
