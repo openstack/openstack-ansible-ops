@@ -383,7 +383,7 @@ function build_venv {
       exit 99
     fi
 
-    apt-get -y install liberasurecode-dev > /dev/null
+    apt-get -y install liberasurecode-dev libmysqlclient-dev > /dev/null
 
     ### The venv build is done using a modern version of the py_pkgs plugin which collects all versions of
     ###  the OpenStack components from a given release. This creates 1 large venv per migratory release.
