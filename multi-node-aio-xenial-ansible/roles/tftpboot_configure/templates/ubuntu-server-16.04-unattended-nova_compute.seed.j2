@@ -19,7 +19,7 @@
 # Use the following option to add additional boot parameters for the
 # installed system (if supported by the bootloader installer).
 # Note: options passed to the installer will be added automatically.
-# d-i debian-installer/add-kernel-opts string $kernel_options_post
+d-i debian-installer/add-kernel-opts string biosdevname=0 net.ifnames=0
 
 #############
 #
@@ -78,6 +78,15 @@ d-i console-setup/ask_detect boolean false
 d-i console-setup/layoutcode string us
 d-i console-setup/variantcode string
 d-i keyboard-configuration/layoutcode string us
+
+#############
+#
+# Net Image
+#
+#############
+
+# Required at least for 12.10+
+d-i live-installer/net-image string http://{{ tftp_mirror }}/ubuntu/install/filesystem.squashfs
 
 #############
 #
@@ -254,8 +263,8 @@ d-i grub-installer/only_debian boolean true
 #############
 
 d-i preseed/late_command string \
-  wget --no-proxy http://{{ webserver_ip_address }}/files/xenial-sources.list -O /target/etc/apt/sources.list; \
-  wget --no-proxy http://{{ webserver_ip_address }}/files/osa-$hostname-bridges.cfg -O /target/etc/network/interfaces.d/osa-$hostname-bridges.cfg; \
+  wget --no-proxy http://{{ webserver_ip_address }}/xenial-sources.list -O /target/etc/apt/sources.list; \
+  wget --no-proxy http://{{ webserver_ip_address }}/osa-$hostname-bridges.cfg -O /target/etc/network/interfaces.d/osa-$hostname-bridges.cfg; \
   sed -i '/PermitRootLogin / s/ .*/ yes/' /target/etc/ssh/sshd_config; \
   mkdir /target/root/.ssh; \
   chmod 0700 /target/root/.ssh; \

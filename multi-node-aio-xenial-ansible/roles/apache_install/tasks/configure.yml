@@ -22,19 +22,19 @@
 - name: Create control file for apache site
   template:
     src: sites-allowed.j2
-    dest: "/etc/apache2/sites-available/{{ url }}.conf"
+    dest: "/etc/apache2/sites-available/{{ apache_url }}.conf"
     mode: 0644
   notify: restart_apache2
 
 - name: Create publish root path
   file:
-    path: "{{ publish_root }}"
+    path: "{{ apache_path }}"
     state: directory
     recurse: yes
 
 - name: Enable apache site using symlink
   file:
-    path: "/etc/apache2/sites-enabled/{{ url }}.conf"
-    src: "/etc/apache2/sites-available/{{ url }}.conf"
+    path: "/etc/apache2/sites-enabled/{{ apache_url }}.conf"
+    src: "/etc/apache2/sites-available/{{ apache_url }}.conf"
     state: link
   notify: restart_apache2

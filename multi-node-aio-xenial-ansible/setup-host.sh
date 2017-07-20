@@ -40,6 +40,10 @@ if ! grep -q "${SSHKEY}" /root/.ssh/authorized_keys; then
   cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 fi
 
+# This will prevent showing dialogs during iptables-persistent installation?
+echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
+echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
+
 # Install basic packages known to be needed
 apt-get update && apt-get install -y bridge-utils ifenslave libvirt-bin lvm2 openssh-server python2.7 qemu-kvm ansible virtinst virt-manager \
                                      vlan software-properties-common python-software-properties python-netaddr ntp qemu-utils lxc1 virtualenv \

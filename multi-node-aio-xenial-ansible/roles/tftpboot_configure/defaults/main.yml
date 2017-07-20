@@ -32,13 +32,14 @@ atftp_group: nogroup                         # What group does this environment 
 
 preseed_password: hackme                     # Default password placed into pre-seed file
 vm_disk_device: vda                          # Default disk device used in pre-seed
-vm_net_iface: ens3                           # Default interface used in pre-seed
+vm_net_iface: eth0                           # Default interface used in pre-seed
 ssh_key: blank
+distro_url:
 
 # These below variables rely on apache being set up and is where the preseed is set up
 
 preseed_apache_url: pxe                      # What is the url http://server/THISVARHERE
-preseed_path: /var/www/pxe                   # What path
+preseed_path: /var/www/html/pxe                   # What path
 webserver_ip_address: "{{ ansible_default_ipv4.address }}"
 
 server_list:                                 # What is our list of servers

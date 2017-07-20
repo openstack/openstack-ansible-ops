@@ -40,7 +40,7 @@ d-i netcfg/dhcp_timeout string 60
 #d-i netcfg/get_nameservers string 8.8.8.8
 #d-i netcfg/confirm_static boolean true
 
-d-i netcfg/get_hostname string swift_node
+d-i netcfg/get_hostname string deploy_node
 d-i netcfg/get_domain string openstackci.local
 
 # Disable that annoying WEP key dialog.
@@ -168,45 +168,21 @@ d-i partman-auto/expert_recipe string \
                       lv_name{ swap00 }                       \
                       method{ swap } format{ }                \
               .                                               \
-              51200 1 51200 ext4                              \
-                      $lvmok{ } in_vg{ lxc }                  \
-                      lv_name{ root00 }                       \
-                      method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ ext4 }    \
-                      label{ root }                           \
-                      mountpoint{ / }                         \
-              .                                               \
-              20480 1 20480 xfs                               \
-                      $lvmok{ } in_vg{ lxc }                  \
-                      lv_name{ swift01 }                      \
-                      method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ xfs }     \
-                      label{ openstack00 }                    \
-                      mountpoint{ /srv/disk1 }                \
-              .                                               \
-              20480 1 20480 xfs                               \
-                      $lvmok{ } in_vg{ lxc }                  \
-                      lv_name{ swift02 }                      \
-                      method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ xfs }     \
-                      label{ openstack00 }                    \
-                      mountpoint{ /srv/disk2 }                \
-              .                                               \
-              20480 1 20480 xfs                               \
-                      $lvmok{ } in_vg{ lxc }                  \
-                      lv_name{ swift03 }                      \
-                      method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ xfs }     \
-                      label{ openstack00 }                    \
-                      mountpoint{ /srv/disk3 }                \
-              .                                               \
-              76800 1 76800 ext4                              \
+              153600 1 153600 ext4                            \
                       $lvmok{ } in_vg{ lxc }                  \
                       lv_name{ openstack00 }                  \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \
                       label{ openstack00 }                    \
                       mountpoint{ /openstack }                \
+              .                                               \
+              1024 1 1000000000 ext4                          \
+                      $lvmok{ } in_vg{ lxc }                  \
+                      lv_name{ root00 }                       \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      label{ root }                           \
+                      mountpoint{ / }                         \
               .                                               \
 
 # This makes partman automatically partition without confirmation, provided
@@ -228,7 +204,7 @@ tasksel tasksel/first multiselect openssh-server
 # Whether to upgrade packages after debootstrap.
 # Allowed values: none, safe-upgrade, full-upgrade
 d-i pkgsel/upgrade select none
-d-i pkgsel/include string bridge-utils ethtool ifenslave lvm2 openssh-server python2.7 vim vlan python-simplejson xfsprogs
+d-i pkgsel/include string bridge-utils ethtool ifenslave lvm2 openssh-server python2.7 vim vlan python-simplejson
 # Policy for applying updates. May be "none" (no automatic updates),
 # "unattended-upgrades" (install security updates automatically), or
 # "landscape" (manage system with Landscape).

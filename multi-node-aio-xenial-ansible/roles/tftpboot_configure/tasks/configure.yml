@@ -24,7 +24,7 @@
   - images
   - pxelinux.cfg
 
-- name: Create pxeboot directories for distributions
+- name: Create directories for distributions
   file:
     path: "{{ atftpd_path }}/images/{{ item }}/"
     state: directory
@@ -32,16 +32,33 @@
     group: "{{ atftp_group }}"
   with_items: "{{ tftp_distro }}"
 
-- name: Create apache directories for preseed
+- name: Create apache directories for preseed, ubuntu image,
   file:
-    path: "{{ preseed_path }}"
+    path: "{{ apache_path }}/{{ item }}"
     state: directory
+  with_items: "{{ tftp_directories }}"
 
 - name: Create the preseed files
   template:
     src: "{{ item.preseed_file }}.j2"
     dest: "{{ preseed_path }}/{{ item.preseed_file }}"
   with_items: "{{ server_list }}"
+
+- name: Get ubuntu server image
+  get_url:
+    url: "{{ distro_url }}"
+    dest: "{{ atftpd_path }}/images/{{ distro_name }}"
+    mode: 0644
+    owner: "{{ atftp_user }}"
+    group: "{{ atftp_group }}"
+
+- name: mount the ubuntu image
+  mount:
+    name: "{{ apache_path }}/ubuntu/"
+    src: "{{ atftpd_path }}/images/{{ distro_name }}"
+    fstype: iso9660
+    opts: loop
+    state: mounted
 
 - name: Pull down boot kernel and initrd - create download directory -{{ tftp_distro }}-
   file:
@@ -54,7 +71,7 @@
 
 - name: Pull down boot kernel and initrd - download -"{{ tftp_distro }}"- releases -"{{ tftp_files }}"- files and place in /var/lib/netboot/
   get_url:
-    url: "http://{{ tftp_mirror }}/ubuntu/dists/{{ item[0] }}-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/{{ item[1] }}"
+    url: "http://{{ tftp_mirror }}/ubuntu/install/netboot/ubuntu-installer/amd64/{{ item[1] }}"
     dest: /var/lib/netboot/{{ item[0] }}
     mode: 0644
     owner: "{{ atftp_user }}"

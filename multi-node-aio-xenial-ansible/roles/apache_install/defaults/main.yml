@@ -22,5 +22,5 @@ packages:                             # Packages required for apache role to wor
     - apache2
 
 # - variables -
-url: blank                            # Default sub folder
+apache_url: blank                            # Default sub folder
 publish_root: blank                   # What will the default path be for the apache site

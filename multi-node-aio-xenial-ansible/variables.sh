@@ -17,7 +17,7 @@ OSA_BRANCH="${OSA_BRANCH:-stable/newton}"
 DEVICE_NAME="${DEVICE_NAME:-vda}"
 
 # What default network device should we use
-DEFAULT_NETWORK="${DEFAULT_NETWORK:-ens3}"
+DEFAULT_NETWORK="${DEFAULT_NETWORK:-eth0}"
 
 # What is the default virtual machine disk size in GB
 VM_DISK_SIZE="${VM_DISK_SIZE:-252}"
@@ -64,4 +64,11 @@ CONTAINER_VMS="${CONTAINER_VMS:-xenial}"
 
 # Ethernet type, this needs to be ens for Xenial and is for
 # templates/network-interfaces/vm.openstackci.local-bonded-bridges.cfg file
-ETH_TYPE="${ETH_TYPE:-ens}"
+ETH_TYPE="${ETH_TYPE:-eth}"
+
+# Default service ports
+OSA_PORTS="${OSA_PORTS:-6080 6082 443 80}"
+
+# Config the baremetal host, treat the baremetal host as a switch
+# put all deploy job into deploy node.
+CONFIG_PREROUTING="${CONFIG_PREROUTING:-true}"

@@ -27,7 +27,7 @@ ssh_agent_reset
 DEVICE_NAME="${DEVICE_NAME:-vda}"
 
 # Set Ethernet type
-ETH_TYPE="${ETH_TYPE:-ens}"
+ETH_TYPE="${ETH_TYPE:-eth}"
 
 # Create VM Basic Configuration files
 for node_type in $(get_all_types); do

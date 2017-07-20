@@ -1,7 +1,7 @@
 ### MANAGED BY {{ role_path|basename }} ANSIBLE ROLE ###
 
-Alias /{{ url }} {{ publish_root }}
-<Directory {{ publish_root }}>
+Alias /{{apache_url}} {{apache_path}}
+<Directory {{ apache_path }}>
 	Require all granted
 	Options +Indexes
 </Directory>

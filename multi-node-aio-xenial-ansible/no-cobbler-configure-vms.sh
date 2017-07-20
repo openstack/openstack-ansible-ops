@@ -54,3 +54,28 @@ for node in $(get_all_hosts); do
     apt-get clean; \
     apt-get update"
 done
+
+# Add node hostname into /etc/hosts
+if ! grep -q "10.0.0.150" /etc/hosts; then
+  for node_type in $(get_all_types); do
+    for node in $(get_host_type ${node_type}); do
+      echo "10.0.0.${node#*":"} ${node%%':'*}" >> /etc/hosts
+    done
+  done
+fi
+
+# Add autocomplete ssh via /etc/hosts and ssh_config to all nodes
+for node in $(get_all_hosts); do
+  echo '
+_complete_hosts () {
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    host_list=`{
+        sed -n -e "s/^[0-9][0-9\.]*//p" /etc/hosts; }|tr " " "\n"|grep -v "*"`
+    COMPREPLY=( $(compgen -W "\${host_list}" -- $cur))
+    return 0
+}
+complete -F _complete_hosts host
+complete -F _complete_hosts ssh
+' | ssh -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "cat >> /root/.bashrc"
+done
