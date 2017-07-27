@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -eu
 # Copyright [2016] [Kevin Carter]
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,28 +13,23 @@ set -eu
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Load all functions
-source functions.rc
+set -euvo
 
-# bring in variable definitions if there is a variables.sh file
-[[ -f variables.sh ]] && source variables.sh
+source bootstrap.sh
 
-# Instruct the system do all of the require host setup
-SETUP_HOST=${SETUP_HOST:-true}
-[[ "${SETUP_HOST}" = true ]] && source setup-host.sh
+source ansible-env.rc
 
-# Instruct the system do all of the cobbler setup
-SETUP_COBBLER=${SETUP_COBBLER:-true}
-[[ "${SETUP_COBBLER}" = true ]] && source setup-cobbler.sh
-
-# Instruct the system do all of the virsh setup
-SETUP_VIRSH_NET=${SETUP_VIRSH_NET:-true}
-[[ "${SETUP_VIRSH_NET}" = true ]] && source setup-virsh-net.sh
-
-# Instruct the system to Kick all of the VMs
-DEPLOY_VMS=${DEPLOY_VMS:-true}
-[[ "${DEPLOY_VMS}" = true ]] && source deploy-vms.sh
-
-# Instruct the system to deploy OpenStack Ansible
-DEPLOY_OSA=${DEPLOY_OSA:-true}
-[[ "${DEPLOY_OSA}" = true ]] && source config-deploy-node.sh
+ansible-playbook -i playbooks/inventory \
+                 -e setup_host=${SETUP_HOST:-"true"} \
+                 -e setup_pxeboot=${SETUP_PXEBOOT:-"true"} \
+                 -e setup_dhcpd=${SETUP_DHCPD:-"true"} \
+                 -e deploy_vms=${DEPLOY_VMS:-"true"} \
+                 -e deploy_osa=${DEPLOY_OSA:-"true"} \
+                 -e osa_branch=${OSA_BRANCH:-"master"} \
+                 -e default_network=${DEFAULT_NETWORK:-"eth0"} \
+                 -e default_image=${DEFAULT_IMAGE:-"ubuntu-16.04-amd64"} \
+                 -e vm_disk_size=${VM_DISK_SIZE:-61440} \
+                 -e http_proxy=${http_proxy:-''} \
+                 -e run_osa=${RUN_OSA:-"true"} \
+                 -e pre_config_osa=${PRE_CONFIG_OSA:-"true"} \
+                 playbooks/site.yml

@@ -1,0 +1,19 @@
+# Physical interface, could be bond. This only needs to be set once
+{% for key, value in mnaio_host_networks.items() %}
+{% if value.iface_port != 'none' %}
+auto {{ value.iface_port }}
+iface {{ value.iface_port }} inet manual
+{% endif %}
+
+auto {{ value.iface }}
+iface {{ value.iface }} inet {{ value.inet_type }}
+    bridge_stp off
+    bridge_waitport {{ value.iface_port == 'none' | ternary('0', '10') }}
+    bridge_fd 0
+    bridge_ports {{ value.iface_port }}
+    offload-sg off
+{% if value.address is defined %}
+    address {{ value.address }}
+{% endif %}
+
+{% endfor %}

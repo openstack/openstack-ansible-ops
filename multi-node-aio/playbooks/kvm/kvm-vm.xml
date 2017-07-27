@@ -1,0 +1,99 @@
+<domain type='kvm'>
+  <name>{{ item.server_hostname }}</name>
+  <memory unit='MiB'>{{ item.server_vm_ram }}</memory>
+  <currentMemory unit='MiB'>{{ item.server_vm_ram }}</currentMemory>
+  <vcpu placement='static' current='1'>{{ item.server_vm_vcpus }}</vcpu>
+  <resource>
+    <partition>/machine</partition>
+  </resource>
+  <os>
+    <type arch='x86_64' machine='pc-i440fx-{{ ansible_distribution_release | lower }}'>hvm</type>
+    <bootmenu enable='yes'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode='host-model'>
+    <model fallback='allow'/>
+    <topology sockets='1' cores='{{ item.server_vm_vcpus }}' threads='1'/>
+  </cpu>
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <pm>
+    <suspend-to-mem enabled='no'/>
+    <suspend-to-disk enabled='no'/>
+  </pm>
+  <devices>
+    <emulator>/usr/bin/kvm-spice</emulator>
+    <disk type='block' device='disk'>
+      <driver name='qemu' type='raw' cache='none' io='native'/>
+      <source dev='/dev/vg01/{{ item.server_hostname }}'/>
+      <target dev='vda' bus='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x09' function='0x0'/>
+      <boot order='1'/>
+    </disk>
+    <controller type='pci' index='0' model='pci-root'>
+      <alias name='pci.0'/>
+    </controller>
+    <controller type='virtio-serial' index='0'>
+      <alias name='virtio-serial0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x0'/>
+    </controller>
+
+{% for _key, _value in item.server_networks.items()|sort(attribute='1.iface') %}
+    <interface type='network'>
+{%     if _key == item.server_vm_primary_network %}
+      <mac address='{{ item.server_mac_address }}'/>
+      <boot order='2'/>
+{%     endif %}
+      <source network='{{ _value.vm_int_iface }}'/>
+      <model type='virtio'/>
+    </interface>
+{% endfor %}
+
+    <serial type='pty'>
+      <source path='/dev/pts/4'/>
+      <target port='0'/>
+      <alias name='serial0'/>
+    </serial>
+
+    <console type='pty' tty='/dev/pts/4'>
+      <source path='/dev/pts/4'/>
+      <target type='serial' port='0'/>
+      <alias name='serial0'/>
+    </console>
+
+    <input type='mouse' bus='ps2'/>
+
+    <input type='keyboard' bus='ps2'/>
+
+    <graphics type='vnc' port='-1' autoport='yes' listen='127.0.0.1'>
+      <listen type='address' address='127.0.0.1'/>
+    </graphics>
+
+    <video>
+      <model type='vmvga' vram='9216' heads='1'/>
+      <alias name='video0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0c' function='0x0'/>
+    </video>
+
+    <memballoon model='virtio'>
+      <alias name='balloon0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0d' function='0x0'/>
+    </memballoon>
+
+    <rng model='virtio'>
+      <backend model='random'>/dev/random</backend>
+      <alias name='rng0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0e' function='0x0'/>
+    </rng>
+
+  </devices>
+</domain>

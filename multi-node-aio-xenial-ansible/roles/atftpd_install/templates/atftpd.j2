@@ -1,3 +1,0 @@
-### MANAGED BY {{ role_path|basename }} ANSIBLE ROLE ###
-USE_INETD=false
-OPTIONS="--user {{ atftp_user }}.{{ atftp_group }} --tftpd-timeout 300 --retry-timeout 5 --mcast-port 1758 --mcast-addr 239.239.239.0-255 --mcast-ttl 1 --maxthread 100 --verbose=5 {{ atftpd_path }}"

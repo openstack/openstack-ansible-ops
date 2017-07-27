@@ -1,8 +1,0 @@
-default linux
-prompt 0
-timeout 1
-label linux
-        kernel /images/{{ item.distro }}/linux
-        ipappend 2
-        append initrd=/images/{{ item.distro }}/initrd.gz ksdevice=bootif netcfg/choose_interface=auto text auto-install/enable=true priority=critical url=http://{{ webserver_ip_address }}/{{ preseed_apache_url }}/{{ item.preseed_file }} hostname={{ item.name }} domain=local.lan suite={{ item.distro }} biosdevname=0 net.ifnames=0
-

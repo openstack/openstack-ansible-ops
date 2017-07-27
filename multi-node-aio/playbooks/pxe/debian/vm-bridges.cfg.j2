@@ -1,0 +1,18 @@
+# Physical interface, could be bond. This only needs to be set once
+
+{% for key, value in item.server_networks.items()|sort(attribute='1.iface') %}
+auto {{ value.iface }}
+iface {{ value.iface }} inet manual
+
+auto br-{{ key }}
+iface br-{{ key }} inet {{ value.inet_type }}
+    bridge_stp off
+    bridge_waitport 10
+    bridge_fd 0
+    bridge_ports {{ value.iface }}
+    offload-sg off
+{% if value.address is defined %}
+    address {{ value.address }}
+{% endif %}
+
+{% endfor %}

@@ -1,0 +1,213 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in witing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather facts
+  hosts: localhost
+  gather_facts: "{{ gather_facts | default(true) }}"
+  pre_tasks:
+    - name: Gather variables for each operating system
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
+      tags:
+        - always
+
+    - name: Install host distro packages
+      package:
+        pkg: "{{ item }}"
+        state: "latest"
+        update_cache: yes
+        cache_valid_time: 600
+      with_items: "{{ mnaio_host_distro_packages }}"
+
+  tasks:
+    - name: Ensure root has a .ssh directory
+      file:
+        path: /root/.ssh
+        state: directory
+        owner: root
+        group: root
+        mode: 0700
+
+    - name: Create ssh key pair for root
+      user:
+        name: root
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: /root/.ssh/id_rsa
+
+    - name: Get root public key
+      command: cat /root/.ssh/id_rsa.pub
+      register: public_key_get
+      changed_when: false
+
+    - name: Set key facts
+      set_fact:
+        root_public_key: "{{ public_key_get.stdout }}"
+
+    - name: Ensure root can ssh to localhost
+      authorized_key:
+        user: "root"
+        key: "{{ root_public_key }}"
+
+    - name: Add sysctl options
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        sysctl_set: yes
+        state: present
+        reload: yes
+        sysctl_file: /etc/sysctl.conf
+
+    - name: Get gateway interface
+      shell: "/sbin/ip r g 1 | awk '{print $5}'"
+      register: gw_iface
+
+    - set_fact:
+        masquerade_interface: "{{ gw_iface.stdout.strip() }}"
+
+    - name: Add IPtables rules
+      iptables:
+        table: "{{ item.table | default(omit) }}"
+        chain: "{{ item.chain | default(omit) }}"
+        in_interface: "{{ item.in_interface | default(omit) }}"
+        out_interface: "{{ item.out_interface | default(omit) }}"
+        source: "{{ item.source | default(omit) }}"
+        destination: "{{ item.destination | default(omit) }}"
+        protocol: "{{ item.protocol | default(omit) }}"
+        match: "{{ item.match | default(omit) }}"
+        destination_port: "{{ item.destination_port | default(omit) }}"
+        jump: "{{ item.jump | default(omit) }}"
+        to_ports: "{{ item.to_ports | default(omit) }}"
+      with_items: "{{ mnaio_host_iptables_rules }}"
+
+    # These rules are added manually due to bugs in the iptables module.
+    - name: Add IPtables rules
+      shell: |
+        if ! iptables -w -t {{ item.table }} -C {{ item.rule }};then
+          iptables -w -t {{ item.table }} -I {{ item.rule }}
+        fi
+      with_items:
+        - table: 'nat'
+          rule: 'POSTROUTING -s 10.0.2.0/22 ! -d 10.0.2.0/22 -j MASQUERADE'
+        - table: 'mangle'
+          rule: 'POSTROUTING -s 10.0.2.0/22 -o vm-br-dhcp -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill'
+        - table: 'mangle'
+          rule: 'POSTROUTING -s 10.0.2.0/22 -o vm-br-dhcp -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill'
+
+    - name: Start netfilter persistent
+      service:
+        name: "{{ mnaio_host_iptables_service }}"
+        state: started
+        enabled: yes
+      when:
+        - ansible_distribution | lower == 'ubuntu'
+
+    - name: Drop host network interfaces
+      template:
+        src: "pxe/{{ ansible_os_family | lower }}/mnaio-bridges.cfg.j2"
+        dest: /etc/network/interfaces.d/mnaio-bridges.cfg
+        mode: "0644"
+        owner: root
+        group: root
+      register: mnaio_bridges
+
+    - name: Ensure extra interfaces are sourced
+      lineinfile:
+        line: "source /etc/network/interfaces.d/*.cfg"
+        dest: "/etc/network/interfaces"
+
+    - name: Set the host intefaces up
+      command: "/sbin/ifup {{ item.value.iface }}"
+      with_dict: "{{ mnaio_host_networks }}"
+      when: mnaio_bridges | changed
+
+    - name: Disable virsh default network
+      shell: |
+        if virsh net-list |  grep -qw "default"; then
+          virsh net-autostart default --disable
+          virsh net-destroy default
+        fi
+
+    - name: Drop virsh network configs
+      template:
+        src: "kvm/libvirt-network-template.xml"
+        dest: "/etc/libvirt/qemu/networks/{{ item.value.iface }}.xml"
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict: "{{ mnaio_host_networks }}"
+
+    - name: Enable new virsh network(s)
+      shell: |
+        if ! virsh net-list |  grep -qw "{{ item.value.iface }}"; then
+          virsh net-define --file /etc/libvirt/qemu/networks/{{ item.value.iface }}.xml
+          virsh net-create --file /etc/libvirt/qemu/networks/{{ item.value.iface }}.xml
+          virsh net-autostart {{ item.value.iface }} || ture
+        fi
+      with_dict: "{{ mnaio_host_networks }}"
+
+    - name: Locate data volume
+      command: "vgdisplay vg01"
+      failed_when: false
+      register: data_volume
+
+    - name: Locate data disk
+      shell: >
+        lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | awk '/d[b-z]+ disk +0/{ if ($4>m){m=$4; d=$1}}; END{print d}'
+      register: lsblk
+      when:
+        - data_volume.rc != 0
+        - mnaio_data_disk is undefined
+
+    - name: Create data disk label
+      command: "parted --script /dev/{{ mnaio_data_disk | default(lsblk.stdout) }} mklabel gpt"
+      when:
+        - data_volume.rc != 0
+
+    - name: Create data disk partition
+      command: "parted --align optimal --script /dev/{{ mnaio_data_disk | default(lsblk.stdout) }} mkpart data1 ext4 0% 100%"
+      when:
+        - data_volume.rc != 0
+
+    - name: Create data volume group
+      lvg:
+        vg: vg01
+        pvs: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
+      when:
+        - data_volume.rc != 0
+
+    - name: Locate virsh data volume
+      command: "virsh pool-info vg01"
+      failed_when: false
+      register: virsh_data_volume
+
+    - name: Create virsh data volume
+      shell: |
+        virsh pool-create-as vg01 logical
+        virsh pool-dumpxml vg01 > /etc/libvirt/storage/vg01.xml
+        virsh pool-define /etc/libvirt/storage/vg01.xml
+        virsh pool-autostart vg01 || true
+      when:
+        - virsh_data_volume.rc != 0
+
+  vars_files:
+    - vars/main.yml
+  tags:
+    - setup-host

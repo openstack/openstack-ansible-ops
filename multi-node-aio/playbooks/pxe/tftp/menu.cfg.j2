@@ -1,0 +1,24 @@
+menu hshift 13
+menu width 49
+menu margin 8
+menu tabmsg
+
+menu title Boot Menu
+label local
+    menu label ^Boot local hard drive
+    LOCALBOOT 0
+
+{% for key, value in images.items() %}
+{%   for _key, _value in value.image_preseeds.items() %}
+label {{ key }}-{{ _key }}
+    menu label ^{{ key }}-{{ _key }} automated install
+    kernel {{ value.image_kernel }}
+{%     if value.image_type == 'debian' %}
+    append {{ value.image_kernel_options }} initrd={{ value.image_initrd }} preseed/url={{ _value.url }} preseed/interactive=false netcfg/choose_interface={{ default_interface }}
+{%     endif %}
+
+{%   endfor %}
+
+{% endfor %}
+
+menu end
