@@ -13,17 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Remove the reminent neutron agent containers
+- name: Remove the remnant neutron agent containers
   hosts: "hosts"
   gather_facts: false
   user: root
   tasks:
-    - name: Search for old containers not yet deleted
-      shell: >-
-        while read line; do lxc-destroy -fn $line; done < /etc/openstack_deploy/leapfrog_remove_remaining_old_containers
-      failed_when: false
-      args:
-        executable: /bin/bash
+    - name: Get list of old containers
+      command: "cat /etc/openstack_deploy/leapfrog_remove_remaining_old_containers"
+      run_once: true
+      delegate_to: localhost
+      register: old_containers
+
+    - name: Destroy old containers
+      command: "lxc-destroy -fn {{ item }}"
+      with_items: old_containers.stdout_lines
+      ignore_errors: true
+
 
 # TODO: Improve l2 convergence too.
 - name: Remove the reminent neutron agent containers
