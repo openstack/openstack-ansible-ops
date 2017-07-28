@@ -207,6 +207,16 @@
       when:
         - virsh_data_volume.rc != 0
 
+    - name: Load virtio kernel modules
+      shell: |
+        for mod in $(find /lib/modules/$(uname -r) -type f -name 'virtio*.ko'); do
+          module=$(echo $(basename $mod) | sed 's/\.ko//g')
+          modprobe ${module}
+          if ! grep ${module} /etc/modules; then
+            echo ${module} | tee -a /etc/modules
+          fi
+        done
+
   vars_files:
     - vars/main.yml
   tags:
