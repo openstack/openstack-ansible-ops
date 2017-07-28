@@ -40,4 +40,7 @@ mnaio_pxe_distro_packages:
 mnaio_dhcp_distro_packages:
   - isc-dhcp-server
 
+mnaio_pkg_cache_server_distro_packages:
+  - apt-cacher-ng
+
 mnaio_host_iptables_service: "{{ (ansible_distribution | lower + '-' + ansible_distribution_version | lower == 'ubuntu-14.04') | ternary('iptables-persistent', 'netfilter-persistent') }}"

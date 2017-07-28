@@ -247,7 +247,7 @@ d-i grub-installer/only_debian boolean true
 # Post Install
 
 d-i preseed/late_command string \
-  in-target bash -c "wget {{ tftp_server }}/scripts/mnaio-post-install-script.sh -O /opt/mnaio-post-install-script.sh"; \
+  in-target bash -c "wget --no-proxy http://{{ tftp_server }}/scripts/mnaio-post-install-script.sh -O /opt/mnaio-post-install-script.sh"; \
   in-target bash -c 'chmod +x /opt/mnaio-post-install-script.sh'; \
   in-target bash -c '/opt/mnaio-post-install-script.sh'
 # Finish

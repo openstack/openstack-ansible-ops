@@ -4,10 +4,9 @@ default_interface: "{{ default_network | default('eth0') }}"
 default_vm_image: "{{ default_image | default('ubuntu-16.04-amd64') }}"
 default_vm_storage: "{{ vm_disk_size | default(61440) }}"
 
-default_ubuntu_mirror_proxy: ''
+default_ubuntu_mirror_proxy: 'http://10.0.2.1:3142/'
 default_ubuntu_mirror_hostname: archive.ubuntu.com
 default_ubuntu_mirror_directory: /ubuntu
-
 ############### DEFAULTS ###############
 
 

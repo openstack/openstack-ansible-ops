@@ -11,8 +11,8 @@ mkdir -p /root/.ssh
 chmod 0700 /root/.ssh
 echo "{{ tftp_ssh_key }}" >> /root/.ssh/authorized_keys
 
-wget {{ tftp_server }}/networking/$(cat /etc/hostname)-bridges.cfg -O /etc/network/interfaces.d/vm-bridges.cfg
-wget {{ tftp_server }}/networking/basic-interface.cfg -O /etc/network/interfaces
+wget --no-proxy http://{{ tftp_server }}/networking/$(cat /etc/hostname)-bridges.cfg -O /etc/network/interfaces.d/vm-bridges.cfg
+wget --no-proxy http://{{ tftp_server }}/networking/basic-interface.cfg -O /etc/network/interfaces
 
 cat > /etc/network/if-up.d/post-up-rules <<EOF
 #!/usr/bin/env bash
