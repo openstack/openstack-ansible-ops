@@ -1,18 +1,23 @@
 # Physical interface, could be bond. This only needs to be set once
 
 {% for key, value in item.server_networks.items()|sort(attribute='1.iface') %}
+{%   if value.iface is defined %}
 auto {{ value.iface }}
 iface {{ value.iface }} inet manual
+{%   endif %}
 
+{% endfor %}
+
+{% for key, value in item.server_networks.items()|sort(attribute='1.iface') %}
 auto br-{{ key }}
 iface br-{{ key }} inet {{ value.inet_type }}
     bridge_stp off
     bridge_waitport 10
     bridge_fd 0
-    bridge_ports {{ value.iface }}
+    bridge_ports {{ value.iface | default('none') }}
     offload-sg off
-{% if value.address is defined %}
+{%   if value.address is defined %}
     address {{ value.address }}
-{% endif %}
+{%   endif %}
 
 {% endfor %}

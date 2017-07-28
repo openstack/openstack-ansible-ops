@@ -63,4 +63,69 @@
   vars_files:
     - vars/main.yml
   tags:
-    - setup-host
+    - deploy-vms
+
+
+- name: Create vm_servers group
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Servers group
+      add_host:
+        name: "{{ item.server_vm_fixed_addr }}"
+        groups: vm_servers
+      with_items: "{{ servers }}"
+
+  vars_files:
+    - vars/main.yml
+  tags:
+    - deploy-vms
+
+
+- name: Wait for deploy host
+  hosts: vm_servers
+  gather_facts: false
+  pre_tasks:
+    - name: Wait for container connectivity
+      wait_for_connection:
+        connect_timeout: 5
+        sleep: 10
+        timeout: 1200
+  tasks:
+    - name: copy host keys
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0600"
+      with_items:
+        - src: /root/.ssh/id_rsa
+          dest: /root/.ssh/id_rsa
+        - src: /root/.ssh/id_rsa.pub
+          dest: /root/.ssh/id_rsa.pub
+
+    - name: un-mount deleteme mount
+      mount:
+        name: "/deleteme"
+        state: unmounted
+
+    - name: remote deleteme mount
+      mount:
+        name: "/deleteme"
+        state: absent
+
+    - name: Remove deleteme dir
+      file:
+        path: "/deleteme"
+        state: absent
+
+    - name: Remove deleteme lv
+      lvol:
+        vg: vg00
+        lv: deleteme00
+        force: true
+        state: absent
+
+  vars_files:
+    - vars/main.yml
+  tags:
+    - deploy-vms

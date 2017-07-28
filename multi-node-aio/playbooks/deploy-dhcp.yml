@@ -65,6 +65,7 @@
         name: "{{ item }}"
         state: restarted
       with_items: "{{ mnaio_dhcp_distro_packages }}"
+
   vars_files:
     - vars/main.yml
   tags:

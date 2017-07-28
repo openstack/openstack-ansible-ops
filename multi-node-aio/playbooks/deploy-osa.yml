@@ -13,49 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Wait for deploy host
-  hosts: openstack_hosts
-  gather_facts: false
-  pre_tasks:
-    - name: Wait for container connectivity
-      wait_for_connection:
-        connect_timeout: 5
-        sleep: 10
-        timeout: 1200
-  tasks:
-    - name: copy host keys
-      copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        mode: "0600"
-      with_items:
-        - src: /root/.ssh/id_rsa
-          dest: /root/.ssh/id_rsa
-        - src: /root/.ssh/id_rsa.pub
-          dest: /root/.ssh/id_rsa.pub
-
-    - name: un-mount deleteme mount
-      mount:
-        name: "/deleteme"
-        state: unmounted
-
-    - name: remote deleteme mount
-      mount:
-        name: "/deleteme"
-        state: absent
-
-    - name: Remove deleteme dir
-      file:
-        path: "/deleteme"
-        state: absent
-
-    - name: Remove deleteme lv
-      lvol:
-        vg: vg00
-        lv: deleteme00
-        force: true
-        state: absent
-
 - name: Setup cinder host volume
   hosts: cinder_hosts
   gather_facts: false
@@ -71,6 +28,11 @@
       lvg:
         vg: cinder-volumes
         pvs: "/dev/vg00/cinder-volumes00"
+
+  vars_files:
+    - vars/main.yml
+  tags:
+    - deploy-osa
 
 
 - name: Setup cinder host volume
@@ -119,6 +81,12 @@
         - disk2
         - disk3
 
+  vars_files:
+    - vars/main.yml
+  tags:
+    - deploy-osa
+
+
 - name: Setup deploy host
   hosts: deploy_hosts
   gather_facts: "{{ gather_facts | default(true) }}"
@@ -144,13 +112,6 @@
       when:
         - pre_config_osa | default(true) | bool
 
-    - name: Create Basic configs
-      shell: cp -R etc/openstack_deploy/* /etc/openstack_deploy
-      args:
-        chdir: /opt/openstack-ansible
-      when:
-        - pre_config_osa | default(true) | bool
-
     - name: Create base directories
       file:
         path: "{{ item }}"
@@ -162,6 +123,13 @@
         - /etc/openstack_deploy
         - /etc/openstack_deploy/conf.d
         - /etc/openstack_deploy/env.d
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Create Basic configs
+      shell: cp -R etc/openstack_deploy/* /etc/openstack_deploy
+      args:
+        chdir: /opt/openstack-ansible
       when:
         - pre_config_osa | default(true) | bool
 
@@ -193,7 +161,9 @@
         - pre_config_osa | default(true) | bool
 
     - name: Get pip2 and pw gen deps
-      command: python2 /opt/get-pip.py pycrypto pyyaml
+      shell: |
+        python2 /opt/get-pip.py
+        $(which pip2 || which pip) install setuptools pycrypto pyyaml
       args:
         chdir: /opt/openstack-ansible
       when:
@@ -226,3 +196,8 @@
           to the {{ groups['deploy_hosts'][0] }} VM and attach to the "build-osa" tmux session.
       when:
         - run_osa | default(true) | bool
+
+  vars_files:
+    - vars/main.yml
+  tags:
+    - deploy-osa
