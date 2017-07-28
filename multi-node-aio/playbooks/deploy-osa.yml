@@ -1,0 +1,227 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in witing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Wait for deploy host
+  hosts: openstack_hosts
+  gather_facts: false
+  pre_tasks:
+    - name: Wait for container connectivity
+      wait_for_connection:
+        connect_timeout: 5
+        sleep: 10
+        timeout: 1200
+  tasks:
+    - name: copy host keys
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0600"
+      with_items:
+        - src: /root/.ssh/id_rsa
+          dest: /root/.ssh/id_rsa
+        - src: /root/.ssh/id_rsa.pub
+          dest: /root/.ssh/id_rsa.pub
+
+    - name: un-mount deleteme mount
+      mount:
+        name: "/deleteme"
+        state: unmounted
+
+    - name: remote deleteme mount
+      mount:
+        name: "/deleteme"
+        state: absent
+
+    - name: Remove deleteme dir
+      file:
+        path: "/deleteme"
+        state: absent
+
+    - name: Remove deleteme lv
+      lvol:
+        vg: vg00
+        lv: deleteme00
+        force: true
+        state: absent
+
+- name: Setup cinder host volume
+  hosts: cinder_hosts
+  gather_facts: false
+  tasks:
+    - name: Create cinder-volumes lv
+      lvol:
+        vg: vg00
+        lv: cinder-volumes00
+        size: 100%FREE
+        shrink: false
+
+    - name: Create data cinder-volumes group
+      lvg:
+        vg: cinder-volumes
+        pvs: "/dev/vg00/cinder-volumes00"
+
+
+- name: Setup cinder host volume
+  hosts: swift_hosts
+  gather_facts: false
+  tasks:
+    - name: Remove deleteme lv
+      lvol:
+        vg: vg00
+        lv: "{{ item }}"
+        size: 4G
+      with_items:
+        - disk1
+        - disk2
+        - disk3
+
+    - name: Format swift drives
+      filesystem:
+        fstype: xfs
+        dev: "/dev/vg00/{{ item }}"
+      with_items:
+        - disk1
+        - disk2
+        - disk3
+
+    - name: Create drive directories
+      file:
+        path: "/srv/{{ item }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      with_items:
+        - disk1
+        - disk2
+        - disk3
+
+    - name: Mount swift drives
+      mount:
+        name: "/srv/{{ item }}"
+        src: "/dev/mapper/vg00-{{ item }}"
+        fstype: xfs
+        state: mounted
+      with_items:
+        - disk1
+        - disk2
+        - disk3
+
+- name: Setup deploy host
+  hosts: deploy_hosts
+  gather_facts: "{{ gather_facts | default(true) }}"
+  pre_tasks:
+    - name: Gather variables for each operating system
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
+      tags:
+        - always
+
+  tasks:
+    # Example read-write git checkout from github
+    - name: Get OSA
+      git:
+        repo: https://git.openstack.org/openstack/openstack-ansible
+        dest: /opt/openstack-ansible
+        version: "{{ osa_branch | default('master') }}"
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Create Basic configs
+      shell: cp -R etc/openstack_deploy/* /etc/openstack_deploy
+      args:
+        chdir: /opt/openstack-ansible
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Create base directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      with_items:
+        - /etc/openstack_deploy
+        - /etc/openstack_deploy/conf.d
+        - /etc/openstack_deploy/env.d
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Drop osa config
+      template:
+        src: "osa/openstack_user_config.yml"
+        dest: /etc/openstack_deploy/openstack_user_config.yml
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Drop osa user variables
+      template:
+        src: "osa/user_mnaio_variables.yml"
+        dest: /etc/openstack_deploy/user_mnaio_variables.yml
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Bootstrap ansible
+      command: bash ./scripts/bootstrap-ansible.sh
+      args:
+        chdir: /opt/openstack-ansible
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Get pip2 and pw gen deps
+      command: python2 /opt/get-pip.py pycrypto pyyaml
+      args:
+        chdir: /opt/openstack-ansible
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Create passwords
+      command: python2 ./scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
+      args:
+        chdir: /opt/openstack-ansible
+      when:
+        - pre_config_osa | default(true) | bool
+
+    - name: Run OSA
+      command: "{{ item }}"
+      args:
+        chdir: /opt/openstack-ansible/playbooks
+      with_items:
+        - tmux new-session -d -s build-osa
+        - tmux select-pane -t 0
+        - tmux send-keys "ulimit -n 10240" C-m
+        - tmux send-keys "openstack-ansible setup-everything.yml" C-m
+      when:
+        - run_osa | default(true) | bool
+
+    - name: Finished notice
+      debug:
+        msg: |
+          OSA deploy running. To check on the state of this deployment, login
+          to the deploy1 VM and attach to the "build-osa" tmux session.
+      when:
+        - run_osa | default(true) | bool

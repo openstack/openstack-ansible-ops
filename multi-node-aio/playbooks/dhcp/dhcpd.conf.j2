@@ -1,0 +1,50 @@
+ddns-update-style none;
+
+allow booting;
+allow bootp;
+
+log-facility local7;
+authoritative;
+
+shared-network all-networks {
+    {% for dhcp in dhcp_list %}
+    subnet {{ dhcp.subnet }} netmask {{ dhcp.netmask }} {
+         option routers             {{ dhcp.gateway }};
+         option domain-name-servers {{ dhcp.dns }};
+         option subnet-mask         {{ dhcp.netmask }};
+         {% if dhcp.default_lease_time is defined and dhcp.default_lease_time > 0 %}
+         default-lease-time         {{ dhcp.default_lease_time }};
+         {% else %}
+         default-lease-time         {{ dhcp_default_lease_time }};
+         {% endif %}
+         {% if dhcp.max_lease_time is defined and dhcp.max_lease_time > 0 %}
+         max-lease-time             {{ dhcp.max_lease_time }};
+         {% else %}
+         max-lease-time             {{ dhcp_max_lease_time }};
+         {% endif %}
+         {% if dhcp.tftp_server is defined and dhcp.tftp_server|ipaddr %}
+         next-server                {{ dhcp.tftp_server }};
+         {% elif tftp_server is defined and tftp_server|length > 0 %}
+         next-server                {{ tftp_server }};
+         {% endif %}
+         {% if dhcp.tftp_boot_path is defined and dhcp.tftp_boot_path|ipaddr %}
+         filename "{{ dhcp.tftp_boot_path }}";
+         {% elif tftp_boot_path is defined and tftp_boot_path|length > 0 %}
+         filename "{{ tftp_boot_path }}";
+         {% endif %}
+    }
+
+    {% endfor %}
+
+    group {
+    {% for item in servers %}
+        host {{ item.server_hostname }} {
+            hardware ethernet {{ item.server_mac_address }};
+            fixed-address {{ item.server_vm_fixed_addr }};
+            option host-name "{{ item.server_hostname }}";
+        }
+    {% endfor %}
+
+    }
+
+}

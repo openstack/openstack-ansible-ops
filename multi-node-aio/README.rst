@@ -12,7 +12,7 @@ Full OpenStack deployment using a single OnMetal host from the
 Rackspace Public Cloud. This is a multi-node installation using
 VMs that have been PXE booted which was done to provide an environment
 that is almost exactly what is in production. This script will build, kick
-and deploy OpenStack using KVM, Cobbler, OpenStack-Ansible within 13 Nodes
+and deploy OpenStack using KVM, OpenStack-Ansible within 12 Nodes
 and 1 load balancer all using a Hyper Converged environment.
 
 
@@ -20,17 +20,16 @@ Process
 -------
 
 Create at least one physical host that has public network access and is running the
-Ubuntu 14.04 LTS (Trusty Tahr) Operating system. This script assumes that you have
-an unpartitioned device with at least 1TB of storage. If you're using the Rackspace
+Ubuntu 14/6.04 LTS Operating system. System assumes that you have an unpartitioned
+device with at least 1TB of storage, however you can customize the size of each VM
+volume by setting the option ``${VM_DISK_SIZE}``. If you're using the Rackspace
 OnMetal servers the drive partitioning will be done for you by detecting the largest
 unpartitioned device. If you're doing the deployment on something other than a Rackspace
-OnMetal server you may need to modify the ``setup-host.sh`` script to do the needful in
-your environment. If you know the device name you want to format you can also set the
-``${DATA_DISK_DEVICE}`` variable accordingly.
-
-Physical disk partitioning can be skipped by setting ``PARTITION_HOST=false``. If you set
-this, make sure you have enough space available to run all of the infrastructure VMs within
-``/var/lib/libvirt/images``.
+OnMetal server you may need to set the ``${DATA_DISK_DEVICE}`` variable accordingly.
+the playbooks will look for a volume group named "vg01", if this volume group exists
+no partitioning or setup on the data disk will take place. To effectively use this
+process for testing it's recommended that the host machine have at least 32GiB of
+RAM.
 
 ===========    ========   ============
 Physical Host Specs known to work well
@@ -85,56 +84,42 @@ Console Access
     :alt: Screen shot of virt-manager console
     :align: center
 
-The root password for all VMs is "**cobbler**". This password is being set within the pre-seed files under the
+The root password for all VMs is "**secrete**". This password is being set within the pre-seed files under the
 "Users and Password" section. If you want to change this password please edit the pre-seed files.
 
 
-Notes
------
-
-The cobbler and pre-seed setup has been implemented using some of the awesome work originally created by James Thorne.
-  * cobbler installation post - https://thornelabs.net/2015/11/26/install-and-configure-cobbler-on-ubuntu-1404.html
-  * pre-seeds -- https://github.com/jameswthorne/preseeds
-
-
-Options
--------
-
-Set the default preseed device name. This is being set because sda is on hosts, vda is kvm, xvda is xen:
-  ``DEVICE_NAME="${DEVICE_NAME:-vda}"``
+``build.sh`` Options
+--------------------
 
 Set to instruct the preseed what the default network is expected to be:
   ``DEFAULT_NETWORK="${DEFAULT_NETWORK:-eth0}"``
 
-Set the data disk device, if unset the largest unpartitioned device will be used to for host VMs:
-  ``DATA_DISK_DEVICE="${DATA_DISK_DEVICE:-$(lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | awk '/d[b-z]+ disk +0/{ if ($4>m){m=$4; d=$1}}; END{print d}')}"``
-
 Set the VM disk size in gigabytes:
   ``VM_DISK_SIZE="${VM_DISK_SIZE:-252}"``
 
-Set the OSA branch for this script to deploy:
-  ``OSA_BRANCH=${OSA_BRANCH:-master}``
 
-Enable partitioning of the "${DATA_DISK_DEVICE}":
-  ``PARTITION_HOST=${PARTITION_HOST:-true}``
+Instruct the system do all of the required host setup:
+  ``SETUP_HOST=${SETUP_HOST:-true}``
 
-Instruct the system to deploy OpenStack Ansible:
-  ``DEPLOY_OSA=${DEPLOY_OSA:-true}``
+Instruct the system do all of the required PXE setup:
+  ``SETUP_PXEBOOT=${SETUP_PXEBOOT:-true}``
+
+Instruct the system do all of the required DHCPD setup:
+  ``SETUP_DHCPD=${SETUP_DHCPD:-true}``
+
 
 Instruct the system to Kick all of the VMs:
   ``DEPLOY_VMS=${DEPLOY_VMS:-true}``
 
-Instruct the system to run VM disk image create:
-  ``VM_IMAGE_CREATE=${VM_IMAGE_CREATE:-true}``
+Instruct the VM to use the selected image, eg. ubuntu-16.04-amd64:
+  ``DEFAULT_IMAGE=${DEFAULT_IMAGE:-ubuntu-16.04-amd64}``
 
-Instruct the system do all of the require host setup:
-  ``SETUP_HOST=${SETUP_HOST:-true}``
 
-Instruct the system do all of the cobbler setup:
-  ``SETUP_COBBLER=${SETUP_COBBLER:-true}``
+Set the OSA branch for this script to deploy:
+  ``OSA_BRANCH=${OSA_BRANCH:-master}``
 
-Instruct the system do all of the virsh network setup:
-  ``SETUP_VIRSH_NET=${SETUP_VIRSH_NET:-true}``
+Instruct the system to deploy OpenStack Ansible:
+  ``DEPLOY_OSA=${DEPLOY_OSA:-true}``
 
 Instruct the system to pre-config the envs for running OSA playbooks:
   ``PRE_CONFIG_OSA=${PRE_CONFIG_OSA:-true}``
@@ -142,57 +127,48 @@ Instruct the system to pre-config the envs for running OSA playbooks:
 Instruct the system to run the OSA playbooks, if you want to deploy other OSA powered cloud, you can set it to false:
   ``RUN_OSA=${RUN_OSA:-true}``
 
-Instruct the VM to use the selected image, eg. ubuntu xenial:
-  ``DEFAULT_IMAGE=${DEFAULT_IMAGE:-16.04}``
 
-Install the specified kernel, eg 3.13.0-34 if you want to deploy Juno release.
-  ``DEFAULT_KERNEL=${DEFAULT_KERNEL:-3.13.0-34}``
+Re-kicking VM(s)
+----------------
 
-Configure the prerouting iptable rules after the OSA deployment
-  ``CONFIG_PREROUTING="${CONFIG_PREROUTING:-true}``
+Re-kicking a VM is as simple as stopping a VM, delete the logical volume, create a new logical volume, start the VM.
+The VM will come back online, pxe boot, and install the base OS.
 
-Re-kicking the VMs
-------------------
+.. code-block:: bash
 
-The build process will add a function to the system to provide you a quick means to re-kick a VM host. The function added
-is ``rekick_vms``. This function can be used to re-kick a specific host. To use this function use the short hostname along
-with the function. EXAMPLE: ``rekick_vms infra1``. This command will destroy the root disk for the VM and reboot it causing
-it to be re-PXE booted. Once the re-deployment has completed (<=10 min) the node will have a vanilla OS.
-
-If you want to re-kick all known hosts you can execute the ``deploy-vms.sh`` script which will do everything needed to
-boot all new VMs paving over the existing ones.
+    virsh destroy "${VM_NAME}"
+    lvremove "/dev/mapper/vg01--${VM_NAME}"
+    lvcreate -L 60G vg01 -n "${VM_NAME}"
+    virsh start "${VM_NAME}"
 
 
-Adding nodes to the deployment
-------------------------------
+To rekick all VMs, the following command can be used on the host machine to cycle through all found VMs and re-provision them.
 
-To add nodes to the deployment simply add the node entries to the hosts.json file. The file divides nodes by type and you
-can add more nodes to any of the available types without any modifications made to the templates or build script. The first
-100 IP address of all used CIDRs have been reserved in the ``openstack_user_config.yml`` and can be used when adding
-additional hosts to the environment.
+.. code-block:: bash
+
+    for VM_NAME in $(virsh list --all | awk '/running/ || /shut/ {print $2}'); do
+      virsh destroy "${VM_NAME}"
+      lvremove "/dev/mapper/vg01--${VM_NAME}"
+      lvcreate -L 60G vg01 -n "${VM_NAME}"
+      virsh start "${VM_NAME}"
+    done
 
 
 Rerunning the build script
 --------------------------
 
 The build script can be rerun at any time. If you have a successful run before and simply want to re-kick everything I
-recommend nuking the running VMs and then executing the build script instructing it to NOT partition the host. This can
-be easily done using the following snippet.
-
-.. code-block:: bash
-
-    for i in $(virsh list --all --name); do virsh destroy $i; virsh undefine $i; rm /var/lib/libvirt/images/$i.img; done
-    rm ~/.ssh/known_hosts; PARTITION_HOST=false ./build.sh
+recommend nuking VMs and then executing the build script.
 
 
 Deploying OpenStack into the environment
 ----------------------------------------
 
-While the build script will deploy OpenStack, you can choose to run this manually. To run a basic deploy using a given branch you can use the following snippet.
+While the build script will deploy OpenStack, you can choose to run this manually. To run a basic deploy using a given branch you can use the following snippet. Set the ansible option ``osa_branch`` or export the environment variable ``OSA_BRANCH`` when using the build.sh script.
 
 .. code-block:: bash
 
-    OSA_BRANCH=master ./deploy-osa.sh
+    ansible-playbook -i playbooks/inventory playbooks/deploy-osa.yml -vv -e 'osa_branch=master'
 
 
 Snapshotting an environment before major testing

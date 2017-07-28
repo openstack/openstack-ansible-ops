@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+apt-get remove --purge snap* lxc* lxd* || true
+
+sed -i 's/\(GRUB_CMDLINE_LINUX_DEFAULT=\).*/\1\"\"/g' /target/etc/default/grub
+update-grub
+
+sed -i '/PermitRootLogin / s/ .*/ yes/' /etc/ssh/sshd_config
+
+mkdir -p /root/.ssh
+chmod 0700 /root/.ssh
+echo "{{ tftp_ssh_key }}" >> /root/.ssh/authorized_keys
+
+wget {{ tftp_server }}/networking/mnaio-bridges.cfg -O /etc/network/interfaces.d/mnaio-bridges.cfg
+wget {{ tftp_server }}/networking/basic-interface.cfg -O /etc/network/interfaces

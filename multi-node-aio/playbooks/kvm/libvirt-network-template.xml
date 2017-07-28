@@ -1,0 +1,5 @@
+<network>
+  <name>{{ item.value.iface }}</name>
+  <forward mode="bridge"/>
+  <bridge name="{{ item.value.iface }}"/>
+</network>
