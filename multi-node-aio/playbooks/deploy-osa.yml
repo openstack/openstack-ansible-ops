@@ -216,12 +216,13 @@
         - tmux send-keys "ulimit -n 10240" C-m
         - tmux send-keys "openstack-ansible setup-everything.yml" C-m
       when:
+        - inventory_hostname == groups['deploy_hosts'][0]
         - run_osa | default(true) | bool
 
     - name: Finished notice
       debug:
         msg: |
           OSA deploy running. To check on the state of this deployment, login
-          to the deploy1 VM and attach to the "build-osa" tmux session.
+          to the {{ groups['deploy_hosts'][0] }} VM and attach to the "build-osa" tmux session.
       when:
         - run_osa | default(true) | bool

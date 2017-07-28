@@ -12,8 +12,8 @@ used_ips:
   - "10.0.248.0,10.0.248.200"
 
 global_overrides:
-  internal_lb_vip_address: "10.0.236.112"
-  external_lb_vip_address: "10.0.2.150"
+  internal_lb_vip_address: "10.0.2.110"
+  external_lb_vip_address: "10.0.236.103"
   tunnel_bridge: "br-vxlan"
   management_bridge: "br-mgmt"
   provider_networks:
@@ -86,6 +86,10 @@ global_overrides:
 ###
 ### Anchors
 ###
+log_block: &log_block
+  log1:
+    ip: 10.0.236.103
+
 infra_block: &infra_block
   infra1:
     ip: 10.0.236.100
@@ -147,14 +151,11 @@ shared-infra_hosts: *infra_block
 repo-infra_hosts: *infra_block
 
 # rsyslog server
-log_hosts:
-  log1:
-    ip: 10.0.236.103
+log_hosts: *log_block
+
 
 # load balancer
-haproxy_hosts:
-  deploy1:
-    ip: 10.0.236.112
+haproxy_hosts: *log_block
 
 ###
 ### OpenStack
