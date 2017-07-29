@@ -219,7 +219,7 @@ d-i grub-installer/only_debian boolean true
 # Post Install
 
 d-i preseed/late_command string \
-  in-target bash -c "wget {{ tftp_server }}/scripts/vm-post-install-script.sh -O /opt/vm-post-install-script.sh"; \
+  in-target bash -c "wget --no-proxy http://{{ tftp_server }}/scripts/vm-post-install-script.sh -O /opt/vm-post-install-script.sh"; \
   in-target bash -c 'chmod +x /opt/vm-post-install-script.sh'; \
   in-target bash -c '/opt/vm-post-install-script.sh'
 # Finish
