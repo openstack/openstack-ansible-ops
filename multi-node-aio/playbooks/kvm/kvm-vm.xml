@@ -2,9 +2,10 @@
   <name>{{ item.server_hostname }}</name>
   <memory unit='MiB'>{{ item.server_vm_ram }}</memory>
   <currentMemory unit='MiB'>{{ item.server_vm_ram }}</currentMemory>
-{% set vcpus_threads = ((item.server_vm_vcpus | int) // 2) %}
-{% set vcpus = (item.server_vm_vcpus | int) * vcpus_threads %}
-  <vcpu placement='static' current='{{ vcpus }}'>{{ vcpus }}</vcpu>
+{% set _vcpus_threads = ((item.server_vm_vcpus | int) // 2) %}
+{% set vcpus_threads = (_vcpus_threads | int) == 0 | ternary('1', _vcpus_threads) %}
+{% set vcpus = (item.server_vm_vcpus | int) * (vcpus_threads | int) %}
+  <vcpu placement='static' current='{{ vcpus | int }}'>{{ vcpus | int }}</vcpu>
   <resource>
     <partition>/machine</partition>
   </resource>
@@ -17,7 +18,7 @@
     <apic/>
   </features>
   <cpu mode='host-model'>
-    <topology sockets='1' cores='{{ item.server_vm_vcpus }}' threads='{{ vcpus_threads }}'/>
+    <topology sockets='1' cores='{{ item.server_vm_vcpus | int }}' threads='{{ vcpus_threads | int }}'/>
   </cpu>
   <clock offset='utc'>
     <timer name='rtc' tickpolicy='catchup'/>

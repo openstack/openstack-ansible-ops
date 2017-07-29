@@ -115,7 +115,7 @@ d-i partman-auto/expert_recipe string \
                       device{ /dev/vda2 }                     \
                       vg_name{ vg00 }                         \
               .                                               \
-              1024 1 4096 linux-swap                          \
+              2048 1 4096 linux-swap                          \
                       $lvmok{ } in_vg{ vg00 }                 \
                       lv_name{ swap00 }                       \
                       method{ swap } format{ }                \
@@ -136,7 +136,7 @@ d-i partman-auto/expert_recipe string \
                       label{ openstack }                      \
                       mountpoint{ /openstack }                \
               .                                               \
-              8192 1 16384 btrfs                              \
+              4096 1 8192 btrfs                               \
                       $lvmok{ } in_vg{ vg00 }                 \
                       lv_name{ machines00 }                   \
                       method{ format } format{ }              \
@@ -144,13 +144,13 @@ d-i partman-auto/expert_recipe string \
                       label{ machines }                       \
                       mountpoint{ /var/lib/machines }         \
               .                                               \
-              1024 1 1024000 ext4                             \
+              8192 1 10240000 ext4                            \
                       $lvmok{ } in_vg{ vg00 }                 \
-                      lv_name{ deleteme00 }                   \
+                      lv_name{ lxc00 }                        \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \
-                      label{ deleteme }                       \
-                      mountpoint{ /deleteme }                 \
+                      label{ lxc }                            \
+                      mountpoint{ /var/lib/lxc }              \
               .                                               \
 
 # This makes partman automatically partition without confirmation, provided
