@@ -19,7 +19,8 @@ source bootstrap.sh
 
 source ansible-env.rc
 
-ansible-playbook -i playbooks/inventory \
+ansible-playbook -vv \
+                 -i playbooks/inventory \
                  -e setup_host=${SETUP_HOST:-"true"} \
                  -e setup_pxeboot=${SETUP_PXEBOOT:-"true"} \
                  -e setup_dhcpd=${SETUP_DHCPD:-"true"} \
@@ -28,7 +29,7 @@ ansible-playbook -i playbooks/inventory \
                  -e osa_branch=${OSA_BRANCH:-"master"} \
                  -e default_network=${DEFAULT_NETWORK:-"eth0"} \
                  -e default_image=${DEFAULT_IMAGE:-"ubuntu-16.04-amd64"} \
-                 -e vm_disk_size=${VM_DISK_SIZE:-61440} \
+                 -e vm_disk_size=${VM_DISK_SIZE:-92160} \
                  -e http_proxy=${http_proxy:-''} \
                  -e run_osa=${RUN_OSA:-"true"} \
                  -e pre_config_osa=${PRE_CONFIG_OSA:-"true"} \

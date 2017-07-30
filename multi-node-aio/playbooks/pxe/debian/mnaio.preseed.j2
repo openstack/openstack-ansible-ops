@@ -112,34 +112,34 @@ d-i partman-auto/choose_recipe select custompartitioning
 d-i partman-auto/expert_recipe string \
       custompartitioning :: \
               1 1 1 free                              \
-                      $gptonly{ }                    \
-                      $primary{ }                    \
-                      $bios_boot{ }                  \
+                      $gptonly{ }                     \
+                      $primary{ }                     \
+                      $bios_boot{ }                   \
                       method{ biosgrub }              \
               .                                       \
               256 1 512 raid                          \
-                      $gptonly{ }                    \
-                      $lvmignore{ }                  \
-                      $primary{ }                    \
-                      $bootable{ }                   \
+                      $gptonly{ }                     \
+                      $lvmignore{ }                   \
+                      $primary{ }                     \
+                      $bootable{ }                    \
                       method{ raid }                  \
                       raidid{ 1 }                     \
               .                                       \
               204800 1 -1 raid                        \
-                      $gptonly{ }                    \
-                      $lvmignore{ }                  \
+                      $gptonly{ }                     \
+                      $lvmignore{ }                   \
                       method{ raid }                  \
                       raidid{ 2 }                     \
               .                                       \
               1024 512 400% linux-swap                \
-                      $defaultignore{ }              \
-                      $lvmok{ }                      \
+                      $defaultignore{ }               \
+                      $lvmok{ }                       \
                       method{ swap }                  \
                       format{ }                       \
               .                                       \
               16384 5000 100% ext4                    \
-                      $defaultignore{ }              \
-                      $lvmok{ }                      \
+                      $defaultignore{ }               \
+                      $lvmok{ }                       \
                       method{ format }                \
                       format{ }                       \
                       use_filesystem{ }               \
@@ -147,8 +147,8 @@ d-i partman-auto/expert_recipe string \
                       mountpoint{ / }                 \
               .                                       \
               81920 1000 100% ext4                    \
-                      $defaultignore{ }              \
-                      $lvmok{ }                      \
+                      $defaultignore{ }               \
+                      $lvmok{ }                       \
                       lv_name{ openstack00 }          \
                       method{ format }                \
                       format{ }                       \
@@ -158,8 +158,8 @@ d-i partman-auto/expert_recipe string \
                       mountpoint{ /openstack }        \
               .                                       \
               81920 1000 100% btrfs                   \
-                      $defaultignore{ }              \
-                      $lvmok{ }                      \
+                      $defaultignore{ }               \
+                      $lvmok{ }                       \
                       lv_name{ machines00 }           \
                       method{ format }                \
                       format{ }                       \

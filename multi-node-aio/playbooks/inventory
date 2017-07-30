@@ -13,6 +13,7 @@ cinder2 ansible_host=10.0.236.108
 swift1 ansible_host=10.0.236.109
 swift2 ansible_host=10.0.236.110
 swift3 ansible_host=10.0.236.111
+loadbalancer1 ansible_host=10.0.236.112
 
 [pxe_hosts]
 mnaio1
@@ -24,7 +25,7 @@ mnaio1
 mnaio1
 
 [deploy_hosts]
-log1
+infra1
 
 [swift_hosts]
 swift1

@@ -103,28 +103,6 @@
         - src: /root/.ssh/id_rsa.pub
           dest: /root/.ssh/id_rsa.pub
 
-    - name: un-mount deleteme mount
-      mount:
-        name: "/deleteme"
-        state: unmounted
-
-    - name: remote deleteme mount
-      mount:
-        name: "/deleteme"
-        state: absent
-
-    - name: Remove deleteme dir
-      file:
-        path: "/deleteme"
-        state: absent
-
-    - name: Remove deleteme lv
-      lvol:
-        vg: vg00
-        lv: deleteme00
-        force: true
-        state: absent
-
   vars_files:
     - vars/main.yml
   tags:

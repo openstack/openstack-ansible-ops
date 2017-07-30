@@ -2,7 +2,7 @@
 ############### DEFAULTS ###############
 default_interface: "{{ default_network | default('eth0') }}"
 default_vm_image: "{{ default_image | default('ubuntu-16.04-amd64') }}"
-default_vm_storage: "{{ vm_disk_size | default(61440) }}"
+default_vm_storage: "{{ vm_disk_size | default(92160) }}"
 
 default_ubuntu_mirror_proxy: 'http://10.0.2.1:3142/'
 default_ubuntu_mirror_hostname: archive.ubuntu.com
@@ -138,7 +138,7 @@ pxelinux_short_name: "syslinux-6.03"
 # List of servers to create specific mac address bound boot entries.
 servers:
   - server_hostname: 'infra1'               # str  - required, hostname of server
-    server_vm_ram: 6144                     # int  - not required, used to specify ram when provisioning a VM
+    server_vm_ram: 8192                     # int  - not required, used to specify ram when provisioning a VM
     server_vm_vcpus: 4                      # int  - not required, used to specify vcpus when provisioning a VM
     server_vm_fixed_addr: '10.0.2.100'      # str  - not required, used to specify fixed address when using internal DHCPD
     server_vm_primary_network: 'dhcp'       # str  - not required, primary network used to kick the VM
@@ -177,7 +177,7 @@ servers:
         address: '10.0.244.100/22'          # str  - not required, must be in CIDR format
         vm_int_iface: vm-br-eth5            # str  - not Required, used to specify an integration networks interface when provisioning a VM
   - server_hostname: 'infra2'
-    server_vm_ram: 6144
+    server_vm_ram: 8192
     server_vm_vcpus: 4
     server_vm_fixed_addr: '10.0.2.101'
     server_vm_primary_network: 'dhcp'
@@ -216,7 +216,7 @@ servers:
         address: '10.0.244.101/22'
         vm_int_iface: vm-br-eth5
   - server_hostname: 'infra3'
-    server_vm_ram: 6144
+    server_vm_ram: 8192
     server_vm_vcpus: 4
     server_vm_fixed_addr: '10.0.2.102'
     server_vm_primary_network: 'dhcp'
@@ -255,7 +255,7 @@ servers:
         address: '10.0.244.102/22'
         vm_int_iface: vm-br-eth5
   - server_hostname: 'logging1'
-    server_vm_ram: 2048
+    server_vm_ram: 1024
     server_vm_vcpus: 2
     server_vm_fixed_addr: '10.0.2.110'
     server_vm_primary_network: 'dhcp'
@@ -565,6 +565,45 @@ servers:
         iface: 'eth5'
         inet_type: 'manual'
         address: '10.0.244.111/22'
+        vm_int_iface: vm-br-eth5
+  - server_hostname: 'loadbalancer1'
+    server_vm_ram: 1024
+    server_vm_vcpus: 1
+    server_vm_fixed_addr: '10.0.2.142'
+    server_vm_primary_network: 'dhcp'
+    server_image: "{{ default_vm_image }}"
+    server_default_interface: 'eth0'
+    server_mac_address: '52:54:00:bd:80:12'
+    server_preseed_ks: 'vm'
+    server_extra_options: ''
+    server_networks:
+      dhcp:
+        iface: 'eth0'
+        inet_type: 'dhcp'
+        vm_int_iface: vm-br-dhcp
+      mgmt:
+        iface: 'eth1'
+        inet_type: 'static'
+        address: '10.0.236.112/22'
+        vm_int_iface: vm-br-eth1
+      flat:
+        iface: 'eth2'
+        inet_type: 'static'
+        address: '10.0.248.112/22'
+        vm_int_iface: vm-br-eth2
+      vlan:
+        iface: 'eth3'
+        inet_type: 'manual'
+        vm_int_iface: vm-br-eth3
+      vxlan:
+        iface: 'eth4'
+        inet_type: 'manual'
+        address: '10.0.240.112/22'
+        vm_int_iface: vm-br-eth4
+      storage:
+        iface: 'eth5'
+        inet_type: 'manual'
+        address: '10.0.244.112/22'
         vm_int_iface: vm-br-eth5
 ############### SERVERS ###############
 
