@@ -134,10 +134,10 @@ swift_block: &swift_block
   swift1:
     ip: 10.0.236.109
 
-  swift1:
+  swift2:
     ip: 10.0.236.110
 
-  swift1:
+  swift3:
     ip: 10.0.236.111
 
 loadbalancer_block: &loadbalancer_block
