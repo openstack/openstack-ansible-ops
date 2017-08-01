@@ -40,6 +40,7 @@ fi
 
 link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 RUN_TASKS=()
+RUN_TASKS+=("openstack-hosts-setup.yml -e redeploy_rerun=true")
 # Ensure the same pip everywhere, even if requirement met or above
 RUN_TASKS+=("${UPGRADE_UTILS}/pip-unify.yml -e release_version=\"${NEWTON_RELEASE}\"")
 
