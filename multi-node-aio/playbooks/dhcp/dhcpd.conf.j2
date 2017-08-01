@@ -37,11 +37,11 @@ shared-network all-networks {
     {% endfor %}
 
     group {
-    {% for item in servers %}
-        host {{ item.server_hostname }} {
-            hardware ethernet {{ item.server_mac_address }};
-            fixed-address {{ item.server_vm_fixed_addr }};
-            option host-name "{{ item.server_hostname }}";
+    {% for item in groups['pxe_servers'] %}
+        host {{ hostvars[item]['server_hostname'] }} {
+            hardware ethernet {{ hostvars[item]['server_mac_address'] }};
+            fixed-address {{ hostvars[item]['server_vm_fixed_addr'] }};
+            option host-name "{{ hostvars[item]['server_hostname'] }}";
         }
     {% endfor %}
 

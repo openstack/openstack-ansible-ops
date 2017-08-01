@@ -1,0 +1,83 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# mnaio_data_disk: 'sdc'  # str - not required, set this to define a given data disk if no data disk
+#                                               is defined the largest unpartitioned disk will be used.
+mnaio_host_networks:
+  dhcp:
+    iface: 'vm-br-dhcp'                 # str  - required, interface name
+    inet_type: 'static'                 # str  - required, iface type [static, dhcp, manual]
+    address: '10.0.2.1/22'              # str  - not required, must be in CIDR format
+    iface_port: none                    # str  - required, physical port used within a host bridge
+  mgmt:
+    iface: 'vm-br-eth1'
+    inet_type: 'static'
+    address: '10.0.236.1/22'
+    iface_port: none
+  flat:
+    iface: 'vm-br-eth2'
+    inet_type: 'static'
+    address: '10.0.248.1/22'
+    iface_port: none
+  vlan:
+    iface: 'vm-br-eth3'
+    inet_type: 'manual'
+    iface_port: none
+  vxlan:
+    iface: 'vm-br-eth4'
+    inet_type: 'manual'
+    address: '10.0.240.1/22'
+    iface_port: none
+  storage:
+    iface: 'vm-br-eth5'
+    inet_type: 'manual'
+    address: '10.0.244.1/22'
+    iface_port: none
+
+mnaio_host_iptables_rules:
+  - table: filter
+    chain: INPUT
+    protocol: tcp
+    match: tcp
+    destination_port: 67
+    jump: ACCEPT
+  - table: filter
+    chain: INPUT
+    protocol: udp
+    match: udp
+    destination_port: 67
+    jump: ACCEPT
+  - table: filter
+    chain: INPUT
+    protocol: udp
+    match: udp
+    destination_port: 53
+    jump: ACCEPT
+  - table: filter
+    chain: INPUT
+    protocol: udp
+    match: udp
+    destination_port: 53
+    jump: ACCEPT
+  - table: filter
+    chain: FORWARD
+    in_interface: vm-br-dhcp
+    jump: ACCEPT
+  - table: filter
+    chain: FORWARD
+    out_interface: vm-br-dhcp
+    jump: ACCEPT
+  - table: nat
+    chain: POSTROUTING
+    out_interface: "{{ masquerade_interface | default(default_interface) }}"
+    jump: MASQUERADE
