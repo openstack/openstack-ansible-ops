@@ -1,50 +1,84 @@
+################################## ALL HOSTS ##################################
 [all]
-localhost ansible_connection=local
-mnaio1 ansible_host=10.0.2.1
+# Local host
+localhost      ansible_connection=local
 
-infra1 ansible_host=10.0.236.100
-infra2 ansible_host=10.0.236.101
-infra3 ansible_host=10.0.236.102
-log1 ansible_host=10.0.236.103
-compute1 ansible_host=10.0.236.105
-compute2 ansible_host=10.0.236.106
-cinder1 ansible_host=10.0.236.107
-cinder2 ansible_host=10.0.236.108
-swift1 ansible_host=10.0.236.109
-swift2 ansible_host=10.0.236.110
-swift3 ansible_host=10.0.236.111
-loadbalancer1 ansible_host=10.0.236.112
+# MNAIO host
+mnaio1         ansible_host=10.0.2.1 ansible_connection=local
 
-[pxe_hosts]
-mnaio1
+# MNAIO VMs
+infra1         ansible_host=10.0.236.100
+infra2         ansible_host=10.0.236.101
+infra3         ansible_host=10.0.236.102
+cinder2        ansible_host=10.0.236.108
+logging1       ansible_host=10.0.236.103
+compute1       ansible_host=10.0.236.105
+compute2       ansible_host=10.0.236.106
+cinder1        ansible_host=10.0.236.107
+swift1         ansible_host=10.0.236.109
+swift2         ansible_host=10.0.236.110
+swift3         ansible_host=10.0.236.111
+loadbalancer1  ansible_host=10.0.236.112
 
-[dhcp_hosts]
-mnaio1
+################################# MNAIO HOSTS #################################
 
+# The group "vm_hosts" is used to define all host machines that will be running
+#  traditional virtualization using KVM.
 [vm_hosts]
 mnaio1
 
+################################## PXE HOSTS ##################################
+
+# The group "mnaio_hosts" is used to define all host machines that will serve
+#  the purpose of running an MNAIO test environment.
+[mnaio_hosts]
+mnaio1
+
+# The group "pxe_hosts" is used to setup all systems that will be responsible
+#  for PXE boot. This will install all of the needed capabilities to TFTP serve
+#  system images.
+[pxe_hosts]
+mnaio1
+
+# The group "dhcp_hosts" is used to setup all systems that will be responsible
+#  for DHCP. This is not required as external DHCP could be used.
+[dhcp_hosts]
+mnaio1
+
+# The group "pxe_servers" is used to create PXE specific configurations for
+#  each host machines.
+[pxe_servers]
+cinder1
+cinder2
+compute1
+compute2
+infra1
+infra2
+infra3
+loadbalancer1
+logging1
+swift1
+swift2
+swift3
+
+################################## OSA HOSTS ##################################
+
+# The group "deploy_hosts" is used to define where an OSA deployment will
+#  originate from.
 [deploy_hosts]
 infra1
 
+############################### OSA MNAIO HOSTS ###############################
+
+# The group "swift_hosts" is used in the MNAIO setup to create the basic drive
+#  setup needed for a swift deployment.
 [swift_hosts]
 swift1
 swift2
 swift3
 
+# The group "cinder_hosts" is used in the MNAIO setup to create the basic drive
+#  setup needed for a cinder LVM deployment.
 [cinder_hosts]
 cinder1
 cinder2
-
-[openstack_hosts]
-infra1
-infra2
-infra3
-log1
-compute1
-compute2
-cinder2
-cinder1
-swift1
-swift2
-swift3

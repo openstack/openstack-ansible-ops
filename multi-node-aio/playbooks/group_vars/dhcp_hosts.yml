@@ -1,0 +1,28 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+dhcp_default_lease_time: 21600   # Default lease time
+dhcp_max_lease_time: 43200       # Max lease time
+tftp_boot_path: /pxelinux.0      # Path of where to boot from first
+
+# - List of DHCP Subnets - These are iterated though and each will be created
+dhcp_list:
+  - netmask: 255.255.255.0                       # Netmask
+    gateway: 10.0.2.1                            # Gateway
+    dns: 8.8.8.8                                 # DNS
+    subnet: 10.0.2.0                             # Subnet mask
+    default_lease_time: 21600                    # Subnet Default lease time - The default is used if this is not defined
+    max_lease_time: 43200                        # Subnet Max lease time - The default is used if this is not defined
+    tftp_boot_path: /pxelinux.0                  # Path for tftp of where to boot from first - The default is used if this is not defined
+    tftp_server: "{{ tftp_server }}"             # The server hosting the TFTP server - The default is used if this is not defined
+    dhcp_default_domain_name: openstackci.local

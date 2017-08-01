@@ -148,8 +148,8 @@ To rekick all VMs, the following command can be used on the host machine to cycl
 
     for VM_NAME in $(virsh list --all | awk '/running/ || /shut/ {print $2}'); do
       virsh destroy "${VM_NAME}"
-      lvremove "/dev/mapper/vg01--${VM_NAME}"
-      lvcreate -L 60G vg01 -n "${VM_NAME}"
+      echo y | lvremove "/dev/mapper/vg01-${VM_NAME}"
+      lvcreate -L 92160M vg01 -n "${VM_NAME}"
       virsh start "${VM_NAME}"
     done
 

@@ -1,6 +1,7 @@
 # Physical interface, could be bond. This only needs to be set once
+{% set server_networks = hostvars[item]['server_networks'] %}
 
-{% for key, value in item.server_networks.items()|sort(attribute='1.iface') %}
+{% for key, value in server_networks.items()|sort(attribute='1.iface') %}
 {%   if value.iface is defined %}
 auto {{ value.iface }}
 iface {{ value.iface }} inet manual
@@ -8,7 +9,7 @@ iface {{ value.iface }} inet manual
 
 {% endfor %}
 
-{% for key, value in item.server_networks.items()|sort(attribute='1.iface') %}
+{% for key, value in server_networks.items()|sort(attribute='1.iface') %}
 auto br-{{ key }}
 iface br-{{ key }} inet {{ value.inet_type }}
     bridge_stp off

@@ -187,35 +187,46 @@
         group: root
       with_items:
         - src: basic-interface.cfg
-          dest: basic-interface.cfg
+          dest: "basic-{{ ansible_os_family | lower }}-interface.cfg"
           dir: networking
+        - src: vm-post-install-script.sh.j2
+          dest: "vm-post-install-{{ ansible_os_family | lower }}-script.sh"
+          dir: scripts
+
+    - name: network scripts for an MNAIO
+      template:
+        src: "mnaio/{{ ansible_os_family | lower }}/{{ item.src }}"
+        dest: /var/www/pxe/{{ item.dir }}/{{ item.dest }}
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - groups['mnaio_hosts'] | default([]) | length > 0
+      with_items:
         - src: mnaio-bridges.cfg.j2
           dest: mnaio-bridges.cfg
           dir: networking
         - src: mnaio-post-install-script.sh.j2
           dest: mnaio-post-install-script.sh
           dir: scripts
-        - src: vm-post-install-script.sh.j2
-          dest: vm-post-install-script.sh
-          dir: scripts
 
     - name: network scripts for servers
       template:
         src: "pxe/{{ ansible_os_family | lower }}/vm-bridges.cfg.j2"
-        dest: /var/www/pxe/networking/{{ item.server_hostname }}-bridges.cfg
+        dest: /var/www/pxe/networking/{{ hostvars[item]['server_hostname'] }}-bridges.cfg
         mode: "0644"
         owner: root
         group: root
-      with_items: "{{ servers }}"
+      with_items: "{{ groups['pxe_servers'] }}"
 
     - name: tftp configs for servers
       template:
         src: "pxe/tftp/pxelinux.cfg.macaddr.j2"
-        dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ item.server_mac_address | replace(':', '-') }}"
+        dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ hostvars[item]['server_mac_address'] | replace(':', '-') }}"
         mode: "0644"
         owner: root
         group: root
-      with_items: "{{ servers }}"
+      with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Preseeds for pxe mnaio
       template:
@@ -290,7 +301,5 @@
         state: restarted
         enabled: yes
 
-  vars_files:
-    - vars/main.yml
   tags:
     - deploy-pxe

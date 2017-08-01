@@ -87,7 +87,7 @@ global_overrides:
 ### Anchors
 ###
 log_block: &log_block
-  log1:
+  logging1:
     ip: 10.0.236.103
 
 infra_block: &infra_block

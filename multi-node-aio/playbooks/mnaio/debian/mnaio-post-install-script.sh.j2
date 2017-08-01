@@ -12,4 +12,4 @@ chmod 0700 /root/.ssh
 echo "{{ tftp_ssh_key }}" >> /root/.ssh/authorized_keys
 
 wget --no-proxy http://{{ tftp_server }}/networking/mnaio-bridges.cfg -O /etc/network/interfaces.d/mnaio-bridges.cfg
-wget --no-proxy http://{{ tftp_server }}/networking/basic-interface.cfg -O /etc/network/interfaces
+wget --no-proxy http://{{ tftp_server }}/networking/basic-debian-interface.cfg -O /etc/network/interfaces

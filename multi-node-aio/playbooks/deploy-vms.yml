@@ -32,36 +32,44 @@
     - name: Create VM LV
       lvol:
         vg: vg01
-        lv: "{{ item.server_hostname }}"
+        lv: "{{ hostvars[item]['server_hostname'] }}"
         size: "{{ default_vm_storage }}"
-      with_items: "{{ servers }}"
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Create the VM template
       template:
         src: kvm/kvm-vm.xml
-        dest: "/etc/libvirt/qemu/{{ item.server_hostname }}.xml"
+        dest: "/etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
         mode: 0644
         owner: root
         group: root
-      with_items: "{{ servers }}"
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Define the VM
-      command: "virsh define /etc/libvirt/qemu/{{ item.server_hostname }}.xml"
+      command: "virsh define /etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
       failed_when: false
-      with_items: "{{ servers }}"
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Create the VM
-      command: "virsh create /etc/libvirt/qemu/{{ item.server_hostname }}.xml"
+      command: "virsh create /etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
       failed_when: false
-      with_items: "{{ servers }}"
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Start the VM
-      command: "virsh start {{ item.server_hostname }}"
+      command: "virsh start {{ hostvars[item]['server_hostname'] }}"
       failed_when: false
-      with_items: "{{ servers }}"
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
 
-  vars_files:
-    - vars/main.yml
   tags:
     - deploy-vms
 
@@ -70,14 +78,14 @@
   hosts: localhost
   gather_facts: false
   tasks:
-    - name: Servers group
+    - name: VM Servers group
       add_host:
-        name: "{{ item.server_vm_fixed_addr }}"
+        name: "{{ hostvars[item]['server_vm_fixed_addr'] }}"
         groups: vm_servers
-      with_items: "{{ servers }}"
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
 
-  vars_files:
-    - vars/main.yml
   tags:
     - deploy-vms
 
@@ -86,11 +94,16 @@
   hosts: vm_servers
   gather_facts: false
   pre_tasks:
-    - name: Wait for container connectivity
-      wait_for_connection:
+    - name: Wait for connectivity 1
+      local_action:
+        module: wait_for
+        host: "{{ ansible_host }}"
         connect_timeout: 5
+        port: 22
         sleep: 10
         timeout: 1200
+        state: started
+        search_regex: OpenSSH
   tasks:
     - name: copy host keys
       copy:
@@ -103,7 +116,100 @@
         - src: /root/.ssh/id_rsa.pub
           dest: /root/.ssh/id_rsa.pub
 
-  vars_files:
-    - vars/main.yml
+  tags:
+    - deploy-vms
+
+
+- name: Setup cinder host volume
+  hosts: cinder_hosts:swift_hosts
+  gather_facts: false
+  tasks:
+    - name: un-mount deleteme mount
+      mount:
+        name: "/var/lib/lxc"
+        state: unmounted
+
+    - name: remote deleteme mount
+      mount:
+        name: "/var/lib/lxc"
+        state: absent
+
+    - name: Remove deleteme lv
+      lvol:
+        vg: vg00
+        lv: lxc00
+        force: true
+        state: absent
+
+  tags:
+    - deploy-vms
+
+
+- name: Setup cinder host volume
+  hosts: cinder_hosts
+  gather_facts: false
+  tasks:
+    - name: Create cinder-volumes lv
+      lvol:
+        vg: vg00
+        lv: cinder-volumes00
+        size: "100%FREE"
+        shrink: false
+
+    - name: Create data cinder-volumes group
+      lvg:
+        vg: cinder-volumes
+        pvs: "/dev/vg00/cinder-volumes00"
+
+  tags:
+    - deploy-vms
+
+
+- name: Setup swift host volume
+  hosts: swift_hosts
+  gather_facts: false
+  tasks:
+    - name: Remove deleteme lv
+      lvol:
+        vg: vg00
+        lv: "{{ item }}"
+        size: 4G
+      with_items:
+        - disk1
+        - disk2
+        - disk3
+
+    - name: Format swift drives
+      filesystem:
+        fstype: xfs
+        dev: "/dev/vg00/{{ item }}"
+      with_items:
+        - disk1
+        - disk2
+        - disk3
+
+    - name: Create drive directories
+      file:
+        path: "/srv/{{ item }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      with_items:
+        - disk1
+        - disk2
+        - disk3
+
+    - name: Mount swift drives
+      mount:
+        name: "/srv/{{ item }}"
+        src: "/dev/mapper/vg00-{{ item }}"
+        fstype: xfs
+        state: mounted
+      with_items:
+        - disk1
+        - disk2
+        - disk3
+
   tags:
     - deploy-vms

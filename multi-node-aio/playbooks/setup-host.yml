@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Gather facts
-  hosts: localhost
+  hosts: mnaio_hosts
   gather_facts: "{{ gather_facts | default(true) }}"
   pre_tasks:
     - name: Gather variables for each operating system
@@ -121,7 +121,7 @@
 
     - name: Drop host network interfaces
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/mnaio-bridges.cfg.j2"
+        src: "mnaio/{{ ansible_os_family | lower }}/mnaio-bridges.cfg.j2"
         dest: /etc/network/interfaces.d/mnaio-bridges.cfg
         mode: "0644"
         owner: root
@@ -277,7 +277,5 @@
         state: restarted
         enabled: yes
 
-  vars_files:
-    - vars/main.yml
   tags:
     - setup-host
