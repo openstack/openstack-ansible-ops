@@ -35,12 +35,12 @@ server_networks:
   mgmt:
     iface: 'eth1'
     inet_type: 'static'
-    address: '10.0.236.103/22'
+    address: '10.0.236.110/22'
     vm_int_iface: vm-br-eth1
   flat:
     iface: 'eth2'
     inet_type: 'static'
-    address: '10.0.248.103/22'
+    address: '10.0.248.110/22'
     vm_int_iface: vm-br-eth2
   vlan:
     iface: 'eth3'
@@ -49,10 +49,10 @@ server_networks:
   vxlan:
     iface: 'eth4'
     inet_type: 'static'
-    address: '10.0.240.103/22'
+    address: '10.0.240.110/22'
     vm_int_iface: vm-br-eth4
   storage:
     iface: 'eth5'
     inet_type: 'static'
-    address: '10.0.244.103/22'
+    address: '10.0.244.110/22'
     vm_int_iface: vm-br-eth5

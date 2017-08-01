@@ -12,8 +12,8 @@ used_ips:
   - "10.0.248.0,10.0.248.200"
 
 global_overrides:
-  internal_lb_vip_address: "10.0.236.112"
-  external_lb_vip_address: "10.0.2.142"
+  internal_lb_vip_address: "10.0.236.150"
+  external_lb_vip_address: "10.0.2.150"
   tunnel_bridge: "br-vxlan"
   management_bridge: "br-mgmt"
   provider_networks:
@@ -86,9 +86,37 @@ global_overrides:
 ###
 ### Anchors
 ###
-log_block: &log_block
-  logging1:
-    ip: 10.0.236.103
+cinder_block: &cinder_block
+  cinder1:
+    ip: 10.0.236.130
+    container_vars:
+      cinder_backends:
+        limit_container_types: cinder_volume
+        lvm:
+          volume_group: cinder-volumes
+          volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+          volume_backend_name: LVM_iSCSI
+          iscsi_ip_address: "10.0.244.130"
+
+  cinder2:
+    ip: 10.0.236.131
+    container_vars:
+      cinder_backends:
+        limit_container_types: cinder_volume
+        lvm:
+          volume_group: cinder-volumes
+          volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+          volume_backend_name: LVM_iSCSI
+          iscsi_ip_address: "10.0.244.131"
+
+
+compute_block: &compute_block
+  compute1:
+    ip: 10.0.236.120
+
+  compute2:
+    ip: 10.0.236.121
+
 
 infra_block: &infra_block
   infra1:
@@ -100,49 +128,28 @@ infra_block: &infra_block
   infra3:
     ip: 10.0.236.102
 
-compute_block: &compute_block
-  compute1:
-    ip: 10.0.236.105
-
-  compute2:
-    ip: 10.0.236.106
-
-cinder_block: &cinder_block
-  cinder1:
-    ip: 10.0.236.107
-    container_vars:
-      cinder_backends:
-        limit_container_types: cinder_volume
-        lvm:
-          volume_group: cinder-volumes
-          volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
-          volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: "10.0.244.107"
-
-  cinder2:
-    ip: 10.0.236.108
-    container_vars:
-      cinder_backends:
-        limit_container_types: cinder_volume
-        lvm:
-          volume_group: cinder-volumes
-          volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
-          volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: "10.0.244.108"
-
-swift_block: &swift_block
-  swift1:
-    ip: 10.0.236.109
-
-  swift2:
-    ip: 10.0.236.110
-
-  swift3:
-    ip: 10.0.236.111
 
 loadbalancer_block: &loadbalancer_block
   loadbalancer1:
-    ip: 10.0.236.112
+    ip: 10.0.236.150
+
+
+log_block: &log_block
+  logging1:
+    ip: 10.0.236.110
+
+
+swift_block: &swift_block
+  swift1:
+    ip: 10.0.236.140
+
+  swift2:
+    ip: 10.0.236.141
+
+  swift3:
+    ip: 10.0.236.142
+
+
 
 
 ###
