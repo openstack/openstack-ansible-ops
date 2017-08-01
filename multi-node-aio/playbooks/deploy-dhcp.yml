@@ -59,6 +59,8 @@
         group: root
       notify: restart dhcpd
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   handlers:
     - name: restart dhcpd
       service:

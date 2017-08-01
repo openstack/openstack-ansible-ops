@@ -282,6 +282,8 @@
       register: fstab
       with_dict: "{{ images }}"
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   handlers:
     - name: restart nginx
       service:

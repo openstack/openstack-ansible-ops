@@ -130,5 +130,7 @@
       when:
         - run_osa | default(true) | bool
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   tags:
     - deploy-osa

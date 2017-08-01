@@ -70,6 +70,8 @@
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   tags:
     - deploy-vms
 
@@ -85,6 +87,8 @@
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
 
   tags:
     - deploy-vms
@@ -116,6 +120,8 @@
         - src: /root/.ssh/id_rsa.pub
           dest: /root/.ssh/id_rsa.pub
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   tags:
     - deploy-vms
 
@@ -141,6 +147,8 @@
         force: true
         state: absent
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   tags:
     - deploy-vms
 
@@ -160,6 +168,8 @@
       lvg:
         vg: cinder-volumes
         pvs: "/dev/vg00/cinder-volumes00"
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
 
   tags:
     - deploy-vms
@@ -210,6 +220,8 @@
         - disk1
         - disk2
         - disk3
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
 
   tags:
     - deploy-vms

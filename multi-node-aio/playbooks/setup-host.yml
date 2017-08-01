@@ -270,6 +270,8 @@
       apt:
         update_cache: yes
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   handlers:
     - name: reload acng
       service:

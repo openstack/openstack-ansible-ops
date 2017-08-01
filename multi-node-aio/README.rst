@@ -19,17 +19,17 @@ and 1 load balancer all using a Hyper Converged environment.
 Process
 -------
 
-Create at least one physical host that has public network access and is running the
-Ubuntu 14/6.04 LTS Operating system. System assumes that you have an unpartitioned
-device with at least 1TB of storage, however you can customize the size of each VM
-volume by setting the option ``${VM_DISK_SIZE}``. If you're using the Rackspace
-OnMetal servers the drive partitioning will be done for you by detecting the largest
-unpartitioned device. If you're doing the deployment on something other than a Rackspace
-OnMetal server you may need to set the ``${DATA_DISK_DEVICE}`` variable accordingly.
-the playbooks will look for a volume group named "vg01", if this volume group exists
-no partitioning or setup on the data disk will take place. To effectively use this
-process for testing it's recommended that the host machine have at least 32GiB of
-RAM.
+Create at least one physical host that has public network access and is running
+the Ubuntu 14/6.04 LTS Operating system. System assumes that you have an
+unpartitioned device with at least 1TB of storage, however you can customize the
+size of each VM volume by setting the option ``${VM_DISK_SIZE}``. If you're
+using the Rackspace OnMetal servers the drive partitioning will be done for you
+by detecting the largest unpartitioned device. If you're doing the deployment on
+something other than a Rackspace OnMetal server you may need to set the
+``${DATA_DISK_DEVICE}`` variable accordingly. the playbooks will look for a
+volume group named "vg01", if this volume group exists no partitioning or setup
+on the data disk will take place. To effectively use this process for testing
+it's recommended that the host machine have at least 32GiB of RAM.
 
 ===========    ========   ============
 Physical Host Specs known to work well
@@ -41,27 +41,30 @@ Physical Host Specs known to work well
 
 These specs are covered by the Rackspace OnMetal-IO v1/2 Servers.
 
-When your ready, run the build script by executing ``bash ./build.sh``. The build script
-current executes a deployment of OpenStack Ansible using the master branch. If you want to
-do something other than deploy master you can set the ``${OSA_BRANCH}`` variable to any
-branch, tag, or SHA.
+When your ready, run the build script by executing ``bash ./build.sh``. The
+build script current executes a deployment of OpenStack Ansible using the master
+branch. If you want to do something other than deploy master you can set the
+``${OSA_BRANCH}`` variable to any branch, tag, or SHA.
 
 
 Post Deployment
 ---------------
 
-Once deployed you can use virt-manager to manage the KVM instances on the host, similar to a DRAC or ILO.
+Once deployed you can use virt-manager to manage the KVM instances on the host,
+similar to a DRAC or ILO.
 
 LINUX:
-    If you're running a linux system as your workstation simply install virt-manager
-    from your package manager and connect to the host via QEMU/KVM:SSH
+    If you're running a linux system as your workstation simply install
+    virt-manager from your package manager and connect to the host via
+    QEMU/KVM:SSH
 
 OSX:
-    If you're running a MAC you can get virt-manager via X11 forwarding to the host
-    or install it via BREW. http://stackoverflow.com/questions/3921814/is-there-a-virt-manager-alternative-for-mac-os-x
+    If you're running a MAC you can get virt-manager via X11 forwarding to the
+    host or install it via BREW. http://stackoverflow.com/questions/3921814/is-there-a-virt-manager-alternative-for-mac-os-x
 
 WINDOWS:
-    If you're running Windows, you can install virt-viewer from the KVM Download site.
+    If you're running Windows, you can install virt-viewer from the KVM Download
+    site.
     https://virt-manager.org/download/
 
 
@@ -84,8 +87,9 @@ Console Access
     :alt: Screen shot of virt-manager console
     :align: center
 
-The root password for all VMs is "**secrete**". This password is being set within the pre-seed files under the
-"Users and Password" section. If you want to change this password please edit the pre-seed files.
+The root password for all VMs is "**secrete**". This password is being set
+within the pre-seed files under the "Users and Password" section. If you want
+to change this password please edit the pre-seed files.
 
 
 ``build.sh`` Options
@@ -124,15 +128,17 @@ Instruct the system to deploy OpenStack Ansible:
 Instruct the system to pre-config the envs for running OSA playbooks:
   ``PRE_CONFIG_OSA=${PRE_CONFIG_OSA:-true}``
 
-Instruct the system to run the OSA playbooks, if you want to deploy other OSA powered cloud, you can set it to false:
+Instruct the system to run the OSA playbooks, if you want to deploy other OSA
+powered cloud, you can set it to false:
   ``RUN_OSA=${RUN_OSA:-true}``
 
 
 Re-kicking VM(s)
 ----------------
 
-Re-kicking a VM is as simple as stopping a VM, delete the logical volume, create a new logical volume, start the VM.
-The VM will come back online, pxe boot, and install the base OS.
+Re-kicking a VM is as simple as stopping a VM, delete the logical volume, create
+a new logical volume, start the VM. The VM will come back online, pxe boot, and
+install the base OS.
 
 .. code-block:: bash
 
@@ -142,7 +148,8 @@ The VM will come back online, pxe boot, and install the base OS.
     virsh start "${VM_NAME}"
 
 
-To rekick all VMs, the following command can be used on the host machine to cycle through all found VMs and re-provision them.
+To rekick all VMs, the following command can be used on the host machine to
+cycle through all found VMs and re-provision them.
 
 .. code-block:: bash
 
@@ -157,14 +164,18 @@ To rekick all VMs, the following command can be used on the host machine to cycl
 Rerunning the build script
 --------------------------
 
-The build script can be rerun at any time. If you have a successful run before and simply want to re-kick everything I
-recommend nuking VMs and then executing the build script.
+The build script can be rerun at any time. If you have a successful run before
+and simply want to re-kick everything I recommend nuking VMs and then executing
+the build script.
 
 
 Deploying OpenStack into the environment
 ----------------------------------------
 
-While the build script will deploy OpenStack, you can choose to run this manually. To run a basic deploy using a given branch you can use the following snippet. Set the ansible option ``osa_branch`` or export the environment variable ``OSA_BRANCH`` when using the build.sh script.
+While the build script will deploy OpenStack, you can choose to run this
+manually. To run a basic deploy using a given branch you can use the following
+snippet. Set the ansible option ``osa_branch`` or export the environment
+variable ``OSA_BRANCH`` when using the build.sh script.
 
 .. code-block:: bash
 
@@ -174,8 +185,9 @@ While the build script will deploy OpenStack, you can choose to run this manuall
 Snapshotting an environment before major testing
 ------------------------------------------------
 
-Running a snapshot on all of the vms before doing major testing is wise as it'll give you a restore point without having to re-kick
-the cloud. You can do this using some basic ``virsh`` commands and a little bash.
+Running a snapshot on all of the vms before doing major testing is wise as it'll
+give you a restore point without having to re-kick the cloud. You can do this
+using some basic ``virsh`` commands and a little bash.
 
 .. code-block:: bash
 
@@ -184,9 +196,11 @@ the cloud. You can do this using some basic ``virsh`` commands and a little bash
     done
 
 
-Once the previous command is complete you'll have a collection of snapshots within all of your infrastructure hosts. These snapshots
-can be used to restore state to a previous point if needed. To restore the infrastructure hosts to a previous point,
-using your snapshots, you can execute a simple ``virsh`` command or the following bash loop to restore everything to a known point.
+Once the previous command is complete you'll have a collection of snapshots
+within all of your infrastructure hosts. These snapshots can be used to restore
+state to a previous point if needed. To restore the infrastructure hosts to a
+previous point, using your snapshots, you can execute a simple ``virsh``
+command or the following bash loop to restore everything to a known point.
 
 .. code-block:: bash
 
