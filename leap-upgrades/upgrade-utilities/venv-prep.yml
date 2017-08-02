@@ -35,8 +35,6 @@
         src: "/opt/{{ file_name }}"
         dest: "/opt"
         copy: "no"
-      when: sync_job | changed
 
     - name: Rewire venv
       command: "virtualenv-tools --update-path=auto /opt/{{ file_name.split('.tgz')[0] }}"
-      when: sync_job | changed
