@@ -166,19 +166,19 @@ function discover_code_version {
     else
         source /etc/openstack-release
         case "${DISTRIB_RELEASE%%.*}" in
-            '11')
+            *11)
                 export CODE_UPGRADE_FROM="KILO"
                 notice "You seem to be running Kilo"
             ;;
-            '12')
+            *12)
                 export CODE_UPGRADE_FROM="LIBERTY"
                 notice "You seem to be running Liberty"
             ;;
-            '13')
+            *13)
                 export CODE_UPGRADE_FROM="MITAKA"
                 notice "You seem to be running Mitaka"
             ;;
-            '14')
+            *14)
                 export CODE_UPGRADE_FROM="NEWTON"
                 notice "You seem to be running Newton"
             ;;
