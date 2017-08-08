@@ -39,3 +39,7 @@ export VENV_URL="${VENV_URL:-https://rpc-repo.rackspace.com/venvs/leap-bundles}"
 export VALIDATE_UPGRADE_INPUT="${VALIDATE_UPGRADE_INPUT:-TRUE}"
 export UPGRADES_TO_TODOLIST="${UPGRADES_TO_TODOLIST:-''}"
 export CODE_UPGRADE_FROM=""
+
+## Ansible debugging
+export LEAP_TIMESTAMP=$(date +%s)
+export ANSIBLE_LOG_PATH="/opt/leap42/ansible-${LEAP_TIMESTAMP}.log"
