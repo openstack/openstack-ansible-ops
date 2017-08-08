@@ -1,0 +1,101 @@
+---
+#
+# Playbook to populate a newly deployed OpenStack cloud with some flavors, images, etc.
+#
+# Runs against the Utility container on infra1, relying on the clouds.yaml file
+# left there by the OpenStack-Ansible playbooks to specify the API endpoint and
+# auth parameters to use.
+#
+- name: OpenStack service setup
+  hosts: utility_all[0]
+  user: root
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+# All the data is found in this file:
+  vars_files:
+    - vars/openstack-service-config.yml
+
+  tasks:
+
+  - name: Ensure python-shade library is present to run ansible os_xxx modules
+    apt:
+      name: python-shade
+      state: present
+
+  - name: Create flavors of nova VMs
+    os_nova_flavor:
+      endpoint_type: internal
+      cloud: default
+      state: present
+      name: "{{ item.name }}"
+      ram: "{{ item.ram }}"
+      vcpus: "{{ item.vcpus }}"
+      disk: "{{ item.disk }}"
+      swap: "{{ item.swap }}"
+      ephemeral: "{{ item.ephemeral }}"
+    with_items: "{{ vm_flavors }}"
+
+  - name: Create networks
+    os_network:
+      endpoint_type: internal
+      cloud: default
+      state: present
+      name: "{{ item.name }}"
+      shared: "{{ item.shared }}"
+      external: "{{ item.external }}"
+      provider_network_type: "{{ item.network_type }}"
+      provider_physical_network: "{{ item.physical_network | default ('') }}"
+    with_items: "{{ networks }}"
+
+  - name: Create subnets on networks
+    os_subnet:
+      endpoint_type: internal
+      cloud: default
+      state: present
+      name: "{{ item.name }}"
+      network_name: "{{ item.network_name }}"
+      ip_version: "{{ item.ip_version }}"
+      cidr: "{{ item.cidr }}"
+      gateway_ip: "{{ item.gateway_ip }}"
+      enable_dhcp: "{{ item.enable_dhcp }}"
+      allocation_pool_start: "{{ item.allocation_pool_start }}"
+      allocation_pool_end: "{{ item.allocation_pool_end }}"
+      dns_nameservers: "{{ item.dns_nameservers | default([]) }}"
+    with_items: "{{ subnets }}"
+
+  - name: Create a router on both public and private networks
+    os_router:
+      endpoint_type: internal
+      cloud: default
+      state: present
+      name: "{{ router_name }}"
+      network: "{{ provider_net_name }}"
+      interfaces:
+        - "{{ private_subnet_name }}"
+    ignore_errors: yes  # will report error if this router already exists
+    register: router_details
+
+  - name: Get list of security groups
+    # Must use shell here because Ansible does not have os_security_group_facts module
+    shell: "source openrc ; openstack security group list -f yaml | awk '/ID/ {print $2}'"
+    args:
+      executable: /bin/bash
+    register: sec_groups
+
+  - name: Setup rules on all security groups
+    os_security_group_rule:
+      endpoint_type: internal
+      cloud: default
+      security_group: "{{ item[1] }}"
+      protocol: "{{ item[0].protocol }}"
+      direction: "{{ item[0].direction }}"
+      port_range_min: "{{ item[0].port_min | default(-1) }}"
+      port_range_max: "{{ item[0].port_max | default(-1) }}"
+    with_nested:
+      - "{{ security_group_rules }}"
+      - "{{ sec_groups.stdout_lines }}"
+
+# Install some Linux system images
+  - include: ./openstack-image-setup.yml
+    with_items: "{{ images }}"
+

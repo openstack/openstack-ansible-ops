@@ -1,0 +1,25 @@
+---
+# These tasks are included in openstack-service-setup.yml playbook and
+# are repeated for each required image file.
+
+- name: Download system image file
+  get_url:
+    url: "{{ item.url }}"
+    dest: "/tmp/os_image_{{ item.name }}"
+    timeout: 600   # big files might take a while to download
+
+- name: Install system image
+  os_image:
+    endpoint_type: internal
+    cloud: default
+    state: present
+    is_public: true
+    name: "{{ item.name }}"
+    filename: "/tmp/os_image_{{ item.name }}"
+    disk_format: "{{ item.format }}"
+
+- name: Clean up temp file
+  file:
+    path: "/tmp/os_image_{{ item.name }}"
+    state: absent
+

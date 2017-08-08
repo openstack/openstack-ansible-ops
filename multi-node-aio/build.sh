@@ -33,5 +33,6 @@ ansible-playbook -vv \
                  -e http_proxy=${http_proxy:-''} \
                  -e run_osa=${RUN_OSA:-"true"} \
                  -e pre_config_osa=${PRE_CONFIG_OSA:-"true"} \
+                 -e configure_openstack=${CONFIGURE_OPENSTACK:-"true"} \
                  --force-handlers \
                  playbooks/site.yml

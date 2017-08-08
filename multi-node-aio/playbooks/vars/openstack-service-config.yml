@@ -1,0 +1,143 @@
+---
+# This file contains data that controls the post-deployment configuration
+# of OpenStack by the Ansible playbook openstack-service-setup.yml
+
+# Define a set of VM flavors to be created
+vm_flavors:
+  - name: m1.micro
+    ram: 256
+    vcpus: 1
+    disk: 1
+    swap: 0
+    ephemeral: 0
+  - name: m1.tiny
+    ram: 512
+    vcpus: 1
+    disk: 1
+    swap: 0
+    ephemeral: 0
+  - name: m1.mini
+    ram: 1024
+    vcpus: 2
+    disk: 3
+    swap: 0
+    ephemeral: 0
+  - name: m1.small
+    ram: 2048
+    vcpus: 3
+    disk: 12
+    swap: 4
+    ephemeral: 4
+  - name: m1.medium
+    ram: 4096
+    vcpus: 6
+    disk: 60
+    swap: 4
+    ephemeral: 20
+  - name: m1.large
+    ram: 8192
+    vcpus: 12
+    disk: 300
+    swap: 4
+    ephemeral: 150
+  - name: m1.xlarge
+    ram: 16384
+    vcpus: 24
+    disk: 600
+    swap: 4
+    ephemeral: 256
+  - name: m1.heavy
+    ram: 32768
+    vcpus: 48
+    disk: 1200
+    swap: 4
+    ephemeral: 256
+
+# Create shared networks and subnets:
+provider_net_name: GATEWAY_NET
+provider_net_cidr: 10.29.248.0/22
+provider_dns_server: "{{ DNS_NAMESERVER | default('8.8.8.8') }}"
+provider_subnet_name: "{{ provider_net_name }}_SUBNET"
+
+private_net_name: PRIVATE_NET
+private_net_cidr: 192.168.0.0/24
+private_subnet_name: "{{ private_net_name }}_SUBNET"
+
+networks:
+  - name: "{{ provider_net_name }}"
+    shared: true
+    external: true
+    network_type: flat
+    physical_network: flat
+  - name: "{{ private_net_name }}"
+    shared: true
+    external: true
+    network_type: vxlan
+    segmentation_id: 101
+
+subnets:
+  - name: "{{ provider_subnet_name }}"
+    network_name: "{{ provider_net_name }}"
+    ip_version: 4
+    cidr: "{{ provider_net_cidr }}"
+    gateway_ip: "{{ provider_net_cidr | ipaddr('1') | ipaddr('address') }}"
+    enable_dhcp: false
+    allocation_pool_start: "{{ provider_net_cidr | ipaddr('201') | ipaddr('address') }}"
+    allocation_pool_end:   "{{ provider_net_cidr | ipaddr('255') | ipaddr('address') }}"
+    dns_nameservers:
+       - "{{ provider_dns_server }}"
+  - name: "{{ private_subnet_name }}"
+    network_name: "{{ private_net_name }}"
+    ip_version: 4
+    cidr: "{{ private_net_cidr }}"
+    gateway_ip: "{{ private_net_cidr | ipaddr('1') | ipaddr('address') }}"
+    enable_dhcp: true
+    allocation_pool_start: "{{ private_net_cidr | ipaddr('10') | ipaddr('address') }}"
+    allocation_pool_end:   "{{ private_net_cidr | ipaddr('254') | ipaddr('address') }}"
+
+router_name: GATEWAY_NET_ROUTER
+security_group_name: gateway_security
+port_name: gateway_port
+
+# Neutron security group setup
+security_group_rules:
+  - name: Allow ICMP
+    protocol: icmp
+    direction: ingress
+  - name: Allow all TCP
+    protocol: tcp
+    direction: ingress
+    port_min: 1
+    port_max: 65535
+  - name: Allow all UDP
+    protocol: udp
+    direction: ingress
+    port_min: 1
+    port_max: 65535
+
+# Create some default images
+images:
+  - name: Ubuntu 14.04 LTS
+    format: qcow2
+    url: http://uec-images.ubuntu.com/releases/14.04/release/ubuntu-14.04-server-cloudimg-amd64-disk1.img
+  - name: Ubuntu 16.04
+    format: qcow2
+    url: http://uec-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
+  - name: Fedora 24
+    format: qcow2
+    url: http://dfw.mirror.rackspace.com/fedora/releases/24/CloudImages/x86_64/images/Fedora-Cloud-Base-24-1.2.x86_64.qcow2
+  - name: CentOS 7
+    format: qcow2
+    url: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+  - name: OpenSuse Leap 42.3
+    format: qcow2
+    url: http://download.opensuse.org/repositories/Cloud:/Images:/Leap_42.3/images/openSUSE-Leap-42.3-OpenStack.x86_64-0.0.4-Build2.223.qcow2
+  - name: Debian 9.1.0
+    format: qcow2
+    url: http://cdimage.debian.org/cdimage/openstack/current/debian-9.1.0-openstack-amd64.qcow2
+  - name: Debian TESTING
+    format: qcow2
+    url: http://cdimage.debian.org/cdimage/openstack/testing/debian-testing-openstack-amd64.qcow2
+  - name: Cirros-0.3.5
+    format: qcow2
+    url: http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img
