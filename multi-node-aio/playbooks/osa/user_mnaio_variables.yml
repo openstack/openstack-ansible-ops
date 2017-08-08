@@ -13,8 +13,10 @@ glance_default_store: swift
 
 {% if http_proxy is defined and http_proxy %}
 proxy_env_url: "{{ http_proxy }}"
+
+{% if global_environment_variables is defined and global_environment_variables | bool %}
 {% raw %}
-no_proxy_env: "localhost,127.0.0.1,{{ internal_lb_vip_address }},{{ external_lb_vip_address }},{% for host in groups['\''all_containers'\''] %}{{ hostvars[host]['\''container_address'\''] }}{% if not loop.last %},{% endif %}{% endfor %}"
+no_proxy_env: "localhost,127.0.0.1,{{ internal_lb_vip_address }},{{ external_lb_vip_address }},{% for host in groups['all_containers'] %}{{ hostvars[host]['container_address'] }}{% if not loop.last %},{% endif %}{% endfor %}"
 global_environment_variables:
   HTTP_PROXY: "{{ proxy_env_url }}"
   HTTPS_PROXY: "{{ proxy_env_url }}"
@@ -23,6 +25,16 @@ global_environment_variables:
   https_proxy: "{{ proxy_env_url }}"
   no_proxy: "{{ no_proxy_env }}"
 {% endraw %}
+{% endif %}
+
+{% if deployment_environment_variables is defined and deployment_environment_variables | bool %}
+{% raw %}
+deployment_environment_variables:
+  http_proxy: "{{ proxy_env_url }}"
+  https_proxy: "{{ proxy_env_url }}"
+  no_proxy: "localhost,127.0.0.1,{{ internal_lb_vip_address }},{{ external_lb_vip_address }},{% for host in groups['keystone_all'] %}{{ hostvars[host]['container_address'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+{% endraw %}
+{% endif %}
 
 glance_glance_api_conf_overrides:
   glance_store:
