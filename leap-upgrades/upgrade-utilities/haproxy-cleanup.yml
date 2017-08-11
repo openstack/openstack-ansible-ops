@@ -1,0 +1,26 @@
+---
+- hosts: haproxy
+  gather_facts: no
+  tasks:
+    - name: Backup haproxy init file
+      fetch:
+        src: /etc/init.d/haproxy
+        dest: "/opt/leap42/haproxy-kilo-{{ ansible_date_time.epoch }}.init"
+    - name: Removing haproxy init
+      file:
+        path: /etc/init.d/haproxy
+        state: absent
+    - name: Override haproxy init with known one
+      unarchive:
+        src: haproxy-cleanup.init
+        dest: /etc/init.d/
+    - name: Ensure permissions for new haproxy init
+      file:
+        path: /etc/init.d/haproxy
+        mode: 0755
+        owner: root
+        group: root
+    - name: Cleanup haproxy configuration folder
+      file:
+        path: /etc/haproxy/conf.d/
+        state: absent

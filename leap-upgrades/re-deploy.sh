@@ -57,6 +57,7 @@ RUN_TASKS+=("lxc-containers-create.yml")
 # Setup Infrastructure
 RUN_TASKS+=("unbound-install.yml")
 RUN_TASKS+=("repo-install.yml")
+RUN_TASKS+=("${UPGRADE_UTILS}/haproxy-cleanup.yml")
 RUN_TASKS+=("haproxy-install.yml")
 RUN_TASKS+=("memcached-install.yml")
 RUN_TASKS+=("galera-install.yml")
