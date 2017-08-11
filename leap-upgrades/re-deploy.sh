@@ -54,7 +54,17 @@ RUN_TASKS+=("${UPGRADE_UTILS}/nova-libvirt-fix.yml")
 RUN_TASKS+=("lxc-hosts-setup.yml")
 RUN_TASKS+=("lxc-containers-create.yml")
 
-RUN_TASKS+=("setup-infrastructure.yml")
+# Setup Infrastructure
+RUN_TASKS+=("unbound-install.yml")
+RUN_TASKS+=("repo-install.yml")
+RUN_TASKS+=("haproxy-install.yml")
+RUN_TASKS+=("memcached-install.yml")
+RUN_TASKS+=("galera-install.yml")
+RUN_TASKS+=("rabbitmq-install.yml")
+RUN_TASKS+=("etcd-install.yml")
+RUN_TASKS+=("utility-install.yml")
+RUN_TASKS+=("rsyslog-install.yml")
+
 # MariaDB sync for major maria upgrades and cluster schema sync
 RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
 
