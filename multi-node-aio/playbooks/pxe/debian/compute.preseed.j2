@@ -30,7 +30,7 @@ d-i netcfg/wireless_wep string
 
 # Pre Install
 
-# Command Line 1: This is necessary otherwise you will be prompted to umount /dev/sda. See Ubuntu bug #1347726.
+# Command Line 1: This is necessary otherwise you will be prompted to umount /dev/vda. See Ubuntu bug #1347726.
 d-i preseed/early_command string \
       umount /media || true
 
@@ -89,6 +89,15 @@ d-i partman-md/device_remove_md boolean true
 # And the same goes for the confirmation to write the lvm partitions.
 d-i partman-lvm/confirm boolean true
 d-i partman-lvm/confirm_nooverwrite boolean true
+d-i partman-md/confirm boolean true
+d-i partman-md/confirm_nooverwrite boolean true
+
+d-i partman-basicfilesystems/choose_label string gpt
+d-i partman-basicfilesystems/default_label string gpt
+d-i partman-partitioning/choose_label string gpt
+d-i partman-partitioning/default_label string gpt
+d-i partman/choose_label string gpt
+d-i partman/default_label string gpt
 
 d-i partman-auto/method string lvm
 d-i partman-auto/disk string /dev/sda
@@ -136,21 +145,13 @@ d-i partman-auto/expert_recipe string \
                       label{ openstack }                      \
                       mountpoint{ /openstack }                \
               .                                               \
-              4096 1 8192 btrfs                               \
+              16384 1 10240000 ext4                           \
                       $lvmok{ } in_vg{ vg00 }                 \
-                      lv_name{ machines00 }                   \
-                      method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ btrfs }   \
-                      label{ machines }                       \
-                      mountpoint{ /var/lib/machines }         \
-              .                                               \
-              8192 1 10240000 ext4                            \
-                      $lvmok{ } in_vg{ vg00 }                 \
-                      lv_name{ lxc00 }                        \
+                      lv_name{ nova00 }                       \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \
-                      label{ lxc }                            \
-                      mountpoint{ /var/lib/lxc }              \
+                      label{ nova }                           \
+                      mountpoint{ /var/lib/nova }             \
               .                                               \
 
 # This makes partman automatically partition without confirmation, provided
@@ -225,7 +226,7 @@ d-i grub-installer/bootdev string default
 # Post Install
 
 d-i preseed/late_command string \
-  in-target bash -c "wget --no-proxy http://{{ tftp_server }}/scripts/mnaio-post-install-script.sh -O /opt/mnaio-post-install-script.sh"; \
+  in-target bash -c "wget --no-proxy http://{{ tftp_server }}/scripts/compute-post-install-script.sh -O /opt/compute-post-install-script.sh"; \
   in-target bash -c 'chmod +x /opt/mnaio-post-install-script.sh'; \
   in-target bash -c '/opt/mnaio-post-install-script.sh'
 # Finish

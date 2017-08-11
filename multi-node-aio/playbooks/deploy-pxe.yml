@@ -196,6 +196,9 @@
         - src: vm-post-install-script.sh.j2
           dest: "vm-post-install-{{ ansible_os_family | lower }}-script.sh"
           dir: scripts
+        - src: compute-post-install-script.sh.j2
+          dest: "compute-post-install-{{ ansible_os_family | lower }}-script.sh"
+          dir: scripts
 
     - name: network scripts for an MNAIO
       template:
@@ -245,6 +248,15 @@
       template:
         src: "pxe/{{ ansible_os_family | lower }}/vm.preseed.j2"
         dest: /var/lib/tftpboot/preseed/vm.preseed
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict: "{{ images }}"
+
+    - name: Preseeds for pxe compute
+      template:
+        src: "pxe/{{ ansible_os_family | lower }}/compute.preseed.j2"
+        dest: /var/lib/tftpboot/preseed/compute.preseed
         mode: "0644"
         owner: root
         group: root

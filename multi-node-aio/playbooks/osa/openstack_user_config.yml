@@ -12,8 +12,8 @@ used_ips:
   - "10.0.248.0,10.0.248.200"
 
 global_overrides:
-  internal_lb_vip_address: "10.0.236.150"
-  external_lb_vip_address: "10.0.2.150"
+  internal_lb_vip_address: "{{ external_lb_vip_address | default(hostvars[groups['loadbalancer_hosts'][0]]['server_networks']['mgmt']['address'].split('/')[0]) }}"
+  external_lb_vip_address: "{{ external_lb_vip_address | default(hostvars[groups['loadbalancer_hosts'][0]]['ansible_host'].split('/')[0]) }}"
   tunnel_bridge: "br-vxlan"
   management_bridge: "br-mgmt"
   provider_networks:
