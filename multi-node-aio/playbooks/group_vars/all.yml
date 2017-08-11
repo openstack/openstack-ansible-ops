@@ -64,3 +64,37 @@ images:
       vm:
         url: "tftp://{{ tftp_server }}/preseed/vm.preseed"
         template_name: "vm.preseed"
+
+
+# mnaio_data_disk: 'sdc'  # str - not required, set this to define a given data disk if no data disk
+#                                               is defined the largest unpartitioned disk will be used.
+mnaio_host_networks:
+  dhcp:
+    iface: 'vm-br-dhcp'                 # str  - required, interface name
+    inet_type: 'static'                 # str  - required, iface type [static, dhcp, manual]
+    address: '10.0.2.1/22'              # str  - not required, must be in CIDR format
+    iface_port: none                    # str  - required, physical port used within a host bridge
+  mgmt:
+    iface: 'vm-br-eth1'
+    inet_type: 'static'
+    address: '10.0.236.1/22'
+    iface_port: none
+  flat:
+    iface: 'vm-br-eth2'
+    inet_type: 'static'
+    address: '10.0.248.1/22'
+    iface_port: none
+  vlan:
+    iface: 'vm-br-eth3'
+    inet_type: 'manual'
+    iface_port: none
+  vxlan:
+    iface: 'vm-br-eth4'
+    inet_type: 'manual'
+    address: '10.0.240.1/22'
+    iface_port: none
+  storage:
+    iface: 'vm-br-eth5'
+    inet_type: 'manual'
+    address: '10.0.244.1/22'
+    iface_port: none
