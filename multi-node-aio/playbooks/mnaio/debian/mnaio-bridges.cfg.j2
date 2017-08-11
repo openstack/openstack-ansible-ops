@@ -15,8 +15,17 @@ iface {{ value.iface }} inet {{ value.inet_type }}
     bridge_fd 0
     bridge_ports {{ value.iface_port }}
     offload-sg off
-{% if value.address is defined %}
+{%   if value.address is defined %}
     address {{ value.address }}
-{% endif %}
+{%   endif %}
+
+{%   if value.address_aliases is defined %}
+{%     for addr in value.address_aliases %}
+auto {{ value.iface }}
+iface {{ value.iface }} inet static
+    address {{ addr }}
+{%     endfor %}
+
+{%   endif %}
 
 {% endfor %}

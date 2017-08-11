@@ -3,7 +3,7 @@
 CacheDir: /var/www/pkg-cache
 LogDir: /var/log/apt-cacher-ng
 Port: 3142
-BindAddress: 10.0.2.1
+BindAddress: {{ default_acng_bind_address }}
 Remap-debrep: file:deb_mirror*.gz /debian ; file:backends_debian # Debian Archives
 Remap-uburep: file:ubuntu_mirrors /ubuntu ; file:backends_ubuntu # Ubuntu Archives
 Remap-debvol: file:debvol_mirror*.gz /debian-volatile ; file:backends_debvol # Debian Volatile Archives

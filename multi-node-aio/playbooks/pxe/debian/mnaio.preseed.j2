@@ -4,7 +4,7 @@
 # Use the following option to add additional boot parameters for the
 # installed system (if supported by the bootloader installer).
 # Note: options passed to the installer will be added automatically.
-d-i debian-installer/add-kernel-opts string biosdevname=0 net.ifnames=0
+d-i debian-installer/add-kernel-opts string biosdevname=0 net.ifnames=0 elevator=cfq
 
 # Networking
 d-i netcfg/choose_interface select eth0

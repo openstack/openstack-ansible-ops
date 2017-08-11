@@ -14,7 +14,7 @@
 default_interface: "{{ default_network | default('eth0') }}"
 default_vm_image: "{{ default_image | default('ubuntu-16.04-amd64') }}"
 default_vm_storage: "{{ vm_disk_size | default(92160) }}"
-
+default_acng_bind_address: 0.0.0.0
 default_os_families:
   ubuntu-16.04-amd64: debian
   ubuntu-14.04-amd64: debian
@@ -24,7 +24,7 @@ default_ubuntu_mirror_hostname: archive.ubuntu.com
 default_ubuntu_mirror_directory: /ubuntu
 
  # IP address, or domain name of the TFTP server
-tftp_server: "{{ ansible_host }}"
+tftp_server: "{{ hostvars[groups['pxe_hosts'][0]]['ansible_host'] | default(ansible_host) }}"
 # tftp_ssh_key: ''  # user defined ssh key, used to access the host
 tftp_port: 69
 
@@ -74,6 +74,8 @@ mnaio_host_networks:
     inet_type: 'static'                 # str  - required, iface type [static, dhcp, manual]
     address: '10.0.2.1/22'              # str  - not required, must be in CIDR format
     iface_port: none                    # str  - required, physical port used within a host bridge
+    address_aliases:                    # list - not required, items must be sting and in CIDR format
+      - '10.0.2.2/22'
   mgmt:
     iface: 'vm-br-eth1'
     inet_type: 'static'
@@ -90,11 +92,11 @@ mnaio_host_networks:
     iface_port: none
   vxlan:
     iface: 'vm-br-eth4'
-    inet_type: 'manual'
+    inet_type: 'static'
     address: '10.0.240.1/22'
     iface_port: none
   storage:
     iface: 'vm-br-eth5'
-    inet_type: 'manual'
+    inet_type: 'static'
     address: '10.0.244.1/22'
     iface_port: none

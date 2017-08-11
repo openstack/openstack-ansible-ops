@@ -59,10 +59,14 @@
       command: cat /root/.ssh/id_rsa.pub
       register: public_key_get
       changed_when: false
+      when:
+        - tftp_ssh_key is undefined
 
     - name: Set key facts
       set_fact:
         tftp_ssh_key: "{{ public_key_get.stdout }}"
+      when:
+        - tftp_ssh_key is undefined
 
   tasks:
     - name: Drop NGINX config
