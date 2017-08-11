@@ -68,6 +68,9 @@ swift3
 [deploy_hosts]
 infra1
 
+[loadbalancer_hosts]
+loadbalancer1
+
 ############################### OSA MNAIO HOSTS ###############################
 
 # The group "swift_hosts" is used in the MNAIO setup to create the basic drive
