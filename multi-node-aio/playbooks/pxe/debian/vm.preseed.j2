@@ -4,7 +4,7 @@
 # Use the following option to add additional boot parameters for the
 # installed system (if supported by the bootloader installer).
 # Note: options passed to the installer will be added automatically.
-d-i debian-installer/add-kernel-opts string biosdevname=0 net.ifnames=0
+d-i debian-installer/add-kernel-opts string biosdevname=0 net.ifnames=0 elevator=noop
 
 # Networking
 d-i netcfg/choose_interface select eth0
@@ -96,7 +96,7 @@ d-i partman-auto/disk string /dev/vda
 # For LVM partitioning, you can select how much of the volume group to use
 # for logical volumes.
 d-i partman-auto-lvm/guided_size string max
-d-i partman-auto-lvm/new_vg_name string vg00
+d-i partman-auto-lvm/new_vg_name string vmvg00
 
 d-i partman-auto/choose_recipe select custompartitioning
 d-i partman-auto/expert_recipe string \
@@ -113,15 +113,15 @@ d-i partman-auto/expert_recipe string \
                       $primary{ }                             \
                       method{ lvm }                           \
                       device{ /dev/vda2 }                     \
-                      vg_name{ vg00 }                         \
+                      vg_name{ vmvg00 }                       \
               .                                               \
               2048 1 4096 linux-swap                          \
-                      $lvmok{ } in_vg{ vg00 }                 \
+                      $lvmok{ } in_vg{ vmvg00 }               \
                       lv_name{ swap00 }                       \
                       method{ swap } format{ }                \
               .                                               \
               8192 1 16384 ext4                               \
-                      $lvmok{ } in_vg{ vg00 }                 \
+                      $lvmok{ } in_vg{ vmvg00 }               \
                       lv_name{ root00 }                       \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \
@@ -129,7 +129,7 @@ d-i partman-auto/expert_recipe string \
                       mountpoint{ / }                         \
               .                                               \
               16384 1 16384 ext4                              \
-                      $lvmok{ } in_vg{ vg00 }                 \
+                      $lvmok{ } in_vg{ vmvg00 }               \
                       lv_name{ openstack00 }                  \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \
@@ -137,7 +137,7 @@ d-i partman-auto/expert_recipe string \
                       mountpoint{ /openstack }                \
               .                                               \
               4096 1 8192 btrfs                               \
-                      $lvmok{ } in_vg{ vg00 }                 \
+                      $lvmok{ } in_vg{ vmvg00 }               \
                       lv_name{ machines00 }                   \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ btrfs }   \
@@ -145,7 +145,7 @@ d-i partman-auto/expert_recipe string \
                       mountpoint{ /var/lib/machines }         \
               .                                               \
               8192 1 10240000 ext4                            \
-                      $lvmok{ } in_vg{ vg00 }                 \
+                      $lvmok{ } in_vg{ vmvg00 }               \
                       lv_name{ lxc00 }                        \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \

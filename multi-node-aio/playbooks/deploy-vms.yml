@@ -82,7 +82,7 @@
   tasks:
     - name: VM Servers group
       add_host:
-        name: "{{ hostvars[item]['server_vm_fixed_addr'] }}"
+        name: "{{ item }}"
         groups: vm_servers
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
@@ -115,9 +115,9 @@
         dest: "{{ item.dest }}"
         mode: "0600"
       with_items:
-        - src: /root/.ssh/id_rsa
+        - src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
           dest: /root/.ssh/id_rsa
-        - src: /root/.ssh/id_rsa.pub
+        - src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
           dest: /root/.ssh/id_rsa.pub
 
   environment: "{{ deployment_environment_variables | default({}) }}"
@@ -142,7 +142,7 @@
 
     - name: Remove deleteme lv
       lvol:
-        vg: vg00
+        vg: vmvg00
         lv: lxc00
         force: true
         state: absent
@@ -159,7 +159,7 @@
   tasks:
     - name: Create cinder-volumes lv
       lvol:
-        vg: vg00
+        vg: vmvg00
         lv: cinder-volumes00
         size: "100%FREE"
         shrink: false
@@ -167,7 +167,7 @@
     - name: Create data cinder-volumes group
       lvg:
         vg: cinder-volumes
-        pvs: "/dev/vg00/cinder-volumes00"
+        pvs: "/dev/vmvg00/cinder-volumes00"
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
@@ -181,7 +181,7 @@
   tasks:
     - name: Remove deleteme lv
       lvol:
-        vg: vg00
+        vg: vmvg00
         lv: "{{ item }}"
         size: 4G
       with_items:
@@ -192,7 +192,7 @@
     - name: Format swift drives
       filesystem:
         fstype: xfs
-        dev: "/dev/vg00/{{ item }}"
+        dev: "/dev/vmvg00/{{ item }}"
       with_items:
         - disk1
         - disk2
@@ -213,7 +213,7 @@
     - name: Mount swift drives
       mount:
         name: "/srv/{{ item }}"
-        src: "/dev/mapper/vg00-{{ item }}"
+        src: "/dev/mapper/vmvg00-{{ item }}"
         fstype: xfs
         state: mounted
       with_items:
