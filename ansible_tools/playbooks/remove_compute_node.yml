@@ -46,7 +46,8 @@
     - name: Remove neutron agent service on {{ host_to_be_removed }}
       shell: |
         . {{ ansible_env.HOME }}/openrc
-        neutron agent-delete {{ neutron_agent_list_results.stdout }}
+        neutron agent-delete {{ item }}
+      with_items: "{{ neutron_agent_list_results.stdout_lines }}"
       register: neutron_delete_results
       changed_when: neutron_delete_results.rc == 0
       failed_when: neutron_delete_results.rc > 0
