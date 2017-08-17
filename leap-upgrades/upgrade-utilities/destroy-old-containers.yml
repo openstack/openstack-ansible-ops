@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Destroy lxc containers except galera
-  hosts: "all_containers:!galera_all:!neutron_agent"
+  hosts: "all_containers:!galera_all:!neutron_agent:!ceph_all"
   gather_facts: false
   user: root
   tasks:
@@ -78,5 +78,5 @@
       command: apt-get update
     - name: Search for and destroy reminent RPC grouped containers
       shell: >-
-        lxc-ls -f | awk '/rpc/ {print $1}' | grep -v "neutron_agent" | xargs -n 1 lxc-destroy -fn
+        lxc-ls -f | awk '/rpc/ {print $1}' | grep -v -e "neutron_agent" -e "ceph" | xargs -n 1 lxc-destroy -fn
       failed_when: false
