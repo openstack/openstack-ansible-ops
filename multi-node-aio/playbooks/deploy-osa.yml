@@ -109,6 +109,15 @@
       when:
         - pre_config_osa | default(true) | bool
 
+    - name: Config Tmux
+      lineinfile:
+        path: /root/.tmux.conf
+        regexp: '^set-option'
+        line: 'set-option -g history-limit 20000'
+        owner: root
+        group: root
+        mode: 0644
+
     - name: Run OSA
       command: "{{ item }}"
       args:
