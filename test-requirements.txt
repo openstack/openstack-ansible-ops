@@ -12,5 +12,5 @@ ndg-httpsclient>=0.4.2;python_version<'3.0' # BSD
 sphinx>=1.6.2 # BSD
 openstackdocstheme>=1.16.0 # Apache-2.0
 doc8 # Apache-2.0
-reno!=2.3.1,>=1.8.0 # Apache-2.0
+reno>=2.5.0 # Apache-2.0
 sphinxmark>=0.1.14 # Apache-2.0
