@@ -19,11 +19,11 @@ export DEBUG="${DEBUG:-TRUE}"
 export DEBUG_PATH="${DEBUG_PATH:-/tmp/run_debug}"
 
 ## Script Vars ---------------------------------------------------------------
-export JUNO_RELEASE="${JUNO_RELEASE:-10.1.14}"
-export KILO_RELEASE="${KILO_RELEASE:-11.2.17}"
-export LIBERTY_RELEASE="${LIBERTY_RELEASE:-12.2.8}"
-export MITAKA_RELEASE="${MITAKA_RELEASE:-13.3.11}"
-export NEWTON_RELEASE="${NEWTON_RELEASE:-14.2.3}"  # commit used due to packaging bug caused by setuptools
+export JUNO_RELEASE="${JUNO_RELEASE:-eol-juno}"
+export KILO_RELEASE="${KILO_RELEASE:-eol-kilo}"
+export LIBERTY_RELEASE="${LIBERTY_RELEASE:-liberty-eol}"
+export MITAKA_RELEASE="${MITAKA_RELEASE:-mitaka-eol}"
+export NEWTON_RELEASE="${NEWTON_RELEASE:-14.2.7}"
 
 ## Environment Vars ------------------------------------------------------------------
 export MAIN_PATH="${MAIN_PATH:-/opt/openstack-ansible}"
