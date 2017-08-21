@@ -427,6 +427,9 @@ function build_venv {
       apt-get -y install libmysqlclient-dev > /dev/null
     fi
 
+    # install ldap and sasl headers for pyldap (or ldap-python)
+    apt-get -y install libldap2-dev libsasl2-dev
+
     ### The venv build is done using a modern version of the py_pkgs plugin which collects all versions of
     ###  the OpenStack components from a given release. This creates 1 large venv per migratory release.
     # If the venv archive exists delete it.
