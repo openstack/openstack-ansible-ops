@@ -419,8 +419,13 @@ function build_venv {
       failure "Can't install liberasurecode-dev. Enable trusty backports or UCA on this host."
       exit 99
     fi
+    apt-get -y install liberasurecode-dev > /dev/null
 
-    apt-get -y install liberasurecode-dev libmysqlclient-dev > /dev/null
+    # Install libmysqlclient-dev so that we are later able to build mysql-python
+    # Allow libmariadbclient-dev to be used instead
+    if ! apt --installed list | grep libmariadbclient-dev; then
+      apt-get -y install libmysqlclient-dev > /dev/null
+    fi
 
     ### The venv build is done using a modern version of the py_pkgs plugin which collects all versions of
     ###  the OpenStack components from a given release. This creates 1 large venv per migratory release.
