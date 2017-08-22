@@ -41,16 +41,20 @@
   hosts: "cinder_all[0]"
   user: root
   tasks:
+    - name: Check the service list
+      shell: mysql -Be 'select `binary`,`host` from services;' cinder | awk '{if (NR!=1) {print $1, $2}}'
+      args:
+        executable: /bin/bash
+      changed_when: false
+      delegate_to: "{{ groups['utility_all'][0] }}"
+      register: cinder_service_list
     - name: Perform a cinder DB sync
       command: "{{ venv_path }}/bin/cinder-manage db sync"
     - name: Perform service purge
-      shell: |
-        IFS=$'\n'
-        for i in $({{ venv_path }}/bin/cinder-manage service list | awk '/None/ {print $1, $2}'); do
-          eval "{{ venv_path }}/bin/cinder-manage service remove $i"
-        done
+      shell: "{{ venv_path }}/bin/cinder-manage service remove {{ item }}"
       args:
         executable: /bin/bash
+      with_items: "{{ cinder_service_list.stdout_lines }}"
 
 - name: Nova DB Migrations
   hosts: "nova_api_os_compute[0]"
