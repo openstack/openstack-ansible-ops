@@ -428,7 +428,7 @@ function build_venv {
     fi
 
     # install ldap and sasl headers for pyldap (or ldap-python)
-    apt-get -y install libldap2-dev libsasl2-dev
+    apt-get -y install libldap2-dev libsasl2-dev libxml2-dev libxslt1-dev
 
     ### The venv build is done using a modern version of the py_pkgs plugin which collects all versions of
     ###  the OpenStack components from a given release. This creates 1 large venv per migratory release.
