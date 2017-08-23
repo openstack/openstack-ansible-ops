@@ -118,11 +118,6 @@ function system_bootstrap {
     done
 
     pushd "$1"
-      # Install the releases global requirements
-      if [[ -f "global-requirement-pins.txt" ]]; then
-        pip install --upgrade --isolated --force-reinstall --requirement global-requirement-pins.txt
-      fi
-
       # Install ansible for system migrations
       scripts/bootstrap-ansible.sh
     popd
