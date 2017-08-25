@@ -28,6 +28,7 @@ git-core          [platform:dpkg]
 libssl-dev        [platform:dpkg]
 libffi-dev        [platform:dpkg]
 python2.7         [platform:dpkg]
+python-apt        [platform:dpkg]
 python-dev        [platform:dpkg]
 
 # Base requirements for CentOS
@@ -46,7 +47,7 @@ python-pyasn1               [platform:dpkg]
 python-openssl              [platform:dpkg]
 python-ndg-httpsclient      [platform:ubuntu !platform:ubuntu-trusty]
 python2-pyasn1              [platform:rpm]
-python2-pyOpenSSL           [platform:rpm]
+pyOpenSSL                   [platform:rpm]
 python-ndg_httpsclient      [platform:rpm]
 
 # Required for compressing collected log files in CI
