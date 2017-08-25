@@ -13,59 +13,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Set venv path
+- name: "Mitaka: Set venv path"
   hosts: "keystone_all[0]:glance_all[0]:cinder_all[0]:nova_api_os_compute[0]:neutron_server[0]:heat_all[0]:ironic_conductor[0]"
   user: root
   vars:
     file_name: "{{ venv_tar_location | basename }}"
   tasks:
-    - name: Set venv fact
+    - name: "Mitaka: Set venv fact"
       set_fact:
         venv_path: "/opt/{{ file_name.split('.tgz')[0] }}"
 
-- name: Keystone DB Migrations
+- name: "Mitaka: Keystone DB Migrations"
   hosts: "keystone_all[0]"
   user: root
   tasks:
-    - name: Perform a Keystone DB sync
+    - name: "Mitaka: Perform a Keystone DB sync"
       command: "{{ venv_path }}/bin/keystone-manage db_sync"
 
-- name: Glance DB Migrations
+- name: "Mitaka: Glance DB Migrations"
   hosts: "glance_all[0]"
   user: root
   tasks:
-    - name: Perform a Glance DB sync
+    - name: "Mitaka: Perform a Glance DB sync"
       command: "{{ venv_path }}/bin/glance-manage db_sync"
 
-- name: Cinder DB Migrations
+- name: "Mitaka: Cinder DB Migrations"
   hosts: "cinder_all[0]"
   user: root
   tasks:
-    - name: Perform a cinder DB sync
+    - name: "Mitaka: Perform a cinder DB sync"
       command: "{{ venv_path }}/bin/cinder-manage db sync"
 
-- name: Nova DB Migrations
+- name: "Mitaka: Nova DB Migrations"
   hosts: "nova_api_os_compute[0]"
   user: root
   tasks:
-    - name: Run nova null uuid checks
+    - name: "Mitaka: Run nova null uuid checks"
       command: "{{ venv_path }}/bin/nova-manage db null_instance_uuid_scan --delete"
-    - name: Perform a Nova DB sync
+    - name: "Mitaka: Perform a Nova DB sync"
       command: "{{ venv_path }}/bin/nova-manage db sync"
-    - name: Perform Nova online data migrations
+    - name: "Mitaka: Perform Nova online data migrations"
       command: "{{ venv_path }}/bin/nova-manage db online_data_migrations"
 
-- name: Stop Neutron Server
+- name: "Mitaka: Stop Neutron Server"
   hosts: "neutron_server"
   user: root
   tasks:
-    - name: Stop Neutron server
+    - name: "Mitaka: Stop Neutron server"
       service:
         name: "neutron-server"
         state: stopped
         pattern: "neutron-server"
 
-- name: Neutron DB Migrations
+- name: "Mitaka: Neutron DB Migrations"
   hosts: "neutron_server[0]"
   user: root
   vars:
@@ -83,31 +83,31 @@
     neutron_db_plugin: "/etc/neutron/{{ neutron_plugins[neutron_plugin_type | default('ml2')]['plugin_ini'] }}"
     neutron_db_config: "/etc/neutron/neutron.conf"
   tasks:
-    - name: Perform a Neutron DB Upgrade
+    - name: "Mitaka: Perform a Neutron DB Upgrade"
       command: "{{ venv_path }}/bin/neutron-db-manage --config-file {{ neutron_db_config }} --config-file {{ neutron_db_plugin }} upgrade {{ neutron_db_revision }}"
       sudo: yes
       sudo_user: "{{ neutron_system_user_name }}"
 
-- name: Heat DB Migrations
+- name: "Mitaka: Heat DB Migrations"
   hosts: "heat_all[0]"
   user: root
   tasks:
-    - name: Perform a heat DB sync
+    - name: "Mitaka: Perform a Heat DB sync"
       command: "{{ venv_path }}/bin/heat-manage db_sync"
 
-- name: Horizon DB drop
+- name: "Mitaka: Horizon DB drop"
   hosts: "utility_all[0]"
   user: root
   tasks:
-    - name: Drop horizon DB - It will be recreated later
+    - name: "Mitaka: Drop horizon DB - It will be recreated later"
       command: "mysql --unbuffered -sNL -e 'drop database {{ horizon_galera_database | default('dash') }}'"
       register: drop_db
       failed_when: false
       changed_when: drop_db.rc == 0
 
-- name: Ironic DB Migrations
+- name: "Mitaka: Ironic DB Migrations"
   hosts: "ironic_conductor[0]"
   user: root
   tasks:
-    - name: Update database schema
+    - name: "Mitaka: Update database schema"
       command: "{{ venv_path }}/ironic-dbsync upgrade"

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Update neutron MTU for vlan, vxlan, and flat networks
+- name: "Mitaka: Update neutron MTU for vlan, vxlan, and flat networks"
   hosts: galera_all[0]
   gather_facts: false
   user: root
@@ -25,7 +25,7 @@
               -e "SELECT network_id, network_type, physical_network FROM ml2_network_segments WHERE network_type IN ('vlan','flat','vxlan','gre') AND network_id IN (select id from networks where mtu=0);" {{ neutron_galera_database | default('neutron') }} | tr "\t" "|"
       register: networks
 
-    - name: Create neutron MTU migration script
+    - name: "Mitaka: Create neutron MTU migration script"
       copy:
         content: |
           {% for item in networks.stdout_lines %}
@@ -75,5 +75,5 @@
           {% endfor %}
         dest: /tmp/neutron-mtu-script.sh
 
-    - name: Run neutron MTU migration script
+    - name: "Mitaka: Run neutron MTU migration script:
       command: bash /tmp/neutron-mtu-script.sh
