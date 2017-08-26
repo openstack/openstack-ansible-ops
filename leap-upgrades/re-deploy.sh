@@ -40,6 +40,13 @@ fi
 
 link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 RUN_TASKS=()
+
+# Pre-setup-hosts hook
+if [ -n "$PRE_SETUP_HOSTS_HOOK" ]; then
+  RUN_TASKS+=("$PRE_SETUP_HOSTS_HOOK")
+fi
+
+# Setup Hosts
 RUN_TASKS+=("openstack-hosts-setup.yml -e redeploy_rerun=true")
 # Ensure the same pip everywhere, even if requirement met or above
 RUN_TASKS+=("${UPGRADE_UTILS}/pip-unify.yml -e release_version=\"${NEWTON_RELEASE}\"")
@@ -53,6 +60,16 @@ RUN_TASKS+=("${UPGRADE_UTILS}/nova-libvirt-fix.yml")
 
 RUN_TASKS+=("lxc-hosts-setup.yml")
 RUN_TASKS+=("lxc-containers-create.yml")
+
+# Post-setup-hosts hook
+if [ -n "$POST_SETUP_HOSTS_HOOK" ]; then
+  RUN_TASKS+=("$POST_SETUP_HOSTS_HOOK")
+fi
+
+# Pre-setup-infrastructure hook
+if [ -n "$PRE_SETUP_INFRASTRUCTURE_HOOK" ]; then
+  RUN_TASKS+=("$PRE_SETUP_INFRASTRUCTURE_HOOK")
+fi
 
 # Setup Infrastructure
 RUN_TASKS+=("unbound-install.yml")
@@ -68,6 +85,18 @@ RUN_TASKS+=("rsyslog-install.yml")
 
 # MariaDB sync for major maria upgrades and cluster schema sync
 RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
+
+# Post-setup-infrastructure hook
+if [ -n "$POST_SETUP_INFRASTRUCTURE_HOOK" ]; then
+  RUN_TASKS+=("$POST_SETUP_INFRASTRUCTURE_HOOK")
+fi
+
+# Pre-setup-openstack hook
+if [ -n "$PRE_SETUP_OPENSTACK_HOOK" ]; then
+  RUN_TASKS+=("$PRE_SETUP_OPENSTACK_HOOK")
+fi
+
+# Setup OpenStack
 
 RUN_TASKS+=("os-keystone-install.yml")
 RUN_TASKS+=("os-glance-install.yml")
@@ -101,6 +130,12 @@ RUN_TASKS+=("os-magnum-install.yml")
 RUN_TASKS+=("os-sahara-install.yml")
 
 RUN_TASKS+=("${UPGRADE_UTILS}/post-redeploy-cleanup.yml")
+
+# Post-setup-openstack hook
+if [ -n "$POST_SETUP_OPENSTACK_HOOK" ]; then
+  RUN_TASKS+=("$POST_SETUP_OPENSTACK_HOOK")
+fi
+
 # Loads a shell script that can be used to modify
 # the RUN_TASKS behavior.
 if [[ ${REDEPLOY_EXTRA_SCRIPT:-} ]]; then
