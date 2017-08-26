@@ -75,5 +75,5 @@
           {% endfor %}
         dest: /tmp/neutron-mtu-script.sh
 
-    - name: "Mitaka: Run neutron MTU migration script:
+    - name: "Mitaka: Run neutron MTU migration script"
       command: bash /tmp/neutron-mtu-script.sh
