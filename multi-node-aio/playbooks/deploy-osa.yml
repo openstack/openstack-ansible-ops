@@ -117,6 +117,7 @@
         owner: root
         group: root
         mode: 0644
+        create: yes
 
     - name: Run OSA
       command: "{{ item }}"
