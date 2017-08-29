@@ -42,7 +42,7 @@ link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 RUN_TASKS=()
 
 # Pre-setup-hosts hook
-if [ -n "$PRE_SETUP_HOSTS_HOOK" ]; then
+if [[ -n ${PRE_SETUP_HOSTS_HOOK+x} ]]; then
   RUN_TASKS+=("$PRE_SETUP_HOSTS_HOOK")
 fi
 
@@ -62,12 +62,12 @@ RUN_TASKS+=("lxc-hosts-setup.yml")
 RUN_TASKS+=("lxc-containers-create.yml")
 
 # Post-setup-hosts hook
-if [ -n "$POST_SETUP_HOSTS_HOOK" ]; then
+if [[ -n ${POST_SETUP_HOSTS_HOOK+x} ][; then
   RUN_TASKS+=("$POST_SETUP_HOSTS_HOOK")
 fi
 
 # Pre-setup-infrastructure hook
-if [ -n "$PRE_SETUP_INFRASTRUCTURE_HOOK" ]; then
+if [[ -n ${PRE_SETUP_INFRASTRUCTURE_HOOK+x} ]]; then
   RUN_TASKS+=("$PRE_SETUP_INFRASTRUCTURE_HOOK")
 fi
 
@@ -87,12 +87,12 @@ RUN_TASKS+=("rsyslog-install.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
 
 # Post-setup-infrastructure hook
-if [ -n "$POST_SETUP_INFRASTRUCTURE_HOOK" ]; then
+if [[ -n ${POST_SETUP_INFRASTRUCTURE_HOOK+x} ]]; then
   RUN_TASKS+=("$POST_SETUP_INFRASTRUCTURE_HOOK")
 fi
 
 # Pre-setup-openstack hook
-if [ -n "$PRE_SETUP_OPENSTACK_HOOK" ]; then
+if [[ -n ${PRE_SETUP_OPENSTACK_HOOK+x} ]; then
   RUN_TASKS+=("$PRE_SETUP_OPENSTACK_HOOK")
 fi
 
@@ -132,7 +132,7 @@ RUN_TASKS+=("os-sahara-install.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/post-redeploy-cleanup.yml")
 
 # Post-setup-openstack hook
-if [ -n "$POST_SETUP_OPENSTACK_HOOK" ]; then
+if [[ -n ${POST_SETUP_OPENSTACK_HOOK+x} ]]; then
   RUN_TASKS+=("$POST_SETUP_OPENSTACK_HOOK")
 fi
 
