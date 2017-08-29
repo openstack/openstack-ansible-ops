@@ -418,7 +418,9 @@ function build_venv {
 
     # Install libmysqlclient-dev so that we are later able to build mysql-python
     # Allow libmariadbclient-dev to be used instead
-    if ! apt --installed list | grep libmariadbclient-dev; then
+    if ! apt --installed list | grep libmariadbclient; then
+      apt-get -y install libmariadbclient-dev > /dev/null
+    else
       apt-get -y install libmysqlclient-dev > /dev/null
     fi
 
