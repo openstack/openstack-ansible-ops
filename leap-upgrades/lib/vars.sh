@@ -26,7 +26,10 @@ export MITAKA_RELEASE="${MITAKA_RELEASE:-mitaka-eol}"
 export NEWTON_RELEASE="${NEWTON_RELEASE:-14.2.7}"
 
 ## Environment Vars ------------------------------------------------------------------
+# main path changes with releases leaping
 export MAIN_PATH="${MAIN_PATH:-/opt/openstack-ansible}"
+# this is the final folder for redeploy.
+export REDEPLOY_OA_FOLDER="${REDEPLOY_OA_FOLDER:-/opt/openstack-ansible}"
 export SYSTEM_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../ && pwd )"
 export UPGRADE_UTILS="${UPGRADE_UTILS:-${SYSTEM_PATH}/upgrade-utilities}"
 

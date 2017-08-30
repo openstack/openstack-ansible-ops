@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# NOTICE: To run this in an automated fashion run the script via
-#   root@HOSTNAME:/opt/openstack-ansible# echo "YES" | bash scripts/run-upgrade.sh
-
 ## Shell Opts ----------------------------------------------------------------
 set -e -u
 
@@ -130,6 +127,6 @@ if [[ ! -f "/opt/leap42/openstack-ansible-upgrade-hostupgrade.leap" ]]; then
     RUN_TASKS=()
     RUN_TASKS+=("${UPGRADE_UTILS}/pip-conf-purge.yml")
     RUN_TASKS+=("openstack-hosts-setup.yml")
-    run_items "/opt/openstack-ansible"
+    run_items "${REDEPLOY_OA_FOLDER}"
     tag_leap_success "upgrade-hostupgrade"
 fi

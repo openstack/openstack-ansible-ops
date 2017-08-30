@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# NOTICE: To run this in an automated fashion run the script via
-#   root@HOSTNAME:/opt/openstack-ansible# echo "YES" | bash scripts/run-upgrade.sh
-
 ## Shell Opts ----------------------------------------------------------------
 set -e -u
 
@@ -32,7 +29,9 @@ if [[ ! -f "/opt/leap42/openstack-ansible-poweroff.leap" ]]; then
   fi
   RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/power-down.yml")
-  run_items "/opt/openstack-ansible"
+  # This run_items doesn't care about which folder it runs in, because just
+  # one task is used, and it's not in the folder
+  run_items "${REDEPLOY_OA_FOLDER}"
   tag_leap_success "poweroff"
 fi
 

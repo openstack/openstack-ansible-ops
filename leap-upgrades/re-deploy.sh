@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# NOTICE: To run this in an automated fashion run the script via
-#   root@HOSTNAME:/opt/openstack-ansible# echo "YES" | bash scripts/run-upgrade.sh
-
 ## Shell Opts ----------------------------------------------------------------
 set -e -u
 
@@ -142,5 +139,5 @@ if [[ ${REDEPLOY_EXTRA_SCRIPT:-} ]]; then
     notice "Running extra script before re-deploy"
     source ${REDEPLOY_EXTRA_SCRIPT}
 fi
-run_items "/opt/openstack-ansible"
+run_items "${REDEPLOY_OA_FOLDER}"
 ### Run the redeploy tasks

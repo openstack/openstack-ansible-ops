@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# NOTICE: To run this in an automated fashion run the script via
-#   root@HOSTNAME:/opt/openstack-ansible# echo "YES" | bash scripts/run-upgrade.sh
-
 ## Shell Opts ----------------------------------------------------------------
 set -e -u
 
