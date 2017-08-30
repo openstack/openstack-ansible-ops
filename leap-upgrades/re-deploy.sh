@@ -62,7 +62,7 @@ RUN_TASKS+=("lxc-hosts-setup.yml")
 RUN_TASKS+=("lxc-containers-create.yml")
 
 # Post-setup-hosts hook
-if [[ -n ${POST_SETUP_HOSTS_HOOK+x} ][; then
+if [[ -n ${POST_SETUP_HOSTS_HOOK+x} ]]; then
   RUN_TASKS+=("$POST_SETUP_HOSTS_HOOK")
 fi
 
@@ -92,7 +92,7 @@ if [[ -n ${POST_SETUP_INFRASTRUCTURE_HOOK+x} ]]; then
 fi
 
 # Pre-setup-openstack hook
-if [[ -n ${PRE_SETUP_OPENSTACK_HOOK+x} ]; then
+if [[ -n ${PRE_SETUP_OPENSTACK_HOOK+x} ]]; then
   RUN_TASKS+=("$PRE_SETUP_OPENSTACK_HOOK")
 fi
 
