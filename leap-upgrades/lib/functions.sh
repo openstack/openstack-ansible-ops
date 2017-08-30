@@ -97,7 +97,15 @@ function run_lock {
   set -e
 }
 
-function system_bootstrap {
+function bootstrap_recent_ansible {
+    # This ensures that old ansible will be removed
+    # and that we have a recent enough Ansible version for:
+    # - the variable upgrades
+    # - the db migrations
+    # - the host upgrade
+    # - the neutron container forget
+    # - the re deploy, if there was no hook that
+    #   redeployed ansible
     if [[ -d "/opt/ansible-runtime" ]]; then
       rm -rf "/opt/ansible-runtime"
     else
@@ -117,7 +125,7 @@ function system_bootstrap {
       notice "Removed System installed Ansible"
     done
 
-    pushd "$1"
+    pushd "${BOOTSTRAP_ANSIBLE_FOLDER}"
       # Install ansible for system migrations
       scripts/bootstrap-ansible.sh
     popd
