@@ -73,6 +73,6 @@ if [[ ! -f "/opt/leap42/openstack-ansible-prep-finalsteps.leap" ]]; then
     unset ANSIBLE_INVENTORY
 
     link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
-    system_bootstrap "/opt/openstack-ansible"
+    bootstrap_recent_ansible
     touch "/opt/leap42/openstack-ansible-prep-finalsteps.leap"
 fi
