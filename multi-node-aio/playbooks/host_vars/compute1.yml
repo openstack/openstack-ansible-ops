@@ -17,7 +17,7 @@ ansible_os_family: "{{ images[default_vm_image]['image_type'] }}"
 
 server_hostname: 'compute1'
 server_vm: true
-server_vm_ram: 2048
+server_vm_ram: 8192
 server_vm_vcpus: 4
 server_vm_fixed_addr: '10.0.2.120'
 server_vm_primary_network: 'dhcp'
