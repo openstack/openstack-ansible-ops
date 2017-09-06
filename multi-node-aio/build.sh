@@ -19,6 +19,11 @@ source bootstrap.sh
 
 source ansible-env.rc
 
+ansible mnaio_hosts \
+        -i playbooks/inventory \
+        -m pip \
+        -a "name=netaddr"
+
 ansible-playbook -vv \
                  -i playbooks/inventory \
                  -e setup_host=${SETUP_HOST:-"true"} \
