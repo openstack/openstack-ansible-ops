@@ -49,6 +49,16 @@
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
+    - name: Wait for guest capabilities to appear
+      command: "virsh capabilities"
+      register: virsh_caps
+      until: "'<guest>' in virsh_caps.stdout"
+      retries: 6
+      delay: 10
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
+
     - name: Define the VM
       command: "virsh define /etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
       failed_when: false

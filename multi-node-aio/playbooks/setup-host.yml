@@ -198,6 +198,11 @@
       failed_when: false
       register: virsh_data_volume
 
+    - name: Create /etc/libvirt/storage directory
+      file:
+        path: "/etc/libvirt/storage/"
+        state: "directory"
+
     - name: Create virsh data volume
       shell: |
         virsh pool-create-as vg01 logical
