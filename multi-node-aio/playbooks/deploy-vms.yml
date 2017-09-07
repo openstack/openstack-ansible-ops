@@ -80,6 +80,14 @@
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
+    - name: Add VM to /etc/hosts file
+      lineinfile:
+        path: "/etc/hosts"
+        line: "{{ hostvars[item]['ansible_host'] }} {{ hostvars[item]['server_hostname'] }}"
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
+
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   tags:

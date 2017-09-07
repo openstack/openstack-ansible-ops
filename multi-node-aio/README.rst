@@ -136,6 +136,10 @@ Instruct the system to configure the completed OpenStack deployment with some
 example flavors, images, networks, etc.:
   ``CONFIGURE_OPENSTACK=${CONFIGURE_OPENSTACK:-true}``
 
+Instruct the system to configure iptables prerouting rules for connecting to
+VMs from outside the host:
+  ``CONFIG_PREROUTING=${CONFIG_PREROUTING:-true}``
+
 
 Re-kicking VM(s)
 ----------------
