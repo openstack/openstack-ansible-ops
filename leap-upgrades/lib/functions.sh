@@ -131,6 +131,17 @@ function bootstrap_recent_ansible {
     popd
 }
 
+function resume_incomplete_leap {
+    echo
+    notice "Detected previous leap attempt to ${CODE_UPGRADE_FROM}."
+    notice 'Would you like to reattempt this leap upgrade?'
+    read -p 'Enter "YES" to continue:' RUSURE
+    if [[ "${RUSURE}" != "YES" ]]; then
+        notice "Quitting..."
+        exit 99
+    fi
+}
+
 function validate_upgrade_input {
 
     echo
@@ -278,7 +289,9 @@ function pre_flight {
 
     discover_code_version
 
-    if [ "${VALIDATE_UPGRADE_INPUT}" == "TRUE" ]; then
+    if [[ -f "${CONFIG_DIR}/upgrade-leap/redeploy-started.complete" && ! -f "${CONFIG_DIR}/upgrade-leap/osa-leap.complete" ]]; then
+        resume_incomplete_leap
+    elif [ "${VALIDATE_UPGRADE_INPUT}" == "TRUE" ]; then
         validate_upgrade_input
     fi
 
