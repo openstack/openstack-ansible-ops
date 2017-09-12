@@ -132,6 +132,10 @@ Instruct the system to run the OSA playbooks, if you want to deploy other OSA
 powered cloud, you can set it to false:
   ``RUN_OSA=${RUN_OSA:-true}``
 
+Instruct the system to configure the completed OpenStack deployment with some
+example flavors, images, networks, etc.:
+  ``CONFIGURE_OPENSTACK=${CONFIGURE_OPENSTACK:-true}``
+
 
 Re-kicking VM(s)
 ----------------
