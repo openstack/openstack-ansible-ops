@@ -21,6 +21,12 @@ set -e -u
 source lib/vars.sh
 source lib/functions.sh
 
+### Set lock file to notate redeploy has started
+# Notate that redeploy has started, if it fails midway, it can be
+# resumed from the starting script without getting prompted to
+# set the version again.
+touch /etc/openstack_deploy/upgrade-leap/redeploy-started.complete
+
 ### Run the redeploy tasks
 # Forget about the old neutron agent container in inventory.
 #  This is done to maximize uptime by leaving the old systems in
