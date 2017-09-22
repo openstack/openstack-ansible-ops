@@ -138,6 +138,20 @@
         - src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
           dest: /root/.ssh/id_rsa.pub
 
+# In vm-post-install-script.sh.j2 we chattr +i the interfaces file to prevent
+# the preseed system from overwriting the file after we've modified it.  The
+# task below simply removes the immutable attribute.
+- name: Remove immutable attr from /etc/network/interfaces
+  hosts: vm_servers
+  gather_facts: true
+  tasks:
+    - file:
+        path: /etc/network/interfaces
+        attr: ""
+      when:
+        - ansible_distribution | lower == "ubuntu"
+        - ansible_distribution_release | lower == "trusty"
+
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   tags:

@@ -215,8 +215,6 @@ d-i passwd/root-password-again password secrete
 # This is fairly safe to set, it makes grub install automatically to the MBR
 # if no other operating system is detected on the machine.
 d-i grub-installer/only_debian boolean true
-d-i grub-installer/with_other_os boolean true
-d-i grub-installer/bootdev string default
 
 # Post Install
 
