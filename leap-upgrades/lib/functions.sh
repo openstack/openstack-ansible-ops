@@ -262,6 +262,8 @@ function set_upgrade_vars {
     export CONFIG_DIR="/etc/openstack_deploy"
   ;;
   esac
+  # Do not forget to export the TODOLIST if you run the scripts one by one.
+  warning "export UPGRADES_TO_TODOLIST=\"${UPGRADES_TO_TODOLIST}\""
 }
 
 function pre_flight {

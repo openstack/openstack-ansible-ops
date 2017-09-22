@@ -47,7 +47,8 @@ bash ./run-stages.sh
 ```
 
 If you want to pre-load the stages you can do so by running the various scripts
-independently.
+independently. **You must** export ``export UPGRADES_TO_TODOLIST`` once the
+prep.sh script is completed.
 
 ``` bash
 bash ./prep.sh
