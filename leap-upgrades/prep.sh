@@ -24,38 +24,22 @@ source lib/functions.sh
 # Execute a preflight check
 pre_flight
 
-# Clone the Juno release so we have a clean copy of the source code.
-if [[ ! -f "/opt/leap42/openstack-ansible-${JUNO_RELEASE}-prep.leap" ]]; then
-  clone_release ${JUNO_RELEASE}
-  touch "/opt/leap42/openstack-ansible-${JUNO_RELEASE}-prep.leap"
-fi
+# assemble list of versions to check out
+TODO="${CODE_UPGRADE_FROM}"
+TODO+=" ${UPGRADES_TO_TODOLIST}"
 
-# Build the releases. This will clone all of the releases and check them out
-#  separately in addition to creating all of the venvs needed for a successful migration.
-if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}-prep.leap" ]]; then
-  clone_release ${KILO_RELEASE}
-  get_venv ${KILO_RELEASE}
-  touch "/opt/leap42/openstack-ansible-${KILO_RELEASE}-prep.leap"
-fi
-
-if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}-prep.leap" ]]; then
-  clone_release ${LIBERTY_RELEASE}
-  get_venv ${LIBERTY_RELEASE}
-  touch "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}-prep.leap"
-fi
-
-if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}-prep.leap" ]]; then
-  clone_release ${MITAKA_RELEASE}
-  get_venv ${MITAKA_RELEASE}
-  touch "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}-prep.leap"
-fi
-
-if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
-  clone_release ${NEWTON_RELEASE}
-  get_venv ${NEWTON_RELEASE}
-  touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap"
-fi
-
+# Build the releases. This will loop through the TODO variable, check out the
+# releases, and create all of the venvs needed for a successful migration
+for RELEASES in ${TODO}; do
+  RELEASE_NAME=${RELEASES}_RELEASE
+  if [[ ! -f "/opt/leap42/openstack-ansible-${!RELEASE_NAME}-prep.leap" ]]; then
+    clone_release ${!RELEASE_NAME}
+    if [[ "${RELEASES}" != "JUNO" ]]; then
+      get_venv ${!RELEASE_NAME}
+    fi
+    touch "/opt/leap42/openstack-ansible-${!RELEASE_NAME}-prep.leap"
+  fi
+done
 
 if [[ ! -f "/opt/leap42/openstack-ansible-prep-finalsteps.leap" ]]; then
     RUN_TASKS=()

@@ -40,7 +40,6 @@ export UPGRADE_UTILS="${UPGRADE_UTILS:-${SYSTEM_PATH}/upgrade-utilities}"
 export VENV_URL="${VENV_URL:-https://rpc-repo.rackspace.com/venvs/leap-bundles}"
 
 export VALIDATE_UPGRADE_INPUT="${VALIDATE_UPGRADE_INPUT:-TRUE}"
-export UPGRADES_TO_TODOLIST="${UPGRADES_TO_TODOLIST:-''}"
 export CODE_UPGRADE_FROM=""
 
 # Bootstrap ansible tool, see also bootstrap_recent_ansible
