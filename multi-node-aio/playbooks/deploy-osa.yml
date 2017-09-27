@@ -59,13 +59,6 @@
       when:
         - pre_config_osa | default(true) | bool
 
-    - name: Create Basic configs
-      shell: cp -R etc/openstack_deploy/* /etc/openstack_deploy
-      args:
-        chdir: /opt/openstack-ansible
-      when:
-        - pre_config_osa | default(true) | bool
-
     - name: Drop osa config
       template:
         src: "osa/openstack_user_config.yml"
