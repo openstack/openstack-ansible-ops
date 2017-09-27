@@ -17,7 +17,7 @@ ansible_os_family: "{{ images[default_vm_image]['image_type'] }}"
 
 server_hostname: 'logging1'
 server_vm: true
-server_vm_ram: 1024
+server_vm_ram: '{{ logging_vm_server_ram | default(1024) }}'
 server_vm_vcpus: 2
 server_vm_fixed_addr: '10.0.2.110'
 server_vm_primary_network: 'dhcp'
