@@ -71,7 +71,17 @@ infra1
 [loadbalancer_hosts]
 loadbalancer1
 
+[log_hosts]
+logging1
+
 ############################### OSA MNAIO HOSTS ###############################
+
+# The group "infra_hosts" is used in the MNAIO setup to create the basic host
+#  layout for nova compute.
+[infra_hosts]
+infra1
+infra2
+infra3
 
 # The group "swift_hosts" is used in the MNAIO setup to create the basic drive
 #  setup needed for a swift deployment.
@@ -85,3 +95,9 @@ swift3
 [cinder_hosts]
 cinder1
 cinder2
+
+# The group "compute_hosts" is used in the MNAIO setup to create the basic host
+#  layout for nova compute.
+[compute_hosts]
+compute1
+compute2
