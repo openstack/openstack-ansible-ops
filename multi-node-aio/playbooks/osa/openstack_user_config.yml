@@ -87,8 +87,9 @@ global_overrides:
 ### Anchors
 ###
 cinder_block: &cinder_block
-  cinder1:
-    ip: 10.0.236.130
+{% for host in groups['cinder_hosts'] %}
+  {{ hostvars[host]['server_hostname'] }}:
+    ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
     container_vars:
       cinder_backends:
         limit_container_types: cinder_volume
@@ -96,60 +97,43 @@ cinder_block: &cinder_block
           volume_group: cinder-volumes
           volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
           volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: "10.0.244.130"
-
-  cinder2:
-    ip: 10.0.236.131
-    container_vars:
-      cinder_backends:
-        limit_container_types: cinder_volume
-        lvm:
-          volume_group: cinder-volumes
-          volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
-          volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: "10.0.244.131"
+          iscsi_ip_address: {{ hostvars[host]['server_networks']['storage']['address'].split('/')[0] }}
+{% endfor %}
 
 
 compute_block: &compute_block
-  compute1:
-    ip: 10.0.236.120
-
-  compute2:
-    ip: 10.0.236.121
+{% for host in groups['compute_hosts'] %}
+  {{ hostvars[host]['server_hostname'] }}:
+    ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+{% endfor %}
 
 
 infra_block: &infra_block
-  infra1:
-    ip: 10.0.236.100
-
-  infra2:
-    ip: 10.0.236.101
-
-  infra3:
-    ip: 10.0.236.102
+{% for host in groups['infra_hosts'] %}
+  {{ hostvars[host]['server_hostname'] }}:
+    ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+{% endfor %}
 
 
 loadbalancer_block: &loadbalancer_block
-  loadbalancer1:
-    ip: 10.0.236.150
+{% for host in groups['loadbalancer_hosts'] %}
+  {{ hostvars[host]['server_hostname'] }}:
+    ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+{% endfor %}
 
 
 log_block: &log_block
-  logging1:
-    ip: 10.0.236.110
+{% for host in groups['log_hosts'] %}
+  {{ hostvars[host]['server_hostname'] }}:
+    ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+{% endfor %}
 
 
 swift_block: &swift_block
-  swift1:
-    ip: 10.0.236.140
-
-  swift2:
-    ip: 10.0.236.141
-
-  swift3:
-    ip: 10.0.236.142
-
-
+{% for host in groups['swift_hosts'] %}
+  {{ hostvars[host]['server_hostname'] }}:
+    ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+{% endfor %}
 
 
 ###
@@ -172,6 +156,9 @@ haproxy_hosts: *loadbalancer_block
 ###
 ### OpenStack
 ###
+
+# Legacy infra hosts
+os-infra_hosts: *infra_block
 
 # keystone
 identity_hosts: *infra_block
