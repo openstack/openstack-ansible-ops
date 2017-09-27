@@ -86,6 +86,16 @@
       when:
         - pre_config_osa | default(true) | bool
 
+    - name: Ensure the user_variables file is populated
+      lineinfile:
+        path: /etc/openstack_deploy/user_variables.yml
+        regexp: '^{{ item }}'
+        line: '{{ item }}'
+        create: yes
+      with_items:
+        - '---'
+        - 'osa_ops_mnaio: true'
+
     - name: Bootstrap ansible
       command: bash ./scripts/bootstrap-ansible.sh
       args:
