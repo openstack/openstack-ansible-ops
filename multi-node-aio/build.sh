@@ -20,12 +20,12 @@ source bootstrap.sh
 source ansible-env.rc
 
 ansible mnaio_hosts \
-        -i playbooks/inventory \
+        -i ${MNAIO_INVENTORY:-"playbooks/inventory"} \
         -m pip \
         -a "name=netaddr"
 
 ansible-playbook -vv \
-                 -i playbooks/inventory \
+                 -i ${MNAIO_INVENTORY:-"playbooks/inventory"} \
                  -e setup_host=${SETUP_HOST:-"true"} \
                  -e setup_pxeboot=${SETUP_PXEBOOT:-"true"} \
                  -e setup_dhcpd=${SETUP_DHCPD:-"true"} \

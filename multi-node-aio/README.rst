@@ -95,6 +95,10 @@ to change this password please edit the pre-seed files.
 ``build.sh`` Options
 --------------------
 
+Set an external inventory used for the MNAIO:
+  ``MNAIO_INVENTORY=${MNAIO_INVENTORY:-playbooks/inventory}``
+
+
 Set to instruct the preseed what the default network is expected to be:
   ``DEFAULT_NETWORK="${DEFAULT_NETWORK:-eth0}"``
 
