@@ -140,6 +140,7 @@ swift_block: &swift_block
 ### Infrastructure
 ###
 
+{% if osa_enable_infra | bool %}
 # galera, memcache, rabbitmq, utility
 shared-infra_hosts: *infra_block
 
@@ -152,35 +153,56 @@ log_hosts: *log_block
 # load balancer
 haproxy_hosts: *loadbalancer_block
 
+# Legacy infra hosts
+os-infra_hosts: *infra_block
+{% endif %}
 
 ###
 ### OpenStack
 ###
 
-# Legacy infra hosts
-os-infra_hosts: *infra_block
-
+{% if osa_enable_identity | bool %}
 # keystone
 identity_hosts: *infra_block
+{% endif %}
 
+{% if osa_enable_block_storage | bool %}
 # cinder api services
 storage-infra_hosts: *infra_block
 
+# cinder storage host (LVM-backed)
+storage_hosts: *cinder_block
+{% endif %}
+
+{% if osa_enable_image | bool %}
 # glance
 image_hosts: *infra_block
+{% endif %}
 
+{% if osa_enable_compute | bool %}
 # nova api, conductor, etc services
 compute-infra_hosts: *infra_block
 
+# nova hypervisors
+compute_hosts: *compute_block
+{% endif %}
+
+{% if osa_enable_orchestration | bool %}
 # heat
 orchestration_hosts: *infra_block
+{% endif %}
 
+{% if osa_enable_dashboard | bool %}
 # horizon
 dashboard_hosts: *infra_block
+{% endif %}
 
+{% if osa_enable_network | bool %}
 # neutron server, agents (L3, etc)
 network_hosts: *infra_block
+{% endif %}
 
+{% if osa_enable_meter | bool %}
 # ceilometer (telemetry data collection)
 metering-infra_hosts: *infra_block
 
@@ -192,15 +214,12 @@ metrics_hosts: *infra_block
 
 # ceilometer compute agent (telemetry data collection)
 metering-compute_hosts: *compute_block
+{% endif %}
 
-# nova hypervisors
-compute_hosts: *compute_block
-
-# cinder storage host (LVM-backed)
-storage_hosts: *cinder_block
-
+{% if osa_enable_object_storage | bool %}
 # swift storage hosts
 swift_hosts: *swift_block
 
 # swift infra hosts
 swift-proxy_hosts: *infra_block
+{% endif %}
