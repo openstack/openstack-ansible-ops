@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Destroy lxc containers except galera
-  hosts: "all_containers:!galera_all:!neutron_agent:!ceph_all:!rsyslog_all"
+  hosts: "{{ destroy_hosts | default('all_containers:!galera_all:!neutron_agent:!ceph_all:!rsyslog_all')}}"
   gather_facts: false
   user: root
   tasks:
