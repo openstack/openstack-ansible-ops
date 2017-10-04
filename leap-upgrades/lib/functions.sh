@@ -39,6 +39,19 @@ function tag_leap_success {
   debug "LEAP ${1} marked as success"
 }
 
+function check_for_todolist {
+  if [[ -v UPGRADES_TO_TODOLIST ]]; then
+    notice "UPGRADES_TO_TODOLIST is set, continuing..."
+  else
+    notice "Please export UPGRADES_TO_TODOLIST variable before continuing"
+    notice "This variable is set via the prep.sh script and details the"
+    notice "incremental RELEASES that need to run for the leap."
+    notice ""
+    notice "example: export UPGRADES_TO_TODOLIST=\"MITAKA NEWTON\""
+    exit 99
+  fi
+}
+
 function run_lock {
 
   set +e
@@ -291,6 +304,12 @@ function pre_flight {
 
     discover_code_version
 
+    # set config directory here since we need to check if existing redeploy
+    # has been kicked off before prompting for the release, JUNO is the only
+    # other directory that may differ but since we aren't leaping to JUNO,
+    # this should be safe to set here
+    CONFIG_DIR="/etc/openstack_deploy"
+
     if [[ -f "${CONFIG_DIR}/upgrade-leap/redeploy-started.complete" && ! -f "${CONFIG_DIR}/upgrade-leap/osa-leap.complete" ]]; then
         resume_incomplete_leap
     elif [ "${VALIDATE_UPGRADE_INPUT}" == "TRUE" ]; then
@@ -419,7 +438,7 @@ function run_venv_prep {
     if [[ -e "/etc/rpc_deploy" ]]; then
       PB_DIR="/opt/leap42/openstack-ansible-${JUNO_RELEASE}/rpc_deployment"
     else
-      PB_DIR="/opt/leap42/openstack-ansible-${KILO_RELEASE}/playbooks"
+      PB_DIR="/opt/leap42/openstack-ansible-${RELEASE}/playbooks"
     fi
 
     pushd "${PB_DIR}"

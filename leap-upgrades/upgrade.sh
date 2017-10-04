@@ -21,6 +21,9 @@ set -e -u
 source lib/vars.sh
 source lib/functions.sh
 
+## Ensure UPGRADES_TO_TODOLIST is set
+check_for_todolist
+
 ### Kilo System migration
 # Run tasks
 UPGRADE_SCRIPTS="${UPGRADE_UTILS}-kilo/scripts"
