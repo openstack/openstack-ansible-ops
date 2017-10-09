@@ -47,6 +47,9 @@ images:
       vm:
         url: "tftp://{{ tftp_server }}/preseed/vm.preseed"
         template_name: "vm.preseed"
+      vm-compute:
+        url: "tftp://{{ tftp_server }}/preseed/vm-compute.preseed"
+        template_name: "vm-compute.preseed"
       compute:
         url: "tftp://{{ tftp_server }}/preseed/compute.preseed"
         template_name: "compute.preseed"
@@ -67,6 +70,9 @@ images:
       vm:
         url: "tftp://{{ tftp_server }}/preseed/vm.preseed"
         template_name: "vm.preseed"
+      vm-compute:
+        url: "tftp://{{ tftp_server }}/preseed/vm-compute.preseed"
+        template_name: "vm-compute.preseed"
       compute:
         url: "tftp://{{ tftp_server }}/preseed/compute.preseed"
         template_name: "compute.preseed"

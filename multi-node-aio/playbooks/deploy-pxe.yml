@@ -253,6 +253,15 @@
         group: root
       with_dict: "{{ images }}"
 
+    - name: Preseeds for pxe vm-compute
+      template:
+        src: "pxe/{{ ansible_os_family | lower }}/vm-compute.preseed.j2"
+        dest: /var/lib/tftpboot/preseed/vm-compute.preseed
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict: "{{ images }}"
+
     - name: Preseeds for pxe compute
       template:
         src: "pxe/{{ ansible_os_family | lower }}/compute.preseed.j2"

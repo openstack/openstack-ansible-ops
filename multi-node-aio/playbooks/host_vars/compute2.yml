@@ -24,7 +24,7 @@ server_vm_primary_network: 'dhcp'
 server_image: "{{ default_vm_image }}"
 server_default_interface: 'eth0'
 server_mac_address: '52:54:00:bd:80:06'
-server_preseed_ks: 'vm'
+server_preseed_ks: 'vm-compute'
 server_extra_options: ''
 
 server_networks:
