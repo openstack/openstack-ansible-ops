@@ -40,6 +40,6 @@ ansible-playbook -vv \
                  -e pre_config_osa=${PRE_CONFIG_OSA:-"true"} \
                  -e configure_openstack=${CONFIGURE_OPENSTACK:-"true"} \
                  -e config_prerouting=${CONFIG_PREROUTING:-"false"} \
-                 -e default_ubuntu_kernel=${DEFAULT_KERNEL:-"linux-generic"} \
+                 -e default_ubuntu_kernel=${DEFAULT_KERNEL:-"linux-image-generic"} \
                  --force-handlers \
                  playbooks/site.yml
