@@ -274,6 +274,11 @@ function set_upgrade_vars {
     export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/playbooks/inventory"
     export CONFIG_DIR="/etc/openstack_deploy"
   ;;
+  *)
+    warning "The option CODE_UPGRADE_FROM is set to \"${CODE_UPGRADE_FROM}\""
+    failure "No CODE_UPGRADE_FROM match found. Please set CODE_UPGRADE_FROM before continuing."
+    exit 99
+  ;;
   esac
   # Do not forget to export the TODOLIST if you run the scripts one by one.
   warning "export UPGRADES_TO_TODOLIST=\"${UPGRADES_TO_TODOLIST}\""
@@ -302,21 +307,16 @@ function pre_flight {
         fi
     fi
 
-    discover_code_version
-
-    # set config directory here since we need to check if existing redeploy
-    # has been kicked off before prompting for the release, JUNO is the only
-    # other directory that may differ but since we aren't leaping to JUNO,
-    # this should be safe to set here
-    CONFIG_DIR="/etc/openstack_deploy"
+    if [[ ! -n "${CODE_UPGRADE_FROM}" ]]; then
+      discover_code_version
+    fi
+    set_upgrade_vars
 
     if [[ -f "${CONFIG_DIR}/upgrade-leap/redeploy-started.complete" && ! -f "${CONFIG_DIR}/upgrade-leap/osa-leap.complete" ]]; then
         resume_incomplete_leap
     elif [ "${VALIDATE_UPGRADE_INPUT}" == "TRUE" ]; then
         validate_upgrade_input
     fi
-
-    set_upgrade_vars
 
     mkdir -p /opt/leap42/venvs
 
