@@ -16,6 +16,7 @@
 ansible_os_family: "{{ images[default_vm_image]['image_type'] }}"
 
 server_hostname: 'infra2'
+server_domain_name: 'openstack.local'
 server_vm: true
 server_vm_ram: '{{ infra_vm_server_ram | default(8192) }}'
 server_vm_vcpus: 4

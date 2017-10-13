@@ -196,13 +196,13 @@
         - src: vm-post-install-script.sh.j2
           dest: "vm-post-install-{{ ansible_os_family | lower }}-script.sh"
           dir: scripts
-        - src: compute-post-install-script.sh.j2
-          dest: "compute-post-install-{{ ansible_os_family | lower }}-script.sh"
+        - src: general-post-install-script.sh.j2
+          dest: "general-post-install-{{ ansible_os_family | lower }}-script.sh"
           dir: scripts
 
     - name: network scripts for an MNAIO
       template:
-        src: "mnaio/{{ ansible_os_family | lower }}/{{ item.src }}"
+        src: "pxe/{{ ansible_os_family | lower }}/{{ item.src }}"
         dest: /var/www/pxe/{{ item.dir }}/{{ item.dest }}
         mode: "0644"
         owner: root
@@ -214,7 +214,7 @@
           dest: mnaio-bridges.cfg
           dir: networking
         - src: mnaio-post-install-script.sh.j2
-          dest: mnaio-post-install-script.sh
+          dest: mnaio-post-install-{{ ansible_os_family | lower }}-script.sh
           dir: scripts
 
     - name: network scripts for servers
@@ -229,7 +229,7 @@
     - name: tftp configs for servers
       template:
         src: "pxe/tftp/pxelinux.cfg.macaddr.j2"
-        dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ hostvars[item]['server_mac_address'] | replace(':', '-') }}"
+        dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ hostvars[item]['server_mac_address'] | replace(':', '-') | lower }}"
         mode: "0644"
         owner: root
         group: root
@@ -266,6 +266,15 @@
       template:
         src: "pxe/{{ ansible_os_family | lower }}/compute.preseed.j2"
         dest: /var/lib/tftpboot/preseed/compute.preseed
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict: "{{ images }}"
+
+    - name: Preseeds for pxe infra
+      template:
+        src: "pxe/{{ ansible_os_family | lower }}/infra.preseed.j2"
+        dest: /var/lib/tftpboot/preseed/infra.preseed
         mode: "0644"
         owner: root
         group: root

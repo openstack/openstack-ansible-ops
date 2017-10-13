@@ -153,7 +153,7 @@ d-i partman-auto/expert_recipe string \
                       $lvmok{ } in_vg{ vg00 }                 \
                       lv_name{ nova00 }                       \
                       method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ ext4 }    \
+                      use_filesystem{ } filesystem{ xfs }     \
                       label{ nova }                           \
                       mountpoint{ /var/lib/nova }             \
               .                                               \
@@ -230,9 +230,9 @@ d-i grub-installer/bootdev string default
 # Post Install
 
 d-i preseed/late_command string \
-  in-target bash -c "wget --no-proxy http://{{ tftp_server }}/scripts/compute-post-install-script.sh -O /opt/compute-post-install-script.sh"; \
-  in-target bash -c 'chmod +x /opt/mnaio-post-install-script.sh'; \
-  in-target bash -c '/opt/mnaio-post-install-script.sh'
+  in-target bash -c "wget --no-proxy http://{{ tftp_server }}/scripts/general-post-install-debian-script.sh -O /opt/general-post-install-script.sh"; \
+  in-target bash -c 'chmod +x /opt/general-post-install-script.sh'; \
+  in-target bash -c '/opt/general-post-install-script.sh'
 # Finish
 
 # Reboot after the install is finished.

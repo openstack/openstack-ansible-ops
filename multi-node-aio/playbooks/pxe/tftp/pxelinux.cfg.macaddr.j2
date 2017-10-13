@@ -7,5 +7,5 @@ timeout 1
 label linux
   kernel {{ image_properties['image_kernel'] }}
 {%     if image_properties['image_type'] == 'debian' %}
-  append hostname={{ server_vars['server_hostname'] }} {{ image_properties['image_kernel_options'] }} initrd={{ image_properties['image_initrd'] }} preseed/url={{ image_properties['image_preseeds'][server_vars['server_preseed_ks']]['url'] }} preseed/interactive=false netcfg/choose_interface={{ server_vars['server_default_interface'] }} {{ server_vars['server_extra_options'] | default('') }}
+  append hostname={{ server_vars['server_hostname'] }} {{ image_properties['image_kernel_options'] }} initrd={{ image_properties['image_initrd'] }} preseed/url={{ image_properties['image_preseeds'][server_vars['server_preseed_ks']]['url'] }} preseed/interactive=false netcfg/choose_interface={{ server_vars['server_default_interface'] }} netcfg/get_domain={{ server_vars['server_domain_name'] }} {{ server_vars['server_extra_options'] | default('') }}
 {%     endif %}

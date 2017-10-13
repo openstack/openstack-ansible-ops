@@ -17,6 +17,10 @@
   when:
     - setup_host | default(true) | bool
 
+- include: deploy-acng.yml
+  when:
+    - setup_pxeboot | default(true) | bool
+
 - include: deploy-pxe.yml
   when:
     - setup_pxeboot | default(true) | bool

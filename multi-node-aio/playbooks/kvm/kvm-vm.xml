@@ -52,7 +52,7 @@
 {% for _key, _value in hostvars[item]['server_networks'].items()|sort(attribute='1.iface') %}
     <interface type='network'>
 {%     if _key == hostvars[item]['server_vm_primary_network'] %}
-      <mac address='{{ hostvars[item]["server_mac_address"] }}'/>
+      <mac address='{{ hostvars[item]["server_mac_address"] | lower }}'/>
       <boot order='2'/>
 {%     endif %}
       <source network='{{ _value.vm_int_iface }}'/>
