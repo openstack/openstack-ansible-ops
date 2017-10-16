@@ -169,7 +169,7 @@ cycle through all found VMs and re-provision them.
 
     for VM_NAME in $(virsh list --all | awk '/running/ || /shut/ {print $2}'); do
       virsh destroy "${VM_NAME}"
-      echo y | lvremove "/dev/mapper/vg01-${VM_NAME}"
+      lvremove -f "/dev/mapper/vg01-${VM_NAME}"
       lvcreate -L 92160M vg01 -n "${VM_NAME}"
       virsh start "${VM_NAME}"
     done
