@@ -129,6 +129,7 @@ if [[ ! -f "/opt/leap42/openstack-ansible-upgrade-hostupgrade.leap" ]]; then
     link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
     RUN_TASKS=()
     RUN_TASKS+=("${UPGRADE_UTILS}/pip-conf-purge.yml")
+    RUN_TASKS+=("${UPGRADE_UTILS}/mariadb-repo-cleanup.yml")
     RUN_TASKS+=("openstack-hosts-setup.yml")
     run_items "${REDEPLOY_OA_FOLDER}"
     tag_leap_success "upgrade-hostupgrade"
