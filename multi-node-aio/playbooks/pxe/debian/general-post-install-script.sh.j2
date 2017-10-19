@@ -11,5 +11,5 @@ mkdir -p /root/.ssh
 chmod 0700 /root/.ssh
 echo "{{ tftp_ssh_key }}" >> /root/.ssh/authorized_keys
 
-wget --no-proxy http://{{ tftp_server }}/networking/$(cat /etc/hostname)-bridges.cfg -O /etc/network/interfaces.d/compute-bridges.cfg
+wget --no-proxy http://{{ tftp_server }}/networking/$(cat /etc/hostname)-bridges.cfg -O /etc/network/interfaces.d/general-bridges.cfg
 wget --no-proxy http://{{ tftp_server }}/networking/basic-debian-interface.cfg -O /etc/network/interfaces

@@ -15,7 +15,8 @@
 
 ansible_os_family: "{{ images[default_vm_image]['image_type'] }}"  # str  - Set the ansible os family
 
-server_hostname: 'example-host1'        # str  - required, hostname of server
+server_hostname: 'host1'                # str  - required, hostname of server
+server_domain_name: 'openstack.local'   # str  - required, domain name of server
 server_vm: true                         # bool - not required, used to specify a host is to become a VM
 server_vm_ram: 8192                     # int  - not required, used to specify ram when provisioning a VM
 server_vm_vcpus: 4                      # int  - not required, used to specify vcpus when provisioning a VM

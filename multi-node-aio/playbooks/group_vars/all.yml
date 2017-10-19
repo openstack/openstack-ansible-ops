@@ -37,7 +37,7 @@ images:
     image_name: "ubuntu-16.04.2-server-amd64.iso"
     image_short_name: "ubuntu-16.04.2-server-amd64"
     image_default_boot: "ubuntu-16.04.2-server-amd64/amd64/boot-screens/menu.cfg"
-    image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical quiet splash"
+    image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
     image_kernel: "ubuntu-16.04.2-server-amd64/amd64/linux"
     image_initrd: "ubuntu-16.04.2-server-amd64/amd64/initrd.gz"
     image_netboot: "ubuntu-16.04.2-server-amd64/install/netboot/ubuntu-installer"
@@ -54,6 +54,9 @@ images:
       compute:
         url: "tftp://{{ tftp_server }}/preseed/compute.preseed"
         template_name: "compute.preseed"
+      infra:
+        url: "tftp://{{ tftp_server }}/preseed/infra.preseed"
+        template_name: "infra.preseed"
   ubuntu-14.04-amd64:
     image_type: debian
     image_iso_url: "http://releases.ubuntu.com/14.04.5/ubuntu-14.04.5-server-amd64.iso"
@@ -77,7 +80,9 @@ images:
       compute:
         url: "tftp://{{ tftp_server }}/preseed/compute.preseed"
         template_name: "compute.preseed"
-
+      infra:
+        url: "tftp://{{ tftp_server }}/preseed/infra.preseed"
+        template_name: "infra.preseed"
 # mnaio_data_disk: 'sdc'  # str - not required, set this to define a given data disk if no data disk
 #                                               is defined the largest unpartitioned disk will be used.
 mnaio_host_networks:
