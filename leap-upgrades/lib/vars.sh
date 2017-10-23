@@ -48,3 +48,6 @@ export BOOTSTRAP_ANSIBLE_FOLDER=${BOOTSTRAP_ANSIBLE_FOLDER:-/opt/openstack-ansib
 ## Ansible debugging
 export LEAP_TIMESTAMP=$(date +%s)
 export ANSIBLE_LOG_PATH="/opt/leap42/ansible-${LEAP_TIMESTAMP}.log"
+
+## Containers List to Destroy in destroy-old-containers.yml
+export CONTAINERS_TO_DESTROY='"'"${CONTAINERS_TO_DESTROY:-all_containers:!galera_all:!neutron_agent:!ceph_all:!rsyslog_all}"'"'

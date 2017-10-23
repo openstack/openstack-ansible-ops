@@ -61,7 +61,7 @@ RUN_TASKS+=("${UPGRADE_UTILS}/pip-unify.yml -e release_version=\"${NEWTON_RELEAS
 RUN_TASKS+=("${UPGRADE_UTILS}/db-stop.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/ansible_fact_cleanup.yml")
 # Physical host cleanup
-RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml")
+RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml -e 'destroy_hosts='${CONTAINERS_TO_DESTROY}''")
 # Permissions for qemu save, because physical host cleanup
 RUN_TASKS+=("${UPGRADE_UTILS}/nova-libvirt-fix.yml")
 
