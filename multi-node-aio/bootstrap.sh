@@ -83,4 +83,4 @@ if [[ ${#BINDEP_PKGS} > 0 ]]; then
     esac
 fi
 
-sudo pip install ansible
+sudo pip install ansible==2.4.0.0
