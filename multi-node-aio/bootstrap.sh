@@ -83,4 +83,5 @@ if [[ ${#BINDEP_PKGS} > 0 ]]; then
     esac
 fi
 
-sudo pip install ansible==2.4.0.0
+# install latest OSA supported Ansible version
+sudo pip install -r https://git.openstack.org/cgit/openstack/openstack-ansible-tests/plain/test-ansible-deps.txt
