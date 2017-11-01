@@ -313,6 +313,12 @@ function pre_flight {
     set_upgrade_vars
 
     if [[ -f "${CONFIG_DIR}/upgrade-leap/redeploy-started.complete" && ! -f "${CONFIG_DIR}/upgrade-leap/osa-leap.complete" ]]; then
+        warning "Redeploy of ${CODE_UPGRADE_FROM} started but did not complete..."
+        resume_incomplete_leap
+    elif [[ -f "/opt/leap42/openstack-ansible-upgrade-hostupgrade.leap" ]] ; then
+        warning "Current code deployed is ${CODE_UPGRADE_FROM}"
+        warning "and it appears the leap process was interrupted after"
+        warning "starting the deployment of ${CODE_UPGRADE_FROM}."
         resume_incomplete_leap
     elif [ "${VALIDATE_UPGRADE_INPUT}" == "TRUE" ]; then
         validate_upgrade_input
