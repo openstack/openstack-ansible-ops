@@ -115,6 +115,7 @@
 - name: Wait for deploy host
   hosts: vm_servers
   gather_facts: false
+  any_errors_fatal: true
   pre_tasks:
     - name: Wait for connectivity 1
       local_action:
