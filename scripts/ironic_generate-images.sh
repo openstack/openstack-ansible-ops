@@ -19,7 +19,7 @@ function cleanup {
 trap cleanup EXIT
 
 function make-base-image {
-  disk-image-create -o baremetal-$DISTRO_NAME-$DIB_RELEASE $DISTRO_NAME baremetal bootloader dhcp-all-interfaces local-config proliant-tools ${DEBUG_USER_ELEMENT:-""}
+  disk-image-create -o baremetal-$DISTRO_NAME-$DIB_RELEASE $DISTRO_NAME baremetal bootloader dhcp-all-interfaces local-config proliant-tools slow-network ${DEBUG_USER_ELEMENT:-""}
 
   rm -R *.d/
   scp -o StrictHostKeyChecking=no baremetal-$DISTRO_NAME-$DIB_RELEASE* "${UTILITY01_HOSTNAME}":~/images
@@ -53,7 +53,9 @@ apt-get install -y kpartx parted qemu-utils
 mkdir -p ~/dib
 pushd ~/dib
   virtualenv env
+  set +u
   source env/bin/activate
+  set -u
 
   # newton pip.conf sucks
   if [[ -f ~/.pip/pip.conf ]]; then
@@ -74,6 +76,9 @@ pushd ~/dib
   if [[ -f ~/.pip/pip.conf.bak ]]; then
     mv ~/.pip/pip.conf.bak ~/.pip/pip.conf
   fi
+  if [[ ! -e ~/dib/openstack-ansible-ops ]]; then
+    git clone https://github.com/openstack/openstack-ansible-ops ~/dib/openstack-ansible-ops
+  fi
 
   UTILITY01_HOSTNAME="${UTILITY01_HOSTNAME:-$(grep infra01_util /etc/hosts | awk '{print $NF}')}"
 
@@ -89,6 +94,10 @@ pushd ~/dib
 
   # set up envars for all images
   export DIB_CLOUD_INIT_DATASOURCES="Ec2, ConfigDrive, OpenStack"
+  export ELEMENTS_PATH=~/dib/openstack-ansible-ops/elements
+  # default to ubuntu xenial
+  export DIB_RELEASE=xenial
+  export DISTRO_NAME=ubuntu
 
   # set up envars for the deploy image ironic agent
   # export DIB_HPSSACLI_URL="http://downloads.hpe.com/pub/softlib2/software1/pubsw-linux/p1857046646/v109216/hpssacli-2.30-6.0.x86_64.rpm"
@@ -114,17 +123,15 @@ pushd ~/dib
     --protected=True \
     --container-format ari < ~/images/ironic-deploy.initramfs"
 
-  # Ubuntu Xenial
-  export DIB_RELEASE=xenial
-  export DISTRO_NAME=ubuntu
+  # Ubuntu Xenial final image
   make-base-image
 
-  # Ubuntu Trusty
+  # Ubuntu Trusty final image
   export DIB_RELEASE=trusty
   export DISTRO_NAME=ubuntu
   make-base-image
 
-  # CentOS 7
+  # CentOS 7 final image
   export DIB_RELEASE=7
   export DISTRO_NAME=centos7
   make-base-image
