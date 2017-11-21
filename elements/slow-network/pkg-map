@@ -1,0 +1,10 @@
+{
+  "family": {
+    "redhat": {
+      "NetworkManager": "NetworkManager"
+    }
+  },
+  "default": {
+    "NetworkManager": ""
+  }
+}

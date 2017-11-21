@@ -13,4 +13,7 @@ if [ -e "/etc/sysconfig/network" ] ; then
 
     # Persistently try to gain a dhcp address
     grep -v -q '^PERSISTENT_DHCLIENT' /etc/sysconfig/network && echo 'PERSISTENT_DHCLIENT=yes' >> /etc/sysconfig/network
+
+    # since we are running on centos only no need to gate this behind an if statement
+    systemctl enable NetworkManager.service
 fi
