@@ -430,6 +430,10 @@ function link_release {
     if [[ -d "/opt/openstack-ansible" ]]; then
       mv "/opt/openstack-ansible" "/opt/openstack-ansible.bak"
     fi
+    if [[ ! -d "$1" ]]; then
+      failure "Make sure the target "$1" exists. "
+      exit 99
+    fi
     ln -sf "$1" "/opt/openstack-ansible"
 }
 
