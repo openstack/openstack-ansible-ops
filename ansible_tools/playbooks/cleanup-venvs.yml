@@ -13,17 +13,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
 - name: Remove older venvs
   hosts: all
   tasks:
-  - name: List older venvs directories
-    shell: "ls -1 /openstack/venvs | grep -v '{{ venv_tag }}$'"
-    register: files
-    when: venv_tag is defined
-    failed_when: files.rc == 2
-  - name: Delete directories
+  - name: List venvs directories
+    find:
+      paths: /openstack/venvs
+      file_type: directory
+      patterns: '.*(?<!{{ venv_tag }})$'
+      use_regex: yes
+    register: result
+  - name: Delete older directories
     file:
-      path: "/openstack/venvs/{{ item }}"
+      path: "{{ item.path }}"
       state: absent
-    with_items: "{{ files.stdout_lines }}"
+    with_items: "{{ result.files }}"
+
+- name: Remove older venv tgz
+  hosts: all
+  tasks:
+  - name: List venv tgz
+    find:
+      paths: /var/cache
+      file_type: file
+      patterns: '.*(?<!{{ venv_tag }})-{{ ansible_architecture | lower }}\.tgz$'
+      use_regex: yes
+    register: result
+  - name: Delete older tgz
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    with_items: "{{ result.files }}"
