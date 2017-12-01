@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Destroy lxc containers except galera
+- name: Cinder volume config check
   hosts: "cinder_volume"
   gather_facts: false
   user: root
@@ -22,7 +22,7 @@
       set_fact:
         in_container: true
       when: >
-        is_metal != true or
+        (is_metal is defined and is_metal != true) or
         container_name != physical_host
 
     - name: Check if cinder backends are LVM
