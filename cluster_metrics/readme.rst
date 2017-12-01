@@ -52,9 +52,15 @@ Install InfluxDB
 
     openstack-ansible playbook-influx-db.yml
 
+Clone the Telegraf repo
+
+.. code-block:: bash
+
+    git clone https://github.com/mgrzybek/openstack-ansible-telegraf /etc/ansibles/roles/openstack-ansible-telegraf
+
 Install Influx Telegraf
 
-If you wish to install telegraf and point it at a specific target, or list of targets, set the ``influx_telegraf_targets``
+If you wish to install telegraf and point it at a specific target, or list of targets, set the ``telegraf_output_influxdb_targets``
 variable in the ``user_variables.yml`` file as a list containing all targets that telegraf should ship metrics to.
 
 .. code-block:: bash

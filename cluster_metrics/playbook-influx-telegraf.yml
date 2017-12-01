@@ -17,57 +17,18 @@
   hosts: "all"
   gather_facts: true
   user: root
-  tasks:
-    - name: Add influxdata apt-keys
-      apt_key:
-        url: "https://repos.influxdata.com/influxdb.key"
-        state: "present"
-    - name: Add influxdata repo
-      apt_repository:
-        repo: "deb https://repos.influxdata.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
-        state: "present"
-        update_cache: yes
-    - name: Install telegraf
-      apt:
-        pkg: "telegraf"
-        state: "latest"
-    - name: Create telegraf plugin dir
-      file:
-        path: "/opt/telegraf"
-        state: directory
-        mode: "0755"
-    - name: Drop telegraf plugin file(s)
-      template:
-        src: "templates/telegraf-plugins/{{ item.value.plugin_name }}"
-        dest: "/opt/telegraf/{{ item.value.plugin_name }}"
-        mode: '0755'
-      with_dict: "{{ command_plugins }}"
-      when:
-        - item.value.when_group | bool
-        - item.value.group == inventory_hostname or
-          inventory_hostname in item.value.group | default([])
-    - name: Drop telegraf config file
-      template:
-        src: templates/telegraf.conf.j2
-        dest: /etc/telegraf/telegraf.conf
-      register: telegraf_config
-    - name: Enable and restart telegraf
-      service:
-        name: "telegraf"
-        enabled: true
-        state: restarted
-      when: telegraf_config | changed
-    - name: Enable and start telegraf
-      service:
-        name: "telegraf"
-        enabled: true
-        state: started
-      when: not telegraf_config | changed
+  roles:
+    - { role: openstack-ansible-telegraf }
   vars_files:
     - vars.yml
   vars:
+    telegraf_output: influxdb
+    telegraf_output_influxdb_database: "{{ influxdb_db_name }}"
+    telegraf_output_influxdb_username: "{{ influxdb_db_metric_user }}"
+    telegraf_output_influxdb_password: "{{ influxdb_db_metric_password }}"
+    telegraf_openstack_scripts_data_format: influx
     commands : []
-    command_plugins:
+    telegraf_openstack_scripts:
       ironic:
         plugin_name: "ironic_nodes.py"
         command:
@@ -86,5 +47,5 @@
           - "python /opt/telegraf/cinder_pools_usage.py"
         group: "{{ groups['utility_all'][0] }}"
         when_group: "{{ (groups['cinder_volumes'] | default([]) | length) > 0 }}"
-    influx_telegraf_targets:
+    telegraf_output_influxdb_targets:
       - "{{ influxdb_protocol|default('http') }}://{{ influxdb_host|default(internal_lb_vip_address) }}:{{ influxdb_port }}"
