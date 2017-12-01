@@ -218,7 +218,7 @@ function get_openstack_release_file {
   # Get openstack_user_config.yml file path
   USER_CONFIG_FILE=$(find /etc/ -name '*_user_config.yml' -o -name 'os-infra_hosts.yml')
   # Get IP of os_infra node
-  INFRA_IP=$(sed -n -e '/infra_hosts/, /ip:/ p' ${USER_CONFIG_FILE} | awk '/ip:/ {print $2; exit}')
+  INFRA_IP=$(sed -n -e '/^#/d' -e '/infra_hosts/, /ip:/ p' ${USER_CONFIG_FILE} | awk '/ip:/ {print $2; exit}')
   if [[ -z "${INFRA_IP}" ]]; then
       failure "Could not find infra ip to get openstack-release file. Exiting.."
       exit 99
