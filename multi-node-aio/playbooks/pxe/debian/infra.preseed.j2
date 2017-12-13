@@ -61,9 +61,9 @@ d-i keyboard-configuration/layoutcode string us
 # Mirror
 
 d-i mirror/country string manual
-d-i mirror/http/proxy string
-d-i mirror/http/hostname string archive.ubuntu.com
-d-i mirror/http/directory string /ubuntu
+d-i mirror/http/proxy string {{ default_ubuntu_mirror_proxy }}
+d-i mirror/http/hostname string {{ default_ubuntu_mirror_hostname }}
+d-i mirror/http/directory string {{ default_ubuntu_mirror_directory }}
 
 # Clock and Time Zone
 

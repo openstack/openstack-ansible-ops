@@ -146,6 +146,11 @@ Instruct the system to configure iptables prerouting rules for connecting to
 VMs from outside the host:
   ``CONFIG_PREROUTING=${CONFIG_PREROUTING:-true}``
 
+Insrtuct the system to use a different Ubuntu mirror:
+  ``DEFAULT_MIRROR_HOSTNAME=${DEFAULT_MIRROR_HOSTNAME:-archive.ubuntu.com}``
+
+Instruct the system to use a different Ubuntu mirror base directory:
+  ``DEFAULT_MIRROR_DIR=${DEFAULT_MIRROR_DIR:-/ubuntu}``
 
 Re-kicking VM(s)
 ----------------

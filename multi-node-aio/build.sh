@@ -41,5 +41,7 @@ ansible-playbook -vv \
                  -e configure_openstack=${CONFIGURE_OPENSTACK:-"true"} \
                  -e config_prerouting=${CONFIG_PREROUTING:-"false"} \
                  -e default_ubuntu_kernel=${DEFAULT_KERNEL:-"linux-image-generic"} \
+                 -e default_ubuntu_mirror_hostname=${DEFAULT_MIRROR_HOSTNAME:-"archive.ubuntu.com"} \
+                 -e default_ubuntu_mirror_directory=${DEFAULT_MIRROR_DIR:-"/ubuntu"} \
                  --force-handlers \
                  playbooks/site.yml
