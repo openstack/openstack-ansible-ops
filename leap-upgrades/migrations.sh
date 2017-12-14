@@ -24,11 +24,14 @@ source lib/functions.sh
 ## Ensure UPGRADES_TO_TODOLIST is set
 check_for_todolist
 
+## Ensure RELEASE is set
+check_for_release
+
 ### Run the DB migrations
 # Stop the services to ensure DB and application consistency
 if [[ ! -f "/opt/leap42/openstack-ansible-poweroff.leap" ]]; then
   if [ -e "/opt/openstack-ansible" ]; then
-    link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
+    link_release "/opt/leap42/openstack-ansible-${RELEASE}"
   fi
   RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/power-down.yml")

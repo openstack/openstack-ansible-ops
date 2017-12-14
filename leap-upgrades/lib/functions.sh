@@ -52,6 +52,19 @@ function check_for_todolist {
   fi
 }
 
+function check_for_release {
+  if [[ -v RELEASE ]]; then
+    notice "RELEASE is set, continuing..."
+  else
+    notice "Please export RELEASE variable before continuing"
+    notice "This variable reflects the release version being leaped"
+    notice "from.  i.e. value of KILO_RELEASE, LIBERTY_RELEASE, etc."
+    notice ""
+    notice "example: export RELEASE=\"liberty-eol\""
+    exit 99
+  fi
+}
+
 function run_lock {
 
   set +e
