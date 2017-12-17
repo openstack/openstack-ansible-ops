@@ -34,7 +34,13 @@ pushd ${MAIN_PATH}/playbooks
   # Remove the dead container types from inventory
   REMOVED_CONTAINERS=""
   REMOVED_CONTAINERS+="$(get_inv_items 'neutron_agent' | awk '{print $2}') "
+  RESERVED_IPS=""
+  RESERVED_IPS+="$(get_inv_items 'neutron_agent' | awk '{print $12}') "
 
+  for ips in ${RESERVED_IPS}; do
+    echo "$ips" >> /etc/openstack_deploy/leapfrog_old_ips_reservation
+    sed -i "/^used_ips:/a \ \ - $ips" /etc/openstack_deploy/openstack_user_config.yml
+  done
   for i in ${REMOVED_CONTAINERS};do
     echo "$i" >> /etc/openstack_deploy/leapfrog_remove_remaining_old_containers
     remove_inv_items $i
