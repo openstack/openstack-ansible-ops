@@ -1,0 +1,45 @@
+---
+- name: install ElK stack
+  hosts: "{{ elk_hosts }}"
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: elasticsearch datapath bind mount
+      lxc_container:
+        name: "{{ inventory_hostname }}"
+        container_command: |
+          [[ ! -d "/var/lib/elasticsearch" ]] && mkdir -p "/var/lib/elasticsearch"
+          [[ ! -d "/var/lib/elasticsearch-olddata" ]] && mkdir -p "/var/lib/elasticsearch-olddata"
+        container_config:
+          - "lxc.mount.entry=/openstack/{{ inventory_hostname }} var/lib/elasticsearch none bind 0 0"
+      delegate_to: "{{ physical_host }}"
+    - name: Add Oracle Java PPA to apt sources list
+      apt_repository: repo='ppa:webupd8team/java' state=present
+    - name: Accept Java 8 License
+      debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+    - name: Ensure Java is installed.
+      apt: name=oracle-java8-installer state=present install_recommends=yes update_cache=yes
+    - name: add Elastic search public GPG key
+      apt_key:
+        url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+        state: "present"
+    - name: add Elastic search repo to apt sources list
+      apt_repository: repo='deb http://packages.elastic.co/elasticsearch/2.x/debian stable main' state=present
+    - name: Ensure Elastic search  is installed.
+      apt: name=elasticsearch state=present update_cache=yes
+    - name: Drop elastic search conf file
+      template:
+        src: templates/elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+    - name: Enable and restart elastic
+      service:
+        name: "elasticsearch"
+        enabled: true
+        state: restarted
+    - name: copy elk-data rotater script
+      copy: src=templates/rotate-topbeatdata.sh dest=/root/rotate-topbeatdata.sh mode=0755
+      when: node_data | bool
+    - name: setup a cron job to use topbeat-data rotater script daily
+      cron: name="compress old topbeat data" minute="55" hour="23" job="/root/rotate-topbeatdata.sh"
+      when: node_data | bool

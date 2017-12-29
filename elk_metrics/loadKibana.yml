@@ -1,0 +1,25 @@
+---
+- name: load beats dashboards to Kibana
+  hosts: kibana
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: download sample dashboards
+      get_url:
+        url: https://download.elastic.co/beats/dashboards/beats-dashboards-1.1.0.zip
+        dest: /root/
+    - name: Ensure unzip is installed.
+      apt: name=unzip state=present
+    - name: extract archive
+      command: unzip -o /root/beats-dashboards-1.1.0.zip -d /root/
+    - command: ./load.sh
+      args:
+       chdir: /root/beats-dashboards-1.1.0
+    - name: copy topbeat index template in Elastic search
+      copy: src=templates/topbeat.template.json dest=/root mode=0644
+    - name: load it in elasticsearch 
+      command: "curl -XPUT 'http://localhost:{{ elastic_port }}/_template/topbeat' -d@topbeat.template.json"
+      args:
+       chdir: /root/
+

@@ -1,0 +1,25 @@
+---
+- name: add reverse proxy to kibana dashboard
+  hosts: haproxy_all
+  become: true
+  tags: nginx-setup
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: Ensure Nginx is installed.
+      apt: name={{ item }} state=present update_cache=yes
+      with_items:
+        - nginx
+        - apache2-utils
+        - python-passlib
+    - name: create kibana user to access web interface
+      htpasswd: path=/etc/nginx/htpasswd.users name={{ kibana_username }} password={{ kibana_password }} owner=root mode=0644
+    - name: Drop Nginx default conf file
+      template:
+        src: templates/nginx_default.j2
+        dest: /etc/nginx/sites-available/default
+    - name: Enable and restart nginx
+      service:
+        name: "nginx"
+        enabled: true
+        state: restarted

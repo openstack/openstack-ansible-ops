@@ -1,0 +1,18 @@
+input:
+  period: 10
+  procs: [".*"]
+
+  stats:
+    system: true
+    proc: true
+    filesystem: true
+
+output:
+  logstash:
+    hosts: {% set IP_ARR=[] %}{% for host in groups['elastic-logstash'] %}{% if IP_ARR.insert(loop.index,hostvars[host]['ansible_ssh_host']) %}{% endif %}{% endfor %}[{{ IP_ARR | map('regex_replace', '$', ':' ~ logstash_beat_input_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+
+shipper:
+
+logging:
+  files:
+    rotateeverybytes: 10485760 # = 10MB

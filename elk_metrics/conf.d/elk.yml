@@ -1,0 +1,10 @@
+elastic-logstash_hosts:
+  logging01:
+    ip: 172.22.8.27
+  logging02:
+    ip: 172.22.8.28
+  logging03:
+    ip: 172.22.8.29
+kibana_hosts:
+  logging01:
+    ip: 172.22.8.27
