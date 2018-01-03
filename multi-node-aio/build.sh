@@ -43,5 +43,11 @@ ansible-playbook -vv \
                  -e default_ubuntu_kernel=${DEFAULT_KERNEL:-"linux-image-generic"} \
                  -e default_ubuntu_mirror_hostname=${DEFAULT_MIRROR_HOSTNAME:-"archive.ubuntu.com"} \
                  -e default_ubuntu_mirror_directory=${DEFAULT_MIRROR_DIR:-"/ubuntu"} \
+                 -e cinder_vm_server_ram=${CINDER_VM_SERVER_RAM-"2048"} \
+                 -e compute_vm_server_ram=${COMPUTE_VM_SERVER_RAM-"8196"} \
+                 -e infra_vm_server_ram=${INFRA_VM_SERVER_RAM-"8196"} \
+                 -e loadbalancer_vm_server_ram=${LOADBALANCER_VM_SERVER_RAM-"1024"} \
+                 -e logging_vm_server_ram=${LOGGING_VM_SERVER_RAM-"1024"} \
+                 -e swift_vm_server_ram=${SWIFT_VM_SERVER_RAM-"1024"} \
                  --force-handlers \
                  playbooks/site.yml

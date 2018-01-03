@@ -152,6 +152,25 @@ Insrtuct the system to use a different Ubuntu mirror:
 Instruct the system to use a different Ubuntu mirror base directory:
   ``DEFAULT_MIRROR_DIR=${DEFAULT_MIRROR_DIR:-/ubuntu}``
 
+Instruct the system to use a set amount of ram for cinder VM type:
+  ``CINDER_VM_SERVER_RAM=${CINDER_VM_SERVER_RAM:-2048}``
+
+Instruct the system to use a set amount of ram for compute VM type:
+  ``COMPUTE_VM_SERVER_RAM=${COMPUTE_VM_SERVER_RAM:-8196}``
+
+Instruct the system to use a set amount of ram for infra VM type:
+  ``INFRA_VM_SERVER_RAM=${INFRA_VM_SERVER_RAM:-8196}``
+
+Instruct the system to use a set amount of ram for load balancer VM type:
+  ``LOADBALANCER_VM_SERVER_RAM=${LOADBALANCER_VM_SERVER_RAM:-1024}``
+
+Instruct the system to use a set amount of ram for the logging VM type:
+  ``LOGGING_VM_SERVER_RAM=${LOGGING_VM_SERVER_RAM:-1024}``
+
+Instruct the system to use a set amount of ram for the swift VM type:
+  ``SWIFT_VM_SERVER_RAM=${SWIFT_VM_SERVER_RAM:-1024}``
+
+
 Re-kicking VM(s)
 ----------------
 
