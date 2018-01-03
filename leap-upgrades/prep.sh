@@ -34,7 +34,7 @@ for RELEASES in ${TODO}; do
   RELEASE_NAME=${RELEASES}_RELEASE
   if [[ ! -f "/opt/leap42/openstack-ansible-${!RELEASE_NAME}-prep.leap" ]]; then
     clone_release ${!RELEASE_NAME}
-    if [[ "${RELEASES}" != "JUNO" ]]; then
+    if [[ "${RELEASES}" != "JUNO" ]] || [[ "${RELEASES}" != "NEWTON" ]]; then
       get_venv ${!RELEASE_NAME}
     fi
     touch "/opt/leap42/openstack-ansible-${!RELEASE_NAME}-prep.leap"
