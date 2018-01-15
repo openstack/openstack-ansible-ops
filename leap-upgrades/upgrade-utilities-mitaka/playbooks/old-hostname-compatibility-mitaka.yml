@@ -51,7 +51,7 @@
         - result2 | skipped
   vars:
     rfc_1034_1035_name: "{{ inventory_hostname | replace('_', '-') }}"
-    domain_name: "{{ openstack_domain|default('openstack.local') }}"
+    domain_name: "{{ openstack_domain|default('.openstack.local') }}"
 
 - name: Cleanup heat services through the database
   hosts: galera_all[0]
