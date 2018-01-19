@@ -49,7 +49,7 @@
     - name: Registering what to disable
       shell: |
         . {{ ansible_env.HOME }}/openrc
-        {{ item.name }} {{ item.list_command}} | awk '{{ item.awk_filter }}{print {{ item.awk_print_column }} }'
+        {{ item.name }} {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} {{ item.list_command}} | awk '{{ item.awk_filter }}{print {{ item.awk_print_column }} }'
       register: to_disable
       with_items: "{{ services }}"
       args:
@@ -65,7 +65,7 @@
     - name: Disabling or deleting the services/agents
       shell: |
         . {{ ansible_env.HOME }}/openrc
-        {{ item.0.item.name }} {{ item.0.item.delete_command }} {{ item.1 }}
+        {{ item.0.item.name }} {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} {{ item.0.item.delete_command }} {{ item.1 }}
         {{ item.0.item.post_command | default('')}}
       with_subelements:
         - to_disable.results
@@ -80,20 +80,20 @@
     - name: Removing the cinder services with old container hostnames
       shell: |
         . /openstack/venvs/cinder-{{openstack_release}}/bin/activate
-        cinder-manage service list \
+        cinder-manage {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} service list \
           | awk '/.*_container.*XXX/{print $1" "$2}'\
           | while read line; do
-            cinder-manage service remove $line;
+            cinder-manage {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} service remove $line;
             done
       args:
         executable: /bin/bash
     - name: Move the cinder volumes running in containers to new hostnames
       shell: |
         . /openstack/venvs/cinder-{{openstack_release}}/bin/activate
-        cinder-manage service list \
+        cinder-manage {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} service list \
           | awk '/volume.*_container.*XXX/{print $2 }'\
           | while IFS=@ read cinderhost cinderbackend; do
-            cinder-manage volume update_host \
+            cinder-manage {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} volume update_host \
               --currenthost $cinderhost@$cinderbackend \
               --newhost ${cinderhost//_/-}@$cinderbackend;
             done
@@ -110,13 +110,13 @@
       # dhcp ports in the same network that are active. Print them for deletion.
       shell: |
         . {{ ansible_env.HOME }}/openrc
-        neutron port-list -c id -c device_owner -c binding:host_id -c status \
+        neutron {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} port-list -c id -c device_owner -c binding:host_id -c status \
           -c network_id  -f value | sort -k 5 -k 4 -r | \
           awk '/dhcp.*BUILD/{net=$5}; /dhcp.*ACTIVE/{if(net==$5){print $1}}' | \
           while read portid; do
-            neutron port-update --admin-state-up False $portid
+            neutron {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} port-update --admin-state-up False $portid
             sleep 1
-            neutron port-delete $portid
+            neutron {{ openrc_insecure |default(false) |bool |ternary('--insecure','') }} port-delete $portid
             done
       args:
         executable: /bin/bash
