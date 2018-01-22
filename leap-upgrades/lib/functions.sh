@@ -98,7 +98,7 @@ function run_lock {
       unset RUN_TASKS[$1]
       notice "$run_item has been marked as success at ${upgrade_marker}"
     else
-      FAILURES_LIST=$(seq $1 $((${#RUN_TASKS[@]} - 1)))
+      FAILURES_LIST=$(seq $1 $((${#RUN_TASKS[@]})))
       failure "******************** failure ********************"
       failure "The upgrade script has encountered a failure."
       failure "Failed on task \"$run_item\""
