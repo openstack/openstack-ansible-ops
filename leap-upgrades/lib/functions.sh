@@ -151,7 +151,7 @@ function bootstrap_recent_ansible {
       notice "Removed System installed Ansible"
     done
 
-    pushd "${BOOTSTRAP_ANSIBLE_FOLDER}"
+    pushd /opt/openstack-ansible
       # Install ansible for system migrations
       scripts/bootstrap-ansible.sh
     popd

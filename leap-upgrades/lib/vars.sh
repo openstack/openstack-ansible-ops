@@ -42,9 +42,6 @@ export VENV_URL="${VENV_URL:-https://rpc-repo.rackspace.com/venvs/leap-bundles}"
 export VALIDATE_UPGRADE_INPUT="${VALIDATE_UPGRADE_INPUT:-TRUE}"
 export CODE_UPGRADE_FROM="${CODE_UPGRADE_FROM:-}"
 
-# Bootstrap ansible tool, see also bootstrap_recent_ansible
-export BOOTSTRAP_ANSIBLE_FOLDER=${BOOTSTRAP_ANSIBLE_FOLDER:-/opt/openstack-ansible/}
-
 ## Ansible debugging
 export LEAP_TIMESTAMP=$(date +%s)
 export ANSIBLE_LOG_PATH="/opt/leap42/ansible-${LEAP_TIMESTAMP}.log"
