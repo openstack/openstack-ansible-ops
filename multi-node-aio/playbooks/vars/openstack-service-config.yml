@@ -123,18 +123,18 @@ images:
   - name: Ubuntu 16.04
     format: qcow2
     url: http://uec-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
-  - name: Fedora 24
+  - name: Fedora 27
     format: qcow2
-    url: http://dfw.mirror.rackspace.com/fedora/releases/24/CloudImages/x86_64/images/Fedora-Cloud-Base-24-1.2.x86_64.qcow2
+    url: http://dfw.mirror.rackspace.com/fedora/releases/27/CloudImages/x86_64/images/Fedora-Cloud-Base-27-1.6.x86_64.qcow2
   - name: CentOS 7
     format: qcow2
     url: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
   - name: OpenSuse Leap 42.3
     format: qcow2
-    url: http://download.opensuse.org/repositories/Cloud:/Images:/Leap_42.3/images/openSUSE-Leap-42.3-OpenStack.x86_64-0.0.4-Build2.223.qcow2
-  - name: Debian 9.1.0
+    url: http://download.opensuse.org/repositories/Cloud:/Images:/Leap_42.3/images/openSUSE-Leap-42.3-OpenStack.x86_64-0.0.4-Build7.64.qcow2
+  - name: Debian 9.3.4
     format: qcow2
-    url: http://cdimage.debian.org/cdimage/openstack/current/debian-9.1.0-openstack-amd64.qcow2
+    url: http://cdimage.debian.org/cdimage/openstack/current/debian-9.3.4-20180118-openstack-amd64.qcow2
   - name: Debian TESTING
     format: qcow2
     url: http://cdimage.debian.org/cdimage/openstack/testing/debian-testing-openstack-amd64.qcow2
