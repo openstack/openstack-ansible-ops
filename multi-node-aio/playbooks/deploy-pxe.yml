@@ -80,18 +80,8 @@
         - restart nginx
 
     - name: Drop tftp-hpa configs
-      copy:
+      template:
         src: "pxe/tftp/tftp-hpa"
-        dest: /etc/default/tftpd-hpa
-        mode: "0644"
-        owner: root
-        group: root
-      notify:
-        - restart tftp-hpa
-
-    - name: Drop inetd configs
-      copy:
-        src: "pxe/tftp/inetd.conf"
         dest: /etc/default/tftpd-hpa
         mode: "0644"
         owner: root
@@ -171,16 +161,6 @@
         group: root
       tags:
         - boot-menu
-
-    - name: Drop tftp-hpa configs
-      template:
-        src: "pxe/tftp/tftp-hpa"
-        dest: /etc/default/tftpd-hpa
-        mode: "0644"
-        owner: root
-        group: root
-      notify:
-        - restart tftp-hpa
 
     - name: network scripts for pxe
       template:
