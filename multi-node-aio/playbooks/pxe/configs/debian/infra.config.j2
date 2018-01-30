@@ -4,13 +4,13 @@
 # Use the following option to add additional boot parameters for the
 # installed system (if supported by the bootloader installer).
 # Note: options passed to the installer will be added automatically.
-d-i debian-installer/add-kernel-opts string biosdevname=0 net.ifnames=0 elevator=noop
+d-i debian-installer/add-kernel-opts string biosdevname=0 net.ifnames=0 elevator=cfq
 
 # Networking
 d-i netcfg/choose_interface select eth0
 d-i netcfg/dhcp_timeout string 60
-d-i netcfg/get_hostname string common1
-d-i netcfg/get_domain string common1.openstackci.local
+d-i netcfg/get_hostname string host1
+d-i netcfg/get_domain string host1.openstack.local
 
 ## USE THIS FOR STATIC NETWORKING
 # d-i netcfg/disable_autoconfig boolean true
@@ -33,11 +33,6 @@ d-i netcfg/wireless_wep string
 # Command Line 1: This is necessary otherwise you will be prompted to umount /dev/vda. See Ubuntu bug #1347726.
 d-i preseed/early_command string \
       umount /media || true
-
-# Net Image
-
-# Required at least for 12.10+
-d-i live-installer/net-image string {{ tftp_server }}/images/{{ item.value.image_short_name }}/install/filesystem.squashfs
 
 # The kernel image (meta) package to be installed; "none" can be used if no
 # kernel is to be installed.
@@ -93,14 +88,23 @@ d-i partman-md/device_remove_md boolean true
 # And the same goes for the confirmation to write the lvm partitions.
 d-i partman-lvm/confirm boolean true
 d-i partman-lvm/confirm_nooverwrite boolean true
+d-i partman-md/confirm boolean true
+d-i partman-md/confirm_nooverwrite boolean true
+
+d-i partman-basicfilesystems/choose_label string gpt
+d-i partman-basicfilesystems/default_label string gpt
+d-i partman-partitioning/choose_label string gpt
+d-i partman-partitioning/default_label string gpt
+d-i partman/choose_label string gpt
+d-i partman/default_label string gpt
 
 d-i partman-auto/method string lvm
-d-i partman-auto/disk string /dev/vda
+d-i partman-auto/disk string /dev/sda
 
 # For LVM partitioning, you can select how much of the volume group to use
 # for logical volumes.
 d-i partman-auto-lvm/guided_size string max
-d-i partman-auto-lvm/new_vg_name string vmvg00
+d-i partman-auto-lvm/new_vg_name string vg00
 
 d-i partman-auto/choose_recipe select custompartitioning
 d-i partman-auto/expert_recipe string \
@@ -116,16 +120,16 @@ d-i partman-auto/expert_recipe string \
               1024 1 100% ext4                                \
                       $primary{ }                             \
                       method{ lvm }                           \
-                      device{ /dev/vda2 }                     \
-                      vg_name{ vmvg00 }                       \
+                      device{ /dev/sda2 }                     \
+                      vg_name{ vg00 }                         \
               .                                               \
               2048 1 4096 linux-swap                          \
-                      $lvmok{ } in_vg{ vmvg00 }               \
+                      $lvmok{ } in_vg{ vg00 }                 \
                       lv_name{ swap00 }                       \
                       method{ swap } format{ }                \
               .                                               \
               8192 1 16384 ext4                               \
-                      $lvmok{ } in_vg{ vmvg00 }               \
+                      $lvmok{ } in_vg{ vg00 }                 \
                       lv_name{ root00 }                       \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \
@@ -133,20 +137,20 @@ d-i partman-auto/expert_recipe string \
                       mountpoint{ / }                         \
               .                                               \
               16384 1 16384 ext4                              \
-                      $lvmok{ } in_vg{ vmvg00 }               \
+                      $lvmok{ } in_vg{ vg00 }                 \
                       lv_name{ openstack00 }                  \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \
                       label{ openstack }                      \
                       mountpoint{ /openstack }                \
               .                                               \
-              16384 1 10240000 xfs                            \
-                      $lvmok{ } in_vg{ vmvg00 }               \
+              16384 1 10240000 ext4                           \
+                      $lvmok{ } in_vg{ vg00 }                 \
                       lv_name{ nova00 }                       \
                       method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ xfs }     \
+                      use_filesystem{ } filesystem{ btrfs }   \
                       label{ nova }                           \
-                      mountpoint{ /var/lib/nova }             \
+                      mountpoint{ /var/lib/machines }         \
               .                                               \
 
 # This makes partman automatically partition without confirmation, provided
@@ -163,22 +167,26 @@ tasksel tasksel/first multiselect openssh-server
 
 # Whether to upgrade packages after debootstrap.
 # Allowed values: none, safe-upgrade, full-upgrade
-d-i pkgsel/upgrade select none
+d-i pkgsel/upgrade select full-upgrade
 d-i pkgsel/include string bridge-utils      \
                           dstat             \
                           ethtool           \
                           git               \
                           htop              \
                           ifenslave         \
+                          libvirt-bin       \
                           lvm2              \
                           openssh-server    \
                           parted            \
+                          python3-all       \
                           python-all        \
-                          qemu-guest-agent  \
+                          qemu-kvm          \
+                          systemd-container \
                           tmux              \
                           vim               \
-                          vlan              \
-                          xfsprogs
+                          virt-manager      \
+                          virtinst          \
+                          vlan
 
 d-i pkgsel/update-policy select none
 
@@ -211,13 +219,15 @@ d-i passwd/root-password-again password secrete
 # This is fairly safe to set, it makes grub install automatically to the MBR
 # if no other operating system is detected on the machine.
 d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+d-i grub-installer/bootdev string default
 
 # Post Install
 
 d-i preseed/late_command string \
-  in-target bash -c "wget --no-proxy http://{{ tftp_server }}/scripts/vm-post-install-debian-script.sh -O /opt/vm-post-install-script.sh"; \
-  in-target bash -c 'chmod +x /opt/vm-post-install-script.sh'; \
-  in-target bash -c '/opt/vm-post-install-script.sh'
+  in-target bash -c "wget --no-proxy http://{{ tftp_server }}/scripts/general-post-install-debian-script.sh -O /opt/general-post-install-script.sh"; \
+  in-target bash -c 'chmod +x /opt/general-post-install-script.sh'; \
+  in-target bash -c '/opt/general-post-install-script.sh'
 # Finish
 
 # Reboot after the install is finished.

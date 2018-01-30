@@ -11,6 +11,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-pxelinux_url: "https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz"
-pxelinux_name: "syslinux-6.03.tar.gz"
-pxelinux_short_name: "syslinux-6.03"
+ipxe_ubuntu_version: "1.0.0+git-20150424.a25a16d-1ubuntu1.2"

@@ -45,15 +45,13 @@
         mode: "0755"
       with_items:
         - /var/www/pxe
+        - /var/www/pxe/configs
         - /var/www/pxe/images
-        - /var/www/pxe/iso
         - /var/www/pxe/networking
         - /var/www/pxe/scripts
         - /var/www/pxe/templates
         - /var/lib/tftpboot
-        - /var/lib/tftpboot/boot-screens
-        - /var/lib/tftpboot/preseed
-        - /var/lib/tftpboot/pxelinux.cfg
+        - /var/lib/tftpboot/ipxe
 
     - name: Get root public key
       command: cat /root/.ssh/id_rsa.pub
@@ -89,82 +87,23 @@
       notify:
         - restart tftp-hpa
 
-    - name: Download image iso(s)
+    - name: Download iPXE
       get_url:
-        url: "{{ item.value.image_iso_url }}"
-        dest: "/var/www/pxe/iso/{{ item.value.image_name }}"
-      with_dict: "{{ images }}"
-
-    - name: Remove image directory if it exists
-      file:
-        path: "/var/www/pxe/images/{{ item.value.image_short_name }}"
-        state: absent
-      with_dict: "{{ images }}"
-
-    - name: Create image directory if it exists
-      file:
-        path: "/var/www/pxe/images/{{ item.value.image_short_name }}"
-        state: directory
-        owner: "root"
-        group: "root"
-        mode: "0755"
-      with_dict: "{{ images }}"
-
-    - name: Extract ISO(s) contents
-      command: "7z x /var/www/pxe/iso/{{ item.value.image_name }}"
-      args:
-        chdir: "/var/www/pxe/images/{{ item.value.image_short_name }}"
-      with_dict: "{{ images }}"
-
-    - name: Download pxelinux
-      get_url:
-        url: "{{ pxelinux_url }}"
-        dest: "/var/www/pxe/{{ pxelinux_name }}"
+        url: "{{ ipxe_kernel_url }}"
+        dest: "/var/lib/tftpboot/ipxe.lkrn"
         tmp_dest: /tmp/
 
-    - name: Remove image directory if it exists
-      file:
-        path: "/var/www/pxe/{{ pxelinux_short_name }}"
-        state: absent
-
-    - name: Extract pxelinux contents
-      command: "tar -xf /var/www/pxe/{{ pxelinux_name }}"
-      args:
-        chdir: "/var/www/pxe"
-
-    - name: Drop pxelinux.cfg default menu
-      copy:
-        src: "pxe/tftp/pxelinux.cfg.default"
-        dest: "{{ item }}"
-        mode: "0644"
-        owner: root
-        group: root
-      with_items:
-        - /var/lib/tftpboot/pxelinux.cfg/default
-        - /var/lib/tftpboot/boot-screens/syslinux.cfg
-
-    # These links are using the shell command because the file module does not create hard links
-    - name: Create hard links
-      shell: |
-        ln -f /var/www/pxe/{{ pxelinux_short_name }}/bios/com32/elflink/ldlinux/ldlinux.c32 /var/lib/tftpboot/ldlinux.c32
-        ln -f /var/www/pxe/{{ pxelinux_short_name }}/bios/core/pxelinux.0 /var/lib/tftpboot/pxelinux.0
-        ln -f /var/www/pxe/{{ pxelinux_short_name }}/bios/com32/lib/libcom32.c32 /var/lib/tftpboot/boot-screens/libcom32.c32
-        ln -f /var/www/pxe/{{ pxelinux_short_name }}/bios/com32/libutil/libutil.c32 /var/lib/tftpboot/boot-screens/libutil.c32
-        ln -f /var/www/pxe/{{ pxelinux_short_name }}/bios/com32/menu/vesamenu.c32 /var/lib/tftpboot/boot-screens/vesamenu.c32
-
-    - name: Drop boot-screens default menu
+    - name: Drop ipxe default menu
       template:
-        src: "pxe/tftp/menu.cfg.j2"
-        dest: /var/lib/tftpboot/boot-screens/menu.cfg
+        src: "pxe/tftp/boot.ipxe.j2"
+        dest: "/var/lib/tftpboot/boot.ipxe"
         mode: "0644"
         owner: root
         group: root
-      tags:
-        - boot-menu
 
     - name: network scripts for pxe
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/{{ item.src }}"
+        src: "pxe/configs/{{ ansible_os_family | lower }}/{{ item.src }}"
         dest: /var/www/pxe/{{ item.dir }}/{{ item.dest }}
         mode: "0644"
         owner: root
@@ -182,7 +121,7 @@
 
     - name: network scripts for an MNAIO
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/{{ item.src }}"
+        src: "pxe/configs/{{ ansible_os_family | lower }}/{{ item.src }}"
         dest: /var/www/pxe/{{ item.dir }}/{{ item.dest }}
         mode: "0644"
         owner: root
@@ -199,7 +138,7 @@
 
     - name: network scripts for servers
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/vm-bridges.cfg.j2"
+        src: "pxe/configs/{{ ansible_os_family | lower }}/vm-bridges.cfg.j2"
         dest: /var/www/pxe/networking/{{ hostvars[item]['server_hostname'] }}-bridges.cfg
         mode: "0644"
         owner: root
@@ -208,8 +147,8 @@
 
     - name: tftp configs for servers
       template:
-        src: "pxe/tftp/pxelinux.cfg.macaddr.j2"
-        dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ hostvars[item]['server_mac_address'] | replace(':', '-') | lower }}"
+        src: "pxe/tftp/boot.ipxe.macaddr.j2"
+        dest: "/var/lib/tftpboot/ipxe/{{ hostvars[item]['server_mac_address'] | replace(':', '-') | lower }}"
         mode: "0644"
         owner: root
         group: root
@@ -217,8 +156,8 @@
 
     - name: Preseeds for pxe mnaio
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/mnaio.preseed.j2"
-        dest: /var/lib/tftpboot/preseed/mnaio.preseed
+        src: "pxe/configs/{{ ansible_os_family | lower }}/mnaio.config.j2"
+        dest: /var/www/pxe/configs/mnaio.config
         mode: "0644"
         owner: root
         group: root
@@ -226,8 +165,8 @@
 
     - name: Preseeds for pxe vm
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/vm.preseed.j2"
-        dest: /var/lib/tftpboot/preseed/vm.preseed
+        src: "pxe/configs/{{ ansible_os_family | lower }}/vm.config.j2"
+        dest: /var/www/pxe/configs/vm.config
         mode: "0644"
         owner: root
         group: root
@@ -235,8 +174,8 @@
 
     - name: Preseeds for pxe vm-compute
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/vm-compute.preseed.j2"
-        dest: /var/lib/tftpboot/preseed/vm-compute.preseed
+        src: "pxe/configs/{{ ansible_os_family | lower }}/vm-compute.config.j2"
+        dest: /var/www/pxe/configs/vm-compute.config
         mode: "0644"
         owner: root
         group: root
@@ -244,8 +183,8 @@
 
     - name: Preseeds for pxe compute
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/compute.preseed.j2"
-        dest: /var/lib/tftpboot/preseed/compute.preseed
+        src: "pxe/configs/{{ ansible_os_family | lower }}/compute.config.j2"
+        dest: /var/www/pxe/configs/compute.config
         mode: "0644"
         owner: root
         group: root
@@ -253,30 +192,11 @@
 
     - name: Preseeds for pxe infra
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/infra.preseed.j2"
-        dest: /var/lib/tftpboot/preseed/infra.preseed
+        src: "pxe/configs/{{ ansible_os_family | lower }}/infra.config.j2"
+        dest: /var/www/pxe/configs/infra.config
         mode: "0644"
         owner: root
         group: root
-      with_dict: "{{ images }}"
-
-    - name: Create netboot bind mount path
-      file:
-        path: "/var/lib/tftpboot/{{ item.value.image_short_name }}"
-        state: directory
-        owner: "root"
-        group: "root"
-        mode: "0755"
-      with_dict: "{{ images }}"
-
-    - name: Unbind mount netboot images
-      mount:
-        name: "/var/lib/tftpboot/{{ item.value.image_short_name }}"
-        src: "/var/www/pxe/images/{{ item.value.image_netboot }}"
-        opts: bind
-        fstype: none
-        state: unmounted
-      register: fstab
       with_dict: "{{ images }}"
 
     - name: Ensure permissions are correct
@@ -285,16 +205,6 @@
         find /var/lib/tftpboot -type d -exec chmod 0755 {} \;
         find /var/lib/tftpboot -type f -exec chmod 0644 {} \;
         find /var/www/pxe -type d -exec chmod 0755 {} \;
-
-    - name: Bind mount netboot images
-      mount:
-        name: "/var/lib/tftpboot/{{ item.value.image_short_name }}"
-        src: "/var/www/pxe/images/{{ item.value.image_netboot }}"
-        opts: bind
-        fstype: none
-        state: mounted
-      register: fstab
-      with_dict: "{{ images }}"
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 

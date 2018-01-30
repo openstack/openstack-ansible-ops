@@ -11,10 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-dhcp_default_lease_time: 21600   # Default lease time
-dhcp_max_lease_time: 43200       # Max lease time
-tftp_boot_path: /pxelinux.0      # Path of where to boot from first
-
+dhcp_default_lease_time: 21600                   # Default lease time
+dhcp_max_lease_time: 43200                       # Max lease time
+ipxe_boot_file: "boot.ipxe"                      # Path of initial iPXE bootloader
 # - List of DHCP Subnets - These are iterated though and each will be created
 dhcp_list:
   - netmask: 255.255.255.0                       # Netmask
@@ -23,6 +22,6 @@ dhcp_list:
     subnet: 10.0.2.0                             # Subnet mask
     default_lease_time: 21600                    # Subnet Default lease time - The default is used if this is not defined
     max_lease_time: 43200                        # Subnet Max lease time - The default is used if this is not defined
-    tftp_boot_path: /pxelinux.0                  # Path for tftp of where to boot from first - The default is used if this is not defined
+    ipxe_boot_file: "boot.ipxe"                  # Path of initial iPXE bootloader to boot from first
     tftp_server: "{{ tftp_server }}"             # The server hosting the TFTP server - The default is used if this is not defined
     dhcp_default_domain_name: openstackci.local

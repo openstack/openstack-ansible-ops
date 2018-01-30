@@ -1,0 +1,61 @@
+#!ipxe
+set esc:hex 1b
+set bold ${esc:string}[1m
+set boldoff ${esc:string}[22m
+set space:hex 20:20
+set space ${space:string}
+set timeout 10
+
+{% if ipxe_kernel_url is defined and ipxe_kernel_url|length > 0%}
+iseq ${version} {{ ipxe_ubuntu_version }} && chain --autofree {{ ipxe_kernel_url }} ||
+{% else %}
+iseq ${version} {{ ipxe_ubuntu_version }} && chain --autofree ipxe.lkrn ||
+{% endif %}
+{% if ipxe_path_url is defined and ipxe_path_url| length > 0%}
+echo Loading iPXE path defined in ipxe_path_url...
+chain --autofree {{ ipxe_path_url }}
+{% endif %}
+:start
+echo ${bold}Multi Node AIO Install${boldoff} starting...
+prompt --key m --timeout 4000 Hit the ${bold}m${boldoff} key to load default menu... && goto menu || goto boot_mac
+
+:boot_mac
+chain --autofree ipxe/${net0/mac:hexhyp} ||
+goto menu
+
+:menu
+clear choice
+menu Multi Node AIO Installation Menu
+item --gap Default:
+item local ${space} Boot from local hdd
+item --gap Automated Installs
+{% for key, value in images.items() %}
+{%   for _key, _value in value.image_configs.items() %}
+item {{ key }}-{{ _key }} ${space} {{ key }}-{{ _key }}
+{%   endfor %}
+{% endfor %}
+item --gap Tools
+item shell ${space} iPXE shell
+isset ${choice} && set timeout 0 || set timeout 300000
+choose --timeout ${timeout} --default local choice && goto ${choice} || goto local
+
+{% for key, value in images.items() %}
+{%   for _key, _value in value.image_configs.items() %}
+:{{ key }}-{{ _key }}
+kernel {{ value.image_netboot_kernel_url }}
+initrd {{ value.image_netboot_initrd_url }}
+{%     if value.image_type == 'debian' %}
+imgargs linux {{ value.image_kernel_options }} initrd=initrd.gz preseed/url={{ _value.url }} preseed/interactive=false netcfg/choose_interface={{ default_interface }}
+{%     endif %}
+boot
+{%   endfor %}
+{% endfor %}
+
+:local
+echo Booting from local disks ...
+exit 0
+
+:shell
+echo Type "exit" to return to menu.
+shell
+goto menu

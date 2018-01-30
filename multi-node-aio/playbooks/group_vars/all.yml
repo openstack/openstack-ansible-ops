@@ -24,6 +24,8 @@ default_ubuntu_mirror_proxy: 'http://10.0.2.1:3142/'
 default_ubuntu_mirror_hostname: archive.ubuntu.com
 default_ubuntu_mirror_directory: /ubuntu
 
+ipxe_kernel_url: "{{ ipxe_kernel_url | default('http://boot.ipxe.org/ipxe.lkrn') }}"
+
  # IP address, or domain name of the TFTP server
 tftp_server: "{{ hostvars[groups['pxe_hosts'][0]]['ansible_host'] | default(ansible_host) }}"
 # tftp_ssh_key: ''  # user defined ssh key, used to access the host
@@ -32,57 +34,51 @@ tftp_port: 69
 # Default ISO images
 images:
   ubuntu-16.04-amd64:
-    image_type: debian
-    image_iso_url: "http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-server-amd64.iso"
-    image_name: "ubuntu-16.04.2-server-amd64.iso"
-    image_short_name: "ubuntu-16.04.2-server-amd64"
-    image_default_boot: "ubuntu-16.04.2-server-amd64/amd64/boot-screens/menu.cfg"
+    image_type: "debian"
+    image_os: "ubuntu"
+    image-version: "xenial"
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
-    image_kernel: "ubuntu-16.04.2-server-amd64/amd64/linux"
-    image_initrd: "ubuntu-16.04.2-server-amd64/amd64/initrd.gz"
-    image_netboot: "ubuntu-16.04.2-server-amd64/install/netboot/ubuntu-installer"
-    image_preseeds:
+    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
+    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
+    image_configs:
       mnaio:
-        url: "tftp://{{ tftp_server }}/preseed/mnaio.preseed"
-        template_name: "mnaio.preseed"
+        url: "http://{{ tftp_server }}/configs/mnaio.config"
+        template_name: "mnaio.config"
       vm:
-        url: "tftp://{{ tftp_server }}/preseed/vm.preseed"
-        template_name: "vm.preseed"
+        url: "http://{{ tftp_server }}/configs/vm.config"
+        template_name: "vm.config"
       vm-compute:
-        url: "tftp://{{ tftp_server }}/preseed/vm-compute.preseed"
-        template_name: "vm-compute.preseed"
+        url: "http://{{ tftp_server }}/configs/vm-compute.config"
+        template_name: "vm-compute.config"
       compute:
-        url: "tftp://{{ tftp_server }}/preseed/compute.preseed"
-        template_name: "compute.preseed"
+        url: "http://{{ tftp_server }}/configs/compute.config"
+        template_name: "compute.config"
       infra:
-        url: "tftp://{{ tftp_server }}/preseed/infra.preseed"
-        template_name: "infra.preseed"
+        url: "http://{{ tftp_server }}/configs/infra.config"
+        template_name: "infra.config"
   ubuntu-14.04-amd64:
-    image_type: debian
-    image_iso_url: "http://releases.ubuntu.com/14.04.5/ubuntu-14.04.5-server-amd64.iso"
-    image_name: "ubuntu-14.04.5-server-amd64.iso"
-    image_short_name: "ubuntu-14.04.5-server-amd64"
-    image_default_boot: "ubuntu-14.04.5-server-amd64/amd64/boot-screens/menu.cfg"
+    image_type: "debian"
+    image_os: "ubuntu"
+    image_version: "trusty"
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical quiet splash"
-    image_kernel: "ubuntu-14.04.5-server-amd64/amd64/linux"
-    image_initrd: "ubuntu-14.04.5-server-amd64/amd64/initrd.gz"
-    image_netboot: "ubuntu-14.04.5-server-amd64/install/netboot/ubuntu-installer"
-    image_preseeds:
+    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
+    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
+    image_configs:
       mnaio:
-        url: "tftp://{{ tftp_server }}/preseed/mnaio.preseed"
-        template_name: "mnaio.preseed"
+        url: "http://{{ tftp_server }}/configs/mnaio.config"
+        template_name: "mnaio.config"
       vm:
-        url: "tftp://{{ tftp_server }}/preseed/vm.preseed"
-        template_name: "vm.preseed"
+        url: "http://{{ tftp_server }}/configs/vm.config"
+        template_name: "vm.config"
       vm-compute:
-        url: "tftp://{{ tftp_server }}/preseed/vm-compute.preseed"
-        template_name: "vm-compute.preseed"
+        url: "http://{{ tftp_server }}/configs/vm-compute.config"
+        template_name: "vm-compute.config"
       compute:
-        url: "tftp://{{ tftp_server }}/preseed/compute.preseed"
-        template_name: "compute.preseed"
+        url: "http://{{ tftp_server }}/configs/compute.config"
+        template_name: "compute.config"
       infra:
-        url: "tftp://{{ tftp_server }}/preseed/infra.preseed"
-        template_name: "infra.preseed"
+        url: "http://{{ tftp_server }}/configs/infra.config"
+        template_name: "infra.config"
 # mnaio_data_disk: 'sdc'  # str - not required, set this to define a given data disk if no data disk
 #                                               is defined the largest unpartitioned disk will be used.
 mnaio_host_networks:

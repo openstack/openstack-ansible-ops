@@ -129,7 +129,7 @@
 
     - name: Drop host network interfaces
       template:
-        src: "pxe/{{ ansible_os_family | lower }}/mnaio-bridges.cfg.j2"
+        src: "pxe/configs/{{ ansible_os_family | lower }}/mnaio-bridges.cfg.j2"
         dest: /etc/network/interfaces.d/mnaio-bridges.cfg
         mode: "0644"
         owner: root
