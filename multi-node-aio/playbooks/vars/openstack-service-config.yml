@@ -55,7 +55,7 @@ vm_flavors:
 
 # Create shared networks and subnets:
 provider_net_name: GATEWAY_NET
-provider_net_cidr: 10.29.248.0/22
+provider_net_cidr: 10.0.248.0/22
 provider_dns_server: "{{ DNS_NAMESERVER | default('8.8.8.8') }}"
 provider_subnet_name: "{{ provider_net_name }}_SUBNET"
 
