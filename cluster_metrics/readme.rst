@@ -1,6 +1,6 @@
 Gather and visualize cluster wide metrics
 #########################################
-:date: 2016-09-01
+:date: 2017-12-01
 :tags: openstack, ansible
 :category: \*openstack, \*nix
 
