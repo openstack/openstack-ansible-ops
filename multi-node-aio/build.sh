@@ -49,5 +49,6 @@ ansible-playbook -vv \
                  -e loadbalancer_vm_server_ram=${LOADBALANCER_VM_SERVER_RAM-"1024"} \
                  -e logging_vm_server_ram=${LOGGING_VM_SERVER_RAM-"1024"} \
                  -e swift_vm_server_ram=${SWIFT_VM_SERVER_RAM-"1024"} \
+                 -e container_tech=${CONTAINER_TECH-"lxc"}\
                  --force-handlers \
                  playbooks/site.yml
