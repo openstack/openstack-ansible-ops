@@ -22,7 +22,6 @@ import datetime
 import logging
 import os
 from openstack import connection
-from openstack import profile
 import signal
 import sys
 import time
@@ -95,16 +94,12 @@ class ServiceTest(object):
         auth_url = os.environ['OS_AUTH_URL']
         password = os.environ['OS_PASSWORD']
 
-        prof = profile.Profile()
-        prof.set_interface(profile.Profile.ALL, 'admin')
-
         conn = connection.Connection(auth_url=auth_url,
                                      username='admin',
                                      password=password,
                                      project_name='admin',
                                      user_domain_id='default',
-                                     project_domain_id='default',
-                                     profile=prof)
+                                     project_domain_id='default')
         self.conn = conn
 
         return conn
