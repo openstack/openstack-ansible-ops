@@ -29,6 +29,24 @@
         - always
 
   tasks:
+    - name: Stop running VMs
+      command: "virsh destroy {{ hostvars[item]['server_hostname'] }}"
+      failed_when: false
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
+
+    - name: Delete VM LV
+      lvol:
+        vg: vg01
+        lv: "{{ hostvars[item]['server_hostname'] }}"
+        state: absent
+        force: yes
+      failed_when: false
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
+
     - name: Create VM LV
       lvol:
         vg: vg01
