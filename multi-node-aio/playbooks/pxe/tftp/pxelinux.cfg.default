@@ -1,5 +1,0 @@
-path boot-screens
-include boot-screens/menu.cfg
-default boot-screens/vesamenu.c32
-prompt 0
-timeout 100

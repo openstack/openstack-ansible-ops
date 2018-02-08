@@ -34,11 +34,6 @@ d-i netcfg/wireless_wep string
 d-i preseed/early_command string \
       umount /media || true
 
-# Net Image
-
-# Required at least for 12.10+
-d-i live-installer/net-image string {{ tftp_server }}/images/{{ item.value.image_short_name }}/install/filesystem.squashfs
-
 # The kernel image (meta) package to be installed; "none" can be used if no
 # kernel is to be installed.
 d-i base-installer/kernel/image string {{ default_ubuntu_kernel }}
