@@ -91,15 +91,8 @@ class ServiceTest(object):
 
     def get_connection(self):
         """Get an OpenStackSDK connection"""
-        auth_url = os.environ['OS_AUTH_URL']
-        password = os.environ['OS_PASSWORD']
 
-        conn = connection.Connection(auth_url=auth_url,
-                                     username='admin',
-                                     password=password,
-                                     project_name='admin',
-                                     user_domain_id='default',
-                                     project_domain_id='default')
+        conn = connection.from_config(cloud_name='default')
         self.conn = conn
 
         return conn
