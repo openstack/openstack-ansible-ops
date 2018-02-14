@@ -24,6 +24,8 @@ default_ubuntu_mirror_proxy: 'http://10.0.2.1:3142/'
 default_ubuntu_mirror_hostname: archive.ubuntu.com
 default_ubuntu_mirror_directory: /ubuntu
 
+default_container_tech: "{{ container_tech | default('lxc') }}"
+
 ipxe_kernel_url: "{{ ipxe_kernel_url | default('http://boot.ipxe.org/ipxe.lkrn') }}"
 
  # IP address, or domain name of the TFTP server

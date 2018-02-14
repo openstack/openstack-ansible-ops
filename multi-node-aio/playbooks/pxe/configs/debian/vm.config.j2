@@ -135,6 +135,16 @@ d-i partman-auto/expert_recipe string \
                       label{ openstack }                      \
                       mountpoint{ /openstack }                \
               .                                               \
+{% if default_container_tech == 'nspawn' %}
+              8192 1 24576 btrfs                              \
+                      $lvmok{ } in_vg{ vmvg00 }               \
+                      lv_name{ machines00 }                   \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ btrfs }   \
+                      label{ machines }                       \
+                      mountpoint{ /var/lib/machines }         \
+              .                                               \
+{% elif default_container_tech == 'lxc' %}
               4096 1 8192 btrfs                               \
                       $lvmok{ } in_vg{ vmvg00 }               \
                       lv_name{ machines00 }                   \
@@ -151,6 +161,7 @@ d-i partman-auto/expert_recipe string \
                       label{ lxc }                            \
                       mountpoint{ /var/lib/lxc }              \
               .                                               \
+{% endif %}
 
 # This makes partman automatically partition without confirmation, provided
 # that you told it what to do using one of the methods above.
