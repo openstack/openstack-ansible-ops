@@ -91,6 +91,7 @@ cinder_block: &cinder_block
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
     container_vars:
+      container_tech: "{{ default_container_tech }}"
       cinder_backends:
         limit_container_types: cinder_volume
         lvm:
@@ -105,6 +106,8 @@ compute_block: &compute_block
 {% for host in groups['compute_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+    container_vars:
+      container_tech: "{{ default_container_tech }}"
 {% endfor %}
 
 
@@ -112,6 +115,8 @@ infra_block: &infra_block
 {% for host in groups['infra_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+    container_vars:
+      container_tech: "{{ default_container_tech }}"
 {% endfor %}
 
 
@@ -119,6 +124,8 @@ loadbalancer_block: &loadbalancer_block
 {% for host in groups['loadbalancer_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+    container_vars:
+      container_tech: "{{ default_container_tech }}"
 {% endfor %}
 
 
@@ -126,6 +133,8 @@ log_block: &log_block
 {% for host in groups['log_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+    container_vars:
+      container_tech: "{{ default_container_tech }}"
 {% endfor %}
 
 
@@ -133,6 +142,8 @@ swift_block: &swift_block
 {% for host in groups['swift_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+    container_vars:
+      container_tech: "{{ default_container_tech }}"
 {% endfor %}
 
 
