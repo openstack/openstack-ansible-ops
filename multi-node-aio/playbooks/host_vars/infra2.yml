@@ -19,7 +19,7 @@ server_hostname: 'infra2'
 server_domain_name: 'openstack.local'
 server_vm: true
 server_vm_ram: '{{ infra_vm_server_ram | default(8192) }}'
-server_vm_vcpus: 4
+server_vm_vcpus: '{{ infra_vm_server_vcpus | default(4) }}'
 server_vm_fixed_addr: '10.0.2.101'
 server_vm_primary_network: 'dhcp'
 server_image: "{{ default_vm_image }}"
