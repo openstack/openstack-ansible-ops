@@ -49,7 +49,7 @@ ansible-playbook -vv \
                  -e loadbalancer_vm_server_ram=${LOADBALANCER_VM_SERVER_RAM:-"1024"} \
                  -e logging_vm_server_ram=${LOGGING_VM_SERVER_RAM:-"1024"} \
                  -e swift_vm_server_ram=${SWIFT_VM_SERVER_RAM:-"1024"} \
-                 -e container_tech=${CONTAINER_TECH-"lxc"} \
+                 -e container_tech=${CONTAINER_TECH:-"lxc"} \
                  -e ipxe_kernel_url=${IPXE_KERNEL_URL:-"http://boot.ipxe.org/ipxe.lkrn"} \
                  -e ipxe_path_url=${IPXE_PATH_URL:-""} \
                  --force-handlers \
