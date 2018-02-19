@@ -35,6 +35,7 @@
         repo: https://git.openstack.org/openstack/openstack-ansible
         dest: /opt/openstack-ansible
         version: "{{ osa_branch | default('master') }}"
+        force: true
       when:
         - pre_config_osa | default(true) | bool
 
