@@ -132,9 +132,9 @@ images:
   - name: OpenSuse Leap 42.3
     format: qcow2
     url: http://download.opensuse.org/repositories/Cloud:/Images:/Leap_42.3/images/openSUSE-Leap-42.3-OpenStack.x86_64.qcow2
-  - name: Debian 9.3.4
+  - name: Debian 9 Latest
     format: qcow2
-    url: http://cdimage.debian.org/cdimage/openstack/current/debian-9.3.4-20180118-openstack-amd64.qcow2
+    url: http://cdimage.debian.org/cdimage/openstack/current-9/debian-9-openstack-amd64.qcow2
   - name: Debian TESTING
     format: qcow2
     url: http://cdimage.debian.org/cdimage/openstack/testing/debian-testing-openstack-amd64.qcow2
