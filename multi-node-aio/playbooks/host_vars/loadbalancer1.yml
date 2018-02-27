@@ -19,7 +19,7 @@ server_hostname: 'loadbalancer1'
 server_domain_name: 'openstack.local'
 server_vm: true
 server_vm_ram: '{{ loadbalancer_vm_server_ram | default(1024) }}'
-server_vm_vcpus: 1
+server_vm_vcpus: '{{ loadbalancer_vm_server_vcpus | default(1) }}'
 server_vm_fixed_addr: '10.0.2.150'
 server_vm_primary_network: 'dhcp'
 server_image: "{{ default_vm_image }}"

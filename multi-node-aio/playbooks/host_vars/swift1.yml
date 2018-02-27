@@ -19,7 +19,7 @@ server_hostname: 'swift1'
 server_domain_name: 'openstack.local'
 server_vm: true
 server_vm_ram: '{{ swift_vm_server_ram | default(1024) }}'
-server_vm_vcpus: 2
+server_vm_vcpus: '{{ swift_vm_server_vcpus | default(2) }}'
 server_vm_fixed_addr: '10.0.2.140'
 server_vm_primary_network: 'dhcp'
 server_image: "{{ default_vm_image }}"

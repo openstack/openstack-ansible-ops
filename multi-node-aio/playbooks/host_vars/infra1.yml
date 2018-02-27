@@ -19,7 +19,7 @@ server_hostname: 'infra1'                                   # str  - required, h
 server_domain_name: 'openstack.local'                # str  - required, domain name of server
 server_vm: true                                             # bool - not required, used to specify a host is to become a VM
 server_vm_ram: '{{ infra_vm_server_ram | default(8192) }}'  # int  - not required, used to specify ram when provisioning a VM
-server_vm_vcpus: 4                                          # int  - not required, used to specify vcpus when provisioning a VM
+server_vm_vcpus: '{{ infra_vm_server_vcpus | default(4) }}' # int  - not required, used to specify vcpus when provisioning a VM
 server_vm_fixed_addr: '10.0.2.100'                          # str  - not required, used to specify fixed address when using internal DHCPD
 server_vm_primary_network: 'dhcp'                           # str  - not required, primary network used to kick the VM
 server_image: "{{ default_vm_image }}"                      # str  - required, image name

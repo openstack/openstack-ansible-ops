@@ -52,5 +52,6 @@ ansible-playbook -vv \
                  -e container_tech=${CONTAINER_TECH:-"lxc"} \
                  -e ipxe_kernel_url=${IPXE_KERNEL_URL:-"http://boot.ipxe.org/ipxe.lkrn"} \
                  -e ipxe_path_url=${IPXE_PATH_URL:-""} \
+                 ${MNAIO_ANSIBLE_PARAMETERS:-""} \
                  --force-handlers \
                  playbooks/site.yml
