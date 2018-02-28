@@ -24,6 +24,8 @@ ansible mnaio_hosts \
         -m pip \
         -a "name=netaddr"
 
+export MNAIO_ANSIBLE_PARAMETERS=${MNAIO_ANSIBLE_PARAMETERS:-""}
+
 ansible-playbook -vv \
                  -i ${MNAIO_INVENTORY:-"playbooks/inventory"} \
                  -e setup_host=${SETUP_HOST:-"true"} \
@@ -51,7 +53,6 @@ ansible-playbook -vv \
                  -e swift_vm_server_ram=${SWIFT_VM_SERVER_RAM:-"1024"} \
                  -e container_tech=${CONTAINER_TECH:-"lxc"} \
                  -e ipxe_kernel_url=${IPXE_KERNEL_URL:-"http://boot.ipxe.org/ipxe.lkrn"} \
-                 -e ipxe_path_url=${IPXE_PATH_URL:-""} \
-                 ${MNAIO_ANSIBLE_PARAMETERS:-""} \
+                 -e ipxe_path_url=${IPXE_PATH_URL:-""} ${MNAIO_ANSIBLE_PARAMETERS} \
                  --force-handlers \
                  playbooks/site.yml
