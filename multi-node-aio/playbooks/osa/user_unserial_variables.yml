@@ -1,0 +1,16 @@
+cinder_api_serial: 100%
+cinder_scheduler_serial: 100%
+cinder_backend_serial: 100%
+glance_api_serial: 100%
+glance_registry_serial: 100%
+neutron_server_serial: 100%
+neutron_agent_serial: 100%
+neutron_other_serial: 100%
+nova_conductor_serial: 100%
+nova_scheduler_serial: 100%
+nova_api_serial: 100%
+nova_console_serial: 100%
+nova_compute_serial: 100%
+nova_serial: 100%
+#keystone_serial: 100%  # Do NOT enable due to race condition with authorized_keys module.
+
