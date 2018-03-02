@@ -34,7 +34,7 @@ http.port: {{ elastic_port }}
 # Pass an initial list of hosts to perform discovery when new node is started:
 # The default list of hosts is ["127.0.0.1", "[::1]"]
 #
-discovery.zen.ping.unicast.hosts: {% set IP_ARR=[] %}{% for host in groups['elastic-logstash'] | union(groups['kibana']) %}{% if IP_ARR.insert(loop.index,hostvars[host]['ansible_ssh_host']) %}{% endif %}{% endfor %}[{{ IP_ARR | join(', ') }}]
+discovery.zen.ping.unicast.hosts: {% set IP_ARR=[] %}{% for host in groups['elastic-logstash'] | union(groups['kibana']) %}{% if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}{% endif %}{% endfor %}[{{ IP_ARR | join(', ') }}]
 node.master: {{ node_master | default(true) }}
 node.data: {{ node_data | default(true) }}
 #
