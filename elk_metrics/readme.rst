@@ -22,7 +22,7 @@ Copy the env.d file into place
 
 .. code-block:: bash
 
-    cd openstack-ansible-ops
+    cd openstack-ansible-ops/elk_metrics
     cp env.d/elk.yml /etc/openstack_deploy/env.d/
 
 Copy the conf.d file into place
@@ -41,14 +41,14 @@ Create the containers
 
 .. code-block:: bash
 
-   cd /opt/openstack-ansible-playbooks
+   cd /opt/openstack-ansible/playbooks
    openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:kibana'
 
-install master/data elasticsearch nodes on the elastic-logstash containers
+Install master/data elasticsearch nodes on the elastic-logstash containers
 
 .. code-block:: bash
 
-    cd /opt/openstack-ansible-ops
+    cd /opt/openstack-ansible-ops/elk_metrics
     openstack-ansible installElastic.yml -e elk_hosts=elastic-logstash -e node_master=true -e node_data=true
 
 Install an Elasticsearch client on the kibana container to serve as a loadbalancer for the Kibana backend server
@@ -63,7 +63,7 @@ Install Logstash on all the elastic containers
 
     openstack-ansible installLogstash.yml
 
-InstallKibana on the kibana container
+Install Kibana on the kibana container
 
 .. code-block:: bash
 
@@ -75,13 +75,13 @@ InstallKibana on the kibana container
 
     openstack-ansible reverseProxyKibana.yml
 
-load topbeat indices into elastic-search and kibana
+Load topbeat indices into elastic-search and kibana
 
 .. code-block:: bash
 
     openstack-ansible loadKibana.yml
 
-install Topbeat everywhere to start shipping metrics to our logstash instances
+Install Topbeat everywhere to start shipping metrics to our logstash instances
 
 .. code-block:: bash
 
