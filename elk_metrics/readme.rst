@@ -3,6 +3,11 @@ install Elk stack with topbeat to gather metrics
 :tags: openstack, ansible
 
 
+Changelog
+---------
+2018-03-06 Per Abildgaard Toft (per@minfejl.dk): Updated to version Elasticsearch,Logstash and Kibana 6.x. Changed Topebeat (deprecated) to metricbeat. Included haproxy endpoint configuration.
+
+
 About this repository
 ---------------------
 
@@ -63,26 +68,40 @@ Install Logstash on all the elastic containers
 
     openstack-ansible installLogstash.yml
 
-InstallKibana on the kibana container
+Install Kibana, nginx reverse proxy and metricbeat on the kibana container
 
 .. code-block:: bash
 
     openstack-ansible installKibana.yml
 
-(Optional) Reverse proxy kibana container to your loadbalancer host
+Conigure haproxy endpoints:
+
+    Edit the /etc/openstack_deploy/user_variables.yml file and add fiel following lines:
+.. code-block:: bash
+
+  haproxy_extra_services:
+   - service:
+        haproxy_service_name: kibana
+        haproxy_ssl: False
+        haproxy_backend_nodes: "{{ groups['kibana'] | default([]) }}"
+        haproxy_port: 81
+        haproxy_balance_type: tcp
+
+and then run the haproxy-install playbook
+.. code-block:: bash
+    cd /opt/openstack-ansible/playbooks/
+     openstack-ansible haproxy-install.yml --tags=haproxy-service-config
+
+
+install Metricbeat everywhere to start shipping metrics to our logstash instances
 
 .. code-block:: bash
 
-    openstack-ansible reverseProxyKibana.yml
+    openstack-ansible installMetricbeat.yml 
 
-load topbeat indices into elastic-search and kibana
+Trouble shooting:
 
-.. code-block:: bash
-
-    openstack-ansible loadKibana.yml
-
-install Topbeat everywhere to start shipping metrics to our logstash instances
+If everything goes bad, you can clean up with the following command:
 
 .. code-block:: bash
-
-    openstack-ansible installTopbeat.yml --forks 100
+     openstack-ansible lxc-containers-destroy.yml --limit=elastic-logstash_all

@@ -1,6 +1,6 @@
 ---
 - name: add reverse proxy to kibana dashboard
-  hosts: haproxy_all
+  hosts: kibana
   become: true
   tags: nginx-setup
   vars_files:

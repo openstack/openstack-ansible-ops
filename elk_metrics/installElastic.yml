@@ -5,6 +5,15 @@
   vars_files:
     - vars/variables.yml
   tasks:
+    - name: Configure systcl vm.max_map_count=262144 on container hosts
+      sysctl:
+        name: "vm.max_map_count"
+        value: "262144"
+        state: "present"
+        reload: "yes"
+      delegate_to: "{{ physical_host }}"
+      tags:
+        - sysctl
     - name: elasticsearch datapath bind mount
       lxc_container:
         name: "{{ inventory_hostname }}"
@@ -22,21 +31,27 @@
       apt: name=oracle-java8-installer state=present install_recommends=yes update_cache=yes
     - name: add Elastic search public GPG key
       apt_key:
-        url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
         state: "present"
+    - name: enable apt https transport
+      apt: name=apt-transport-https state=present update_cache=yes
     - name: add Elastic search repo to apt sources list
-      apt_repository: repo='deb http://packages.elastic.co/elasticsearch/2.x/debian stable main' state=present
+      apt_repository: repo='deb https://artifacts.elastic.co/packages/6.x/apt stable main' state=present
     - name: Ensure Elastic search  is installed.
       apt: name=elasticsearch state=present update_cache=yes
     - name: Drop elastic search conf file
       template:
         src: templates/elasticsearch.yml.j2
         dest: /etc/elasticsearch/elasticsearch.yml
+      tags: 
+          - config
     - name: Enable and restart elastic
       service:
         name: "elasticsearch"
         enabled: true
         state: restarted
+      tags: 
+          - config
     - name: copy elk-data rotater script
       copy: src=templates/rotate-topbeatdata.sh dest=/root/rotate-topbeatdata.sh mode=0755
       when: node_data | bool
