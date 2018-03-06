@@ -1,0 +1,30 @@
+---
+- name: metricsbeat
+  hosts: hosts
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: add metricsbeat repo to apt sources list
+      apt_repository: repo='deb https://artifacts.elastic.co/packages/6.x/apt stable main' state=present
+    - name: add Elastic search public GPG key (same for Metricsbeat)
+      apt_key:
+        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+        state: "present"
+    - name: enable apt-transport-https 
+      apt: name=apt-transport-https state=present update_cache=yes
+    - name: Ensure Metricsbeat is installed.
+      apt: name=metricbeat state=present update_cache=yes
+    - name: Drop metricbeat conf file
+      template:
+        src: templates/metricbeat.yml.j2
+        dest: /etc/metricbeat/metricbeat.yml
+      tags:
+          - config
+    - name: Enable and restart metricbeat
+      service:
+        name: "metricbeat"
+        enabled: true
+        state: restarted
+      tags:
+          - config
