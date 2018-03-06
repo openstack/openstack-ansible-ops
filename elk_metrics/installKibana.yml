@@ -5,12 +5,31 @@
   vars_files:
     - vars/variables.yml
   tasks:
+    - name: Ensure Nginx is installed.
+      apt: name={{ item }} state=present update_cache=yes
+      with_items:
+        - nginx
+        - apache2-utils
+        - python-passlib
+    - name: create kibana user to access web interface
+      htpasswd: path=/etc/nginx/htpasswd.users name={{ kibana_username }} password={{ kibana_password }} owner=root mode=0644
+    - name: Drop Nginx default conf file
+      template:
+        src: templates/nginx_default.j2
+        dest: /etc/nginx/sites-available/default
+    - name: Enable and restart nginx
+      service:
+        name: "nginx"
+        enabled: true
+        state: restarted
     - name: add Elastic search public GPG key
       apt_key:
-        url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
         state: "present"
+    - name: enable apt https transport
+      apt: name=apt-transport-https state=present update_cache=yes
     - name: add kibana repo to apt sources list
-      apt_repository: repo='deb http://packages.elastic.co/kibana/4.4/debian stable main' state=present
+      apt_repository: repo='deb https://artifacts.elastic.co/packages/6.x/apt stable main' state=present
     - name: Ensure kibana  is installed.
       apt: name=kibana state=present update_cache=yes
     - name: Drop kibana conf file
@@ -21,6 +40,23 @@
     - name: Enable and restart kibana
       service:
         name: "kibana"
+        enabled: true
+        state: restarted
+    - name: install metricsbeat
+      apt: name=metricbeat  state=present
+    - name: Ensure curl is installed.
+      apt: name=curl state=present
+    - name: Drop metricbeat conf file
+      template:
+        src: templates/metricbeat-kibana.yml.j2
+        dest: /etc/metricbeat/metricbeat.yml
+    - name: import dashboards in elasticsearch
+      command: "metricbeat  setup  --template -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=[\"localhost:9200\"]'"
+      args:
+       chdir: /root/
+    - name: Enable and restart metricbeat
+      service:
+        name: "metricbeat"
         enabled: true
         state: restarted
 

@@ -1,16 +1,23 @@
 # ---------------------------------- Cluster -----------------------------------
 cluster.name: {{ cluster_name }}
 # ------------------------------------ Node ------------------------------------
-node.name: {{ node_name }}
+node.name: {{ ansible_nodename }}
 # node.rack: r1
 # ----------------------------------- Paths ------------------------------------
 # Path to directory where to store the data (separate multiple locations by comma):
 #
 # path.data: /path/to/data
+path.data: /var/lib/elasticsearch
+#
+# Path to log files:
+#
 #
 # Path to log files:
 #
 # path.logs: /path/to/logs
+#path.logs: /var/lib/elasticsearch/logs/
+path.logs: /var/log/elasticsearch/
+
 # ----------------------------------- Memory -----------------------------------
 #
 # Lock the memory on startup:
@@ -25,7 +32,7 @@ node.name: {{ node_name }}
 # ---------------------------------- Network -----------------------------------
 #
 # Set the bind address to a specific IP (IPv4 or IPv6):
-network.host: {{ elastic_interface }}
+network.host: [127.0.0.1, {{ ansible_host }}]
 # Set a custom port for HTTP:
 
 http.port: {{ elastic_port }}
@@ -34,7 +41,7 @@ http.port: {{ elastic_port }}
 # Pass an initial list of hosts to perform discovery when new node is started:
 # The default list of hosts is ["127.0.0.1", "[::1]"]
 #
-discovery.zen.ping.unicast.hosts: {% set IP_ARR=[] %}{% for host in groups['elastic-logstash'] | union(groups['kibana']) %}{% if IP_ARR.insert(loop.index,hostvars[host]['ansible_ssh_host']) %}{% endif %}{% endfor %}[{{ IP_ARR | join(', ') }}]
+discovery.zen.ping.unicast.hosts: {% set IP_ARR=[] %}{% for host in groups['elastic-logstash'] | union(groups['kibana']) %}{% if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}{% endif %}{% endfor %}[{{ IP_ARR | join(', ') }}]
 node.master: {{ node_master | default(true) }}
 node.data: {{ node_data | default(true) }}
 #
