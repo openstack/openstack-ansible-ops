@@ -42,6 +42,7 @@ global_overrides:
         container_bridge: "br-flat"
         container_type: "veth"
         container_interface: "eth12"
+        host_bind_override: "eth2"
         type: "flat"
         net_name: "flat"
         group_binds:
