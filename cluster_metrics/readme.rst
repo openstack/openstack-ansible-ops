@@ -56,7 +56,7 @@ Clone the Telegraf repo
 
 .. code-block:: bash
 
-    git clone https://github.com/mgrzybek/openstack-ansible-telegraf /etc/ansibles/roles/openstack-ansible-telegraf
+    git clone https://github.com/mgrzybek/openstack-ansible-telegraf /etc/ansible/roles/openstack-ansible-telegraf
 
 Install Influx Telegraf
 
