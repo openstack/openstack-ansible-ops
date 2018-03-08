@@ -48,4 +48,4 @@
         group: "{{ groups['utility_all'][0] }}"
         when_group: "{{ (groups['cinder_volumes'] | default([]) | length) > 0 }}"
     telegraf_output_influxdb_targets:
-      - "{{ influxdb_protocol|default('http') }}://{{ influxdb_host|default(internal_lb_vip_address) }}:{{ influxdb_port }}"
+      - "{{ influxdb_protocol|default('http') }}://{{ influxdb_host|default(hostvars[groups['cluster-metrics'][0]]['ansible_host']) }}:{{ influxdb_port }}"
