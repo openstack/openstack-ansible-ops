@@ -81,7 +81,7 @@ subnets:
     ip_version: 4
     cidr: "{{ provider_net_cidr }}"
     gateway_ip: "{{ provider_net_cidr | ipaddr('1') | ipaddr('address') }}"
-    enable_dhcp: false
+    enable_dhcp: "{{ enable_provider_net_dhcp | default(false) | bool }}"
     allocation_pool_start: "{{ provider_net_cidr | ipaddr('201') | ipaddr('address') }}"
     allocation_pool_end:   "{{ provider_net_cidr | ipaddr('255') | ipaddr('address') }}"
     dns_nameservers:
