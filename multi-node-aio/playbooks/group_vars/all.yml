@@ -28,7 +28,7 @@ default_ubuntu_mirror_directory: /ubuntu
 
 default_container_tech: "{{ container_tech | default('lxc') }}"
 
-ipxe_kernel_url: "http://boot.ipxe.org/ipxe.lkrn"
+ipxe_kernel_base_url: "http://boot.ipxe.org"
 
  # IP address, or domain name of the TFTP server
 tftp_server: "{{ hostvars[groups['pxe_hosts'][0]]['ansible_host'] | default(ansible_host) }}"

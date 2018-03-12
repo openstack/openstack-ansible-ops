@@ -89,9 +89,13 @@
 
     - name: Download iPXE
       get_url:
-        url: "{{ ipxe_kernel_url }}"
-        dest: "/var/lib/tftpboot/ipxe.lkrn"
+        url: "{{ ipxe_kernel_base_url }}/{{ item.filename }}"
+        dest: "/var/lib/tftpboot/{{ item.dest }}"
         tmp_dest: /tmp/
+      with_items:
+        - { filename: 'ipxe.lkrn', dest: 'ipxe.lkrn' }
+        - { filename: 'ipxe.efi', dest: 'ipxe.efi' }
+        - { filename: 'undionly.kpxe', dest: 'undionly.kpxe' }
 
     - name: Drop ipxe default menu
       template:

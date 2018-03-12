@@ -52,7 +52,7 @@ ansible-playbook -vv \
                  -e logging_vm_server_ram=${LOGGING_VM_SERVER_RAM:-"1024"} \
                  -e swift_vm_server_ram=${SWIFT_VM_SERVER_RAM:-"1024"} \
                  -e container_tech=${CONTAINER_TECH:-"lxc"} \
-                 -e ipxe_kernel_url=${IPXE_KERNEL_URL:-"http://boot.ipxe.org/ipxe.lkrn"} \
+                 -e ipxe_kernel_base_url=${IPXE_KERNEL_BASE_URL:-"http://boot.ipxe.org"} \
                  -e ipxe_path_url=${IPXE_PATH_URL:-""} ${MNAIO_ANSIBLE_PARAMETERS} \
                  --force-handlers \
                  playbooks/site.yml
