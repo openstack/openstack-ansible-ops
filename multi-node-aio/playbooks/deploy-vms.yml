@@ -177,6 +177,47 @@
     - deploy-vms
 
 
+- name: Set MaxSessions and MaxStartups to reduce connection failures
+  hosts: vm_servers
+  gather_facts: "{{ gather_facts | default(true) }}"
+  pre_tasks:
+    - name: Gather variables for each operating system
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
+      tags:
+        - always
+  tasks:
+    - lineinfile:
+        path: /etc/ssh/sshd_config
+        line: MaxStartups 100
+        state: present
+        regexp: '^MaxStartups.*$'
+      notify:
+        - restart sshd
+    - lineinfile:
+        path: /etc/ssh/sshd_config
+        line: MaxSessions 100
+        state: present
+        regexp: '^MaxSessions.*$'
+      notify:
+        - restart sshd
+  handlers:
+    - name: restart sshd
+      service:
+        name: "{{ ssh_service_name }}"
+        state: restarted
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  tags:
+    - deploy-vms
+
+
 - name: Setup cinder host volume
   hosts: cinder_hosts:swift_hosts
   gather_facts: false
@@ -276,3 +317,5 @@
 
   tags:
     - deploy-vms
+
+
