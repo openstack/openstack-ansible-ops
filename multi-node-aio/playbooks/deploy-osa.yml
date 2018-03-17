@@ -80,6 +80,17 @@
       when:
         - pre_config_osa | default(true) | bool
 
+    - name: Drop config to disable serial throttle settings
+      template:
+        src: "osa/user_unserial_variables.yml"
+        dest: /etc/openstack_deploy/user_unserial_variables.yml
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - pre_config_osa | default(true) | bool
+        - osa_disable_serial | default(false) | bool
+
     - name: Ensure the user_variables file is populated
       lineinfile:
         path: /etc/openstack_deploy/user_variables.yml
