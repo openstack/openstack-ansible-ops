@@ -38,22 +38,41 @@
 
     - name: Delete VM LV
       lvol:
-        vg: vg01
+        vg: "{{ default_vm_disk_vg }}"
         lv: "{{ hostvars[item]['server_hostname'] }}"
         state: absent
         force: yes
       failed_when: false
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
+        - default_vm_disk_mode | default('lvm') == "lvm"
+      with_items: "{{ groups['pxe_servers'] }}"
+
+    - name: Delete VM Disk Image
+      command: |
+        rm -f /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img
+      failed_when: false
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+        - default_vm_disk_mode | default('lvm') == "file"
       with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Create VM LV
       lvol:
-        vg: vg01
+        vg: "{{ default_vm_disk_vg }}"
         lv: "{{ hostvars[item]['server_hostname'] }}"
         size: "{{ default_vm_storage }}"
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
+        - default_vm_disk_mode | default('lvm') == "lvm"
+      with_items: "{{ groups['pxe_servers'] }}"
+
+    - name: Create VM Disk Image
+      command: |
+        qemu-img create -f qcow2 /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img {{ default_vm_storage }}m
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+        - default_vm_disk_mode | default('lvm') == "file"
       with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Create the VM template

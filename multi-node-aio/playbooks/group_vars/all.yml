@@ -14,6 +14,8 @@
 default_interface: "{{ default_network | default('eth0') }}"
 default_vm_image: "{{ default_image | default('ubuntu-16.04-amd64') }}"
 default_vm_storage: "{{ vm_disk_size | default(92160) }}"
+default_vm_disk_mode: lvm
+default_vm_disk_vg: vg01
 default_acng_bind_address: 0.0.0.0
 default_os_families:
   ubuntu-16.04-amd64: debian
@@ -26,7 +28,7 @@ default_ubuntu_mirror_directory: /ubuntu
 
 default_container_tech: "{{ container_tech | default('lxc') }}"
 
-ipxe_kernel_url: "{{ ipxe_kernel_url | default('http://boot.ipxe.org/ipxe.lkrn') }}"
+ipxe_kernel_url: "http://boot.ipxe.org/ipxe.lkrn"
 
  # IP address, or domain name of the TFTP server
 tftp_server: "{{ hostvars[groups['pxe_hosts'][0]]['ansible_host'] | default(ansible_host) }}"

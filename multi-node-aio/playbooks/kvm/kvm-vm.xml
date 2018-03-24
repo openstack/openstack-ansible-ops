@@ -34,9 +34,15 @@
   </pm>
   <devices>
     <emulator>/usr/bin/kvm-spice</emulator>
+{% if default_vm_disk_mode == "lvm" %}
     <disk type='block' device='disk'>
       <driver name='qemu' type='raw' cache='none' io='native'/>
-      <source dev='/dev/vg01/{{ hostvars[item]["server_hostname"] }}'/>
+      <source dev='/dev/{{ default_vm_disk_vg }}/{{ hostvars[item]["server_hostname"] }}'/>
+{% elif default_vm_disk_mode == "file" %}
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='none' io='native'/>
+      <source file='/var/lib/libvirt/images/{{ hostvars[item]["server_hostname"] }}.img'/>
+{% endif %}
       <target dev='vda' bus='virtio'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x09' function='0x0'/>
       <boot order='1'/>
