@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Deploy telegraf
-  hosts: "all"
+  hosts: "all:!elk_all"
   gather_facts: true
   user: root
   roles:
@@ -31,20 +31,29 @@
     telegraf_openstack_scripts:
       ironic:
         plugin_name: "ironic_nodes.py"
+        plugin_source_path: "scripts/ironic_nodes.py"
         command:
           - "python /opt/telegraf/ironic_nodes.py"
+        sudoers_entry:
+          - "{{ telegraf_openstack_scripts_path }}/ironic_nodes.py"
         group: "{{ groups['utility_all'][0] }}"
         when_group: "{{ (groups['ironic_api'] | default([]) | length) > 0 }}"
       kvm:
         plugin_name: "kvm_virsh.py"
+        plugin_source_path: "scripts/kvm_virsh.py"
         command:
           - "python /opt/telegraf/kvm_virsh.py"
+        sudoers_entry:
+          - "{{ telegraf_openstack_scripts_path }}/kvm_virsh.py"
         group: "{{ groups['nova_compute'] }}"
         when_group: "{{ (groups['nova_compute'] | default([]) | length) > 0 and (nova_virt_type | default('qemu') in ['kvm', 'qemu']) }}"
       cinder_pools_usage:
         plugin_name: "cinder_pools_usage.py"
+        plugin_source_path: "scripts/cinder_pools_usage.py"
         command:
           - "python /opt/telegraf/cinder_pools_usage.py"
+        sudoers_entry:
+          - "{{ telegraf_openstack_scripts_path }}/cinder_pools_usage.py"
         group: "{{ groups['utility_all'][0] }}"
         when_group: "{{ (groups['cinder_volumes'] | default([]) | length) > 0 }}"
     telegraf_output_influxdb_targets:
