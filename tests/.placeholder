@@ -1,0 +1,4 @@
+# This placeholder is here to ensure that git
+# does not remove this directory. The directory
+# is used by run_tests.sh to symlink the common
+# tests folder.
