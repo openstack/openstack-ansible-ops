@@ -65,6 +65,16 @@
         curl https://www.centos.org/download/full-mirrorlist.csv | sed 's/^.*"http:/http:/' | sed 's/".*$//' | grep ^http >/etc/apt-cacher-ng/centos_mirrors
         echo "http://mirror.centos.org/centos/" >>/etc/apt-cacher-ng/centos_mirrors
 
+    - name: override default ubuntu mirror list
+      copy:
+        dest: /etc/apt-cacher-ng/backends_ubuntu
+        mode: 0644
+        owner: root
+        group: root
+        content: 'http://archive.ubuntu.com/ubuntu/'
+      notify:
+        - reload acng
+
     - name: Drop acng.conf
       template:
         src: "pxe/acng.conf.j2"
