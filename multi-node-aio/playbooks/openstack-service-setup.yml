@@ -34,6 +34,8 @@
       swap: "{{ item.swap }}"
       ephemeral: "{{ item.ephemeral }}"
     with_items: "{{ vm_flavors }}"
+    tags:
+      - create_flavors
 
   - name: Create networks
     os_network:
@@ -46,6 +48,8 @@
       provider_network_type: "{{ item.network_type }}"
       provider_physical_network: "{{ item.physical_network | default ('') }}"
     with_items: "{{ networks }}"
+    tags:
+      - create_networks
 
   - name: Create subnets on networks
     os_subnet:
@@ -62,6 +66,8 @@
       allocation_pool_end: "{{ item.allocation_pool_end }}"
       dns_nameservers: "{{ item.dns_nameservers | default([]) }}"
     with_items: "{{ subnets }}"
+    tags:
+      - create_networks
 
   - name: Create a router on both public and private networks
     os_router:
@@ -74,6 +80,8 @@
         - "{{ private_subnet_name }}"
     ignore_errors: yes  # will report error if this router already exists
     register: router_details
+    tags:
+      - create_networks
 
   - name: Get list of security groups
     # Must use shell here because Ansible does not have os_security_group_facts module
@@ -81,6 +89,8 @@
     args:
       executable: /bin/bash
     register: sec_groups
+    tags:
+      - create_networks
 
   - name: Setup rules on all security groups
     os_security_group_rule:
@@ -94,8 +104,12 @@
     with_nested:
       - "{{ security_group_rules }}"
       - "{{ sec_groups.stdout_lines }}"
+    tags:
+      - create_networks
 
 # Install some Linux system images
   - include: ./openstack-image-setup.yml
     with_items: "{{ images }}"
+    tags:
+      - create_images
 
