@@ -27,7 +27,7 @@ Copy the env.d file into place
 
 .. code-block:: bash
 
-    cd openstack-ansible-ops
+    cd openstack-ansible-ops/elk_metrics_6x
     cp env.d/elk.yml /etc/openstack_deploy/env.d/
 
 Copy the conf.d file into place
@@ -53,55 +53,70 @@ install master/data elasticsearch nodes on the elastic-logstash containers
 
 .. code-block:: bash
 
-    cd /opt/openstack-ansible-ops
-    openstack-ansible installElastic.yml -e elk_hosts=elastic-logstash -e node_master=true -e node_data=true
-
-Install an Elasticsearch client on the kibana container to serve as a loadbalancer for the Kibana backend server
-
-.. code-block:: bash
-
-    openstack-ansible installElastic.yml -e elk_hosts=kibana -e node_master=false -e node_data=false
+    cd /opt/openstack-ansible-ops/elk_metrics_6x
+    openstack-ansible installElastic.yml
 
 Install Logstash on all the elastic containers
 
 .. code-block:: bash
 
+    cd /opt/openstack-ansible-ops/elk_metrics_6x
     openstack-ansible installLogstash.yml
 
 Install Kibana, nginx reverse proxy and metricbeat on the kibana container
 
 .. code-block:: bash
 
+    cd /opt/openstack-ansible-ops/elk_metrics_6x
     openstack-ansible installKibana.yml
-
-Conigure haproxy endpoints:
-
-    Edit the /etc/openstack_deploy/user_variables.yml file and add fiel following lines:
-.. code-block:: bash
-
-  haproxy_extra_services:
-   - service:
-        haproxy_service_name: kibana
-        haproxy_ssl: False
-        haproxy_backend_nodes: "{{ groups['kibana'] | default([]) }}"
-        haproxy_port: 81
-        haproxy_balance_type: tcp
-
-and then run the haproxy-install playbook
-.. code-block:: bash
-    cd /opt/openstack-ansible/playbooks/
-     openstack-ansible haproxy-install.yml --tags=haproxy-service-config
-
 
 install Metricbeat everywhere to start shipping metrics to our logstash instances
 
 .. code-block:: bash
 
-    openstack-ansible installMetricbeat.yml 
+    cd /opt/openstack-ansible-ops/elk_metrics_6x
+    openstack-ansible installMetricbeat.yml
 
-Trouble shooting:
+Optional | conigure haproxy endpoints
 
-If everything goes bad, you can clean up with the following command:
+Edit the `/etc/openstack_deploy/user_variables.yml` file and add fiel following lines
+
+.. code-block:: yaml
+
+    haproxy_extra_services:
+     - service:
+          haproxy_service_name: kibana
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['kibana'] | default([]) }}"
+          haproxy_port: 81  # This is set using the "kibana_nginx_port" variable
+          haproxy_balance_type: tcp
+      - service:
+          haproxy_service_name: elastic-logstash
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['elastic-logstash'] | default([]) }}"
+          haproxy_port: 5044  # This is set using the "logstash_beat_input_port" variable
+          haproxy_balance_type: tcp
+      - service:
+          haproxy_service_name: elastic-logstash
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['elastic-logstash'] | default([]) }}"
+          haproxy_port: 9201  # This is set using the "elastic_hap_port" variable
+          haproxy_check_port: 9200  # This is set using the "elastic_port" variable
+          haproxy_backend_port: 9200  # This is set using the "elastic_port" variable
+          haproxy_balance_type: tcp
+
+Optional | run the haproxy-install playbook
 
 .. code-block:: bash
-     openstack-ansible lxc-containers-destroy.yml --limit=elastic-logstash_all
+
+    cd /opt/openstack-ansible/playbooks/
+    openstack-ansible haproxy-install.yml --tags=haproxy-service-config
+
+Trouble shooting
+^^^^^^^^^^^^^^^^
+
+If everything goes bad, you can clean up with the following command
+
+.. code-block:: bash
+
+     openstack-ansible lxc-containers-destroy.yml --limit=kibana:elastic-logstash_all

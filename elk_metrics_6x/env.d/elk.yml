@@ -13,15 +13,11 @@ container_skel:
       - elastic-logstash_containers
     contains:
       - elastic-logstash
-    properties:
-      container_fs_size: 150G
   kibana_container:
     belongs_to:
       - kibana_containers
     contains:
       - kibana
-    properties:
-      container_fs_size: 10G
 
 physical_skel:
   elastic-logstash_containers:

@@ -1,46 +1,51 @@
 ---
-- name: install ElK stack
+- name: Install Logstash
   hosts: elastic-logstash
   become: true
   vars_files:
     - vars/variables.yml
   tasks:
-    - name: add Elastic search public GPG key
-      apt_key:
-        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
-        state: "present"
-    - name: enable apt https transport
-      apt: name=apt-transport-https state=present update_cache=yes
-    - name: add Logstash to apt sources list
-      apt_repository: repo='deb https://artifacts.elastic.co/packages/6.x/apt stable main' state=present
+    - include_tasks: common_task_install_elk_repo.yml
+
     - name: Ensure Logstash is installed.
-      apt: name=logstash state=present update_cache=yes
+      apt:
+        name: logstash
+        state: present
+        update_cache: yes
+
     - name: Drop Logstash conf for beats input
       template:
         src: templates/02-beats-input.conf.j2
         dest: /etc/logstash/conf.d/02-beats-input.conf
+
     - name: Drop Logstash conf for beats input
       template:
         src: templates/10-syslog-filter.conf.j2
         dest: /etc/logstash/conf.d/10-syslog-filter.conf
+
     - name: Drop Logstash conf for beats output
       template:
         src: templates/30-elasticsearch-output.conf.j2
         dest: /etc/logstash/conf.d/30-elasticsearch-output.conf
-    - shell:  /usr/share/logstash/bin/logstash -t --path.settings /etc/logstash
+
+    - name: Ensure logstash ownership
+      file:
+        path: /var/lib/logstash
+        owner: logstash
+        group: logstash
+        recurse: true
+
+    - name: Load logstash config
+      command: "/usr/share/logstash/bin/logstash -t --path.settings /etc/logstash"
       register: conf_success
-    - debug: var=conf_success
+      become: yes
+      become_user: logstash
+
+    - name: Print config output
+      debug: var=conf_success
+
     - name: Enable and restart logstash
-      service:
+      systemd:
         name: "logstash"
         enabled: true
         state: restarted
-
-
-
-
-
-
-
-
-

@@ -1,30 +1,77 @@
 ---
-- name: metricsbeat
-  hosts: hosts
+- name: Install Metricsbeat
+  hosts: all
   become: true
+  vars:
+    haproxy_ssl: false
+
   vars_files:
     - vars/variables.yml
+
+  pre_tasks:
+    - include_tasks: common_task_install_elk_repo.yml
+
+    - name: Ensure Metricsbeat is installed
+      apt:
+        name: metricbeat
+        state: present
+        update_cache: true
+
   tasks:
-    - name: add metricsbeat repo to apt sources list
-      apt_repository: repo='deb https://artifacts.elastic.co/packages/6.x/apt stable main' state=present
-    - name: add Elastic search public GPG key (same for Metricsbeat)
-      apt_key:
-        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
-        state: "present"
-    - name: enable apt-transport-https 
-      apt: name=apt-transport-https state=present update_cache=yes
-    - name: Ensure Metricsbeat is installed.
-      apt: name=metricbeat state=present update_cache=yes
+    - name: Check for apache
+      stat:
+        path: /etc/apache2
+      register: apache2
+
+    - name: Check for httpd
+      stat:
+        path: /etc/httpd
+      register: httpd
+
+    - name: Check for nginx
+      stat:
+        path: /etc/nginx/nginx.conf
+      register: nginx
+
+    - name: Check for uwsgi
+      stat:
+        path: /etc/uwsgi
+      register: uwsgi
+
+    - name: Set discovery facts
+      set_fact:
+        apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
+        nginx_enabled: "{{ nginx.stat.exists | bool }}"
+        uwsgi_enabled: "{{ uwsgi.stat.exists | bool }}"
+
+  post_tasks:
     - name: Drop metricbeat conf file
       template:
         src: templates/metricbeat.yml.j2
         dest: /etc/metricbeat/metricbeat.yml
-      tags:
-          - config
+
     - name: Enable and restart metricbeat
-      service:
+      systemd:
         name: "metricbeat"
         enabled: true
         state: restarted
-      tags:
-          - config
+
+
+- name: Load Metricsbeat Dashboards
+  hosts: all[0]
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: Load templates
+      shell: >-
+        {% set IP_ARR=[] %}
+        {% for host in groups['elastic-logstash'] %}
+        {%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
+        {%   endif %}
+        {% endfor %}
+        {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
+        metricbeat setup
+        -E 'output.logstash.enabled=false'
+        -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
+        -e -v

@@ -1,0 +1,50 @@
+---
+- name: Install Packetbeat
+  hosts: all
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  pre_tasks:
+    - include_tasks: common_task_install_elk_repo.yml
+
+    - name: Ensure packetbeat is installed
+      apt:
+        name: packetbeat
+        state: present
+        update_cache: true
+
+  post_tasks:
+    - name: Drop packetbeat conf file
+      template:
+        src: templates/packetbeat.yml.j2
+        dest: /etc/packetbeat/packetbeat.yml
+
+    - name: Enable and restart packetbeat
+      systemd:
+        name: "packetbeat"
+        enabled: true
+        state: restarted
+
+
+- name: Load Packetbeat Dashboards
+  hosts: all[0]
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: Load templates
+      shell: >-
+        {% set IP_ARR=[] %}
+        {% for host in groups['elastic-logstash'] %}
+        {%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
+        {%   endif %}
+        {% endfor %}
+        {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
+        packetbeat setup
+        -E 'output.logstash.enabled=false'
+        -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
+        -e -v

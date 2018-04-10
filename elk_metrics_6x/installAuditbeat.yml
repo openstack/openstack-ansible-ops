@@ -1,0 +1,53 @@
+---
+- name: Install Auditbeat
+  hosts: hosts
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  pre_tasks:
+    - include_tasks: common_task_install_elk_repo.yml
+
+    - name: Ensure Auditbeat is installed
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      with_items:
+        - audispd-plugins
+        - auditbeat
+
+  post_tasks:
+    - name: Drop auditbeat conf file
+      template:
+        src: templates/auditbeat.yml.j2
+        dest: /etc/auditbeat/auditbeat.yml
+
+    - name: Enable and restart auditbeat
+      systemd:
+        name: "auditbeat"
+        enabled: "{{ not inventory_hostname in groups['kibana'] | default([]) }}"
+        state: restarted
+
+
+- name: Load Auditbeat Dashboards
+  hosts: hosts[0]
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: Load templates
+      shell: >-
+        {% set IP_ARR=[] %}
+        {% for host in groups['elastic-logstash'] %}
+        {%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
+        {%   endif %}
+        {% endfor %}
+        {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
+        auditbeat setup
+        -E 'output.logstash.enabled=false'
+        -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
+        -e -v
