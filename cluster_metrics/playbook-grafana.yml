@@ -26,6 +26,7 @@
         name: "{{ grafana_db_name }}"
         state: "present"
       delegate_to: "{{ groups['galera_all'][0] }}"
+      no_log: true
     - name: Grant access to the DB for the service
       mysql_user:
         login_user: "{{ galera_root_user }}"
@@ -37,6 +38,7 @@
         state: "present"
         priv: "{{ grafana_db_name }}.*:ALL"
       delegate_to: "{{ groups['galera_all'][0] }}"
+      no_log: true
       with_items:
         - "localhost"
         - "%"
