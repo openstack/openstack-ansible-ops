@@ -21,6 +21,8 @@
     apt:
       name: python-shade
       state: present
+    tags:
+      - always
 
   - name: Create flavors of nova VMs
     os_nova_flavor:
