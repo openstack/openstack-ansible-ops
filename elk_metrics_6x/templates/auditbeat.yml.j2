@@ -32,7 +32,7 @@ auditbeat.modules:
 # The auditd module collects events from the audit framework in the Linux
 # kernel. You need to specify audit rules for the events that you want to audit.
 - module: auditd
-  socket_type: multicast
+  socket_type: {{ (apply_security_hardening | default(true) | bool) | ternary('multicast', 'unicast') }}
   resolve_ids: true
   failure_mode: silent
   backlog_limit: 8196
@@ -55,14 +55,18 @@ auditbeat.modules:
     ## Executions.
     -a always,exit -F arch=b64 -S execve,execveat -k exec
 
-    ## Identity changes.
+    # Things that affect identity.
     -w /etc/group -p wa -k identity
     -w /etc/passwd -p wa -k identity
     -w /etc/gshadow -p wa -k identity
+    -w /etc/shadow -p wa -k identity
 
-    ## Unauthorized access attempts.
-    -a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EACCES -k access
-    -a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -k access
+    # Unauthorized access attempts to files (unsuccessful).
+    -a always,exit -F arch=b32 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -F key=access
+    -a always,exit -F arch=b32 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -F key=access
+    -a always,exit -F arch=b64 -S open,truncate,ftruncate,creat,openat,open_by_handle_at -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -F key=access
+    -a always,exit -F arch=b64 -S open,truncate,ftruncate,creat,openat,open_by_handle_at -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -F key=access
+
 {% endif %}
 
 # The file integrity module sends events when files are changed (created,
@@ -71,11 +75,12 @@ auditbeat.modules:
   paths:
   - /bin
   - /etc/apt
-  - /etc/networking
+  - /etc/network
   - /etc/openstack_deploy
   - /etc/sysconfig
   - /etc/systemd
   - /etc/yum
+  - /etc/zypp
   - /openstack/venvs
   - /sbin
   - /usr/bin
@@ -96,11 +101,11 @@ auditbeat.modules:
 
   # Average scan rate. This throttles the amount of CPU and I/O that Auditbeat
   # consumes at startup while scanning. Default is "50 MiB".
-  scan_rate_per_sec: 50 MiB
+  scan_rate_per_sec: 64 MiB
 
   # Limit on the size of files that will be hashed. Default is "100 MiB".
   # Limit on the size of files that will be hashed. Default is "100 MiB".
-  max_file_size: 100 MiB
+  max_file_size: 128 MiB
 
   # Hash types to compute when the file changes. Supported types are
   # blake2b_256, blake2b_384, blake2b_512, md5, sha1, sha224, sha256, sha384,
@@ -774,15 +779,15 @@ setup.template.enabled: true
 
 # Template name. By default the template name is "auditbeat-%{[beat.version]}"
 # The template name and pattern has to be set in case the elasticsearch index pattern is modified.
-#setup.template.name: "auditbeat-%{[beat.version]}"
+setup.template.name: "auditbeat-%{[beat.version]}"
 
 # Template pattern. By default the template pattern is "-%{[beat.version]}-*" to apply to the default index settings.
 # The first part is the version of the beat and then -* is used to match all daily indices.
 # The template name and pattern has to be set in case the elasticsearch index pattern is modified.
-#setup.template.pattern: "auditbeat-%{[beat.version]}-*"
+setup.template.pattern: "auditbeat-%{[beat.version]}-*"
 
 # Path to fields.yml file to generate the template
-#setup.template.fields: "${path.config}/fields.yml"
+setup.template.fields: "${path.config}/fields.yml"
 
 # Overwrite existing template
 setup.template.overwrite: true

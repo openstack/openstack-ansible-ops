@@ -1,17 +1,12 @@
-install Elk stack with topbeat to gather metrics
-#################################################
+Install ELK with beats to gather metrics
+########################################
 :tags: openstack, ansible
-
-
-Changelog
----------
-2018-03-06 Per Abildgaard Toft (per@minfejl.dk): Updated to version Elasticsearch,Logstash and Kibana 6.x. Changed Topebeat (deprecated) to metricbeat. Included haproxy endpoint configuration.
-
 
 About this repository
 ---------------------
 
-This set of playbooks will deploy elk cluster (Elasticsearch, Logstash, Kibana) with topbeat to gather metrics from hosts metrics to the ELK cluster.
+This set of playbooks will deploy elk cluster (Elasticsearch, Logstash, Kibana)
+with topbeat to gather metrics from hosts metrics to the ELK cluster.
 
 Process
 -------
@@ -27,7 +22,7 @@ Copy the env.d file into place
 
 .. code-block:: bash
 
-    cd openstack-ansible-ops/elk_metrics_6x
+    cd /opt/openstack-ansible-ops/elk_metrics_6x
     cp env.d/elk.yml /etc/openstack_deploy/env.d/
 
 Copy the conf.d file into place
@@ -36,7 +31,9 @@ Copy the conf.d file into place
 
     cp conf.d/elk.yml /etc/openstack_deploy/conf.d/
 
-In **elk.yml**, list your logging hosts under elastic-logstash_hosts to create the elasticsearch cluster in multiple containers and one logging host under kibana_hosts to create the kibana container
+In **elk.yml**, list your logging hosts under elastic-logstash_hosts to create
+the elasticsearch cluster in multiple containers and one logging host under
+kibana_hosts to create the kibana container
 
 .. code-block:: bash
 
@@ -70,7 +67,8 @@ Install Kibana, nginx reverse proxy and metricbeat on the kibana container
     cd /opt/openstack-ansible-ops/elk_metrics_6x
     openstack-ansible installKibana.yml
 
-install Metricbeat everywhere to start shipping metrics to our logstash instances
+Install Metricbeat everywhere to start shipping metrics to our logstash
+instances
 
 .. code-block:: bash
 
@@ -79,7 +77,8 @@ install Metricbeat everywhere to start shipping metrics to our logstash instance
 
 Optional | conigure haproxy endpoints
 
-Edit the `/etc/openstack_deploy/user_variables.yml` file and add fiel following lines
+Edit the `/etc/openstack_deploy/user_variables.yml` file and add fiel following
+lines
 
 .. code-block:: yaml
 

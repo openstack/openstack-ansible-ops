@@ -72,6 +72,10 @@
         {% endfor %}
         {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
         metricbeat setup
+        {{ item }}
         -E 'output.logstash.enabled=false'
         -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
         -e -v
+      with_items:
+        - "--template"
+        - "--dashboards"

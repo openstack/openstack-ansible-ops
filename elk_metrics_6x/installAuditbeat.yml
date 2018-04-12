@@ -26,6 +26,14 @@
         src: templates/auditbeat.yml.j2
         dest: /etc/auditbeat/auditbeat.yml
 
+    - name: Stop auditd
+      systemd:
+        name: "auditd"
+        enabled: "{{ not inventory_hostname in groups['kibana'] | default([]) }}"
+        state: stopped
+      when:
+        - not apply_security_hardening | default(true) | bool
+
     - name: Enable and restart auditbeat
       systemd:
         name: "auditbeat"
@@ -48,6 +56,10 @@
         {% endfor %}
         {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
         auditbeat setup
+        {{ item }}
         -E 'output.logstash.enabled=false'
         -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
         -e -v
+      with_items:
+        - "--template"
+        - "--dashboards"

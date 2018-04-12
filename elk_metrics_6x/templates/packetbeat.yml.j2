@@ -18,24 +18,24 @@ packetbeat.interfaces.device: any
 # not the fastest option.
 # * af_packet, which uses memory-mapped sniffing. This option is faster than
 # libpcap and doesn't require a kernel module, but it's Linux-specific.
-#packetbeat.interfaces.type: pcap
+packetbeat.interfaces.type: af_packet
 
 # The maximum size of the packets to capture. The default is 65535, which is
 # large enough for almost all networks and interface types. If you sniff on a
 # physical network interface, the optimal setting is the MTU size. On virtual
 # interfaces, however, it's safer to accept the default value.
-#packetbeat.interfaces.snaplen: 65535
+packetbeat.interfaces.snaplen: 65535
 
 # The maximum size of the shared memory buffer to use between the kernel and
 # user space. A bigger buffer usually results in lower CPU usage, but consumes
 # more memory. This setting is only available for the af_packet sniffer type.
 # The default is 30 MB.
-#packetbeat.interfaces.buffer_size_mb: 30
+packetbeat.interfaces.buffer_size_mb: 30
 
 # Packetbeat automatically generates a BPF for capturing only the traffic on
 # ports where it expects to find known protocols. Use this settings to tell
 # Packetbeat to generate a BPF filter that accepts VLAN tags.
-#packetbeat.interfaces.with_vlans: true
+packetbeat.interfaces.with_vlans: true
 
 # Use this setting to override the automatically generated BPF filter.
 #packetbeat.interfaces.bpf_filter:
@@ -44,7 +44,7 @@ packetbeat.interfaces.device: any
 
 packetbeat.flows:
   # Enable Network flows. Default: true
-  #enabled: true
+  enabled: true
 
   # Set network flow timeout. Flow is killed if no packet is received before being
   # timed out.
@@ -60,10 +60,17 @@ packetbeat.protocols:
   # Enable ICMPv4 and ICMPv6 monitoring. Default: true
   enabled: true
 
-{% if inventory_hostname in groups['rabbitmq_all'] | default([]) %}
 - type: amqp
   # Enable AMQP monitoring. Default: true
-  enabled: true
+{% set ns = namespace(enabled=(inventory_hostname in groups['rabbitmq_all'] | default([]))) %}
+{% if not ns.enabled | bool %}
+{%   for _item in groups['rabbitmq_all'] | default([]) %}
+{%     if not ns.enabled | bool | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
+{%       set ns.enabled = true %}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+  enabled: {{ ns.enabled | bool }}
 
   # Configure the ports where to listen for AMQP traffic. You can disable
   # the AMQP protocol by commenting out the list of ports.
@@ -97,9 +104,11 @@ packetbeat.protocols:
   # Transaction timeout. Expired transactions will no longer be correlated to
   # incoming responses, but sent to Elasticsearch immediately.
   #transaction_timeout: 10s
-{% endif %}
 
 - type: cassandra
+  # Enable cassandra monitoring. Default: false
+  enabled: false
+
   #Cassandra port for traffic monitoring.
   ports: [9042]
 
@@ -156,10 +165,17 @@ packetbeat.protocols:
   # incoming responses, but sent to Elasticsearch immediately.
   #transaction_timeout: 10s
 
-{% if inventory_hostname in groups['shared-infra_hosts'] | default([]) %}
 - type: http
   # Enable HTTP monitoring. Default: true
-  enabled: true
+{% set ns = namespace(enabled=(inventory_hostname in groups['shared-infra_hosts'] | default([]))) %}
+{% if not ns.enabled | bool %}
+{%   for _item in groups['shared-infra_hosts'] | default([]) %}
+{%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
+{%       set ns.enabled = true %}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+  enabled: {{ ns.enabled }}
 
   # Configure the ports where to listen for HTTP traffic. You can disable
   # the HTTP protocol by commenting out the list of ports.
@@ -209,12 +225,18 @@ packetbeat.protocols:
   # Maximum message size. If an HTTP message is larger than this, it will
   # be trimmed to this size. Default is 10 MB.
   #max_message_size: 10485760
-{% endif %}
 
-{% if inventory_hostname in groups['memcached_all'] | default([]) %}
 - type: memcache
   # Enable memcache monitoring. Default: true
-  enabled: true
+{% set ns = namespace(enabled=(inventory_hostname in groups['memcached_all'] | default([]))) %}
+{% if not ns.enabled | bool %}
+{%   for _item in groups['memcached_all'] | default([]) %}
+{%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
+{%       set ns.enabled = true %}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+  enabled: {{ ns.enabled }}
 
   # Configure the ports where to listen for memcache traffic. You can disable
   # the Memcache protocol by commenting out the list of ports.
@@ -260,12 +282,18 @@ packetbeat.protocols:
   # Transaction timeout. Expired transactions will no longer be correlated to
   # incoming responses, but sent to Elasticsearch immediately.
   #transaction_timeout: 10s
-{% endif %}
 
-{% if inventory_hostname in groups['galera_all'] | default([]) %}
 - type: mysql
   # Enable mysql monitoring. Default: true
-  enabled: true
+{% set ns = namespace(enabled=(inventory_hostname in groups['galera_all'] | default([]))) %}
+{% if not ns.enabled | bool %}
+{%   for _item in groups['galera_all'] | default([]) %}
+{%     if not ns.enabled | bool and _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
+{%       set ns.enabled = true %}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+  enabled: {{ ns.enabled }}
 
   # Configure the ports where to listen for MySQL traffic. You can disable
   # the MySQL protocol by commenting out the list of ports.
@@ -282,11 +310,10 @@ packetbeat.protocols:
   # Transaction timeout. Expired transactions will no longer be correlated to
   # incoming responses, but sent to Elasticsearch immediately.
   #transaction_timeout: 10s
-{% endif %}
 
 - type: pgsql
   # Enable pgsql monitoring. Default: true
-  #enabled: true
+  enabled: false
 
   # Configure the ports where to listen for Pgsql traffic. You can disable
   # the Pgsql protocol by commenting out the list of ports.
@@ -306,7 +333,7 @@ packetbeat.protocols:
 
 - type: redis
   # Enable redis monitoring. Default: true
-  #enabled: true
+  enabled: false
 
   # Configure the ports where to listen for Redis traffic. You can disable
   # the Redis protocol by commenting out the list of ports.
@@ -326,7 +353,7 @@ packetbeat.protocols:
 
 - type: thrift
   # Enable thrift monitoring. Default: true
-  #enabled: true
+  enabled: false
 
   # Configure the ports where to listen for Thrift-RPC traffic. You can disable
   # the Thrift-RPC protocol by commenting out the list of ports.
@@ -381,7 +408,7 @@ packetbeat.protocols:
 
 - type: mongodb
   # Enable mongodb monitoring. Default: true
-  #enabled: true
+  enabled: false
 
   # Configure the ports where to listen for MongoDB traffic. You can disable
   # the MongoDB protocol by commenting out the list of ports.
@@ -409,10 +436,17 @@ packetbeat.protocols:
   # incoming responses, but sent to Elasticsearch immediately.
   #transaction_timeout: 10s
 
-{% if (inventory_hostname in groups['glance_all'] | default([])) or (inventory_hostname in groups['nova_compute'] | default([])) %}
 - type: nfs
   # Enable NFS monitoring. Default: true
-  enabled: true
+{% set ns = namespace(enabled=((inventory_hostname in groups['glance_all'] | default([])) or (inventory_hostname in groups['nova_compute'] | default([])))) %}
+{% if not ns.enabled | bool %}
+{%   for _item in groups['glance_all'] | default([]) + groups['nova_compute'] | default([]) %}
+{%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
+{%       set ns.enabled = true %}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+  enabled: {{ ns.enabled }}
 
   # Configure the ports where to listen for NFS traffic. You can disable
   # the NFS protocol by commenting out the list of ports.
@@ -429,12 +463,18 @@ packetbeat.protocols:
   # Transaction timeout. Expired transactions will no longer be correlated to
   # incoming responses, but sent to Elasticsearch immediately.
   #transaction_timeout: 10s
-{% endif %}
 
-{% if (inventory_hostname in groups['haproxy_all'] | default([])) or (inventory_hostname in groups['horizon_alll'] | default([])) %}
 - type: tls
   # Enable TLS monitoring. Default: true
-  #enabled: true
+{% set ns = namespace(enabled=((inventory_hostname in groups['haproxy_all'] | default([])) or (inventory_hostname in groups['horizon_all'] | default([])))) %}
+{% if not ns.enabled | bool %}
+{%   for _item in groups['haproxy_all'] | default([]) + groups['horizon_all'] | default([]) %}
+{%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
+{%       set ns.enabled = true %}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+  enabled: {{ ns.enabled }}
 
   # Configure the ports where to listen for TLS traffic. You can disable
   # the TLS protocol by commenting out the list of ports.
@@ -447,7 +487,6 @@ packetbeat.protocols:
   # If this option is enabled, the raw certificates will be stored
   # in PEM format under the `raw` key. The default is false.
   #include_raw_certificates: false
-{% endif %}
 
 #=========================== Monitored processes ==============================
 
@@ -1127,15 +1166,15 @@ setup.template.enabled: true
 
 # Template name. By default the template name is "packetbeat-%{[beat.version]}"
 # The template name and pattern has to be set in case the elasticsearch index pattern is modified.
-#setup.template.name: "packetbeat-%{[beat.version]}"
+setup.template.name: "packetbeat-%{[beat.version]}"
 
 # Template pattern. By default the template pattern is "-%{[beat.version]}-*" to apply to the default index settings.
 # The first part is the version of the beat and then -* is used to match all daily indices.
 # The template name and pattern has to be set in case the elasticsearch index pattern is modified.
-#setup.template.pattern: "packetbeat-%{[beat.version]}-*"
+setup.template.pattern: "packetbeat-%{[beat.version]}-*"
 
 # Path to fields.yml file to generate the template
-#setup.template.fields: "${path.config}/fields.yml"
+setup.template.fields: "${path.config}/fields.yml"
 
 # Overwrite existing template
 setup.template.overwrite: true

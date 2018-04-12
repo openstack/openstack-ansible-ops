@@ -1,6 +1,6 @@
 ---
 - name: Install Packetbeat
-  hosts: all
+  hosts: hosts
   become: true
   vars:
     haproxy_ssl: false
@@ -13,9 +13,12 @@
 
     - name: Ensure packetbeat is installed
       apt:
-        name: packetbeat
+        name: "{{ item }}"
         state: present
         update_cache: true
+      with_items:
+        - tcpdump
+        - packetbeat
 
   post_tasks:
     - name: Drop packetbeat conf file
@@ -31,7 +34,7 @@
 
 
 - name: Load Packetbeat Dashboards
-  hosts: all[0]
+  hosts: hosts[0]
   become: true
   vars_files:
     - vars/variables.yml
@@ -45,6 +48,10 @@
         {% endfor %}
         {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
         packetbeat setup
+        {{ item }}
         -E 'output.logstash.enabled=false'
         -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
         -e -v
+      with_items:
+        - "--template"
+        - "--dashboards"
