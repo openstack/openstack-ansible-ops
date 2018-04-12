@@ -1,0 +1,155 @@
+---
+- name: Install Filebeat
+  hosts: all
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  pre_tasks:
+    - include_tasks: common_task_install_elk_repo.yml
+
+    - name: Ensure Filebeat is installed
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      with_items:
+        - filebeat
+
+  tasks:
+    - name: Check for apache
+      stat:
+        path: /etc/apache2
+      register: apache2
+
+    - name: Check for auditd
+      stat:
+        path: /etc/audit
+      register: audit
+
+    - name: Check for ceph
+      stat:
+        path: /var/log/ceph
+      register: ceph
+
+    - name: Check for cinder
+      stat:
+        path: /var/log/cinder
+      register: cinder
+
+    - name: Check for glance
+      stat:
+        path: /var/log/glance
+      register: glance
+
+    - name: Check for heat
+      stat:
+        path: /var/log/heat
+      register: heat
+
+    - name: Check for horizon
+      stat:
+        path: /var/log/horizon
+      register: horizon
+
+    - name: Check for httpd
+      stat:
+        path: /var/log/httpd
+      register: httpd
+
+    - name: Check for keystone
+      stat:
+        path: /var/log/keystone
+      register: keystone
+
+    - name: Check for mysql
+      stat:
+        path: /var/lib/mysql
+      register: mysql
+
+    - name: Check for neutron
+      stat:
+        path: /var/log/neutron
+      register: neutron
+
+    - name: Check for nginx
+      stat:
+        path: /var/log/nginx
+      register: nginx
+
+    - name: Check for nova
+      stat:
+        path: /var/log/nova
+      register: nova
+
+    - name: Check for octavia
+      stat:
+        path: /var/log/octavia
+      register: octavia
+
+    - name: Check for swift
+      stat:
+        path: /var/log/swift
+      register: swift
+
+    - name: Check for rabbitmq
+      stat:
+        path: /var/lib/rabbitmq
+      register: rabbitmq
+
+    - name: Set discovery facts
+      set_fact:
+        apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
+        nginx_enabled: "{{ nginx.stat.exists | bool }}"
+        auditd_enabled: "{{ audit.stat.exists | bool }}"
+        mysql_enabled: "{{ mysql.stat.exists | bool }}"
+        cinder_enabled: "{{ cinder.stat.exists | bool }}"
+        glance_enabled: "{{ glance.stat.exists | bool }}"
+        heat_enabled: "{{ heat.stat.exists | bool }}"
+        horizon_enabled: "{{ horizon.stat.exists | bool }}"
+        keystone_enabled: "{{ keystone.stat.exists | bool }}"
+        neutron_enabled: "{{ neutron.stat.exists | bool }}"
+        nova_enabled: "{{ nova.stat.exists | bool }}"
+        octavia_enabled: "{{ octavia.stat.exists | bool }}"
+        swift_enabled: "{{ swift.stat.exists | bool }}"
+        rabbitmq_enabled: "{{ rabbitmq.stat.exists | bool }}"
+        ceph_enabled: "{{ ceph.stat.exists | bool }}"
+
+  post_tasks:
+    - name: Drop Filebeat conf file
+      template:
+        src: templates/filebeat.yml.j2
+        dest: /etc/filebeat/filebeat.yml
+
+    - name: Enable and restart Filebeat
+      systemd:
+        name: "filebeat"
+        enabled: true
+        state: restarted
+
+
+- name: Load Filebeat Dashboards
+  hosts: all[0]
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: Load templates
+      shell: >-
+        {% set IP_ARR=[] %}
+        {% for host in groups['elastic-logstash'] %}
+        {%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
+        {%   endif %}
+        {% endfor %}
+        {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
+        filebeat setup
+        {{ item }}
+        -E 'output.logstash.enabled=false'
+        -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
+        -e -v
+      with_items:
+        - "--template"
+        - "--dashboards"
