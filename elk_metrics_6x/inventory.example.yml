@@ -1,0 +1,51 @@
+---
+
+################################## ALL HOSTS ##################################
+all:
+  hosts:
+    # Local host
+    localhost:
+      ansible_connection: local
+
+################################## REQUIRED ###################################
+    logging01:
+      ansible_host: 172.16.27.100
+      ansible_user: root
+
+############################## OPTIONAL TARGETS ###############################
+    target1:
+      ansible_host: 172.16.27.200
+      ansible_user: root
+
+  vars: {}
+
+
+################################### GROUPS ####################################
+
+# The hosts group is used to target physical host machines. Enter all physical
+# host machines here.
+hosts:
+  hosts:
+    target1:
+
+# This is the location where elasticsearch(s) and logstash(s) will live.
+elastic-logstash:
+  hosts:
+    logging01:
+
+# This is the location where kibana(s) will live
+kibana:
+  hosts:
+    logging01:
+
+# These groups are all optional groups used within the stack to agment the data
+# collection in an OpenStack environment.
+ceph-mon: {}
+galera_all: {}
+nova_compute: {}
+haproxy_all: {}
+horizon_all: {}
+memcached_all: {}
+rabbitmq_all: {}
+shared-infra_hosts: {}
+utility_all: {}

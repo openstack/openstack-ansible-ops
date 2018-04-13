@@ -8,8 +8,64 @@ About this repository
 This set of playbooks will deploy elk cluster (Elasticsearch, Logstash, Kibana)
 with topbeat to gather metrics from hosts metrics to the ELK cluster.
 
-Process
--------
+**These playbooks require Ansible 2.4+.**
+
+OpenStack-Ansible Integration
+-----------------------------
+
+These playbooks can be used as standalone inventory or as an integrated part of
+an OpenStack-Ansible deployment. For a simple example of standalone inventory,
+see ``inventory.example.yml``.
+
+Optional | Load balancer VIP address
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to use multi-node elasticsearch a loadbalancer is required. Haproxy can
+provide the load balancer functionality needed. The option
+`internal_lb_vip_address` is used as the endpoint (virtual IP address) services
+like Kibana will use when connecting to elasticsearch. If this option is
+omitted, the first node in the elasticsearch cluster will be used.
+
+Optional | configure haproxy endpoints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Edit the `/etc/openstack_deploy/user_variables.yml` file and add fiel following
+lines
+
+.. code-block:: yaml
+
+    haproxy_extra_services:
+     - service:
+          haproxy_service_name: kibana
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['kibana'] | default([]) }}"
+          haproxy_port: 81  # This is set using the "kibana_nginx_port" variable
+          haproxy_balance_type: tcp
+      - service:
+          haproxy_service_name: elastic-logstash
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['elastic-logstash'] | default([]) }}"
+          haproxy_port: 5044  # This is set using the "logstash_beat_input_port" variable
+          haproxy_balance_type: tcp
+      - service:
+          haproxy_service_name: elastic-logstash
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['elastic-logstash'] | default([]) }}"
+          haproxy_port: 9201  # This is set using the "elastic_hap_port" variable
+          haproxy_check_port: 9200  # This is set using the "elastic_port" variable
+          haproxy_backend_port: 9200  # This is set using the "elastic_port" variable
+          haproxy_balance_type: tcp
+
+Optional | run the haproxy-install playbook
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    cd /opt/openstack-ansible/playbooks/
+    openstack-ansible haproxy-install.yml --tags=haproxy-service-config
+
+Deployment Process
+------------------
 
 Clone the elk-osa repo
 
@@ -75,44 +131,8 @@ instances
     cd /opt/openstack-ansible-ops/elk_metrics_6x
     openstack-ansible installMetricbeat.yml
 
-Optional | conigure haproxy endpoints
-
-Edit the `/etc/openstack_deploy/user_variables.yml` file and add fiel following
-lines
-
-.. code-block:: yaml
-
-    haproxy_extra_services:
-     - service:
-          haproxy_service_name: kibana
-          haproxy_ssl: False
-          haproxy_backend_nodes: "{{ groups['kibana'] | default([]) }}"
-          haproxy_port: 81  # This is set using the "kibana_nginx_port" variable
-          haproxy_balance_type: tcp
-      - service:
-          haproxy_service_name: elastic-logstash
-          haproxy_ssl: False
-          haproxy_backend_nodes: "{{ groups['elastic-logstash'] | default([]) }}"
-          haproxy_port: 5044  # This is set using the "logstash_beat_input_port" variable
-          haproxy_balance_type: tcp
-      - service:
-          haproxy_service_name: elastic-logstash
-          haproxy_ssl: False
-          haproxy_backend_nodes: "{{ groups['elastic-logstash'] | default([]) }}"
-          haproxy_port: 9201  # This is set using the "elastic_hap_port" variable
-          haproxy_check_port: 9200  # This is set using the "elastic_port" variable
-          haproxy_backend_port: 9200  # This is set using the "elastic_port" variable
-          haproxy_balance_type: tcp
-
-Optional | run the haproxy-install playbook
-
-.. code-block:: bash
-
-    cd /opt/openstack-ansible/playbooks/
-    openstack-ansible haproxy-install.yml --tags=haproxy-service-config
-
 Trouble shooting
-^^^^^^^^^^^^^^^^
+----------------
 
 If everything goes bad, you can clean up with the following command
 
