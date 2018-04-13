@@ -13,14 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# Grafana vars
-grafana_port: 8089
-grafana_db_name: grafana
-grafana_db_user: grafana
-grafana_db_password: secrete
-grafana_admin_password: SuperSecrete
-
 # InfluxDB vars
 influxdb_admin_port: 8083
 influxdb_port: 8086

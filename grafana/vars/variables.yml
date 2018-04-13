@@ -1,0 +1,12 @@
+# Grafana vars
+grafana_db_name: grafana
+grafana_db_user: grafana
+grafana_db_password: SuperSecrete
+grafana_admin_password: admin
+
+grafana_plugins:
+  - grafana-piechart-panel
+
+grafana_api_keys:
+  - name: "admin"
+    role: "Admin"

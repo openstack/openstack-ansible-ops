@@ -23,12 +23,12 @@ physical_skel:
   elastic-logstash_containers:
     belongs_to:
       - all_containers
-  kibana_containers:
-    belongs_to:
-      - all_containers
   elastic-logstash_hosts:
     belongs_to:
       - hosts
+  kibana_containers:
+    belongs_to:
+      - all_containers
   kibana_hosts:
     belongs_to:
       - hosts

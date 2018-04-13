@@ -70,12 +70,3 @@
               read_queries:
                  rule: "path_sub -i query"
                  backend_name: "influxdb"
-        - service:
-            haproxy_service_name: grafana
-            haproxy_backend_nodes: "{{ groups['cluster-metrics'] | default([]) }}"
-            haproxy_ssl: "{{ haproxy_ssl }}"
-            haproxy_port: 8089
-            haproxy_balance_type: tcp
-            haproxy_backend_options:
-              - tcp-check
-

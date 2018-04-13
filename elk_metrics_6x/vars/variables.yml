@@ -13,5 +13,6 @@ kibana_password: admin
 kibana_nginx_port: 81
 kibana_server_name: "{{ ansible_hostname }}"
 
+
 # logstash vars
 logstash_beat_input_port: 5044

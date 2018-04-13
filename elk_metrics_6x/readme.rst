@@ -27,7 +27,7 @@ like Kibana will use when connecting to elasticsearch. If this option is
 omitted, the first node in the elasticsearch cluster will be used.
 
 Optional | configure haproxy endpoints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Edit the `/etc/openstack_deploy/user_variables.yml` file and add fiel following
 lines

@@ -1,0 +1,20 @@
+---
+component_skel:
+  grafana:
+    belongs_to:
+      - grafana_all
+
+container_skel:
+  grafana_container:
+    belongs_to:
+      - grafana_containers
+    contains:
+      - grafana
+
+physical_skel:
+  grafana_containers:
+    belongs_to:
+      - all_containers
+  grafana_hosts:
+    belongs_to:
+      - hosts
