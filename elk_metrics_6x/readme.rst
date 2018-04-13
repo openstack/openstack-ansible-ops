@@ -131,6 +131,22 @@ instances
     cd /opt/openstack-ansible-ops/elk_metrics_6x
     openstack-ansible installMetricbeat.yml
 
+
+Adding Grafana visualizations
+-----------------------------
+
+See the grafana directory for more information on how to deploy grafana. Once
+When deploying grafana, source the variable file from ELK in order to
+automatically connect grafana to the Elasticsearch datastore and import
+dashboards. Including the variable file is as simple as adding
+``-e @../elk_metrics_6x/vars/variables.yml`` to the grafana playbook
+run.
+
+Included dashboards
+
+* https://grafana.com/dashboards/5569
+* https://grafana.com/dashboards/5566
+
 Trouble shooting
 ----------------
 

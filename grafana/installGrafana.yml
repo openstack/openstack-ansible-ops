@@ -71,7 +71,6 @@
       when:
         - (groups['galera_all'] | default([])) | length > 0
 
-  pre_tasks:
     - name: Ensure https repos function
       apt:
         pkg: "apt-transport-https"

@@ -4,9 +4,18 @@ grafana_db_user: grafana
 grafana_db_password: SuperSecrete
 grafana_admin_password: admin
 
+grafana_users:
+  allow_sign_up: False
+  allow_org_create: false
+  auto_assign_org: false
+  auto_assign_org_role: Viewer
+  default_theme: light
+
+grafana_security:
+  admin_user: admin
+  admin_password: "{{ grafana_admin_password }}"
+
+grafana_address: "{{ ansible_host }}"
+
 grafana_plugins:
   - grafana-piechart-panel
-
-grafana_api_keys:
-  - name: "admin"
-    role: "Admin"

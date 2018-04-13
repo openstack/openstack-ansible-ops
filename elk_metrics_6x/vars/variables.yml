@@ -16,3 +16,90 @@ kibana_server_name: "{{ ansible_hostname }}"
 
 # logstash vars
 logstash_beat_input_port: 5044
+
+
+# Grafana
+grafana_dashboards:
+  - dashboard_id: 5566
+    revision_id: 0
+    datasource: "metricbeat-Elasticsearch"
+  - dashboard_id: 5569
+    revision_id: 0
+    datasource: "filebeat-Elasticsearch"
+
+grafana_datasources:
+  - name: "all-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: true
+    database: "*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "auditbeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "auditbeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "filebeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "filebeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "metricbeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "metricbeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "packetbeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "packetbeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
