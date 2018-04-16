@@ -7,6 +7,35 @@
   tasks:
     - include_tasks: common_task_install_elk_repo.yml
 
+    - name: Configure systcl vm.max_map_count=262144 on container hosts
+      sysctl:
+        name: "vm.max_map_count"
+        value: "262144"
+        state: "present"
+        reload: "yes"
+      delegate_to: "{{ physical_host }}"
+      tags:
+        - sysctl
+
+    - name: logstash datapath bind mount
+      lxc_container:
+        name: "{{ inventory_hostname }}"
+        container_command: |
+          [[ ! -d "/var/lib/logstash" ]] && mkdir -p "/var/lib/logstash"
+        container_config:
+          - "lxc.mount.entry=/openstack/{{ inventory_hostname }} var/lib/logstash none bind 0 0"
+      delegate_to: "{{ physical_host }}"
+      when:
+        - physical_host != inventory_hostname
+        - container_tech | default('lxc') == 'lxc'
+
+    - name: Ensure Java is installed
+      apt:
+        name: openjdk-8-jre
+        state: present
+        install_recommends: yes
+        update_cache: yes
+
     - name: Ensure Logstash is installed.
       apt:
         name: logstash

@@ -14,6 +14,7 @@
       delegate_to: "{{ physical_host }}"
       tags:
         - sysctl
+
     - name: elasticsearch datapath bind mount
       lxc_container:
         name: "{{ inventory_hostname }}"
@@ -23,6 +24,9 @@
         container_config:
           - "lxc.mount.entry=/openstack/{{ inventory_hostname }} var/lib/elasticsearch none bind 0 0"
       delegate_to: "{{ physical_host }}"
+      when:
+        - physical_host != inventory_hostname
+        - container_tech | default('lxc') == 'lxc'
 
     - name: Ensure Java is installed
       apt:
