@@ -1,0 +1,56 @@
+---
+- name: Install apm-server
+  hosts: apm-server
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  pre_tasks:
+    - include_tasks: common_task_install_elk_repo.yml
+
+    - name: Ensure apm-server is installed
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      with_items:
+        - apm-server
+
+  post_tasks:
+    - name: Drop apm-server conf file
+      template:
+        src: templates/apm-server.yml.j2
+        dest: /etc/apm-server/apm-server.yml
+
+    - name: Enable and restart APM Server
+      systemd:
+        name: "apm-server"
+        enabled: true
+        state: restarted
+
+
+- name: Load apm-server Dashboards
+  hosts: apm-server[0]
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    - name: Load templates
+      shell: >-
+        {% set IP_ARR=[] %}
+        {% for host in groups['elastic-logstash'] %}
+        {%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
+        {%   endif %}
+        {% endfor %}
+        {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
+        apm-server setup
+        {{ item }}
+        -E 'apm-server.host=localhost:8200'
+        -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
+        -e -v
+      with_items:
+        - "--template"
+        - "--dashboards"

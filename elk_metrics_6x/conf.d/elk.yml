@@ -9,3 +9,11 @@ elastic-logstash_hosts:
 kibana_hosts:
   logging01:
     ip: 172.22.8.27
+
+apm-server_hosts:
+  logging01:
+    ip: 172.22.8.27
+  logging02:
+    ip: 172.22.8.28
+  logging03:
+    ip: 172.22.8.29
