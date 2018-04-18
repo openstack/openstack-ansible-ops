@@ -153,3 +153,7 @@
       with_items:
         - "--template"
         - "--dashboards"
+      register: templates
+      until: templates | success
+      retries: 3
+      delay: 2

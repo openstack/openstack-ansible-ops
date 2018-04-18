@@ -1,6 +1,6 @@
 ---
-- name: Install Auditbeat
-  hosts: hosts
+- name: Install Heartbeat
+  hosts: utility_all
   become: true
   vars:
     haproxy_ssl: false
@@ -11,38 +11,27 @@
   pre_tasks:
     - include_tasks: common_task_install_elk_repo.yml
 
-    - name: Ensure Auditbeat is installed
+    - name: Ensure heartbeat is installed
       apt:
-        name: "{{ item }}"
+        name: "heartbeat-elastic"
         state: present
         update_cache: true
-      with_items:
-        - audispd-plugins
-        - auditbeat
 
   post_tasks:
-    - name: Drop auditbeat conf file
+    - name: Drop heartbeat conf file
       template:
-        src: templates/auditbeat.yml.j2
-        dest: /etc/auditbeat/auditbeat.yml
+        src: templates/heartbeat.yml.j2
+        dest: /etc/heartbeat/heartbeat.yml
 
-    - name: Stop auditd
+    - name: Enable and restart heartbeat
       systemd:
-        name: "auditd"
-        enabled: "{{ not inventory_hostname in groups['kibana'] | default([]) }}"
-        state: stopped
-      when:
-        - not apply_security_hardening | default(true) | bool
-
-    - name: Enable and restart auditbeat
-      systemd:
-        name: "auditbeat"
-        enabled: "{{ not inventory_hostname in groups['kibana'] | default([]) }}"
+        name: "heartbeat-elastic"
+        enabled: true
         state: restarted
 
 
-- name: Load Auditbeat Dashboards
-  hosts: hosts[0]
+- name: Load Heartbeat Dashboards
+  hosts: utility_all[0]
   become: true
   vars_files:
     - vars/variables.yml
@@ -55,7 +44,7 @@
         {%   endif %}
         {% endfor %}
         {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
-        auditbeat setup
+        heartbeat setup
         {{ item }}
         -E 'output.logstash.enabled=false'
         -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'

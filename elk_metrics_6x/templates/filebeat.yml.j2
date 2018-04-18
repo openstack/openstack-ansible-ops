@@ -1360,83 +1360,7 @@ filebeat.prospectors:
 
 
 #----------------------------- Logstash output ---------------------------------
-output.logstash:
-  # Boolean flag to enable or disable the output module.
-  enabled: true
-
-  # The Logstash hosts
-  hosts: {% set IP_ARR=[] %}{% for host in groups['elastic-logstash'] %}{% if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}{% endif %}{% endfor %}[{{ IP_ARR | map('regex_replace', '$', ':' ~ logstash_beat_input_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
-
-  # Number of workers per Logstash host.
-  #worker: 1
-
-  # Set gzip compression level.
-  #compression_level: 3
-
-  # Optional maximum time to live for a connection to Logstash, after which the
-  # connection will be re-established.  A value of `0s` (the default) will
-  # disable this feature.
-  #
-  # Not yet supported for async connections (i.e. with the "pipelining" option set)
-  #ttl: 30s
-
-  # Optional load balance the events between the Logstash hosts. Default is false.
-  loadbalance: true
-
-  # Number of batches to be sent asynchronously to logstash while processing
-  # new batches.
-  #pipelining: 2
-
-  # If enabled only a subset of events in a batch of events is transferred per
-  # transaction.  The number of events to be sent increases up to `bulk_max_size`
-  # if no error is encountered.
-  #slow_start: false
-
-  # Optional index name. The default index name is set to filebeat
-  # in all lowercase.
-  #index: 'filebeat'
-
-  # SOCKS5 proxy server URL
-  #proxy_url: socks5://user:password@socks5-server:2233
-
-  # Resolve names locally when using a proxy server. Defaults to false.
-  #proxy_use_local_resolver: false
-
-  # Enable SSL support. SSL is automatically enabled, if any SSL setting is set.
-  #ssl.enabled: true
-
-  # Configure SSL verification mode. If `none` is configured, all server hosts
-  # and certificates will be accepted. In this mode, SSL based connections are
-  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
-  # `full`.
-  #ssl.verification_mode: full
-
-  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
-  # 1.2 are enabled.
-  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
-
-  # Optional SSL configuration options. SSL is off by default.
-  # List of root certificates for HTTPS server verifications
-  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
-
-  # Certificate for SSL client authentication
-  #ssl.certificate: "/etc/pki/client/cert.pem"
-
-  # Client Certificate Key
-  #ssl.key: "/etc/pki/client/cert.key"
-
-  # Optional passphrase for decrypting the Certificate Key.
-  #ssl.key_passphrase: ''
-
-  # Configure cipher suites to be used for SSL connections
-  #ssl.cipher_suites: []
-
-  # Configure curve types for ECDHE based cipher suites
-  #ssl.curve_types: []
-
-  # Configure what types of renegotiation are supported. Valid options are
-  # never, once, and freely. Default is never.
-  #ssl.renegotiation: never
+{% include 'templates/_include_log_stash_output.yml.j2' %}
 
 #------------------------------- Kafka output ----------------------------------
 #output.kafka:
@@ -1811,58 +1735,7 @@ setup.template.settings:
     #enabled: false
 
 #============================== Kibana =====================================
-
-# Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
-# This requires a Kibana endpoint configuration.
-setup.kibana:
-
-  # Kibana Host
-  # Scheme and port can be left out and will be set to the default (http and 5601)
-  # In case you specify and additional path, the scheme is required: http://localhost:5601/path
-  # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
-  host: "{{ hostvars[groups['kibana'][0]]['ansible_host'] }}:{{ kibana_port }}"
-
-  # Optional protocol and basic auth credentials.
-  #protocol: "https"
-  #username: "elastic"
-  #password: "changeme"
-
-  # Optional HTTP Path
-  #path: ""
-
-  # Use SSL settings for HTTPS. Default is true.
-  #ssl.enabled: true
-
-  # Configure SSL verification mode. If `none` is configured, all server hosts
-  # and certificates will be accepted. In this mode, SSL based connections are
-  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
-  # `full`.
-  #ssl.verification_mode: full
-
-  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
-  # 1.2 are enabled.
-  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
-
-  # SSL configuration. By default is off.
-  # List of root certificates for HTTPS server verifications
-  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
-
-  # Certificate for SSL client authentication
-  #ssl.certificate: "/etc/pki/client/cert.pem"
-
-  # Client Certificate Key
-  #ssl.key: "/etc/pki/client/cert.key"
-
-  # Optional passphrase for decrypting the Certificate Key.
-  #ssl.key_passphrase: ''
-
-  # Configure cipher suites to be used for SSL connections
-  #ssl.cipher_suites: []
-
-  # Configure curve types for ECDHE based cipher suites
-  #ssl.curve_types: []
-
-
+{% include 'templates/_include_kibana_setup.yml.j2' %}
 
 #================================ Logging ======================================
 # There are four options for the log output: file, stderr, syslog, eventlog

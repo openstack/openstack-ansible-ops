@@ -19,3 +19,4 @@
 - import_playbook: installMetricbeat.yml
 - import_playbook: installPacketbeat.yml
 - import_playbook: installAuditbeat.yml
+- import_playbook: installHeartbeat.yml

@@ -1,121 +1,236 @@
-########################## Auditbeat Configuration #############################
+################### Heartbeat Configuration Example #########################
 
-# This is a reference configuration file documenting all non-deprecated options
-# in comments. For a shorter configuration example that contains only the most
-# common options, please see auditbeat.yml in the same directory.
+# This file is a full configuration example documenting all non-deprecated
+# options in comments. For a shorter configuration example, that contains
+# only some common options, please see heartbeat.yml in the same directory.
 #
 # You can find the full configuration reference here:
-# https://www.elastic.co/guide/en/beats/auditbeat/index.html
+# https://www.elastic.co/guide/en/beats/heartbeat/index.html
 
-#============================  Config Reloading ================================
+############################# Heartbeat ######################################
+{%   set icmp_hosts = [] %}
+{%   for host_item in groups['all'] %}
+{%     set _ = icmp_hosts.extend([hostvars[host_item]['ansible_host']]) %}
+{%   endfor %}
+# Configure monitors
+heartbeat.monitors:
+- type: icmp # monitor type `icmp` (requires root) uses ICMP Echo Request to ping
+             # configured hosts
 
-# Config reloading allows to dynamically load modules. Each file which is
-# monitored must contain one or multiple modules as a list.
-auditbeat.config.modules:
+  # Monitor name used for job name and document type.
+  #name: icmp
 
-  # Glob pattern for configuration reloading
-  path: ${path.config}/conf.d/*.yml
+  # Enable/Disable monitor
+  #enabled: true
 
-  # Period on which files under path should be checked for changes
-  reload.period: 10s
+  # Configure task schedule using cron-like syntax
+  schedule: '@every 30s' # every 30 seconds from start of beat
 
-  # Set to true to enable config reloading
-  reload.enabled: false
+  # List of hosts to ping
+  hosts: [{{ icmp_hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+  # Configure IP protocol types to ping on if hostnames are configured.
+  # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
+  ipv4: true
+  ipv6: true
+  mode: any
 
-# Maximum amount of time to randomly delay the start of a metricset. Use 0 to
-# disable startup delay.
-auditbeat.max_start_delay: 10s
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
 
-#==========================  Modules configuration =============================
-auditbeat.modules:
+    # Interval between file file changed checks.
+    #interval: 5s
 
-# The auditd module collects events from the audit framework in the Linux
-# kernel. You need to specify audit rules for the events that you want to audit.
-- module: auditd
-  socket_type: {{ (apply_security_hardening | default(true) | bool) | ternary('multicast', 'unicast') }}
-  resolve_ids: true
-  failure_mode: silent
-  backlog_limit: 8196
-  rate_limit: 0
-  include_raw_message: false
-  include_warnings: false
+  # Total running time per ping test.
+  timeout: {{ groups['hosts'] | length }}s
 
-{% if not apply_security_hardening | default(true) | bool %}
-  audit_rules: |
-    ## Define audit rules here.
-    ## Create file watches (-w) or syscall audits (-a or -A). Uncomment these
-    ## examples or add your own rules.
+  # Waiting duration until another ICMP Echo Request is emitted.
+  wait: 1s
 
-    ## If you are on a 64 bit platform, everything should be running
-    ## in 64 bit mode. This rule will detect any use of the 32 bit syscalls
-    ## because this might be a sign of someone exploiting a hole in the 32
-    ## bit API.
-    -a always,exit -F arch=b32 -S all -F key=32bit-abi
+  # The tags of the monitors are included in their own field with each
+  # transaction published. Tags make it easy to group servers by different
+  # logical properties.
+  #tags: ["service-X", "web-tier"]
 
-    ## Executions.
-    -a always,exit -F arch=b64 -S execve,execveat -k exec
+  # Optional fields that you can specify to add additional information to the
+  # monitor output. Fields can be scalar values, arrays, dictionaries, or any nested
+  # combination of these.
+  #fields:
+  #  env: staging
 
-    # Things that affect identity.
-    -w /etc/group -p wa -k identity
-    -w /etc/passwd -p wa -k identity
-    -w /etc/gshadow -p wa -k identity
-    -w /etc/shadow -p wa -k identity
+  # If this option is set to true, the custom fields are stored as top-level
+  # fields in the output document instead of being grouped under a fields
+  # sub-dictionary. Default is false.
+  #fields_under_root: false
 
-    # Unauthorized access attempts to files (unsuccessful).
-    -a always,exit -F arch=b32 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -F key=access
-    -a always,exit -F arch=b32 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -F key=access
-    -a always,exit -F arch=b64 -S open,truncate,ftruncate,creat,openat,open_by_handle_at -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -F key=access
-    -a always,exit -F arch=b64 -S open,truncate,ftruncate,creat,openat,open_by_handle_at -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -F key=access
+{% set tcp_hosts = [] %}
+{% set http_hosts = [] %}
+{% set haproxy_host = hostvars[groups['haproxy_all'][0]] %}
+{% for item in haproxy_host['haproxy_default_services'] + haproxy_extra_services | default([]) %}
+{%   set item_service = item['service'] %}
+{%   for backend in item_service['haproxy_backend_nodes'] + item_service['haproxy_backup_nodes'] | default([]) %}
+{%     set backend_host = hostvars[backend]['ansible_host'] %}
+{%     set port = item_service['haproxy_check_port'] | default(item_service['haproxy_port']) %}
+{%     if not '{{' in backend_host and not '{{' in (port | string) %}
+{%       if item_service['haproxy_balance_type'] | default('tcp') == 'tcp' %}
+{%         set _ = tcp_hosts.extend([backend_host + ":" + (port | string)]) %}
+{%       elif item_service['haproxy_balance_type'] | default('tcp') == 'http' %}
+{%         set _ = http_hosts.extend(["http://" + backend_host + ":" + (port | string) + "/"]) %}
+{%       endif %}
+{%     endif %}
+{%   endfor %}
+{% endfor %}
+- type: tcp # monitor type `tcp`. Connect via TCP and optionally verify endpoint
+            # by sending/receiving a custom payload
 
-{% endif %}
+  # Monitor name used for job name and document type
+  #name: tcp
 
-# The file integrity module sends events when files are changed (created,
-# updated, deleted). The events contain file metadata and hashes.
-- module: file_integrity
-  paths:
-  - /bin
-  - /etc/apt
-  - /etc/network
-  - /etc/openstack_deploy
-  - /etc/sysconfig
-  - /etc/systemd
-  - /etc/yum
-  - /etc/zypp
-  - /openstack/venvs
-  - /sbin
-  - /usr/bin
-  - /usr/local/bin
-  - /usr/sbin
+  # Enable/Disable monitor
+  #enabled: true
 
-  # List of regular expressions to filter out notifications for unwanted files.
-  # Wrap in single quotes to workaround YAML escaping rules. By default no files
-  # are ignored.
-  exclude_files:
-  - '(?i)\.sw[nop]$'
-  - '~$'
-  - '/\.git($|/)'
+  # Configure task schedule
+  schedule: '@every 30s' # every 30 seconds from start of beat
 
-  # Scan over the configured file paths at startup and send events for new or
-  # modified files since the last time Auditbeat was running.
-  scan_at_start: true
+  # configure hosts to ping.
+  # Entries can be:
+  #   - plain host name or IP like `localhost`:
+  #       Requires ports configs to be checked. If ssl is configured,
+  #       a SSL/TLS based connection will be established. Otherwise plain tcp connection
+  #       will be established
+  #   - hostname + port like `localhost:12345`:
+  #       Connect to port on given host. If ssl is configured,
+  #       a SSL/TLS based connection will be established. Otherwise plain tcp connection
+  #       will be established
+  #   - full url syntax. `scheme://<host>:[port]`. The `<scheme>` can be one of
+  #     `tcp`, `plain`, `ssl` and `tls`. If `tcp`, `plain` is configured, a plain
+  #     tcp connection will be established, even if ssl is configured.
+  #     Using `tls`/`ssl`, an SSL connection is established. If no ssl is configured,
+  #     system defaults will be used (not supported on windows).
+  #     If `port` is missing in url, the ports setting is required.
+  hosts: [{{ tcp_hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
 
-  # Average scan rate. This throttles the amount of CPU and I/O that Auditbeat
-  # consumes at startup while scanning. Default is "50 MiB".
-  scan_rate_per_sec: 64 MiB
+  # Configure IP protocol types to ping on if hostnames are configured.
+  # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
+  ipv4: true
+  ipv6: true
+  mode: any
 
-  # Limit on the size of files that will be hashed. Default is "100 MiB".
-  # Limit on the size of files that will be hashed. Default is "100 MiB".
-  max_file_size: 128 MiB
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
 
-  # Hash types to compute when the file changes. Supported types are
-  # blake2b_256, blake2b_384, blake2b_512, md5, sha1, sha224, sha256, sha384,
-  # sha512, sha512_224, sha512_256, sha3_224, sha3_256, sha3_384 and sha3_512.
-  # Default is sha1.
-  hash_types: [sha1]
+    # Interval between file file changed checks.
+    #interval: 5s
 
-  # Detect changes to files included in subdirectories. Disabled by default.
-  recursive: true
+  # List of ports to ping if host does not contain a port number
+  # ports: [80, 9200, 5044]
 
+  # Total test connection and data exchange timeout
+  #timeout: 16s
+
+  # Optional payload string to send to remote and expected answer. If none is
+  # configured, the endpoint is expected to be up if connection attempt was
+  # successful. If only `send_string` is configured, any response will be
+  # accepted as ok. If only `receive_string` is configured, no payload will be
+  # send, but client expects to receive expected payload on connect.
+  #check:
+    #send: ''
+    #receive: ''
+
+  # SOCKS5 proxy url
+  # proxy_url: ''
+
+  # Resolve hostnames locally instead on SOCKS5 server:
+  #proxy_use_local_resolver: false
+
+  # TLS/SSL connection settings:
+  #ssl:
+    # Certificate Authorities
+    #certificate_authorities: ['']
+
+    # Required TLS protocols
+    #supported_protocols: ["TLSv1.0", "TLSv1.1", "TLSv1.2"]
+
+- type: http # monitor type `http`. Connect via HTTP an optionally verify response
+
+  # Monitor name used for job name and document type
+  #name: http
+
+  # Enable/Disable monitor
+  #enabled: true
+
+  # Configure task schedule
+  schedule: '@every 30s' # every 30 seconds from start of beat
+
+  # Configure URLs to ping
+  urls: [{{ http_hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+
+  # Configure IP protocol types to ping on if hostnames are configured.
+  # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
+  ipv4: true
+  ipv6: true
+  mode: any
+
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
+
+    # Interval between file file changed checks.
+    #interval: 5s
+
+  # Optional HTTP proxy url. If not set HTTP_PROXY environment variable will be used.
+  #proxy_url: ''
+
+  # Total test connection and data exchange timeout
+  #timeout: 16s
+
+  # Optional Authentication Credentials
+  #username: ''
+  #password: ''
+
+  # TLS/SSL connection settings for use with HTTPS endpoint. If not configured
+  # system defaults will be used.
+  #ssl:
+    # Certificate Authorities
+    #certificate_authorities: ['']
+
+    # Required TLS protocols
+    #supported_protocols: ["TLSv1.0", "TLSv1.1", "TLSv1.2"]
+
+  # Request settings:
+  check.request:
+    # Configure HTTP method to use. Only 'HEAD', 'GET' and 'POST' methods are allowed.
+    method: "HEAD"
+
+    # Dictionary of additional HTTP headers to send:
+    #headers:
+
+    # Optional request body content
+    #body:
+
+  # Expected response settings
+  #check.response:
+    # Expected status code. If not configured or set to 0 any status code not
+    # being 404 is accepted.
+    #status: 0
+
+    # Required response headers.
+    #headers:
+
+    # Required response contents.
+    #body:
+
+heartbeat.scheduler:
+  # Limit number of concurrent tasks executed by heartbeat. The task limit if
+  # disabled if set to 0. The default is 0.
+  limit: {{ groups['hosts'] | length // 4 }}
+
+  # Set the scheduler it's timezone
+  #location: ''
 
 #================================ General ======================================
 
@@ -152,8 +267,7 @@ auditbeat.modules:
 
     # Hints the minimum number of events stored in the queue,
     # before providing a batch of events to the outputs.
-    # The default value is set to 2048.
-    # A value of 0 ensures events are immediately available
+    # A value of 0 (the default) ensures events are immediately available
     # to be sent to the outputs.
     #flush.min_events: 2048
 
@@ -219,7 +333,6 @@ auditbeat.modules:
 #    match_pids: ["process.pid", "process.ppid"]
 #    match_source: true
 #    match_source_index: 4
-#    match_short_id: false
 #    cleanup_timeout: 60
 #    # To connect to Docker over TLS you must specify a client and CA certificate.
 #    #ssl:
@@ -233,11 +346,10 @@ auditbeat.modules:
 #
 #processors:
 #- add_docker_metadata: ~
-#- add_host_metadata: ~
 
 #============================= Elastic Cloud ==================================
 
-# These settings simplify using auditbeat with the Elastic Cloud (https://cloud.elastic.co/).
+# These settings simplify using heartbeat with the Elastic Cloud (https://cloud.elastic.co/).
 
 # The cloud.id setting overwrites the `output.elasticsearch.hosts` and
 # `setup.kibana.host` options.
@@ -279,10 +391,10 @@ auditbeat.modules:
   # Number of workers per Elasticsearch host.
   #worker: 1
 
-  # Optional index name. The default is "auditbeat" plus date
-  # and generates [auditbeat-]YYYY.MM.DD keys.
+  # Optional index name. The default is "heartbeat" plus date
+  # and generates [heartbeat-]YYYY.MM.DD keys.
   # In case you modify this pattern you must update setup.template.name and setup.template.pattern accordingly.
-  #index: "auditbeat-%{[beat.version]}-%{+yyyy.MM.dd}"
+  #index: "heartbeat-%{[beat.version]}-%{+yyyy.MM.dd}"
 
   # Optional ingest node pipeline. By default no pipeline will be used.
   #pipeline: ""
@@ -384,7 +496,7 @@ auditbeat.modules:
   #username: ''
   #password: ''
 
-  # Kafka version auditbeat is assumed to run against. Defaults to the oldest
+  # Kafka version heartbeat is assumed to run against. Defaults to the oldest
   # supported stable version (currently version 0.8.2.0)
   #version: 0.8.2
 
@@ -500,8 +612,8 @@ auditbeat.modules:
   #port: 6379
 
   # The name of the Redis list or channel the events are published to. The
-  # default is auditbeat.
-  #key: auditbeat
+  # default is heartbeat.
+  #key: heartbeat
 
   # The password to authenticate with. The default is no authentication.
   #password:
@@ -593,14 +705,14 @@ auditbeat.modules:
 
   # Path to the directory where to save the generated files. The option is
   # mandatory.
-  #path: "/tmp/auditbeat"
+  #path: "/tmp/heartbeat"
 
-  # Name of the generated files. The default is `auditbeat` and it generates
-  # files: `auditbeat`, `auditbeat.1`, `auditbeat.2`, etc.
-  #filename: auditbeat
+  # Name of the generated files. The default is `heartbeat` and it generates
+  # files: `heartbeat`, `heartbeat.1`, `heartbeat.2`, etc.
+  #filename: heartbeat
 
   # Maximum size in kilobytes of each file. When this size is reached, and on
-  # every auditbeat restart, the files are rotated. The default value is 10240
+  # every heartbeat restart, the files are rotated. The default value is 10240
   # kB.
   #rotate_every_kb: 10000
 
@@ -623,26 +735,26 @@ auditbeat.modules:
 
 #================================= Paths ======================================
 
-# The home path for the auditbeat installation. This is the default base path
+# The home path for the heartbeat installation. This is the default base path
 # for all other path settings and for miscellaneous files that come with the
 # distribution (for example, the sample dashboards).
 # If not set by a CLI flag or in the configuration file, the default for the
 # home path is the location of the binary.
 #path.home:
 
-# The configuration path for the auditbeat installation. This is the default
+# The configuration path for the heartbeat installation. This is the default
 # base path for configuration files, including the main YAML configuration file
 # and the Elasticsearch template file. If not set by a CLI flag or in the
 # configuration file, the default for the configuration path is the home path.
 #path.config: ${path.home}
 
-# The data path for the auditbeat installation. This is the default base path
-# for all the files in which auditbeat needs to store its data. If not set by a
+# The data path for the heartbeat installation. This is the default base path
+# for all the files in which heartbeat needs to store its data. If not set by a
 # CLI flag or in the configuration file, the default for the data path is a data
 # subdirectory inside the home path.
 #path.data: ${path.home}/data
 
-# The logs path for a auditbeat installation. This is the default location for
+# The logs path for a heartbeat installation. This is the default location for
 # the Beat's log files. If not set by a CLI flag or in the configuration file,
 # the default for the logs path is a logs subdirectory inside the home path.
 #path.logs: ${path.home}/logs
@@ -668,7 +780,7 @@ setup.dashboards.enabled: true
 # In case the archive contains the dashboards from multiple Beats, this lets you
 # select which one to load. You can load all the dashboards in the archive by
 # setting this to the empty string.
-#setup.dashboards.beat: auditbeat
+#setup.dashboards.beat: heartbeat
 
 # The name of the Kibana index to use for setting the configuration. Default is ".kibana"
 #setup.dashboards.kibana_index: .kibana
@@ -681,17 +793,6 @@ setup.dashboards.enabled: true
 # how to install the dashboards by first querying Elasticsearch.
 #setup.dashboards.always_kibana: false
 
-# If true and Kibana is not reachable at the time when dashboards are loaded,
-# it will retry to reconnect to Kibana instead of exiting with an error.
-#setup.dashboards.retry.enabled: false
-
-# Duration interval between Kibana connection retries.
-#setup.dashboards.retry.interval: 1s
-
-# Maximum number of retries before exiting with an error, 0 for unlimited retrying.
-#setup.dashboards.retry.maximum: 0
-
-
 #============================== Template =====================================
 
 # A template is used to set the mapping in Elasticsearch
@@ -701,14 +802,14 @@ setup.dashboards.enabled: true
 # Set to false to disable template loading.
 setup.template.enabled: true
 
-# Template name. By default the template name is "auditbeat-%{[beat.version]}"
+# Template name. By default the template name is "heartbeat-%{[beat.version]}"
 # The template name and pattern has to be set in case the elasticsearch index pattern is modified.
-setup.template.name: "auditbeat-%{[beat.version]}"
+setup.template.name: "heartbeat-%{[beat.version]}"
 
 # Template pattern. By default the template pattern is "-%{[beat.version]}-*" to apply to the default index settings.
 # The first part is the version of the beat and then -* is used to match all daily indices.
 # The template name and pattern has to be set in case the elasticsearch index pattern is modified.
-setup.template.pattern: "auditbeat-%{[beat.version]}-*"
+setup.template.pattern: "heartbeat-%{[beat.version]}-*"
 
 # Path to fields.yml file to generate the template
 setup.template.fields: "${path.config}/fields.yml"
@@ -754,7 +855,7 @@ setup.template.settings:
 # Send all logging output to Windows Event Logs. The default is false.
 #logging.to_eventlog: false
 
-# If enabled, auditbeat periodically logs its internal metrics that have changed
+# If enabled, heartbeat periodically logs its internal metrics that have changed
 # in the last period. For each metric that changed, the delta from the value at
 # the beginning of the period is logged. Also, the total values for
 # all non-zero internal metrics are logged on shutdown. The default is true.
@@ -769,10 +870,10 @@ logging.to_files: true
 logging.files:
   # Configure the path where the logs are written. The default is the logs directory
   # under the home path (the binary location).
-  path: /var/log/auditbeat
+  path: /var/log/heartbeat
 
   # The name of the files where the logs are written to.
-  name: auditbeat
+  name: heartbeat
 
   # Configure log file size limit. If limit is reached, log file will be
   # automatically rotated
@@ -790,7 +891,7 @@ logging.files:
 
 
 #============================== Xpack Monitoring =====================================
-# auditbeat can export internal metrics to a central Elasticsearch monitoring cluster.
+# heartbeat can export internal metrics to a central Elasticsearch monitoring cluster.
 # This requires xpack monitoring to be enabled in Elasticsearch.
 # The reporting is disabled by default.
 

@@ -13,9 +13,9 @@
 
 # The URL of the Elasticsearch instance to use for all your queries.
 {% if internal_lb_vip_address is defined %}
-  elasticsearch.url: "http://{{ internal_lb_vip_address }}:{{ elastic_hap_port }}"
+ elasticsearch.url: "http://{{ internal_lb_vip_address }}:{{ elastic_hap_port }}"
 {% else %}
-  elasticsearch.url: "http://{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }}:{{ elastic_port }}"
+ elasticsearch.url: "http://{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }}:{{ elastic_port }}"
 {% endif %}
 # When this setting’s value is true Kibana uses the hostname specified in the server.host
 # setting. When the value of this setting is false, Kibana uses the hostname of the host

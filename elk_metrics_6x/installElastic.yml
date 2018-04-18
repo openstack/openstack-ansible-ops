@@ -37,7 +37,7 @@
 
     - include_tasks: common_task_install_elk_repo.yml
 
-    - name: Ensure Elastic search  is installed.
+    - name: Ensure Elastic search is installed
       apt:
         name: elasticsearch
         state: present
@@ -49,6 +49,14 @@
         dest: /etc/elasticsearch/elasticsearch.yml
       tags:
           - config
+
+    - name: Ensure elasticsearch ownership
+      file:
+        path: /var/lib/elasticsearch
+        owner: elasticsearch
+        group: elasticsearch
+        recurse: true
+
     - name: Enable and restart elastic
       systemd:
         name: "elasticsearch"
