@@ -1,0 +1,76 @@
+---
+- name: Ensure sysctl
+  hosts: graylog_hosts
+  gather_facts: true
+  tasks:
+    - name: Setup sysctl
+      sysctl:
+        name: vm.max_map_count
+        value: "262144"
+        state: present
+      delegate_to: "{{ physical_host }}"
+
+- name: Install java from openjdk
+  hosts: graylog_hosts
+  tasks:
+    # TODO: Replace this with a group var to log_hosts to use openstack_hosts role.
+    - name: installing repo for Java 8 in Ubuntu 16.04
+      apt_repository: repo='ppa:openjdk-r/ppa'
+      when: ansible_distribution_release == 'xenial'
+
+    - name: Install Java for Ubuntu
+      include_role:
+        name: geerlingguy.java
+      when:
+        - ansible_os_family | lower == 'debian'
+        - ansible_distribution_release == 'xenial'
+      vars:
+        java_packages:
+          - openjdk-8-jdk
+
+    # TODO: Add SUSE support
+    - name: Install Java on CentOS
+      package:
+        name: java-1.8.0-openjdk-headless.x86_64
+        state: present
+      when: ansible_os_family | lower == 'redhat'
+
+- name: Install graylog
+  hosts: graylog_hosts
+  vars:
+    # Graylog is compatible with elasticsearch 5.x since version 2.3.0, so ensure to use the right combination for your installation
+    # Also use the right branch of the Elasticsearch Ansible role, master supports 5.x.
+    es_java_install: False
+    es_java: openjdk-8-jre-headless
+    es_major_version: "5.x"
+    es_version: "5.6.7"
+    es_instance_name: 'graylog'
+    es_scripts: False
+    es_templates: False
+    es_version_lock: False
+    es_heap_size: 1g
+    es_config: {
+      node.name: "graylog",
+      cluster.name: "graylog",
+      http.port: 9200,
+      transport.tcp.port: 9300,
+      network.host: "{{ es_bind_address | default('0.0.0.0') }}",
+      node.data: true,
+      node.master: "{{ inventory_hostname == groups['graylog_hosts'][0] }}",
+    }
+
+    graylog_install_java: False
+    graylog_install_mongodb: True
+    graylog_install_nginx: False #Will be behind your LB
+    graylog_web_endpoint_uri: "https://{{ external_lb_vip_address }}:9000/api/"
+    graylog_is_master: "{{ inventory_hostname == groups['graylog_hosts'][0] }}"
+    graylog_elasticsearch_hosts: "{{ groups['graylog_hosts'] | map('extract', hostvars, 'ansible_host') | map('regex_replace', '^(.*)$', 'http://\\1:9200') | join(', ') }}"
+    graylog_web_listen_uri: "http://{{ ansible_host }}:9000/"
+    graylog_rest_listen_uri: "http://{{ ansible_host }}:9000/api/"
+    # TODO(evrardjp): Replace this with a proper test when
+    # https://github.com/Graylog2/graylog-ansible-role/pull/88 has merged
+    graylog_not_testing: False
+  roles:
+    # TODO: Contribute to the role for SUSE support
+    - role: Graylog2.graylog-ansible-role
+      tags: graylog

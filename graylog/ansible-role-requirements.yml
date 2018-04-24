@@ -1,0 +1,16 @@
+---
+- name: elastic.elasticsearch
+  src: https://github.com/elastic/ansible-elasticsearch.git
+  version: 3bdcd8fe4d0afdc2da5e12475b2093bb2bb3326b
+
+- name: jdauphant.nginx
+  src: https://github.com/jdauphant/ansible-role-nginx.git
+  version: 'v2.7.4'
+
+- name: geerlingguy.java
+  src: https://github.com/geerlingguy/ansible-role-java
+  version: ebe72b1b52fe0053bb156fd1b29d044f2048556b
+
+- name: Graylog2.graylog-ansible-role
+  src: https://github.com/Graylog2/graylog-ansible-role.git
+  version: e1159ec2712199f2da5768187cee84d1359bbd55
