@@ -14,8 +14,15 @@
     - name: Ensure heartbeat is installed
       apt:
         name: "heartbeat-elastic"
-        state: present
+        state: "{{ elk_package_state | default('present') }}"
         update_cache: true
+      tags:
+        - package_install
+
+    - name: exit playbook after uninstall
+      meta: end_play
+      when:
+        - elk_package_state | default('present') == 'absent'
 
   post_tasks:
     - name: Drop heartbeat conf file

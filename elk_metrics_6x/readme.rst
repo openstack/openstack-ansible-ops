@@ -154,4 +154,5 @@ If everything goes bad, you can clean up with the following command
 
 .. code-block:: bash
 
-     openstack-ansible lxc-containers-destroy.yml --limit=kibana:elastic-logstash_all
+     openstack-ansible /opt/openstack-ansible-ops/elk_metrics_6x/site.yml -e "elk_package_state=absent" --tags package_install
+     openstack-ansible /opt/openstack-ansible/playbooks/lxc-containers-destroy.yml --limit=kibana:elastic-logstash_all

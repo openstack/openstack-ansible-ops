@@ -62,7 +62,7 @@ Create the containers
 
 .. code-block:: bash
 
-   cd /opt/openstack-ansible-playbooks
+   cd /opt/openstack-ansible/playbooks
    openstack-ansible lxc-containers-create.yml -e 'container_group=grafana'
 
 install grafana

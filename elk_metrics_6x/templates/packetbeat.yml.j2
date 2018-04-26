@@ -167,19 +167,20 @@ packetbeat.protocols:
 
 - type: http
   # Enable HTTP monitoring. Default: true
-{% set ns = namespace(enabled=(inventory_hostname in groups['shared-infra_hosts'] | default([]))) %}
-{% if not ns.enabled | bool %}
-{%   for _item in groups['shared-infra_hosts'] | default([]) %}
-{%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
-{%       set ns.enabled = true %}
+{% set used_ports = [53, 443, 2049, 3306, 5432, 5672, 6379, 9042, 9090, 11211, 27017] %}
+{% set ports = [] %}
+{% for item in heartbeat_services %}
+{%   for port in item.ports %}
+{%     if (item.type == 'http') and (not port in used_ports) %}
+{%       set _ = ports.extend([port]) %}
 {%     endif %}
 {%   endfor %}
-{% endif %}
-  enabled: {{ ns.enabled }}
+{% endfor %}
+  enabled: true
 
   # Configure the ports where to listen for HTTP traffic. You can disable
   # the HTTP protocol by commenting out the list of ports.
-  ports: [80, 81, 5000, 6385, 8000, 8002, 8004, 8041, 8042, 8080, 8180, 8181, 8185, 8386, 8774, 8775, 8776, 8779, 8780, 9191, 9201, 9292, 9311, 9511, 9696, 9876, 9890, 15672, 35357]
+  ports: {{ ports | unique }}
 
   # Uncomment the following to hide certain parameters in URL or forms attached
   # to HTTP requests. The names of the parameters are case insensitive.
@@ -482,7 +483,7 @@ packetbeat.protocols:
 
   # If this option is enabled, the client and server certificates and
   # certificate chains are sent to Elasticsearch. The default is true.
-  #send_certificates: true
+  send_certificates: true
 
   # If this option is enabled, the raw certificates will be stored
   # in PEM format under the `raw` key. The default is false.

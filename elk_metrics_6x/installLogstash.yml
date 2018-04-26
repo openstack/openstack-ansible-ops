@@ -17,13 +17,19 @@
       tags:
         - sysctl
 
+    - name: Ensure mount directories exists
+      file:
+        path: "/openstack/{{ inventory_hostname }}/logstash"
+        state: "directory"
+      delegate_to: "{{ physical_host }}"
+
     - name: logstash datapath bind mount
       lxc_container:
         name: "{{ inventory_hostname }}"
         container_command: |
           [[ ! -d "/var/lib/logstash" ]] && mkdir -p "/var/lib/logstash"
         container_config:
-          - "lxc.mount.entry=/openstack/{{ inventory_hostname }} var/lib/logstash none bind 0 0"
+          - "lxc.mount.entry=/openstack/{{ inventory_hostname }}/logstash var/lib/logstash none bind 0 0"
       delegate_to: "{{ physical_host }}"
       when:
         - physical_host != inventory_hostname
