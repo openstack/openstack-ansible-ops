@@ -1,0 +1,34 @@
+# {{ ansible_managed }}
+
+CacheDir: /var/www/pkg-cache
+LogDir: /var/log/apt-cacher-ng
+Port: 3142
+BindAddress: {{ default_acng_bind_address }}
+Remap-debrep: file:deb_mirror*.gz /debian ; file:backends_debian # Debian Archives
+Remap-uburep: file:ubuntu_mirrors /ubuntu ; file:backends_ubuntu # Ubuntu Archives
+Remap-debvol: file:debvol_mirror*.gz /debian-volatile ; file:backends_debvol # Debian Volatile Archives
+Remap-cygwin: file:cygwin_mirrors /cygwin # ; file:backends_cygwin # incomplete, please create this file or specify preferred mirrors here
+Remap-sfnet:  file:sfnet_mirrors # ; file:backends_sfnet # incomplete, please create this file or specify preferred mirrors here
+Remap-alxrep: file:archlx_mirrors /archlinux # ; file:backend_archlx # Arch Linux
+Remap-fedora: file:fedora_mirrors # Fedora Linux
+Remap-epel:   file:epel_mirrors # Fedora EPEL
+Remap-slrep:  file:sl_mirrors # Scientific Linux
+Remap-centos: file:centos_mirrors /centos #centos
+ReportPage: acng-report.html
+PidFile: /var/run/apt-cacher-ng
+ExTreshold: 4
+LocalDirs: acng-doc /usr/share/doc/apt-cacher-ng
+PassThroughPattern: .*
+{% if default_http_proxy is defined and default_http_proxy %}
+Proxy: {{ default_http_proxy }}
+{% endif %}
+{% if ansible_distribution_release | lower != 'trusty' %}
+VfilePatternEx: ^/\?release=[0-9]+&arch=
+{% endif %}
+# NOTE(mhayden): Caching the CentOS mirror list causes yum to throw
+# 503 errors intermittently since the remote file is dynamic. Also,
+# yum has issues with retrieving the mariadb.org repodata bz2 and
+# that causes more intermittent 503 errors. This DontCache line
+# tells apt-cacher-ng to allow requests for these to pass through
+# without being cached.
+DontCache: (mirrorlist\.centos\.org)|(mariadb\.org.*\.bz2$)

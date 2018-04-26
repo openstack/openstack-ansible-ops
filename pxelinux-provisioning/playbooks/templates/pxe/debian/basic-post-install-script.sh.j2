@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+apt-get remove --purge snap* lxc* lxd* || true
+
+sed -i 's/\(GRUB_CMDLINE_LINUX_DEFAULT=\).*/\1\"\"/g' /target/etc/default/grub
+update-grub
+
+sed -i '/PermitRootLogin / s/ .*/ without-password/' /etc/ssh/sshd_config
+
+mkdir -p /root/.ssh
+chmod 0700 /root/.ssh
+echo "{{ default_tftp_ssh_key }}" >> /root/.ssh/authorized_keys

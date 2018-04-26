@@ -1,0 +1,49 @@
+---
+################################## ALL HOSTS ##################################
+
+all:
+  vars:
+    server_netmask: "255.255.255.0"
+    server_gateway: "10.127.83.1"
+    server_dns: "8.8.8.8"
+    server_subnet: "10.127.83.0"
+
+  hosts:
+    # Local host
+    localhost:
+      ansible_host: 127.0.0.1
+
+    # PXE Server
+    n1:
+      ansible_user: root
+
+################################## PXE HOSTS ##################################
+
+# The group "pxe_hosts" is used to setup all systems that will be responsible
+#  for PXE boot. This will install all of the needed capabilities to TFTP serve
+#  system images.
+pxe_hosts:
+  hosts:
+    localhost: {}
+
+dhcp_hosts:
+  hosts:
+    localhost: {}
+
+################################# PXE TARGETS #################################
+
+# The group "pxe_servers" is used for all servers that will be a PXE target.
+pxe_servers:
+  hosts:
+    n1:
+      ansible_os_family: "{{ default_images[default_image_name]['image_type'] }}"
+      server_hostname: 'n1'
+      server_image: "ubuntu-16.04-amd64"
+      server_default_interface: 'eth0'
+      server_obm_ip: 10.0.0.200
+      server_model: PowerEdge R710
+      server_mac_address: 00:11:22:33:44:55
+      server_extra_options: ''
+      server_fixed_addr: "10.0.0.100"
+      server_domain_name: "{{ default_server_domain_name }}"
+      ansible_host: "{{ server_fixed_addr }}"
