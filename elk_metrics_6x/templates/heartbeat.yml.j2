@@ -74,6 +74,7 @@ heartbeat.monitors:
 {%           set _ = hosts.extend([backend_host + ":" + (port | string)]) %}
 {%         endfor %}
 {%       endfor %}
+{%       if hosts | length > 0 %}
 - type: tcp # monitor type `tcp`. Connect via TCP and optionally verify endpoint
             # by sending/receiving a custom payload
 
@@ -146,6 +147,7 @@ heartbeat.monitors:
 
     # Required TLS protocols
     #supported_protocols: ["TLSv1.0", "TLSv1.1", "TLSv1.2"]
+{%       endif %}
 {%     elif item.type == 'http' %}
 {%       set hosts = [] %}
 {%       for port in item.ports | default([])  %}
@@ -154,6 +156,7 @@ heartbeat.monitors:
 {%           set _ = hosts.extend(["http://" + backend_host + ":" + (port | string) + item.path]) %}
 {%         endfor %}
 {%       endfor %}
+{%       if hosts | length > 0 %}
 - type: http # monitor type `http`. Connect via HTTP an optionally verify response
 
   # Monitor name used for job name and document type
@@ -224,6 +227,7 @@ heartbeat.monitors:
 
     # Required response contents.
     #body:
+{%       endif %}
 {%     endif %}
 {%   endif %}
 {% endfor %}

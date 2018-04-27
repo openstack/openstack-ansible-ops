@@ -24,14 +24,14 @@ heartbeat_services:
     name: galera HTTP
     ports:
       - 9200
-    type: tcp
+    type: http
+    method: HEAD
+    path: "/"
   - group: "{{ groups['galera_all'] }}"
     name: galera TCP
     ports:
       - 3306
-    type: http
-    method: HEAD
-    path: "/"
+    type: tcp
   - group: "{{ groups['repo_all'] }}"
     name: repo git
     ports:
@@ -45,16 +45,9 @@ heartbeat_services:
     method: HEAD
     path: "/"
   - group: "{{ groups['repo_all'] }}"
-    name: repo cache
-    ports:
-      - 3142
-    type: http
-    method: HEAD
-    path: "/"
-  - group: "{{ groups['repo_all'] }}"
     name: repo acng
     ports:
-      - 80
+      - 3142
     type: http
     method: HEAD
     path: "/acng-report.html"
@@ -135,9 +128,7 @@ heartbeat_services:
       - 6080
       - 6082
       - 6083
-    type: http
-    method: HEAD
-    path: "/"
+    type: tcp
   - group: "{{ groups['cinder_api'] }}"
     name: cinder api
     ports:
@@ -185,7 +176,6 @@ heartbeat_services:
     name: rabbitmq management
     ports:
       - 15672
-      - 15671
     type: http
     method: HEAD
     path: "/"
@@ -305,6 +295,21 @@ grafana_datasources:
     basicAuthPassword: ""
     isDefault: false
     database: "filebeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "heartbeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "heartbeat-*"
     jsonData:
       esVersion: 56
       keepCookies: []
