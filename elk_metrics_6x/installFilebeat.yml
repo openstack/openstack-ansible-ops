@@ -1,6 +1,6 @@
 ---
 - name: Install Filebeat
-  hosts: all
+  hosts: hosts
   become: true
   vars:
     haproxy_ssl: false
@@ -112,18 +112,19 @@
         apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
         nginx_enabled: "{{ nginx.stat.exists | bool }}"
         auditd_enabled: "{{ audit.stat.exists | bool }}"
-        mysql_enabled: "{{ mysql.stat.exists | bool }}"
-        cinder_enabled: "{{ cinder.stat.exists | bool }}"
-        glance_enabled: "{{ glance.stat.exists | bool }}"
-        heat_enabled: "{{ heat.stat.exists | bool }}"
-        horizon_enabled: "{{ horizon.stat.exists | bool }}"
-        keystone_enabled: "{{ keystone.stat.exists | bool }}"
-        neutron_enabled: "{{ neutron.stat.exists | bool }}"
-        nova_enabled: "{{ nova.stat.exists | bool }}"
-        octavia_enabled: "{{ octavia.stat.exists | bool }}"
-        swift_enabled: "{{ swift.stat.exists | bool }}"
-        rabbitmq_enabled: "{{ rabbitmq.stat.exists | bool }}"
-        ceph_enabled: "{{ ceph.stat.exists | bool }}"
+        mysql_enabled: "{{ (mysql.stat.exists | bool) or (inventory_hostname in groups['galera_all'] | default([])) }}"
+        ceph_enabled: "{{ (ceph.stat.exists | bool) or (inventory_hostname in groups['ceph_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*ceph.*') | list | length) > 0) }}"
+        cinder_enabled: "{{ (cinder.stat.exists | bool) or (inventory_hostname in groups['cinder_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*cinder.*') | list | length) > 0) }}"
+        glance_enabled: "{{ (glance.stat.exists | bool) or (inventory_hostname in groups['glance_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*glance.*') | list | length) > 0) }}"
+        heat_enabled: "{{ (heat.stat.exists | bool) or (inventory_hostname in groups['heat_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*heat.*') | list | length) > 0) }}"
+        horizon_enabled: "{{ (horizon.stat.exists | bool) or (inventory_hostname in groups['horizon_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*horizon.*') | list | length) > 0) }}"
+        keystone_enabled: "{{ (keystone.stat.exists | bool) or (inventory_hostname in groups['keystone_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*keystone.*') | list | length) > 0) }}"
+        neutron_enabled: "{{ (neutron.stat.exists | bool) or (inventory_hostname in groups['neutron_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*neutron.*') | list | length) > 0) }}"
+        nova_enabled: "{{ (nova.stat.exists | bool) or (inventory_hostname in groups['nova_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*nova.*') | list | length) > 0) }}"
+        octavia_enabled: "{{ (octavia.stat.exists | bool) or (inventory_hostname in groups['octavia_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*octavia.*') | list | length) > 0) }}"
+        swift_enabled: "{{ (swift.stat.exists | bool) or (inventory_hostname in groups['swift_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*swift.*') | list | length) > 0) }}"
+        rabbitmq_enabled: "{{ (rabbitmq.stat.exists | bool) or (inventory_hostname in groups['rabbitmq_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*rabbit.*') | list | length) > 0) }}"
+
 
   post_tasks:
     - name: Drop Filebeat conf file
@@ -139,7 +140,7 @@
 
 
 - name: Load Filebeat Dashboards
-  hosts: all[0]
+  hosts: hosts[0]
   become: true
   vars_files:
     - vars/variables.yml
