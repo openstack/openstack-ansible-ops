@@ -99,7 +99,7 @@ Create the containers
 
 .. code-block:: bash
 
-   cd /opt/openstack-ansible-playbooks
+   cd /opt/openstack-ansible/playbooks
    openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:kibana'
 
 install master/data elasticsearch nodes on the elastic-logstash containers

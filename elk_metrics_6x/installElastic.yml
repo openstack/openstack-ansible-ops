@@ -5,6 +5,16 @@
   vars_files:
     - vars/variables.yml
   tasks:
+    - name: Set half memory fact
+      set_fact:
+        h_mem: "{{ ansible_memtotal_mb // 2 }}"
+
+    - name: Set logstash facts
+      set_fact:
+        elastic_heap_size: "{{ ((h_mem | int) > 30720) | ternary(30720, h_mem) }}"
+      when:
+        - elastic_heap_size is undefined
+
     - name: Configure systcl vm.max_map_count=262144 on container hosts
       sysctl:
         name: "vm.max_map_count"
@@ -48,10 +58,15 @@
         state: present
         update_cache: yes
 
-    - name: Drop elastic search conf file
+    - name: Drop elasticsearch conf file
       template:
-        src: templates/elasticsearch.yml.j2
-        dest: /etc/elasticsearch/elasticsearch.yml
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - src: templates/elasticsearch.yml.j2
+          dest: /etc/elasticsearch/elasticsearch.yml
+        - src: templates/jvm.options.j2
+          dest: /etc/elasticsearch/jvm.options
       tags:
         - config
 
