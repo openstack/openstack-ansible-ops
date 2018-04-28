@@ -65,3 +65,5 @@
       until: templates | success
       retries: 3
       delay: 2
+  tags:
+    - beat-setup
