@@ -23,3 +23,4 @@
 - import_playbook: installAuditbeat.yml
 - import_playbook: installHeartbeat.yml
 - import_playbook: installFilebeat.yml
+- import_playbook: installJournalbeat.yml
