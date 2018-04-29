@@ -7,7 +7,7 @@
   tasks:
     - include_tasks: common_task_install_elk_repo.yml
 
-    - name: Ensure Nginx is installed.
+    - name: Ensure Nginx is installed
       apt:
         name: "{{ item }}"
         state: present

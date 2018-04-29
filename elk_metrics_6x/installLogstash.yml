@@ -5,6 +5,16 @@
   vars_files:
     - vars/variables.yml
   tasks:
+    - name: Set quarter memory fact
+      set_fact:
+        q_mem: "{{ ansible_memtotal_mb // 4 }}"
+
+    - name: Set logstash facts
+      set_fact:
+        elastic_heap_size: "{{ ((q_mem | int) > 30720) | ternary(30720, q_mem) }}"
+      when:
+        - elastic_heap_size is undefined
+
     - include_tasks: common_task_install_elk_repo.yml
 
     - name: Configure systcl vm.max_map_count=262144 on container hosts
@@ -63,21 +73,22 @@
         src: templates/30-elasticsearch-output.conf.j2
         dest: /etc/logstash/conf.d/30-elasticsearch-output.conf
 
+    - name: Drop elasticsearch conf file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - src: templates/jvm.options.j2
+          dest: /etc/logstash/jvm.options
+      tags:
+        - config
+
     - name: Ensure logstash ownership
       file:
         path: /var/lib/logstash
         owner: logstash
         group: logstash
         recurse: true
-
-    - name: Load logstash config
-      command: "/usr/share/logstash/bin/logstash -t --path.settings /etc/logstash"
-      register: conf_success
-      become: yes
-      become_user: logstash
-
-    - name: Print config output
-      debug: var=conf_success
 
     - name: Enable and restart logstash
       systemd:
