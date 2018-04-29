@@ -64,28 +64,21 @@ heartbeat.monitors:
   # sub-dictionary. Default is false.
   #fields_under_root: false
 
-{% set tcp_hosts = [] %}
-{% set http_hosts = [] %}
-{% set haproxy_host = hostvars[groups['haproxy_all'][0]] %}
-{% for item in haproxy_host['haproxy_default_services'] + haproxy_extra_services | default([]) %}
-{%   set item_service = item['service'] %}
-{%   for backend in item_service['haproxy_backend_nodes'] + item_service['haproxy_backup_nodes'] | default([]) %}
-{%     set backend_host = hostvars[backend]['ansible_host'] %}
-{%     set port = item_service['haproxy_check_port'] | default(item_service['haproxy_port']) %}
-{%     if not '{{' in backend_host and not '{{' in (port | string) %}
-{%       if item_service['haproxy_balance_type'] | default('tcp') == 'tcp' %}
-{%         set _ = tcp_hosts.extend([backend_host + ":" + (port | string)]) %}
-{%       elif item_service['haproxy_balance_type'] | default('tcp') == 'http' %}
-{%         set _ = http_hosts.extend(["http://" + backend_host + ":" + (port | string) + "/"]) %}
-{%       endif %}
-{%     endif %}
-{%   endfor %}
-{% endfor %}
+{% for item in heartbeat_services %}
+{%   if inventory_hostname in groups['utility_all'] | default([]) %}
+{%     if item.type == 'tcp' %}
+{%       set hosts = [] %}
+{%       for port in item.ports | default([])  %}
+{%         for backend in item.group | default([])  %}
+{%           set backend_host = hostvars[backend]['ansible_host'] %}
+{%           set _ = hosts.extend([backend_host + ":" + (port | string)]) %}
+{%         endfor %}
+{%       endfor %}
 - type: tcp # monitor type `tcp`. Connect via TCP and optionally verify endpoint
             # by sending/receiving a custom payload
 
   # Monitor name used for job name and document type
-  #name: tcp
+  name: "{{ item.name }}"
 
   # Enable/Disable monitor
   #enabled: true
@@ -109,7 +102,7 @@ heartbeat.monitors:
   #     Using `tls`/`ssl`, an SSL connection is established. If no ssl is configured,
   #     system defaults will be used (not supported on windows).
   #     If `port` is missing in url, the ports setting is required.
-  hosts: [{{ tcp_hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+  hosts: [{{ hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
 
   # Configure IP protocol types to ping on if hostnames are configured.
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
@@ -153,11 +146,18 @@ heartbeat.monitors:
 
     # Required TLS protocols
     #supported_protocols: ["TLSv1.0", "TLSv1.1", "TLSv1.2"]
-
+{%     elif item.type == 'http' %}
+{%       set hosts = [] %}
+{%       for port in item.ports | default([])  %}
+{%         for backend in item.group | default([])  %}
+{%           set backend_host = hostvars[backend]['ansible_host'] %}
+{%           set _ = hosts.extend(["http://" + backend_host + ":" + (port | string) + item.path]) %}
+{%         endfor %}
+{%       endfor %}
 - type: http # monitor type `http`. Connect via HTTP an optionally verify response
 
   # Monitor name used for job name and document type
-  #name: http
+  name: "{{ item.name }}"
 
   # Enable/Disable monitor
   #enabled: true
@@ -166,13 +166,13 @@ heartbeat.monitors:
   schedule: '@every 30s' # every 30 seconds from start of beat
 
   # Configure URLs to ping
-  urls: [{{ http_hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+  urls: [{{ hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
 
   # Configure IP protocol types to ping on if hostnames are configured.
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
   ipv4: true
   ipv6: true
-  mode: any
+  mode: "any"
 
   # Configure file json file to be watched for changes to the monitor:
   #watch.poll_file:
@@ -204,10 +204,11 @@ heartbeat.monitors:
   # Request settings:
   check.request:
     # Configure HTTP method to use. Only 'HEAD', 'GET' and 'POST' methods are allowed.
-    method: "HEAD"
+    method: "{{ item.method }}"
 
     # Dictionary of additional HTTP headers to send:
-    #headers:
+    headers:
+      User-agent: osa-heartbeat-healthcheck
 
     # Optional request body content
     #body:
@@ -223,6 +224,9 @@ heartbeat.monitors:
 
     # Required response contents.
     #body:
+{%     endif %}
+{%   endif %}
+{% endfor %}
 
 heartbeat.scheduler:
   # Limit number of concurrent tasks executed by heartbeat. The task limit if

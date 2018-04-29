@@ -14,10 +14,17 @@
     - name: Ensure apm-server is installed
       apt:
         name: "{{ item }}"
-        state: present
+        state: "{{ elk_package_state | default('present') }}"
         update_cache: true
       with_items:
         - apm-server
+      tags:
+        - package_install
+
+    - name: exit playbook after uninstall
+      meta: end_play
+      when:
+        - elk_package_state | default('present') == 'absent'
 
   post_tasks:
     - name: Drop apm-server conf file

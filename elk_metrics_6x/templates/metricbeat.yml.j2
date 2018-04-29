@@ -229,27 +229,7 @@ metricbeat.modules:
 #  #response.enabled: false
 #  #dedot.enabled: false
 #
-{% if inventory_hostname in groups['utility_all'] | default([]) %}
-{% set haproxy_host = hostvars[groups['haproxy_all'][0]] %}
-{%   for item in haproxy_host['haproxy_default_services'] + haproxy_extra_services | default([]) %}
-{%     set item_service = item['service'] %}
-{%     for backend in item_service['haproxy_backend_nodes'] + item_service['haproxy_backup_nodes'] | default([]) %}
-{%       set backend_host = hostvars[backend]['ansible_host'] %}
-{%       set port = item_service['haproxy_check_port'] | default(item_service['haproxy_port']) %}
-{%       if not '{{' in backend_host and not '{{' in (port | string) %}
-- module: http
-  metricsets: ["server"]
-  host: "{{ backend_host }}"
-  port: {{ port | int }}
-  enabled: true
-  method: "{{ (item_service['haproxy_backend_options'] | default(['check', 'HEAD', '/']))[0].split()[1] | default('GET') }}"
-  path: "{{ (item_service['haproxy_backend_options'] | default(['check', 'HEAD', '/']))[0].split()[2] | default('/') }}"
 
-{%       endif %}
-{%     endfor %}
-{%   endfor %}
-{% endif %}
-#
 ##------------------------------- Jolokia Module ------------------------------
 #- module: jolokia
 #  metricsets: ["jmx"]
@@ -443,12 +423,12 @@ metricbeat.modules:
 - module: rabbitmq
   metricsets: ["node", "queue"]
   period: 10s
-  hosts: ["localhost:5672", "localhost:5671"]
-#
+  hosts: ["localhost:5672", "localhost:5671", "localhost:15672", "localhost:15671"]
   username: {{ rabbitmq_monitoring_userid | default('monitoring') }}
   password: {{ rabbitmq_monitoring_password  }}
 #
 {% endif %}
+
 ##-------------------------------- Redis Module -------------------------------
 #- module: redis
 #  metricsets: ["info", "keyspace"]

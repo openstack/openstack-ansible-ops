@@ -15,14 +15,19 @@
       tags:
         - sysctl
 
+    - name: Ensure mount directories exists
+      file:
+        path: "/openstack/{{ inventory_hostname }}/elasticsearch"
+        state: "directory"
+      delegate_to: "{{ physical_host }}"
+
     - name: elasticsearch datapath bind mount
       lxc_container:
         name: "{{ inventory_hostname }}"
         container_command: |
           [[ ! -d "/var/lib/elasticsearch" ]] && mkdir -p "/var/lib/elasticsearch"
-          [[ ! -d "/var/lib/elasticsearch-olddata" ]] && mkdir -p "/var/lib/elasticsearch-olddata"
         container_config:
-          - "lxc.mount.entry=/openstack/{{ inventory_hostname }} var/lib/elasticsearch none bind 0 0"
+          - "lxc.mount.entry=/openstack/{{ inventory_hostname }}/elasticsearch var/lib/elasticsearch none bind 0 0"
       delegate_to: "{{ physical_host }}"
       when:
         - physical_host != inventory_hostname
@@ -48,7 +53,7 @@
         src: templates/elasticsearch.yml.j2
         dest: /etc/elasticsearch/elasticsearch.yml
       tags:
-          - config
+        - config
 
     - name: Ensure elasticsearch ownership
       file:
@@ -56,6 +61,8 @@
         owner: elasticsearch
         group: elasticsearch
         recurse: true
+      tags:
+        - config
 
     - name: Enable and restart elastic
       systemd:
@@ -63,4 +70,4 @@
         enabled: true
         state: restarted
       tags:
-          - config
+        - config
