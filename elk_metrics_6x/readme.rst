@@ -10,6 +10,16 @@ with topbeat to gather metrics from hosts metrics to the ELK cluster.
 
 **These playbooks require Ansible 2.4+.**
 
+Before running these playbooks the ``systemd_service`` role is required and is
+used in community roles. If these playbooks are being run in an
+OpenStack-Ansible installation the required role will be resolved for you. If
+the Installation is outside of OpenStack-Ansible, clone the role or add it to an
+ansible role requirements file.
+
+.. code-block:: bash
+
+    git clone https://github.com/openstack/ansible-role-systemd_service /etc/ansible/roles/systemd_service
+
 OpenStack-Ansible Integration
 -----------------------------
 

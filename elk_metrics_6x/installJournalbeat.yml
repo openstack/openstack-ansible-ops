@@ -1,0 +1,145 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Install Journalbeat
+  hosts: hosts
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  pre_tasks:
+    - include_tasks: common_task_install_go1.10.1.yml
+
+    - name: Ensure libsystemd-dev is installed
+      apt:
+        name: "{{ item }}"
+        state: "{{ elk_package_state | default('present') }}"
+        update_cache: true
+      with_items:
+        - git
+        - libsystemd-dev
+      tags:
+        - package_install
+
+    - name: exit playbook after uninstall
+      meta: end_play
+      when:
+        - elk_package_state | default('present') == 'absent'
+        - ansible_service_mgr == "systemd"
+
+  tasks:
+    - name: create the system group
+      group:
+        name: "journalbeat"
+        state: "present"
+        system: "yes"
+
+    - name: Create the nova system user
+      user:
+        name: "journalbeat"
+        group: "journalbeat"
+        comment: "journalbeat user"
+        shell: "/bin/false"
+        createhome: "yes"
+        home: "/usr/share/journalbeat"
+
+    - name: Create journalbeat data path
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "journalbeat"
+        group: "journalbeat"
+        mode: "0755"
+      with_items:
+        - "/usr/share/journalbeat"
+        - "/var/lib/journalbeat"
+        - "/var/log/journalbeat"
+        - "/etc/journalbeat"
+
+    - name: Install journalbeat
+      shell: |
+        . /etc/default/go1.10.1
+        /opt/go1.10.1/go/bin/go get -v github.com/mheese/journalbeat
+
+    - name: Drop journalbeat conf file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - src: templates/journalbeat.yml.j2
+          dest: /etc/journalbeat/journalbeat.yml
+
+    - name: Run the systemd service role
+      include_role:
+        name: systemd_service
+        private: true
+      vars:
+        systemd_service_restart_changed: false
+        systemd_services:
+          - service_name: "journalbeat"
+            execstarts:
+              - /usr/local/bin/journalbeat
+                -c /etc/journalbeat/journalbeat.yml
+                -path.home /usr/share/journalbeat
+                -path.config /etc/journalbeat
+                -path.data /var/lib/journalbeat
+                -path.logs /var/log/journalbeat
+            config_overrides:
+              Service:
+                EnvironmentFile: "-/etc/default/go1.10.1"
+              Unit:
+                Documentation: https://github.com/mheese/journalbeat/blob/master/README.md
+                Wants: network-online.target
+                After: network-online.target
+
+    - name: Enable and restart journalbeat
+      systemd:
+        name: "journalbeat"
+        enabled: true
+        state: restarted
+        daemon_reload: yes
+
+
+## NOTE(cloudnull): This task is broken at this point due to missing
+##                  configuration. Once the following issue
+##                  [ https://github.com/mheese/journalbeat/issues/136 ] is
+##                  resolved this should be uncommented.
+# - name: Load Journalbeat Dashboards
+#   hosts: hosts[0]
+#   become: true
+#   vars_files:
+#     - vars/variables.yml
+#   tasks:
+#     - name: Load templates
+#       shell: >-
+#         {% set IP_ARR=[] %}
+#         {% for host in groups['elastic-logstash'] %}
+#         {%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
+#         {%   endif %}
+#         {% endfor %}
+#         {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
+#         /usr/local/bin/journalbeat -setup
+#         -E 'output.logstash.enabled=false'
+#         -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
+#         -e -v
+#       register: templates
+#       until: templates | success
+#       retries: 3
+#       delay: 2
+#   tags:
+#     - beat-setup
