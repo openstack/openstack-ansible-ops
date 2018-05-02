@@ -49,7 +49,7 @@
         state: "present"
         system: "yes"
 
-    - name: Create the nova system user
+    - name: Create the journalbeat user
       user:
         name: "journalbeat"
         group: "journalbeat"

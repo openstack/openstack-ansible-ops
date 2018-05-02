@@ -1,0 +1,101 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Install Curator
+  hosts: "elastic-logstash"
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  pre_tasks:
+    - name: Ensure curator is installed
+      pip:
+        name: elasticsearch-curator
+        state: "{{ elk_package_state | default('present') }}"
+
+    - name: exit playbook after uninstall
+      meta: end_play
+      when:
+        - elk_package_state | default('present') == 'absent'
+
+  tasks:
+    - name: create the system group
+      group:
+        name: "curator"
+        state: "present"
+        system: "yes"
+
+    - name: Create the curator system user
+      user:
+        name: "curator"
+        group: "curator"
+        comment: "curator user"
+        shell: "/bin/false"
+        createhome: "yes"
+        home: "/var/lib/curator"
+
+    - name: Create curator data path
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "curator"
+        group: "curator"
+        mode: "0755"
+        recurse: true
+      with_items:
+        - "/var/lib/curator"
+        - "/var/log/curator"
+        - "/etc/curator"
+
+    - name: Drop curator conf file
+      template:
+        src: templates/curator.yml.j2
+        dest: /var/lib/curator/curator.yml
+
+    - name: Drop curator action file
+      template:
+        src: templates/curator-actions.yml.j2
+        dest: /var/lib/curator/actions.yml
+
+  post_tasks:
+    - name: Run the systemd service role
+      include_role:
+        name: systemd_service
+        private: true
+      vars:
+        systemd_service_enabled: true
+        systemd_user_name: curator
+        systemd_group_name: curator
+        systemd_services:
+          - service_name: "curator"
+            execstarts:
+              - /usr/local/bin/curator
+                --config /var/lib/curator/curator.yml
+                /var/lib/curator/actions.yml
+            timer:
+              state: "started"
+              options:
+                OnBootSec: 30min
+                OnUnitActiveSec: 48h
+                Persistent: true
+
+    - name: Enable and restart curator.timer
+      systemd:
+        name: "curator.timer"
+        enabled: true
+        state: restarted
