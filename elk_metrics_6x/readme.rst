@@ -70,6 +70,7 @@ lines.
           haproxy_backend_port: 9200  # This is set using the "elastic_port" variable
           haproxy_balance_type: tcp
 
+
 Optional | run the haproxy-install playbook
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

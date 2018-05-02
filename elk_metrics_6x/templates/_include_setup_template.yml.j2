@@ -1,0 +1,18 @@
+{% set shards = ((groups["elastic-logstash"] | length) * 3) | int %}
+
+# Elasticsearch template settings
+setup.template.settings:
+
+  # A dictionary of settings to place into the settings.index dictionary
+  # of the Elasticsearch template. For more details, please check
+  # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html
+  index:
+    number_of_shards: {{ shards }}
+    codec: best_compression
+    # This provides for an index split of up to 2 times the number of available shards
+    number_of_routing_shards: {{ (shards | int) * 2 * (groups["elastic-logstash"] | length) }}
+
+  # A dictionary of settings for the _source field. For more details, please check
+  # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html
+  #_source:
+    #enabled: false

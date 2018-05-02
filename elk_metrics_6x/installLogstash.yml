@@ -52,7 +52,7 @@
         install_recommends: yes
         update_cache: yes
 
-    - name: Ensure Logstash is installed.
+    - name: Ensure Logstash is installed
       apt:
         name: logstash
         state: present

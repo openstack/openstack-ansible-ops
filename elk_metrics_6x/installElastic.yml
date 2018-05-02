@@ -67,6 +67,8 @@
           dest: /etc/elasticsearch/elasticsearch.yml
         - src: templates/jvm.options.j2
           dest: /etc/elasticsearch/jvm.options
+        - src: templates/es-log4j2.properties.j2
+          dest: /etc/elasticsearch/log4j2.properties
       tags:
         - config
 

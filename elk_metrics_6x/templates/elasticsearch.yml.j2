@@ -43,17 +43,24 @@ http.port: {{ elastic_port }}
 #
 {% set IP_ARR=[] %}
 {% for host in groups['elastic-logstash'] %}
-{%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
+{%   if IP_ARR.extend([hostvars[host]['ansible_host'] | string]) %}
 {%   endif %}
 {% endfor %}
-discovery.zen.ping.unicast.hosts: [{{ IP_ARR | join(', ') }}]
-node.master: {{ (inventory_hostname == groups['elastic-logstash'][0]) | ternary(true, false) }}
-node.data: true
+{% set available_nodes = (groups['elastic-logstash'] | length) %}
+{# the master node count takes half the available nodes or sets it's self as 1 #}
+{% set _master_node_count = (available_nodes > 1) | ternary(((available_nodes // 2) | int), 1) %}
+{# if the master node count is even, add one to it otherwise use the provided value #}
+{% set master_node_count = ((_master_node_count | int) % 2 != 0) | ternary(_master_node_count, (_master_node_count + 1)) %}
+
+discovery.zen.ping.unicast.hosts: {{ IP_ARR }}
 #
 # Prevent the "split brain" by configuring the majority of nodes (total number of nodes / 2 + 1):
-#
-# discovery.zen.minimum_master_nodes: 3
-#
+discovery.zen.minimum_master_nodes: {{ master_node_count | int }}
+# The first set of nodes in the master_node_count are marked as such
+node.master: {{ (inventory_hostname in groups['elastic-logstash'][:master_node_count | int]) | ternary(true, false) }}
+# Every node in the master list and every other node after will be a data node
+node.data: {{ (inventory_hostname in (groups['elastic-logstash'][:master_node_count| int] + groups['elastic-logstash'][master_node_count | int::2])) | ternary(true, false) }}
+
 # For more information, see the documentation at:
 # <http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-discovery.html>
 #
@@ -61,7 +68,7 @@ node.data: true
 #
 # Block initial recovery after a full cluster restart until N nodes are started:
 #
-# gateway.recover_after_nodes: 3
+gateway.recover_after_nodes: {{ master_node_count }}
 #
 # For more information, see the documentation at:
 # <http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-gateway.html>
