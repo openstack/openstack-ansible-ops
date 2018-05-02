@@ -20,73 +20,73 @@ logstash_beat_input_port: 5044
 
 # Beat options
 heartbeat_services:
-  - group: "{{ groups['galera_all'] }}"
+  - group: "{{ groups['galera_all'] | default([]) }}"
     name: galera HTTP
     ports:
       - 9200
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['galera_all'] }}"
+  - group: "{{ groups['galera_all'] | default([]) }}"
     name: galera TCP
     ports:
       - 3306
     type: tcp
-  - group: "{{ groups['repo_all'] }}"
+  - group: "{{ groups['repo_all'] | default([]) }}"
     name: repo git
     ports:
       - 9418
     type: tcp
-  - group: "{{ groups['repo_all'] }}"
+  - group: "{{ groups['repo_all'] | default([]) }}"
     name: repo server
     ports:
       - 8181
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['repo_all'] }}"
+  - group: "{{ groups['repo_all'] | default([]) }}"
     name: repo acng
     ports:
       - 3142
     type: http
     method: HEAD
     path: "/acng-report.html"
-  - group: "{{ groups['glance_api'] }}"
+  - group: "{{ groups['glance_api'] | default([]) }}"
     name: glance api
     ports:
       - 9292
     type: http
     method: HEAD
     path: "/healthcheck"
-  - group: "{{ groups['glance_api'] }}"
+  - group: "{{ groups['glance_api'] | default([]) }}"
     name: glance registry
     ports:
       - 9191
     type: http
     method: HEAD
     path: "/healthcheck"
-  - group: "{{ groups['gnocchi_all'] }}"
+  - group: "{{ groups['gnocchi_all'] | default([]) }}"
     name: gnocchi api
     ports:
       - 8041
     type: http
     method: HEAD
     path: "/healthcheck"
-  - group: "{{ groups['heat_api_cfn'] }}"
+  - group: "{{ groups['heat_api_cfn'] | default([]) }}"
     name: heat cfn api
     ports:
       - 8000
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['heat_api'] }}"
+  - group: "{{ groups['heat_api'] | default([]) }}"
     name: heat api
     ports:
       - 8004
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['keystone_all'] }}"
+  - group: "{{ groups['keystone_all'] | default([]) }}"
     name: keystone api
     ports:
       - 5000
@@ -94,49 +94,49 @@ heartbeat_services:
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['neutron_server'] }}"
+  - group: "{{ groups['neutron_server'] | default([]) }}"
     name: neutron server
     ports:
       - 9696
     type: http
     method: GET
     path: "/"
-  - group: "{{ groups['nova_api_metadata'] }}"
+  - group: "{{ groups['nova_api_metadata'] | default([]) }}"
     name: nova api metadata
     ports:
       - 8775
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['nova_api_os_compute'] }}"
+  - group: "{{ groups['nova_api_os_compute'] | default([]) }}"
     name: nova api compute
     ports:
       - 8774
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['nova_api_placement'] }}"
+  - group: "{{ groups['nova_api_placement'] | default([]) }}"
     name: nova api placement
     ports:
       - 8780
     type: http
     method: GET
     path: "/"
-  - group: "{{ groups['nova_console'] }}"
+  - group: "{{ groups['nova_console'] | default([]) }}"
     name: nova console
     ports:
       - 6080
       - 6082
       - 6083
     type: tcp
-  - group: "{{ groups['cinder_api'] }}"
+  - group: "{{ groups['cinder_api'] | default([]) }}"
     name: cinder api
     ports:
       - 8776
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['horizon_all'] }}"
+  - group: "{{ groups['horizon_all'] | default([]) }}"
     name: horizon
     ports:
       - 80
@@ -144,96 +144,96 @@ heartbeat_services:
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['sahara_api'] }}"
+  - group: "{{ groups['sahara_api'] | default([]) }}"
     name: sahara api
     ports:
       - 8386
     type: http
     method: HEAD
     path: "/healthcheck"
-  - group: "{{ groups['swift_proxy'] }}"
+  - group: "{{ groups['swift_proxy'] | default([]) }}"
     name: swift proxy
     ports:
       - 8080
     type: http
     method: HEAD
     path: "/healthcheck"
-  - group: "{{ groups['aodh_api'] }}"
+  - group: "{{ groups['aodh_api'] | default([]) }}"
     name: aodh api
     ports:
       - 8042
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['ironic_api'] }}"
+  - group: "{{ groups['ironic_api'] | default([]) }}"
     name: ironic api
     ports:
       - 6385
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['rabbitmq_all'] }}"
+  - group: "{{ groups['rabbitmq_all'] | default([]) }}"
     name: rabbitmq management
     ports:
       - 15672
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['rabbitmq_all'] }}"
+  - group: "{{ groups['rabbitmq_all'] | default([]) }}"
     name: rabbitmq access
     ports:
       - 5672
       - 5671
     type: tcp
-  - group: "{{ groups['magnum_all'] }}"
+  - group: "{{ groups['magnum_all'] | default([]) }}"
     name: magnum api
     ports:
       - 9511
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['trove_api'] }}"
+  - group: "{{ groups['trove_api'] | default([]) }}"
     name: trove api
     ports:
       - 8779
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['barbican_api'] }}"
+  - group: "{{ groups['barbican_api'] | default([]) }}"
     name: barbican api
     ports:
       - 9311
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['designate_api'] }}"
+  - group: "{{ groups['designate_api'] | default([]) }}"
     name: designate api
     ports:
       - 9001
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['octavia_all'] }}"
+  - group: "{{ groups['octavia_all'] | default([]) }}"
     name: octavia api
     ports:
       - 9876
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['tacker_all'] }}"
+  - group: "{{ groups['tacker_all'] | default([]) }}"
     name: tracker api
     ports:
       - 9890
     type: http
     method: HEAD
     path: "/"
-  - group: "{{ groups['neutron_server'] }}"
+  - group: "{{ groups['neutron_server'] | default([]) }}"
     name: opendaylight
     ports:
       - 8180
       - 8185
     type: tcp
-  - group: "{{ groups['neutron_server'] }}"
+  - group: "{{ groups['neutron_server'] | default([]) }}"
     name: ceph-rgw
     ports:
       - 7980

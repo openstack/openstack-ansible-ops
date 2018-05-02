@@ -2,13 +2,14 @@ Install ELK with beats to gather metrics
 ########################################
 :tags: openstack, ansible
 
+
 About this repository
 ---------------------
 
 This set of playbooks will deploy elk cluster (Elasticsearch, Logstash, Kibana)
 with topbeat to gather metrics from hosts metrics to the ELK cluster.
 
-**These playbooks require Ansible 2.4+.**
+**These playbooks require Ansible 2.5+.**
 
 Before running these playbooks the ``systemd_service`` role is required and is
 used in community roles. If these playbooks are being run in an
@@ -20,12 +21,14 @@ ansible role requirements file.
 
     git clone https://github.com/openstack/ansible-role-systemd_service /etc/ansible/roles/systemd_service
 
+
 OpenStack-Ansible Integration
 -----------------------------
 
 These playbooks can be used as standalone inventory or as an integrated part of
 an OpenStack-Ansible deployment. For a simple example of standalone inventory,
 see ``inventory.example.yml``.
+
 
 Optional | Load balancer VIP address
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -36,11 +39,12 @@ provide the load balancer functionality needed. The option
 like Kibana will use when connecting to elasticsearch. If this option is
 omitted, the first node in the elasticsearch cluster will be used.
 
+
 Optional | configure haproxy endpoints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Edit the `/etc/openstack_deploy/user_variables.yml` file and add fiel following
-lines
+Edit the `/etc/openstack_deploy/user_variables.yml` file and add the following
+lines.
 
 .. code-block:: yaml
 
@@ -74,8 +78,9 @@ Optional | run the haproxy-install playbook
     cd /opt/openstack-ansible/playbooks/
     openstack-ansible haproxy-install.yml --tags=haproxy-service-config
 
-Deployment Process
-------------------
+
+Setup | system configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Clone the elk-osa repo
 
@@ -112,38 +117,43 @@ Create the containers
    cd /opt/openstack-ansible/playbooks
    openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:kibana'
 
-install master/data elasticsearch nodes on the elastic-logstash containers
+
+Deployment | legacy environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If these playbooks are to be run in an environment that does not have access to
+modern Ansible source the script ``bootstrap-embeded-ansible.sh`` before running
+the playbooks. This script will install Ansible **2.5.2** in a virtual
+environment within ``/opt``. This will provide for everything needed to run
+these playbooks in an OpenStack-Ansible cloud without having to upgrade the
+Ansible version from within the legacy environment. When it comes time to
+execute these playbooks substite the ``openstack-ansible`` command with the
+full path to ``ansible-playbook`` within the embeded ansible virtual
+environment making sure to include the available user provided variables.
+
+Example commands to deploy all of these playbooks using the embeded ansible.
 
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/elk_metrics_6x
-    openstack-ansible installElastic.yml
+    source bootstrap-embeded-ansible.sh
+    /opt/ansible25/bin/ansible-playbook ${ANSIBLE_USER_VARS} site.yml
 
-Install Logstash on all the elastic containers
 
-.. code-block:: bash
+Deploying | modern environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    cd /opt/openstack-ansible-ops/elk_metrics_6x
-    openstack-ansible installLogstash.yml
-
-Install Kibana, nginx reverse proxy and metricbeat on the kibana container
-
-.. code-block:: bash
-
-    cd /opt/openstack-ansible-ops/elk_metrics_6x
-    openstack-ansible installKibana.yml
-
-Install Metricbeat everywhere to start shipping metrics to our logstash
-instances
+Install master/data elasticsearch nodes on the elastic-logstash containers,
+deploy logstash, deploy kibana, and then deploy all of the service beats.
 
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/elk_metrics_6x
-    openstack-ansible installMetricbeat.yml
+    openstack-ansible site.yml
 
 
-Adding Grafana visualizations
------------------------------
+Optional | add Grafana visualizations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 See the grafana directory for more information on how to deploy grafana. Once
 When deploying grafana, source the variable file from ELK in order to
@@ -152,10 +162,11 @@ dashboards. Including the variable file is as simple as adding
 ``-e @../elk_metrics_6x/vars/variables.yml`` to the grafana playbook
 run.
 
-Included dashboards
+Included dashboards.
 
 * https://grafana.com/dashboards/5569
 * https://grafana.com/dashboards/5566
+
 
 Trouble shooting
 ----------------
