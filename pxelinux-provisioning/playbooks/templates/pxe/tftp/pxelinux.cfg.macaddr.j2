@@ -1,0 +1,10 @@
+{% set image_properties = default_images[hostvars[item]['server_image']] %}
+
+default linux
+prompt 0
+timeout 1
+label linux
+  kernel {{ image_properties['image_kernel'] }}
+{% if image_properties['image_type'] == 'debian' %}
+  append hostname={{ hostvars[item]['server_hostname'] }} domain={{ hostvars[item]['server_domain_name'] }} {{ image_properties['image_kernel_options'] }} initrd={{ image_properties['image_initrd'] }} preseed/url={{ image_properties['image_preseed_option']['url'] }} preseed/interactive=false netcfg/choose_interface={{ hostvars[item]['server_default_interface'] }} {{ hostvars[item]['server_extra_options'] | default('') }}
+{% endif %}

@@ -1,0 +1,310 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in witing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Run DRAC Config
+  hosts: pxe_servers
+  gather_facts: false
+  connection: local
+  tasks:
+    - set_fact:
+        racadm_path: "/opt/dell/srvadmin/sbin/racadm"
+      tags:
+        - always
+
+    - name: check for racadm
+      stat:
+        path: "{{ racadm_path }}"
+      register: racadm_command
+      tags:
+        - always
+
+    - name: check for racadm_command
+      fail:
+        msg: "racadm command is not found."
+      when:
+        - not racadm_command.stat.exists
+      tags:
+        - always
+
+    - set_fact:
+        racadm: "{{ racadm_path }} -r {{ server_obm_ip }} -u root -p calvin"
+      tags:
+        - always
+
+    - name: set cfgServerBootOnce
+      command: "{{ racadm }} config -g cfgServerInfo -o cfgServerBootOnce 0"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgServerFirstBootDevice
+
+    - name: set cfgServerFirstBootDevice
+      command: "{{ racadm }} config -g cfgServerInfo -o cfgServerFirstBootDevice HDD"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgServerFirstBootDevice
+
+    - name: set cfgServerBootOnce
+      command: "{{ racadm }} config -g cfgServerInfo -o cfgServerBootOnce 1"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgServerBootOnce
+
+    - name: set cfgServerFirstBootDevice
+      command: "{{ racadm }} config -g cfgServerInfo -o cfgServerFirstBootDevice PXE"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgServerBootOnce
+
+    - name: set cfgNicEnable
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicEnable 1"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicEnable
+
+    - name: set cfgNicIPv4Enable
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicIPv4Enable 1"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicIPv4Enable
+
+    - name: set cfgNicUseDhcp
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicUseDhcp 0"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicUseDhcp
+
+    - name: set cfgNicVLanEnable
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicVLanEnable 0"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicVLanEnable
+
+    - name: set cfgNicVLanID
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicVLanID 1"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicVLanID
+
+    - name: set cfgNicVLanPriority
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicVLanPriority 0"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicVLanPriority
+
+    - name: set cfgNicSelection
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicSelection 2"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicSelection
+
+    - name: set cfgDNSServersFromDHCP
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgDNSServersFromDHCP 0"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgDNSServersFromDHCP
+
+    - name: set cfgDNSRacName
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgDNSRacName {{ server_hostname }}"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgDNSRacName
+
+    - name: set cfgNicIpAddress
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicIpAddress {{ server_obm_ip }}"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicIpAddress
+
+    - name: set cfgDNSServer1
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgDNSServer1 {{ server_gateway }}"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgDNSServer1
+
+    - name: set cfgDNSServer2
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgDNSServer2 {{ server_dns }}"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgDNSServer2
+
+    - name: set cfgNicNetmask
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicNetmask {{ server_netmask }}"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicNetmask
+
+    - name: set cfgNicGateway
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgNicGateway {{ server_gateway }}"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgNicGateway
+
+    - name: set cfgDNSDomainName
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgDNSDomainName {{ server_domain_name }}"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgDNSDomainName
+
+    - name: set cfgDNSDomainNameFromDHCP
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgDNSDomainNameFromDHCP 0"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgDNSDomainNameFromDHCP
+
+    - name: set cfgDNSRegisterRac
+      command: "{{ racadm }} config -g cfgLanNetworking -o cfgDNSRegisterRac 0"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgDNSRegisterRac
+
+    - name: set cfgIpmiLanEnable
+      command: "{{ racadm }} config -g cfgIpmiLan -o cfgIpmiLanEnable 1"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgIpmiLanEnable
+
+    - name: set cfgIpmiLanPrivilegeLimit
+      command: "{{ racadm }} config -g cfgIpmiLan -o cfgIpmiLanPrivilegeLimit 4"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgIpmiLanPrivilegeLimit
+
+    - name: set cfgIpmiLanAlertEnable
+      command: "{{ racadm }} config -g cfgIpmiLan -o cfgIpmiLanAlertEnable 0"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgIpmiLanAlertEnable
+
+    - name: set cfgIpmiEncryptionKey
+      command: "{{ racadm }} config -g cfgIpmiLan -o cfgIpmiEncryptionKey 0000000000000000000000000000000000000000"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgIpmiEncryptionKey
+
+    - name: set cfgIpmiPetCommunityName
+      command: "{{ racadm }} config -g cfgIpmiLan -o cfgIpmiPetCommunityName public"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - cfgIpmiPetCommunityName
+
+    - name: run sslresetcfg
+      command: "{{ racadm }} sslresetcfg"
+      register: command
+      failed_when: not command.rc in [0, 2]
+      until: command is success
+      retries: 2
+      delay: 2
+      tags:
+        - sslresetcfg
+
+    - name: run serveraction powercycle
+      command: "{{ racadm }} serveraction powercycle"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      when:
+        - not inventory_hostname in groups['pxe_hosts']
+      tags:
+        - powercycle
+
+    - name: run racreset
+      command: "{{ racadm }} racreset"
+      register: command
+      until: command is success
+      retries: 2
+      delay: 2
+      when:
+        - not inventory_hostname in groups['pxe_hosts']
+      tags:
+        - racreset

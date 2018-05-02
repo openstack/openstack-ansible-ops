@@ -1,0 +1,17 @@
+menu hshift 13
+menu width 49
+menu margin 8
+menu tabmsg
+
+menu title Boot Menu
+
+{% for key, value in default_images.items() %}
+label {{ key }}-{{ default_images[key]['image_preseed'] }}
+    menu label ^{{ key }}-{{ default_images[key]['image_preseed'] }} automated install
+    kernel {{ value.image_kernel }}
+{%   if value.image_type == 'debian' %}
+    append {{ value.image_kernel_options }} initrd={{ value.image_initrd }} preseed/url={{ default_images[key]['image_preseed_option']['url'] }} preseed/interactive=false netcfg/choose_interface={{ default_interface }}
+{%   endif %}
+{% endfor %}
+
+menu end

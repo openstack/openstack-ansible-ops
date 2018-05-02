@@ -1,0 +1,91 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This is the default system root password. This should be changed.
+default_root_password: secrete
+
+# Depending on the kernel parameters passed into the physical machines when
+# booted these options may be different or host specific.
+default_interface: "{{ default_network | default('eth0') }}"
+default_dhcp_interface: "{{ default_interface }}"
+
+# To speed up the deployment apt-cacher NG is used on the pxe/dhcp server.
+default_acng_bind_address: 0.0.0.0
+
+# This is a mapping of OS familiies. While Ansible has a suitable interface for
+# for this it can vary in unpredictable ways. This setting it used to determine
+# the type of preseed needed to deploy an given OS type.
+default_os_families:
+  ubuntu-16.04-amd64: debian
+
+# Default setting for Apt-Cacher-NG.
+default_mirror_proxy: 'http://{{ default_tftp_server }}:3142/'
+default_mirror_hostname: archive.ubuntu.com
+default_mirror_directory: /ubuntu
+
+ # IP address, or domain name of the TFTP server
+default_tftp_server: "{{ hostvars[groups['pxe_hosts'][0]]['ansible_host'] | default(ansible_host) }}"
+# tftp_ssh_key: ''  # user defined ssh key, used to access the host
+default_tftp_port: 69
+default_tftp_boot_path: /pxelinux.0      # Path of where to boot from first
+
+# Default ISO images
+default_image_name: "ubuntu-16.04-amd64"
+default_images:
+  ubuntu-16.04-amd64:
+    image_type: debian
+    image_iso_url: "http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-server-amd64.iso"
+    image_name: "ubuntu-16.04.2-server-amd64.iso"
+    image_short_name: "ubuntu-16.04.2-server-amd64"
+    image_default_boot: "ubuntu-16.04.2-server-amd64/amd64/boot-screens/menu.cfg"
+    image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical quiet splash"
+    image_kernel: "ubuntu-16.04.2-server-amd64/amd64/linux"
+    image_initrd: "ubuntu-16.04.2-server-amd64/amd64/initrd.gz"
+    image_netboot: "ubuntu-16.04.2-server-amd64/install/netboot/ubuntu-installer"
+    image_preseed: basic
+    image_preseed_option:
+      url: "tftp://{{ default_tftp_server }}/preseed/basic.preseed"
+
+# PXELinux downloads. While pxelinux is available as a component of most distros
+# the version may vary. This stabalizes on a known set.
+default_pxelinux_url: "https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz"
+default_pxelinux_name: "syslinux-6.03.tar.gz"
+default_pxelinux_short_name: "syslinux-6.03"
+
+# Default network / server setup used in DHCP
+default_server_domain_name: "openstack.local"
+default_server_netmask: "255.255.255.0"
+default_server_gateway: "10.0.0.1"
+default_server_dns: "8.8.8.8"
+default_server_subnet: "10.0.0.0"
+
+# List of DHCP Subnets - These are iterated though and each will be created
+default_dhcp_default_lease_time: 21600                            # Default lease time
+default_dhcp_max_lease_time: 43200                                # Max lease time
+
+# DHCP system setup
+default_dhcp_list:
+  - netmask: "{{ default_server_netmask }}"                       # Netmask
+    gateway: "{{ default_server_gateway }}"                       # Gateway
+    dns: "{{ default_server_dns }}"                               # DNS
+    subnet: "{{ default_server_subnet }}"                         # Subnet mask
+    default_lease_time: "{{ default_dhcp_default_lease_time }}"   # Subnet Default lease time - The default is used if this is not defined
+    max_lease_time: "{{ default_dhcp_max_lease_time }}"           # Subnet Max lease time - The default is used if this is not defined
+    tftp_boot_path: /pxelinux.0                                   # Path for tftp of where to boot from first - The default is used if this is not defined
+    tftp_server: "{{ default_tftp_server }}"                      # The server hosting the TFTP server - The default is used if this is not defined
+    dhcp_default_domain_name: "{{ default_server_domain_name }}"  # Domain name
+
+# Determine the root disk. This can be statically set. By default this function
+# is run as an early command during preseed which will look at all active disks
+# and use the first one.
+default_root_disk: '$(fdisk -l | grep sd | grep -wo "dev.*:" | sed "s/\://" | head -n1)'

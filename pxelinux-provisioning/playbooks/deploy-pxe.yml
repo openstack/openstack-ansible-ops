@@ -1,0 +1,268 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in witing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Deploy PXE
+  hosts: pxe_hosts
+  gather_facts: "{{ gather_facts | default(true) }}"
+  pre_tasks:
+    - name: Gather variables for each operating system
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
+      tags:
+        - always
+
+    - name: Install host distro packages
+      package:
+        pkg: "{{ item }}"
+        state: "latest"
+        update_cache: yes
+        cache_valid_time: 600
+      with_items: "{{ default_pxe_distro_packages }}"
+
+    - name: Create base directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      with_items:
+        - /var/www/pxe
+        - /var/www/pxe/images
+        - /var/www/pxe/iso
+        - /var/www/pxe/networking
+        - /var/www/pxe/scripts
+        - /var/www/pxe/templates
+        - /var/lib/tftpboot
+        - /var/lib/tftpboot/boot-screens
+        - /var/lib/tftpboot/preseed
+        - /var/lib/tftpboot/pxelinux.cfg
+
+    - name: Get root public key
+      command: cat /root/.ssh/id_rsa.pub
+      register: public_key_get
+      changed_when: false
+      when:
+        - default_tftp_ssh_key is undefined
+
+    - name: Set key facts
+      set_fact:
+        default_tftp_ssh_key: "{{ public_key_get.stdout }}"
+      when:
+        - default_tftp_ssh_key is undefined
+
+  tasks:
+    - name: Drop NGINX config
+      copy:
+        src: "templates/pxe/sites-enabled.default.j2"
+        dest: /etc/nginx/sites-enabled/default
+        mode: "0644"
+        owner: root
+        group: root
+      notify:
+        - restart nginx
+
+    - name: Drop tftp-hpa configs
+      copy:
+        src: "templates/pxe/tftp/tftp-hpa.j2"
+        dest: /etc/default/tftpd-hpa
+        mode: "0644"
+        owner: root
+        group: root
+      notify:
+        - restart tftp-hpa
+
+    - name: Drop inetd configs
+      copy:
+        src: "templates/pxe/tftp/inetd.conf.j2"
+        dest: /etc/default/tftpd-hpa
+        mode: "0644"
+        owner: root
+        group: root
+      notify:
+        - restart tftp-hpa
+
+    - name: Download image iso(s)
+      get_url:
+        url: "{{ item.value.image_iso_url }}"
+        dest: "/var/www/pxe/iso/{{ item.value.image_name }}"
+      with_dict: "{{ default_images }}"
+
+    - name: Clean image directory
+      file:
+        path: "/var/www/pxe/images/{{ item.value.image_short_name }}"
+        state: absent
+      with_dict: "{{ default_images }}"
+
+    - name: Create image directory
+      file:
+        path: "/var/www/pxe/images/{{ item.value.image_short_name }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      with_dict: "{{ default_images }}"
+
+    - name: Extract ISO(s) contents
+      command: "7z x /var/www/pxe/iso/{{ item.value.image_name }}"
+      args:
+        chdir: "/var/www/pxe/images/{{ item.value.image_short_name }}"
+      with_dict: "{{ default_images }}"
+
+    - name: Download pxelinux
+      get_url:
+        url: "{{ default_pxelinux_url }}"
+        dest: "/var/www/pxe/{{ default_pxelinux_name }}"
+        tmp_dest: /tmp/
+
+    - name: Clean pxe image directory
+      file:
+        path: "/var/www/pxe/{{ default_pxelinux_short_name }}"
+        state: absent
+
+    - name: Extract pxelinux contents
+      command: "tar -xf /var/www/pxe/{{ default_pxelinux_name }}"
+      args:
+        chdir: "/var/www/pxe"
+
+    - name: Drop pxelinux.cfg default menu
+      copy:
+        src: "templates/pxe/tftp/pxelinux.cfg.default.j2"
+        dest: "{{ item }}"
+        mode: "0644"
+        owner: root
+        group: root
+      with_items:
+        - /var/lib/tftpboot/pxelinux.cfg/default
+        - /var/lib/tftpboot/boot-screens/syslinux.cfg
+
+    # These links are using the shell command because the file module does not create hard links
+    - name: Create hard links
+      shell: |
+        ln -f /var/www/pxe/{{ default_pxelinux_short_name }}/bios/com32/elflink/ldlinux/ldlinux.c32 /var/lib/tftpboot/ldlinux.c32
+        ln -f /var/www/pxe/{{ default_pxelinux_short_name }}/bios/core/pxelinux.0 /var/lib/tftpboot/pxelinux.0
+        ln -f /var/www/pxe/{{ default_pxelinux_short_name }}/bios/com32/lib/libcom32.c32 /var/lib/tftpboot/boot-screens/libcom32.c32
+        ln -f /var/www/pxe/{{ default_pxelinux_short_name }}/bios/com32/libutil/libutil.c32 /var/lib/tftpboot/boot-screens/libutil.c32
+        ln -f /var/www/pxe/{{ default_pxelinux_short_name }}/bios/com32/menu/vesamenu.c32 /var/lib/tftpboot/boot-screens/vesamenu.c32
+
+    - name: Drop boot-screens default menu
+      template:
+        src: "templates/pxe/tftp/menu.cfg.j2"
+        dest: /var/lib/tftpboot/boot-screens/menu.cfg
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Drop tftp-hpa configs
+      template:
+        src: "templates/pxe/tftp/tftp-hpa.j2"
+        dest: /etc/default/tftpd-hpa
+        mode: "0644"
+        owner: root
+        group: root
+      notify:
+        - restart tftp-hpa
+
+    - name: tftp configs for servers
+      template:
+        src: "templates/pxe/tftp/pxelinux.cfg.macaddr.j2"
+        dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ hostvars[item]['server_mac_address'] | replace(':', '-') | upper }}"
+        mode: "0644"
+        owner: root
+        group: root
+      with_items: "{{ groups['pxe_servers'] }}"
+
+    - name: Preseeds for pxe scripts
+      template:
+        src: "templates/pxe/{{ item.value.image_type }}/{{ item.value.image_preseed }}-post-install-script.sh.j2"
+        dest: "/var/www/pxe/scripts/{{ item.value.image_preseed }}-post-install-script.sh"
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict: "{{ default_images }}"
+
+    - name: Preseeds for pxe
+      template:
+        src: "templates/pxe/{{ item.value.image_type }}/{{ item.value.image_preseed }}.preseed.j2"
+        dest: "/var/lib/tftpboot/preseed/{{ item.value.image_preseed }}.preseed"
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict: "{{ default_images }}"
+
+    - name: Create netboot bind mount path
+      file:
+        path: "/var/lib/tftpboot/{{ item.value.image_short_name }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      with_dict: "{{ default_images }}"
+
+    - name: Unbind mount netboot images
+      mount:
+        name: "/var/lib/tftpboot/{{ item.value.image_short_name }}"
+        src: "/var/www/pxe/images/{{ item.value.image_netboot }}"
+        opts: bind
+        fstype: none
+        state: unmounted
+      register: fstab
+      with_dict: "{{ default_images }}"
+
+    - name: Ensure permissions are correct
+      shell: |
+        # Fix perms if needed
+        find /var/lib/tftpboot -type d -exec chmod 0755 {} \;
+        find /var/lib/tftpboot -type f -exec chmod 0644 {} \;
+        find /var/www/pxe -type d -exec chmod 0755 {} \;
+
+    - name: Bind mount netboot images
+      mount:
+        name: "/var/lib/tftpboot/{{ item.value.image_short_name }}"
+        src: "/var/www/pxe/images/{{ item.value.image_netboot }}"
+        opts: bind
+        fstype: none
+        state: mounted
+      register: fstab
+      with_dict: "{{ default_images }}"
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: "nginx"
+        state: restarted
+        enabled: yes
+
+    - name: restart tftp-hpa
+      systemd:
+        name: "tftpd-hpa"
+        state: restarted
+        enabled: yes
+
+    - name: restart inetd
+      systemd:
+        name: "inetutils-inetd"
+        state: restarted
+        enabled: yes
+
+  tags:
+    - deploy-pxe
