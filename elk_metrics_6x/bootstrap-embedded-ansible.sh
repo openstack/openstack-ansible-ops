@@ -31,16 +31,16 @@ if [[ ! -d "/opt/ansible25/repositories/roles/systemd_service" ]]; then
 fi
 
 if [[ -f "/etc/openstack_deploy/openstack_inventory.json" ]]; then
-  mkdir -p /opt/ansible25/inventrory
-  cat > /opt/ansible25/inventrory/openstack_inventory.sh <<EOF
+  mkdir -p /opt/ansible25/inventory
+  cat > /opt/ansible25/inventory/openstack_inventory.sh <<EOF
 #!/usr/bin/env bash
 cat /etc/openstack_deploy/openstack_inventory.json
 EOF
-  chmod +x /opt/ansible25/inventrory/openstack_inventory.sh
+  chmod +x /opt/ansible25/inventory/openstack_inventory.sh
 fi
 
 export ANSIBLE_ROLES_PATH="/opt/ansible25/repositories/roles"
 export ANSIBLE_ACTION_PLUGINS="/opt/ansible25/repositories/ansible-config_template/action"
-export ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY:-/opt/ansible25/inventrory/openstack_inventory.sh}"
+export ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY:-/opt/ansible25/inventory/openstack_inventory.sh}"
 
 export ANSIBLE_USER_VARS="$(for i in $(ls /etc/openstack_deploy/user_*secret*.yml); do echo -n "-e@$i "; done)"
