@@ -1,0 +1,9 @@
+---
+- name: systemd_service
+  scm: git
+  src: https://git.openstack.org/openstack/ansible-role-systemd_service
+  version: master
+- name: config_template
+  scm: git
+  src: https://git.openstack.org/openstack/ansible-config_template
+  version: master

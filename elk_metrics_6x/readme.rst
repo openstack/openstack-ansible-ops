@@ -11,16 +11,6 @@ with topbeat to gather metrics from hosts metrics to the ELK cluster.
 
 **These playbooks require Ansible 2.5+.**
 
-Before running these playbooks the ``systemd_service`` role is required and is
-used in community roles. If these playbooks are being run in an
-OpenStack-Ansible installation the required role will be resolved for you. If
-the Installation is outside of OpenStack-Ansible, clone the role or add it to an
-ansible role requirements file.
-
-.. code-block:: bash
-
-    git clone https://github.com/openstack/ansible-role-systemd_service /etc/ansible/roles/systemd_service
-
 
 OpenStack-Ansible Integration
 -----------------------------
@@ -119,30 +109,40 @@ Create the containers
    openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:kibana'
 
 
-Deployment | legacy environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Deploying | Installing with embedded Ansible
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If these playbooks are to be run in an environment that does not have access to
-modern Ansible source the script ``bootstrap-embeded-ansible.sh`` before running
-the playbooks. This script will install Ansible **2.5.2** in a virtual
-environment within ``/opt``. This will provide for everything needed to run
-these playbooks in an OpenStack-Ansible cloud without having to upgrade the
-Ansible version from within the legacy environment. When it comes time to
-execute these playbooks substite the ``openstack-ansible`` command with the
-full path to ``ansible-playbook`` within the embeded ansible virtual
-environment making sure to include the available user provided variables.
+If this is being executed on a system that already has Ansible installed but is
+incompatible with these playbooks the script `bootstrap-embedded-ansible.sh` can
+be sourced to grab an embedded version of Ansible prior to executing the
+playbooks.
 
-Example commands to deploy all of these playbooks using the embeded ansible.
-
-.. code-block:: bash
-
-    cd /opt/openstack-ansible-ops/elk_metrics_6x
-    source bootstrap-embeded-ansible.sh
-    /opt/ansible25/bin/ansible-playbook ${ANSIBLE_USER_VARS} site.yml
+``` bash
+source bootstrap-embedded-ansible.sh
+```
 
 
-Deploying | modern environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Deploying | Manually resolving the dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This playbook has external role dependencies. If Ansible is not installed with
+the `bootstrap-ansible.sh` script these dependencies can be resolved with the
+``ansible-galaxy`` command and the ``ansible-role-requirements.yml`` file.
+
+* Example galaxy execution
+
+``` bash
+ansible-galaxy install -r ansible-role-requirements.yml
+```
+
+Once the dependencies are set make sure to set the action plugin path to the
+location of the config_template action directory. This can be done using the
+environment variable `ANSIBLE_ACTION_PLUGINS` or through the use of an
+`ansible.cfg` file.
+
+
+Deploying | The environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install master/data elasticsearch nodes on the elastic-logstash containers,
 deploy logstash, deploy kibana, and then deploy all of the service beats.
@@ -150,7 +150,15 @@ deploy logstash, deploy kibana, and then deploy all of the service beats.
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/elk_metrics_6x
-    openstack-ansible site.yml
+    ansible-playbook site.yml
+
+
+* The `openstack-ansible` command can be used if the version of ansible on the
+  system is greater than **2.5**.
+
+
+The individual playbooks found within this repository can be independently run
+at anytime.
 
 
 Optional | add Grafana visualizations
