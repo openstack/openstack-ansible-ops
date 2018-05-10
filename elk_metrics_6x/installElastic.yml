@@ -78,6 +78,10 @@
         owner: elasticsearch
         group: elasticsearch
         recurse: true
+      register: e_perms
+      until: e_perms is success
+      retries: 3
+      delay: 1
       tags:
         - config
 

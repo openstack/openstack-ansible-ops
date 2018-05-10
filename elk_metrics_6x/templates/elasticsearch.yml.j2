@@ -32,7 +32,7 @@ bootstrap.memory_lock: false
 # ---------------------------------- Network -----------------------------------
 #
 # Set the bind address to a specific IP (IPv4 or IPv6):
-network.host: [127.0.0.1, {{ ansible_host }}]
+network.host: ["127.0.0.1", "{{ ansible_host }}"]
 # Set a custom port for HTTP:
 
 http.port: {{ elastic_port }}
@@ -43,8 +43,7 @@ http.port: {{ elastic_port }}
 #
 {% set IP_ARR=[] %}
 {% for host in groups['elastic-logstash'] %}
-{%   if IP_ARR.extend([hostvars[host]['ansible_host'] | string]) %}
-{%   endif %}
+{%   set _ = IP_ARR.insert(loop.index, (hostvars[host]['ansible_host'] | string)) %}
 {% endfor %}
 {% set available_nodes = (groups['elastic-logstash'] | length) %}
 {# the master node count takes half the available nodes or sets it's self as 1 #}
@@ -52,7 +51,7 @@ http.port: {{ elastic_port }}
 {# if the master node count is even, add one to it otherwise use the provided value #}
 {% set master_node_count = ((_master_node_count | int) % 2 != 0) | ternary(_master_node_count, (_master_node_count + 1)) %}
 
-discovery.zen.ping.unicast.hosts: {{ IP_ARR }}
+discovery.zen.ping.unicast.hosts: {{ IP_ARR | to_json }}
 #
 # Prevent the "split brain" by configuring the majority of nodes (total number of nodes / 2 + 1):
 discovery.zen.minimum_master_nodes: {{ master_node_count | int }}
@@ -68,7 +67,7 @@ node.data: {{ (inventory_hostname in (groups['elastic-logstash'][:master_node_co
 #
 # Block initial recovery after a full cluster restart until N nodes are started:
 #
-gateway.recover_after_nodes: {{ master_node_count }}
+gateway.recover_after_nodes: {{ master_node_count | int // 2 }}
 #
 # For more information, see the documentation at:
 # <http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-gateway.html>

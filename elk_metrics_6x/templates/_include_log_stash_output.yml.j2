@@ -1,14 +1,13 @@
 {% set IP_ARR=[] %}
 {% for host in groups['elastic-logstash'] %}
-{%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
-{%   endif %}
+{%   set _ = IP_ARR.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (logstash_beat_input_port | string))) %}
 {% endfor %}
 output.logstash:
   # Boolean flag to enable or disable the output module.
   enabled: true
 
   # The Logstash hosts
-  hosts: [{{ IP_ARR | map('regex_replace', '$', ':' ~ logstash_beat_input_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+  hosts: {{ IP_ARR | to_json }}
 
   # Number of workers per Logstash host.
   #worker: 1

@@ -6,14 +6,14 @@ node_name: ${HOSTNAME}
 
 # elastic curator vars
 # all retention options are in days
-elastic_logstash_retention: 28
-elastic_apm_retention: 14
-elastic_auditbeat_retention: 14
-elastic_filebeat_retention: 14
+elastic_logstash_retention: 14
+elastic_apm_retention: 3
+elastic_auditbeat_retention: 7
+elastic_filebeat_retention: 7
 elastic_heartbeat_retention: 7
 elastic_journalbeat_retention: 14
-elastic_metricbeat_retention: 14
-elastic_packetbeat_retention: 7
+elastic_metricbeat_retention: 3
+elastic_packetbeat_retention: 3
 
 # kibana vars
 kibana_interface: 0.0.0.0

@@ -17,7 +17,7 @@ metricbeat.config.modules:
   path: ${path.config}/conf.d/*.yml
 
   # Period on which files under path should be checked for changes
-  reload.period: 10s
+  reload.period: 30s
 
   # Set to true to enable config reloading
   reload.enabled: false
@@ -41,7 +41,7 @@ metricbeat.max_start_delay: 10s
 #          config:
 #            - module: etcd
 #              metricsets: ["leader", "self", "store"]
-#              period: 10s
+#              period: 30s
 #              hosts: ["${host}:2379"]
 
 #==========================  Modules configuration ============================
@@ -63,7 +63,7 @@ metricbeat.modules:
     - diskio          # Disk IO
     - socket          # Sockets and connection info (linux only)
   enabled: true
-  period: 10s
+  period: 30s
   processes: ['.*']
 
   # Configure the metric types that are included by these metricsets.
@@ -115,14 +115,14 @@ metricbeat.modules:
 #- module: aerospike
 #  metricsets: ["namespace"]
 #  enabled: false
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:3000"]
 #
 ##------------------------------- Apache Module -------------------------------
 {% if apache_enabled | default(false) | bool %}
 - module: apache
   metricsets: ["status"]
-  period: 10s
+  period: 30s
 #
 #  # Apache hosts
   hosts: ["http://127.0.0.1"]
@@ -138,24 +138,24 @@ metricbeat.modules:
 {% endif %}
 #
 #-------------------------------- Ceph Module --------------------------------
-{% if inventory_hostname in groups['ceph-mon'] | default([]) %}
+{% if ceph_enabled | default(false) | bool %}
 - module: ceph
   metricsets: ["cluster_disk", "cluster_health", "monitor_health", "pool_disk", "osd_tree"]
-  period: 10s
+  period: 30s
   hosts: ["localhost:5000"]
 #
 {% endif %}
 ##------------------------------ Couchbase Module -----------------------------
 #- module: couchbase
 #  metricsets: ["bucket", "cluster", "node"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:8091"]
 #
 ##------------------------------- Docker Module -------------------------------
 #- module: docker
 #  metricsets: ["container", "cpu", "diskio", "healthcheck", "info", "memory", "network"]
 #  hosts: ["unix:///var/run/docker.sock"]
-#  period: 10s
+#  period: 30s
 #
 #  # To connect to Docker over TLS you must specify a client and CA certificate.
 #  #ssl:
@@ -166,7 +166,7 @@ metricbeat.modules:
 ##----------------------------- Dropwizard Module -----------------------------
 #- module: dropwizard
 #  metricsets: ["collector"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:8080"]
 #  metrics_path: /metrics/metrics
 #  namespace: example
@@ -175,21 +175,21 @@ metricbeat.modules:
 {% if inventory_hostname in groups['elastic-logstash'] | default([]) %}
 - module: elasticsearch
   metricsets: ["node", "node_stats"]
-  period: 10s
+  period: 30s
   hosts: ["localhost:9200"]
 #
 {% endif %}
 ##-------------------------------- Etcd Module --------------------------------
 #- module: etcd
 #  metricsets: ["leader", "self", "store"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:2379"]
 #
 #
 ##------------------------------- Golang Module -------------------------------
 #- module: golang
 #  metricsets: ["expvar","heap"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:6060"]
 #  heap.path: "/debug/vars"
 #  expvar:
@@ -209,17 +209,17 @@ metricbeat.modules:
 #
 #
 ##------------------------------- HAProxy Module ------------------------------
-{% if inventory_hostname in groups['haproxy_all'] | default([]) %}
+{% if haproxy_enabled | default(false) | bool %}
 - module: haproxy
   metricsets: ["info", "stat"]
-  period: 10s
+  period: 30s
   hosts: ["tcp://127.0.0.1:14567"]
 #
 {% endif %}
 ##-------------------------------- HTTP Module --------------------------------
 #- module: http
 #  metricsets: ["json"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:80"]
 #  namespace: "json_namespace"
 #  path: "/"
@@ -233,7 +233,7 @@ metricbeat.modules:
 ##------------------------------- Jolokia Module ------------------------------
 #- module: jolokia
 #  metricsets: ["jmx"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost"]
 #  namespace: "metrics"
 #  path: "/jolokia/?ignoreErrors=true&canonicalNaming=false"
@@ -244,7 +244,7 @@ metricbeat.modules:
 ##-------------------------------- Kafka Module -------------------------------
 #- module: kafka
 #  metricsets: ["partition"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:9092"]
 #
 #  #client_id: metricbeat
@@ -272,7 +272,7 @@ metricbeat.modules:
 {% if inventory_hostname in groups['kibana'] | default([]) %}
 - module: kibana
   metricsets: ["status"]
-  period: 10s
+  period: 30s
   hosts: ["localhost:{{ kibana_port }}"]
 #
 {% endif %}
@@ -285,7 +285,7 @@ metricbeat.modules:
 #    - pod
 #    - container
 #    - volume
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:10255"]
 #
 ## State metrics from kube-state-metrics service:
@@ -297,7 +297,7 @@ metricbeat.modules:
 #    - state_replicaset
 #    - state_pod
 #    - state_container
-#  period: 10s
+#  period: 30s
 #  hosts: ["kube-state-metrics:8080"]
 #
 ## Kubernetes events
@@ -311,23 +311,23 @@ metricbeat.modules:
 - module: logstash
   metricsets: ["node", "node_stats"]
   enabled: false
-  period: 10s
+  period: 30s
   hosts: ["localhost:9600"]
 #
 #
 {% endif %}
 ##------------------------------ Memcached Module -----------------------------
-{% if inventory_hostname in groups['memcached_all'] | default([]) %}
+{% if memcached_enabled | default(false) | bool %}
 - module: memcached
   metricsets: ["stats"]
-  period: 10s
-  hosts: ["localhost:11211"]
+  period: 30s
+  hosts: ["127.0.0.1:11211"]
 
 {% endif %}
 ##------------------------------- MongoDB Module ------------------------------
 #- module: mongodb
 #  metricsets: ["dbstats", "status"]
-#  period: 10s
+#  period: 30s
 #
 #  # The hosts must be passed as MongoDB URLs in the format:
 #  # [mongodb://][user:pass@]host[:port].
@@ -343,10 +343,10 @@ metricbeat.modules:
 #  #password: pass
 #
 ##-------------------------------- MySQL Module -------------------------------
-{% if (inventory_hostname in groups['galera_all'] | default([])) and galera_root_user is defined and galera_root_password is defined %}
+{% if (mysql_enabled | default(false) | bool) and galera_root_user is defined and galera_root_password is defined %}
 - module: mysql
   metricsets: ["status"]
-  period: 10s
+  period: 30s
 #
 #  # Host DSN should be defined as "user:pass@tcp(127.0.0.1:3306)/"
 #  # The username and password can either be set in the DSN or using the username
@@ -369,7 +369,7 @@ metricbeat.modules:
 - module: nginx
   metricsets: ["stubstatus"]
   enabled: true
-  period: 10s
+  period: 30s
 
   # Nginx hosts
   hosts: ["http://127.0.0.1"]
@@ -380,7 +380,7 @@ metricbeat.modules:
 ##------------------------------- PHP_FPM Module ------------------------------
 #- module: php_fpm
 #  metricsets: ["pool"]
-#  period: 10s
+#  period: 30s
 #  status_path: "/status"
 #  hosts: ["localhost:8080"]
 #
@@ -396,7 +396,7 @@ metricbeat.modules:
 #    # Stats about every PostgreSQL process
 #    - activity
 #
-#  period: 10s
+#  period: 30s
 #
 #  # The host must be passed as PostgreSQL URL. Example:
 #  # postgres://localhost:5432?sslmode=disable
@@ -413,16 +413,16 @@ metricbeat.modules:
 ##----------------------------- Prometheus Module -----------------------------
 #- module: prometheus
 #  metricsets: ["stats"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:9090"]
 #  metrics_path: /metrics
 #  #namespace: example
 #
 ##------------------------------ RabbitMQ Module ------------------------------
-{% if inventory_hostname in groups['rabbitmq_all'] | default([]) and rabbitmq_monitoring_password is defined %}
+{% if (rabbitmq_enabled | default(false) | bool) and (rabbitmq_monitoring_password is defined) %}
 - module: rabbitmq
   metricsets: ["node", "queue"]
-  period: 10s
+  period: 30s
   hosts: ["localhost:5672", "localhost:5671", "localhost:15672", "localhost:15671"]
   username: {{ rabbitmq_monitoring_userid | default('monitoring') }}
   password: {{ rabbitmq_monitoring_password  }}
@@ -432,7 +432,7 @@ metricbeat.modules:
 ##-------------------------------- Redis Module -------------------------------
 #- module: redis
 #  metricsets: ["info", "keyspace"]
-#  period: 10s
+#  period: 30s
 #
 #  # Redis hosts
 #  hosts: ["127.0.0.1:6379"]
@@ -464,14 +464,14 @@ metricbeat.modules:
 {% if uwsgi_enabled | default(false) | bool %}
 - module: uwsgi
   metricsets: ["status"]
-  period: 10s
+  period: 30s
   hosts: ["tcp://127.0.0.1:9191"]
 #
 {% endif %}
 ##------------------------------- vSphere Module ------------------------------
 #- module: vsphere
 #  metricsets: ["datastore", "host", "virtualmachine"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["https://localhost/sdk"]
 #
 #  username: "user"
@@ -485,7 +485,7 @@ metricbeat.modules:
 ##------------------------------- Windows Module ------------------------------
 #- module: windows
 #  metricsets: ["perfmon"]
-#  period: 10s
+#  period: 30s
 #  perfmon.counters:
 #
 #- module: windows
@@ -495,7 +495,7 @@ metricbeat.modules:
 ##------------------------------ ZooKeeper Module -----------------------------
 #- module: zookeeper
 #  metricsets: ["mntr"]
-#  period: 10s
+#  period: 30s
 #  hosts: ["localhost:2181"]
 #
 #

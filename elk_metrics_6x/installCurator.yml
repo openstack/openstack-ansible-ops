@@ -91,7 +91,7 @@
               state: "started"
               options:
                 OnBootSec: 30min
-                OnUnitActiveSec: 48h
+                OnUnitActiveSec: 24h
                 Persistent: true
 
     - name: Enable and restart curator.timer

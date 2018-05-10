@@ -17,7 +17,7 @@ journalbeat:
   #cursor_state_file: .journalbeat-cursor-state
 
   # How frequently should we save the cursor to disk (defaults to 5s)
-  #cursor_flush_period: 5s
+  cursor_flush_period: 10s
 
   # Path to the file to store the queue of events pending (defaults to ".journalbeat-pending-queue")
   #pending_queue.file: .journalbeat-pending-queue
@@ -30,7 +30,7 @@ journalbeat:
   # In case of disaster most probably journalbeat won't get a chance to shutdown
   # itself gracefully and this flush period option will serve you as a
   # backup creation frequency option.
-  #pending_queue.flush_period: 1s
+  pending_queue.flush_period: 5s
 
   # Size of the buffered queue for the published and acknowledged messages
   #pending_queue.completed_queue_size: 8192
@@ -157,7 +157,12 @@ name: journalbeat
   # Scheme and port can be left out and will be set to the default (http and 9200)
   # In case you specify and additional path, the scheme is required: http://localhost:9200/path
   # IPv6 addresses should always be defined as: https://[2001:db8::1]:9200
-  #hosts: {% set IP_ARR=[] %}{% for host in groups['elastic-logstash'] %}{% if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}{% endif %}{% endfor %}[{{ IP_ARR | map('regex_replace', '$', ':' ~ elastic_port | string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+
+  #{% set IP_ARR=[] %}
+  #{% for host in groups['elastic-logstash'] %}
+  #{%   set _ = IP_ARR.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
+  #{% endfor %}
+  #hosts: {{ IP_ARR | to_json }}
 
   # Set gzip compression level.
   #compression_level: 0

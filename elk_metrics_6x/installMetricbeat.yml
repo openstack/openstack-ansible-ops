@@ -30,15 +30,45 @@
         path: /etc/apache2
       register: apache2
 
+    - name: Check for ceph
+      stat:
+        path: /etc/ceph
+      register: ceph
+
+    - name: Check for haproxy
+      stat:
+        path: /etc/haproxy
+      register: haproxy
+
+    - name: Check for docker
+      stat:
+        path: /var/run/docker.sock
+      register: docker
+
     - name: Check for httpd
       stat:
         path: /etc/httpd
       register: httpd
 
+    - name: Check for memcached
+      stat:
+        path: /etc/memcached.conf
+      register: memcached
+
+    - name: Check for mysql
+      stat:
+        path: /var/lib/mysql
+      register: mysql
+
     - name: Check for nginx
       stat:
         path: /etc/nginx/nginx.conf
       register: nginx
+
+    - name: Check for rabbitmq
+      stat:
+        path: /var/lib/rabbitmq
+      register: rabbitmq
 
     - name: Check for uwsgi
       stat:
@@ -48,7 +78,13 @@
     - name: Set discovery facts
       set_fact:
         apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
+        ceph_enabled: "{{ ceph.stat.exists | bool }}"
+        docker_enabled: "{{ docker.stat.exists | bool }}"
+        haproxy_enabled: "{{ haproxy.stat.exists | bool }}"
+        memcached_enabled: "{{ memcached.stat.exists | bool }}"
+        mysql_enabled: "{{ mysql.stat.exists | bool }}"
         nginx_enabled: "{{ nginx.stat.exists | bool }}"
+        rabbitmq_enabled: "{{ rabbitmq.stat.exists | bool }}"
         uwsgi_enabled: "{{ uwsgi.stat.exists | bool }}"
 
   post_tasks:
@@ -74,20 +110,18 @@
       shell: >-
         {% set IP_ARR=[] %}
         {% for host in groups['elastic-logstash'] %}
-        {%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
-        {%   endif %}
+        {%   set _ = IP_ARR.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
         {% endfor %}
-        {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
         metricbeat setup
         {{ item }}
         -E 'output.logstash.enabled=false'
-        -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
+        -E 'output.elasticsearch.hosts={{ IP_ARR | to_json }}'
         -e -v
       with_items:
         - "--template"
         - "--dashboards"
       register: templates
-      until: templates | success
+      until: templates is success
       retries: 3
       delay: 2
   tags:

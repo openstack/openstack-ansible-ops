@@ -85,7 +85,7 @@ heartbeat.monitors:
   #enabled: true
 
   # Configure task schedule
-  schedule: '@every 30s' # every 30 seconds from start of beat
+  schedule: '@every 45s' # every 30 seconds from start of beat
 
   # configure hosts to ping.
   # Entries can be:
@@ -166,7 +166,7 @@ heartbeat.monitors:
   #enabled: true
 
   # Configure task schedule
-  schedule: '@every 30s' # every 30 seconds from start of beat
+  schedule: '@every 60s' # every 30 seconds from start of beat
 
   # Configure URLs to ping
   urls: [{{ hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]

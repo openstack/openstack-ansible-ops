@@ -150,7 +150,7 @@ deploy logstash, deploy kibana, and then deploy all of the service beats.
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/elk_metrics_6x
-    ansible-playbook site.yml
+    ansible-playbook site.yml $USER_VARS
 
 
 * The `openstack-ansible` command can be used if the version of ansible on the

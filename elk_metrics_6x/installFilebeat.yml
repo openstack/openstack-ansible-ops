@@ -149,20 +149,18 @@
       shell: >-
         {% set IP_ARR=[] %}
         {% for host in groups['elastic-logstash'] %}
-        {%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
-        {%   endif %}
+        {%   set _ = IP_ARR.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
         {% endfor %}
-        {% set elasticsearch_hosts = [IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' )] %}
         filebeat setup
         {{ item }}
         -E 'output.logstash.enabled=false'
-        -E 'output.elasticsearch.hosts={{ elasticsearch_hosts }}'
+        -E 'output.elasticsearch.hosts={{ IP_ARR | to_json }}'
         -e -v
       with_items:
         - "--template"
         - "--dashboards"
       register: templates
-      until: templates | success
+      until: templates is success
       retries: 3
       delay: 2
   tags:

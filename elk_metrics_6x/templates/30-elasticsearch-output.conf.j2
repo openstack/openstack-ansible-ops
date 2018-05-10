@@ -1,11 +1,10 @@
 {% set IP_ARR=[] %}
 {% for host in groups['elastic-logstash'] %}
-{%   if IP_ARR.insert(loop.index,hostvars[host]['ansible_host']) %}
-{%   endif %}
-{% endfor -%}
+{%   set _ = IP_ARR.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
+{% endfor %}
 output {
   elasticsearch {
-    hosts => [{{ IP_ARR | map('regex_replace', '$', ':' ~ elastic_port|string()) | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+    hosts => {{ IP_ARR | to_json }}
     sniffing => true
     manage_template => false
     index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
