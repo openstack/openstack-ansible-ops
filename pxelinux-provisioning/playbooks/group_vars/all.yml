@@ -27,6 +27,7 @@ default_acng_bind_address: 0.0.0.0
 # the type of preseed needed to deploy an given OS type.
 default_os_families:
   ubuntu-16.04-amd64: debian
+  ubuntu-18.04-amd64: debian
 
 # Default setting for Apt-Cacher-NG.
 default_mirror_proxy: 'http://{{ default_tftp_server }}:3142/'
@@ -40,7 +41,7 @@ default_tftp_port: 69
 default_tftp_boot_path: /pxelinux.0      # Path of where to boot from first
 
 # Default ISO images
-default_image_name: "ubuntu-16.04-amd64"
+default_image_name: "ubuntu-18.04-amd64"
 default_images:
   ubuntu-16.04-amd64:
     image_type: debian
@@ -52,6 +53,19 @@ default_images:
     image_kernel: "ubuntu-16.04.2-server-amd64/amd64/linux"
     image_initrd: "ubuntu-16.04.2-server-amd64/amd64/initrd.gz"
     image_netboot: "ubuntu-16.04.2-server-amd64/install/netboot/ubuntu-installer"
+    image_preseed: basic
+    image_preseed_option:
+      url: "tftp://{{ default_tftp_server }}/preseed/basic.preseed"
+  ubuntu-18.04-amd64:
+    image_type: debian
+    image_iso_url: "http://cdimage.ubuntu.com/ubuntu-server/daily/current/bionic-server-amd64.iso"
+    image_name: "bionic-server-amd64.iso"
+    image_short_name: "bionic-server-amd64"
+    image_default_boot: "bionic-server-amd64/amd64/boot-screens/menu.cfg"
+    image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical quiet splash"
+    image_kernel: "bionic-server-amd64/amd64/linux"
+    image_initrd: "bionic-server-amd64/amd64/initrd.gz"
+    image_netboot: "bionic-server-amd64/install/netboot/ubuntu-installer"
     image_preseed: basic
     image_preseed_option:
       url: "tftp://{{ default_tftp_server }}/preseed/basic.preseed"
