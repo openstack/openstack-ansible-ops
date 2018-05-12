@@ -22,7 +22,7 @@ ansible-playbook -vv \
                  -e setup_host=${SETUP_HOST:-"true"} \
                  -e setup_pxeboot=${SETUP_PXEBOOT:-"true"} \
                  -e setup_dhcpd=${SETUP_DHCPD:-"true"} \
-                 -e default_image=${DEFAULT_IMAGE:-"ubuntu-16.04-amd64"} \
+                 -e default_image=${DEFAULT_IMAGE:-"ubuntu-18.04-amd64"} \
                  -e default_http_proxy=${DEFAULT_HTTP_PROXY:-''} \
                  --force-handlers \
                  playbooks/site.yml

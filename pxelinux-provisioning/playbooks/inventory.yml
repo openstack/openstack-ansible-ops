@@ -38,7 +38,7 @@ pxe_servers:
     n1:
       ansible_os_family: "{{ default_images[default_image_name]['image_type'] }}"
       server_hostname: 'n1'
-      server_image: "ubuntu-16.04-amd64"
+      server_image: "ubuntu-18.04-amd64"
       server_default_interface: 'eth0'
       server_obm_ip: 10.0.0.200
       server_model: PowerEdge R710

@@ -38,7 +38,7 @@ following configuration.
     $name_used_in_inventory:
       ansible_os_family: "{{ default_images[default_image_name]['image_type'] }}"
       server_hostname: '$hostname'
-      server_image: "ubuntu-16.04-amd64"
+      server_image: "ubuntu-18.04-amd64"
       server_default_interface: 'eth0'
       server_obm_ip: 192.168.1.100
       server_model: PowerEdge R710
@@ -62,7 +62,7 @@ everything or the playbooks could be run with the following commmand.
                          -e setup_host=${SETUP_HOST:-"true"}
                          -e setup_pxeboot=${SETUP_PXEBOOT:-"true"}
                          -e setup_dhcpd=${SETUP_DHCPD:-"true"}
-                         -e default_image=${DEFAULT_IMAGE:-"ubuntu-16.04-amd64"}
+                         -e default_image=${DEFAULT_IMAGE:-"ubuntu-18.04-amd64"}
                          -e default_http_proxy=${DEFAULT_HTTP_PROXY:-''}
                          --force-handlers
                          playbooks/site.yml
