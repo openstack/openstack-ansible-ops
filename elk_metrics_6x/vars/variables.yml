@@ -89,6 +89,8 @@ heartbeat_services:
     type: http
     method: HEAD
     path: "/"
+    check_response:
+      status: 300
   - group: "{{ groups['heat_api'] | default([]) }}"
     name: heat api
     ports:
@@ -96,6 +98,8 @@ heartbeat_services:
     type: http
     method: HEAD
     path: "/"
+    check_response:
+      status: 300
   - group: "{{ groups['keystone_all'] | default([]) }}"
     name: keystone api
     ports:
@@ -104,6 +108,8 @@ heartbeat_services:
     type: http
     method: HEAD
     path: "/"
+    check_response:
+      status: 300
   - group: "{{ groups['neutron_server'] | default([]) }}"
     name: neutron server
     ports:
@@ -146,6 +152,8 @@ heartbeat_services:
     type: http
     method: HEAD
     path: "/"
+    check_response:
+      status: 300
   - group: "{{ groups['horizon_all'] | default([]) }}"
     name: horizon
     ports:

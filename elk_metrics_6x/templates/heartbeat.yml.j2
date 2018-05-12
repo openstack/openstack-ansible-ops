@@ -217,6 +217,8 @@ heartbeat.monitors:
     #body:
 
   # Expected response settings
+{%         if item.check_response is defined %}
+  check.response: {{ item.check_response }}
   #check.response:
     # Expected status code. If not configured or set to 0 any status code not
     # being 404 is accepted.
@@ -227,6 +229,7 @@ heartbeat.monitors:
 
     # Required response contents.
     #body:
+{%         endif %}
 {%       endif %}
 {%     endif %}
 {%   endif %}
