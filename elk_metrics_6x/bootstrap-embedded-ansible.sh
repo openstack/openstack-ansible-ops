@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export OPTS=()
 export ANSIBLE_EMBED_HOME="${HOME}/ansible25"
+OPTS+=('ANSIBLE_EMBED_HOME')
 
 if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
   apt-get update
@@ -51,21 +53,37 @@ EOF
   fi
 
   export USER_VARS="$(for i in $(ls -1 /etc/openstack_deploy/user_*secret*.yml); do echo -n "-e@$i "; done)"
+  OPTS+=('USER_VARS')
   echo "env USER_VARS set"
   echo "Extra users variables can be expanded by including the option \$USER_VARS on a playbook run."
 
   export ANSIBLE_INVENTORY="${ANSIBLE_EMBED_HOME}/inventory/openstack_inventory.sh"
+  OPTS+=('ANSIBLE_INVENTORY')
   echo "env ANSIBLE_INVENTORY set"
 fi
 
 export ANSIBLE_HOST_KEY_CHECKING="False"
+OPTS+=('ANSIBLE_HOST_KEY_CHECKING')
 echo "env ANSIBLE_HOST_KEY_CHECKING set"
 
 export ANSIBLE_ROLES_PATH="${ANSIBLE_EMBED_HOME}/repositories/roles"
+OPTS+=('ANSIBLE_ROLES_PATH')
 echo "env ANSIBLE_ACTION_PLUGINS set"
 
 export ANSIBLE_ACTION_PLUGINS="${ANSIBLE_EMBED_HOME}/repositories/ansible-config_template/action"
+OPTS+=('ANSIBLE_ACTION_PLUGINS')
 echo "env ANSIBLE_ROLES_PATH set"
 
 source ${ANSIBLE_EMBED_HOME}/bin/activate
 echo "Embedded Ansible has been activated. Run 'deactivate' to leave the embedded environment".
+
+function deactivate_embedded_venv {
+  deactivate
+  for i in ${OPTS[@]}; do
+    unset ${i}
+  done
+  unset deactivate_embedded_venv
+  unalias deactivate
+}
+
+alias deactivate=deactivate_embedded_venv

@@ -106,7 +106,7 @@ Create the containers
 .. code-block:: bash
 
    cd /opt/openstack-ansible/playbooks
-   openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:kibana'
+   openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:kibana:apm-server'
 
 
 Deploying | Installing with embedded Ansible
@@ -117,9 +117,9 @@ incompatible with these playbooks the script `bootstrap-embedded-ansible.sh` can
 be sourced to grab an embedded version of Ansible prior to executing the
 playbooks.
 
-``` bash
-source bootstrap-embedded-ansible.sh
-```
+.. code-block:: bash
+
+    source bootstrap-embedded-ansible.sh
 
 
 Deploying | Manually resolving the dependencies
@@ -131,9 +131,10 @@ the `bootstrap-ansible.sh` script these dependencies can be resolved with the
 
 * Example galaxy execution
 
-``` bash
-ansible-galaxy install -r ansible-role-requirements.yml
-```
+.. code-block:: bash
+
+    ansible-galaxy install -r ansible-role-requirements.yml
+
 
 Once the dependencies are set make sure to set the action plugin path to the
 location of the config_template action directory. This can be done using the
@@ -175,6 +176,15 @@ Included dashboards.
 
 * https://grafana.com/dashboards/5569
 * https://grafana.com/dashboards/5566
+
+Example command using the embedded Ansible from within the grafana directory.
+
+.. code-block:: bash
+
+    ansible-playbook ${USER_VARS} installGrafana.yml \
+                                  -e @../elk_metrics_6x/vars/variables.yml \
+                                  -e galera_root_user=root \
+                                  -e 'galera_address={{ internal_lb_vip_address }}'
 
 
 Trouble shooting
