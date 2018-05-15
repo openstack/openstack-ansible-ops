@@ -1,0 +1,5 @@
+---
+# This is the location where osquery(s) will live
+osquery_hosts:
+  hosts:
+    all:
