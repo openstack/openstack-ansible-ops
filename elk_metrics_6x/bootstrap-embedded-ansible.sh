@@ -37,6 +37,11 @@ if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/ansible-config_template" ]]; then
   git clone https://git.openstack.org/openstack/ansible-config_template "${ANSIBLE_EMBED_HOME}/repositories/ansible-config_template"
 fi
 
+if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/openstack_ansible_plugins" ]]; then
+  mkdir -p "${ANSIBLE_EMBED_HOME}/repositories"
+  git clone https://git.openstack.org/openstack/openstack-ansible-plugins "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins"
+fi
+
 if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_service" ]]; then
   mkdir -p "${ANSIBLE_EMBED_HOME}/repositories"
   git clone https://git.openstack.org/openstack/ansible-role-systemd_service "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_service"
@@ -68,11 +73,15 @@ echo "env ANSIBLE_HOST_KEY_CHECKING set"
 
 export ANSIBLE_ROLES_PATH="${ANSIBLE_EMBED_HOME}/repositories/roles"
 OPTS+=('ANSIBLE_ROLES_PATH')
-echo "env ANSIBLE_ACTION_PLUGINS set"
+echo "env ANSIBLE_ROLES_PATH set"
 
 export ANSIBLE_ACTION_PLUGINS="${ANSIBLE_EMBED_HOME}/repositories/ansible-config_template/action"
 OPTS+=('ANSIBLE_ACTION_PLUGINS')
-echo "env ANSIBLE_ROLES_PATH set"
+echo "env ANSIBLE_ACTION_PLUGINS set"
+
+export ANSIBLE_CONNECTION_PLUGINS="${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins/connection/"
+OPTS+=('ANSIBLE_CONNECTION_PLUGINS')
+echo "env ANSIBLE_CONNECTION_PLUGINS set"
 
 source ${ANSIBLE_EMBED_HOME}/bin/activate
 echo "Embedded Ansible has been activated. Run 'deactivate' to leave the embedded environment".
