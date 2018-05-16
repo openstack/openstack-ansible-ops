@@ -74,9 +74,10 @@
         - "/etc/journalbeat"
 
     - name: Install journalbeat
-      shell: |
-        . /etc/default/go1.10.1
-        /opt/go1.10.1/go/bin/go get -v github.com/mheese/journalbeat
+      shell: /opt/go1.10.1/go/bin/go get -v github.com/mheese/journalbeat
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/opt/go1.10.1/go/bin"
+        GOPATH: /usr/local
 
     - name: Drop journalbeat conf file
       template:
