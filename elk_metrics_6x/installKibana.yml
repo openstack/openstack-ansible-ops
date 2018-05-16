@@ -4,6 +4,9 @@
   become: true
   vars_files:
     - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   tasks:
     - include_tasks: common_task_install_elk_repo.yml
 

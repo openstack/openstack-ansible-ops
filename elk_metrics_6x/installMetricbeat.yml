@@ -5,6 +5,8 @@
   vars:
     haproxy_ssl: false
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   vars_files:
     - vars/variables.yml
 

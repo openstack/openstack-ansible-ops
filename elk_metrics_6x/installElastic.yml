@@ -2,8 +2,12 @@
 - name: Install Elastic Search
   hosts: "elastic-logstash"
   become: true
+
   vars_files:
     - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   tasks:
     - name: Set half memory fact
       set_fact:

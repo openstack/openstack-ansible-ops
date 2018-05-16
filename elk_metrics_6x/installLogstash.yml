@@ -4,6 +4,9 @@
   become: true
   vars_files:
     - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   tasks:
     - name: Set quarter memory fact
       set_fact:
