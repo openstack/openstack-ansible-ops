@@ -24,7 +24,8 @@
     state: present
     update_cache: yes
 
-- name: add metricsbeat repo to apt sources list
+- name: add elk repo to apt sources list
   apt_repository:
-    repo: 'deb https://artifacts.elastic.co/packages/6.x/apt stable main'
-    state: "{{ elk_package_state | default('present') }}"
+    repo: "{{ elk_repo.repo }}"
+    state: "{{ elk_repo.state }}"
+    filename: "{{ elk_repo.filename | default(omit) }}"

@@ -1,3 +1,8 @@
+# elk apt repo
+elk_repo:
+  repo: 'deb https://artifacts.elastic.co/packages/6.x/apt stable main'
+  state: "{{ elk_package_state | default('present') }}"
+
 # elastic search vars
 elastic_port: 9200
 elastic_hap_port: 9201
