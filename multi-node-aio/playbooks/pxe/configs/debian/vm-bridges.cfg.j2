@@ -15,8 +15,18 @@ iface br-{{ key }} inet {{ value.inet_type }}
     bridge_stp off
     bridge_waitport 10
     bridge_fd 0
-    bridge_ports {{ value.iface | default('none') }}
     offload-sg off
+{%   if value.iface is defined %}
+    pre-up ip link add br-veth-{{ key }} type veth peer name v{{ value.iface }} || true
+    # Set both ends UP
+    pre-up ip link set br-veth-{{ key }} up
+    pre-up ip link set v{{ value.iface }} up
+    # Delete veth pair on DOWN
+    post-down ip link del br-vlan-veth || true
+    bridge_ports {{ value.iface }} br-veth-{{ key }}
+{%   else %}
+    bridge_ports none
+{%   endif %}
 {%   if value.address is defined %}
     address {{ value.address }}
 {%   endif %}
