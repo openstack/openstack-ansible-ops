@@ -18,8 +18,15 @@ export ANSIBLE_EMBED_HOME="${HOME}/ansible25"
 OPTS+=('ANSIBLE_EMBED_HOME')
 
 if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
-  apt-get update
-  apt-get -y install python3-virtualenv python-virtualenv
+  if [  ${DISTRIB_RELEASE} = "14.04" ]; then
+    apt-get update
+    apt-get -y install python-virtualenv
+    echo "done installing python-virtualenv"
+  else
+    apt-get update
+    apt-get -y install python3-virtualenv python-virtualenv
+    echo "done installing python-virtualenv python3-virtualenv"
+  fi
   if [[ -f "/usr/bin/python2" ]]; then
     virtualenv --python="/usr/bin/python2" "${ANSIBLE_EMBED_HOME}"
   elif [[ -f "/usr/bin/python3" ]]; then
