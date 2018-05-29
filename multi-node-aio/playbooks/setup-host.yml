@@ -132,6 +132,7 @@
       lineinfile:
         line: "source /etc/network/interfaces.d/*.cfg"
         dest: "/etc/network/interfaces"
+        regexp: "^source /etc/network/interfaces.d/.*"
 
     - name: Set the host intefaces up
       command: "/sbin/ifup {{ item.value.iface }}"
