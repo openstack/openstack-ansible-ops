@@ -288,6 +288,50 @@ filebeat.prospectors:
 - type: log
 
   # Change to true to enable this prospector configuration.
+  enabled: {{ designate_enabled | bool }}
+
+  # Paths that should be crawled and fetched. Glob based paths.
+  # To fetch all ".log" files from a specific level of subdirectories
+  # /var/log/*/*.log can be used.
+  # For each file found under this path, a harvester is started.
+  # Make sure not file is defined twice as this can lead to unexpected behaviour.
+  paths:
+    - /var/log/designate/*.log
+    - /openstack/log/*designate*/*.log
+
+  ### Multiline options
+
+  # The regexp Pattern that has to be matched. The example pattern matches all lines starting with [
+  multiline.pattern: '^[0-9-]{10} +[0-9:\.]+ +[0-9]+ +[A-Z]+ +[A-Za-z0-9\._]+ \[|Traceback'
+
+  # Defines if the pattern set under pattern should be negated or not. Default is false.
+  multiline.negate: true
+
+  # Match can be set to "after" or "before". It is used to define if lines should be append to a pattern
+  # that was (not) matched before or after or as long as a pattern is not matched based on negate.
+  # Note: After is the equivalent to previous and before is the equivalent to to next in Logstash
+  multiline.match: after
+
+  # The maximum number of lines that are combined to one event.
+  # In case there are more the max_lines the additional lines are discarded.
+  # Default is 500
+  multiline.max_lines: 500
+
+  # After the defined timeout, an multiline event is sent even if no new pattern was found to start a new event
+  # Default is 5s.
+  multiline.timeout: 5s
+
+  # Optional additional fields. These fields can be freely picked
+  # to add additional information to the crawled log files for filtering
+  tags:
+    - openstack
+    - designate
+
+  symlinks: false
+
+- type: log
+
+  # Change to true to enable this prospector configuration.
   enabled: {{ cinder_enabled | bool }}
 
   # Paths that should be crawled and fetched. Glob based paths.

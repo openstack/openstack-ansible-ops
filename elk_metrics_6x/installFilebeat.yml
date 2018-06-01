@@ -109,6 +109,11 @@
         path: /var/lib/rabbitmq
       register: rabbitmq
 
+    - name: Check for designate
+      stat:
+        path: /var/log/designate
+      register: designate
+
     - name: Set discovery facts
       set_fact:
         apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
@@ -126,6 +131,7 @@
         octavia_enabled: "{{ (octavia.stat.exists | bool) or (inventory_hostname in groups['octavia_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*octavia.*') | list | length) > 0) }}"
         swift_enabled: "{{ (swift.stat.exists | bool) or (inventory_hostname in groups['swift_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*swift.*') | list | length) > 0) }}"
         rabbitmq_enabled: "{{ (rabbitmq.stat.exists | bool) or (inventory_hostname in groups['rabbitmq_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*rabbit.*') | list | length) > 0) }}"
+        designate_enabled: "{{ (designate.stat.exists | bool) or (inventory_hostname in groups['designate_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*designate.*') | list | length) > 0) }}"
 
 
   post_tasks:
