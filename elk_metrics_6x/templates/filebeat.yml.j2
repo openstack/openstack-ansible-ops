@@ -298,6 +298,7 @@ filebeat.prospectors:
   paths:
     - /var/log/designate/*.log
     - /openstack/log/*designate*/*.log
+    - /openstack/log/*designate*/designate/*.log
 
   ### Multiline options
 
@@ -342,6 +343,7 @@ filebeat.prospectors:
   paths:
     - /var/log/cinder/*.log
     - /openstack/log/*cinder*/*.log
+    - /openstack/log/*cinder*/cinder/*.log
 
   ### Multiline options
 
@@ -386,6 +388,7 @@ filebeat.prospectors:
   paths:
     - /var/log/glance/*.log
     - /openstack/log/*glance*/*.log
+    - /openstack/log/*glance*/glance/*.log
 
   ### Multiline options
 
@@ -430,6 +433,7 @@ filebeat.prospectors:
   paths:
     - /var/log/heat/*.log
     - /openstack/log/*heat*/*.log
+    - /openstack/log/*heat*/heat/*.log
 
   ### Multiline options
 
@@ -474,6 +478,7 @@ filebeat.prospectors:
   paths:
     - /var/log/horizon/*.log
     - /openstack/log/*horizon*/*.log
+    - /openstack/log/*horizon*/horizon/*.log
 
   ### Multiline options
 
@@ -518,6 +523,7 @@ filebeat.prospectors:
   paths:
     - /var/log/keystone/*.log
     - /openstack/log/*keystone*/*.log
+    - /openstack/log/*keystone*/keystone/*.log
 
   ### Multiline options
 
@@ -562,6 +568,7 @@ filebeat.prospectors:
   paths:
     - /var/log/neutron/*.log
     - /openstack/log/*neutron*/*.log
+    - /openstack/log/*neutron*/neutron/*.log
 
   ### Multiline options
 
@@ -606,6 +613,7 @@ filebeat.prospectors:
   paths:
     - /var/log/nova/*.log
     - /openstack/log/*nova*/*.log
+    - /openstack/log/*nova*/nova/*.log
 
   ### Multiline options
 
@@ -650,6 +658,7 @@ filebeat.prospectors:
   paths:
     - /var/log/octavia/*.log
     - /openstack/log/*octavia*/*.log
+    - /openstack/log/*octavia*/octavia/*.log
 
   ### Multiline options
 
@@ -850,8 +859,9 @@ filebeat.prospectors:
   # For each file found under this path, a harvester is started.
   # Make sure not file is defined twice as this can lead to unexpected behaviour.
   paths:
-    - /var/log/rabbit*/*
-    - /openstack/log/*rabbit*/*
+    - /var/log/rabbit*/*.log
+    - /openstack/log/*rabbit*/*.log
+    - /openstack/log/*rabbit*/rabbit*/*.log
 
   ### Multiline options
 
