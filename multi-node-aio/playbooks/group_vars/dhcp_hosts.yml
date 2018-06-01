@@ -20,7 +20,7 @@ dhcp_list:
     gateway: 10.0.2.1                            # Gateway
     dns: 8.8.8.8                                 # DNS
     subnet: 10.0.0.0                             # Subnet mask
-    range_start: 10.0.2.3                        # Start of DHCP range
+    range_start: 10.0.2.160                      # Start of DHCP range
     range_end: 10.0.3.254                        # End of DHCP range
     broadcast: 10.0.3.255                        # Network Broadcast address
     default_lease_time: 21600                    # Subnet Default lease time - The default is used if this is not defined
