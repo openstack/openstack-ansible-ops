@@ -22,7 +22,7 @@ default_dhcp_interface: "{{ default_interface }}"
 # To speed up the deployment apt-cacher NG is used on the pxe/dhcp server.
 default_acng_bind_address: 0.0.0.0
 
-# This is a mapping of OS familiies. While Ansible has a suitable interface for
+# This is a mapping of OS familiies. While Ansible has a suitable interface
 # for this it can vary in unpredictable ways. This setting it used to determine
 # the type of preseed needed to deploy an given OS type.
 default_os_families:
