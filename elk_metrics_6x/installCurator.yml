@@ -29,6 +29,7 @@
       pip:
         name: elasticsearch-curator
         state: "{{ elk_package_state | default('present') }}"
+        extra_args: --isolated
 
     - name: exit playbook after uninstall
       meta: end_play
