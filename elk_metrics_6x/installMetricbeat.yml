@@ -29,7 +29,7 @@
   tasks:
     - name: Check for apache
       stat:
-        path: /etc/apache2
+        path: /etc/apache2/sites-available
       register: apache2
 
     - name: Check for ceph
