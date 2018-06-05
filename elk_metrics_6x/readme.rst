@@ -61,6 +61,132 @@ lines.
           haproxy_balance_type: tcp
 
 
+Optional | add OSProfiler to an OpenStack-Ansible deployment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To initalize the `OSProfiler` module within openstack the following overrides
+can be applied to the to a user variables file. The hmac key needs to be defined
+consistently throughout the environment.
+
+Full example to initialize the `OSProfiler` modules throughout an
+OpenStack-Ansible deployment.
+
+.. code-block:: yaml
+
+    profiler_overrides: &os_profiler
+      profiler:
+        enabled: true
+        trace_sqlalchemy: true
+        hmac_keys: "UNIQUE_HMACKEY"  # This needs to be set consistently throughout the deployment
+        connection_string: "elasticsearch://{{ internal_lb_vip_address }}:9201"
+        es_doc_type: "notification"
+        es_scroll_time: "2m"
+        es_scroll_size: "10000"
+        filter_error_trace: "false"
+
+    aodh_aodh_conf_overrides: *os_profiler
+    barbican_config_overrides: *os_profiler
+    ceilometer_ceilometer_conf_overrides: *os_profiler
+    cinder_cinder_conf_overrides: *os_profiler
+    designate_designate_conf_overrides: *os_profiler
+    glance_glance_api_conf_overrides: *os_profiler
+    gnocchi_conf_overrides: *os_profiler
+    heat_heat_conf_overrides: *os_profiler
+    horizon_config_overrides: *os_profiler
+    ironic_ironic_conf_overrides: *os_profiler
+    keystone_keystone_conf_overrides: *os_profiler
+    magnum_config_overrides: *os_profiler
+    neutron_neutron_conf_overrides: *os_profiler
+    nova_nova_conf_overrides: *os_profiler
+    octavia_octavia_conf_overrides: *os_profiler
+    rally_config_overrides: *os_profiler
+    sahara_conf_overrides: *os_profiler
+    swift_swift_conf_overrides: *os_profiler
+    tacker_tacker_conf_overrides: *os_profiler
+    trove_config_overrides: *os_profiler
+
+
+If a deployer wishes to use multiple keys they can do so by with comma seperated
+list.
+
+.. code-block:: yaml
+
+    profiler_overrides: &os_profiler
+      profiler:
+        hmac_keys: "key1,key2"
+
+
+To add the `OSProfiler` section to an exist set of overrides, the `yaml` section
+can be added or dynamcally appended to a given hash using `yaml` tags.
+
+.. code-block:: yaml
+
+    profiler_overrides: &os_profiler
+      profiler:
+        enabled: true
+        hmac_keys: "UNIQUE_HMACKEY"  # This needs to be set consistently throughout the deployment
+        connection_string: "elasticsearch://{{ internal_lb_vip_address }}:9201"
+        es_doc_type: "notification"
+        es_scroll_time: "2m"
+        es_scroll_size: "10000"
+        filter_error_trace: "false"
+
+    # Example to merge the os_profiler tag to into an existing override hash
+    nova_nova_conf_overrides:
+      section1_override:
+        key: "value"
+      <<: *os_profiler
+
+
+While the `osprofiler` and `elasticsearch` libraries should be installed
+within all virtual environments by default, it's possible they're missing
+within a given deployment. To install these dependencies throughout the
+cluster without having to invoke a *repo-build* run the following *adhoc*
+Ansible command can by used.
+
+.. code-block:: bash
+
+    ansible -m shell -a 'find /openstack/venvs/* -maxdepth 0 -type d -exec {}/bin/pip install osprofiler elasticsearch \;' all
+
+
+Once the overides are inplace the **openstack-ansible** playbooks will need to
+be rerun. To simply inject these options into the system a deployer will be able
+to use the `*-config` tags that are apart of all `os_*` roles. The following
+example will run the **config** tag on **ALL** openstack playbooks.
+
+.. code-block:: bash
+
+    openstack-ansible setup-openstack.yml --tags "$(cat setup-openstack.yml | grep -wo 'os-.*' | awk -F'-' '{print $2 "-config"}' | tr '\n' ',')"
+
+
+Once the `OSProfiler` module has been initialized tasks can be profiled on
+demand by using the `--profile` or `--os-profile` switch in the various
+openstack clients along with one of the given hmac keys defined.
+
+Legacy profile example command.
+
+.. code-block:: bash
+
+    glance --profile key1 image-list
+
+
+Modern profile example command, requires `python-openstackclient >= 3.4.1` and
+the `osprofiler` library.
+
+.. code-block:: bash
+
+    openstack --os-profile key2 image list
+
+
+If the client library is not installed in the same path as the
+`python-openstackclient` client, run the following command to install the
+required library.
+
+.. code-block:: bash
+
+    pip install osprofiler
+
+
 Optional | run the haproxy-install playbook
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
