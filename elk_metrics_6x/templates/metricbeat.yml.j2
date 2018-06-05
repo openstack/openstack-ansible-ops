@@ -372,7 +372,7 @@ metricbeat.modules:
   period: 30s
 
   # Nginx hosts
-  hosts: ["http://127.0.0.1"]
+  hosts: ["http://{{ ansible_hostname }}"]
 
   # Path to server status. Default server-status
   server_status_path: "server-status"
