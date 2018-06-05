@@ -1,0 +1,29 @@
+---
+- name: Create known indexes in Elasticsearch
+  hosts: "elastic-logstash[0]"
+  become: true
+
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  tasks:
+    - name: Create basic indexes
+      uri:
+        url: http://127.0.0.1:9200/{{ item.name }}
+        method: PUT
+        body: "{{ item.index_options | to_json }}"
+        status_code: 200,400
+        body_format: json
+      with_items:
+        - name: "osprofiler-notifications"
+          index_options:
+            settings:
+              index:
+                codec: "best_compression"
+                mapping:
+                  total_fields:
+                    limit: "10000"
+                refresh_interval: "5s"
+                number_of_replicas: "1"

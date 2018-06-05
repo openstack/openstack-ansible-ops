@@ -18,6 +18,8 @@
 - import_playbook: installKibana.yml
 - import_playbook: installAPMserver.yml
 
+- import_playbook: createElasticIndexes.yml
+
 - import_playbook: installMetricbeat.yml
 - import_playbook: installPacketbeat.yml
 - import_playbook: installAuditbeat.yml
