@@ -213,7 +213,7 @@ metricbeat.modules:
 - module: haproxy
   metricsets: ["info", "stat"]
   period: 30s
-  hosts: ["tcp://127.0.0.1:14567"]
+  hosts: [ {{ elastic_metricbeat_haproxy_monitoring_hosts }} ]
 #
 {% endif %}
 ##-------------------------------- HTTP Module --------------------------------
