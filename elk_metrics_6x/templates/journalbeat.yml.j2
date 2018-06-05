@@ -280,7 +280,9 @@ name: journalbeat
 
 
 #----------------------------- Logstash output ---------------------------------
+{% with _named_index="journalbeat" %}
 {% include 'templates/_include_log_stash_output.yml.j2' %}
+{% endwith %}
 
 #------------------------------- Kafka output ----------------------------------
 #output.kafka:
