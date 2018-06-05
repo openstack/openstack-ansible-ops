@@ -1,0 +1,7 @@
+Listen 127.0.1.1:80
+
+<VirtualHost 127.0.1.1:80>
+  <Location "/server-status">
+    SetHandler server-status
+  </Location>
+</VirtualHost>
