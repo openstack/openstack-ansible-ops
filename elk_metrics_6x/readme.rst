@@ -162,6 +162,69 @@ The individual playbooks found within this repository can be independently run
 at anytime.
 
 
+Optional | Enable uwsgi stats
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Config overrides can be used to make uwsgi stats available on unix
+domain sockets. Any /tmp/*uwsgi-stats.sock will be picked up by Metricsbeat.
+
+.. code-block:: yaml
+
+    nova_api_metadata_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/nova-api-metadata-uwsgi-stats.sock"
+
+    keystone_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/keystone-uwsgi-stats.sock"
+
+    cinder_api_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/cinder-api-uwsgi-stats.sock"
+
+    glance_api_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/glance-api-uwsgi-stats.sock"
+
+    heat_api_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/heat-api-uwsgi-stats.sock"
+
+    heat_api_cfn_init_overrides:
+      uwsgi:
+        stats: "/tmp/heat-api-cfn-uwsgi-stats.sock"
+
+    nova_api_metadata_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/nova-api-metadata-uwsgi-stats.sock"
+
+    nova_api_os_compute_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/nova-api-os-compute-uwsgi-stats.sock"
+
+    nova_placement_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/nova-placement-uwsgi-stats.sock"
+
+    octavia_api_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/octavia-api-uwsgi-stats.sock"
+
+    sahara_api_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/sahara-api-uwsgi-stats.sock"
+
+    ironic_api_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/ironic-api-uwsgi-stats.sock"
+
+    magnum_api_uwsgi_ini_overrides:
+      uwsgi:
+        stats: "/tmp/magnum-api-uwsgi-stats.sock"
+
+Rerun all of the **openstack-ansible** playbooks to enable these stats. Use the *-config
+tags on all of the `os_*` roles.
+
 Optional | add Grafana visualizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
