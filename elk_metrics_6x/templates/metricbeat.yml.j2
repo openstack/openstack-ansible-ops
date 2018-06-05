@@ -423,7 +423,7 @@ metricbeat.modules:
 - module: rabbitmq
   metricsets: ["node", "queue"]
   period: 30s
-  hosts: ["localhost:5672", "localhost:5671", "localhost:15672", "localhost:15671"]
+  hosts: [ {{ elastic_metricbeat_rabbitmq_monitoring_hosts }} ]
   username: {{ rabbitmq_monitoring_userid | default('monitoring') }}
   password: {{ rabbitmq_monitoring_password  }}
 #

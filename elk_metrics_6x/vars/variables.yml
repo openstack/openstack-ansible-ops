@@ -4,6 +4,7 @@ elk_repo:
   state: "{{ elk_package_state | default('present') }}"
 
 #metricbeats monitoring endpoints
+elastic_metricbeat_rabbitmq_monitoring_hosts: '"localhost:15672"'
 elastic_metricbeat_haproxy_monitoring_hosts: '"unix:///var/run/haproxy.stat"'
 
 # elastic search vars
