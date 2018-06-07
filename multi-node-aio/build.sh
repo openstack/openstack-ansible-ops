@@ -33,6 +33,7 @@ ansible-playbook -vv \
                  -e setup_dhcpd=${SETUP_DHCPD:-"true"} \
                  -e deploy_vms=${DEPLOY_VMS:-"true"} \
                  -e deploy_osa=${DEPLOY_OSA:-"true"} \
+                 -e osa_repo=${OSA_REPO:-"https://git.openstack.org/openstack/openstack-ansible"} \
                  -e osa_branch=${OSA_BRANCH:-"master"} \
                  -e default_network=${DEFAULT_NETWORK:-"eth0"} \
                  -e default_image=${DEFAULT_IMAGE:-"ubuntu-16.04-amd64"} \

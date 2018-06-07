@@ -125,6 +125,9 @@ Instruct the VM to use the selected image, eg. ubuntu-16.04-amd64:
 Instruct the VM to use the selected kernel meta package, eg. linux-generic:
   ``DEFAULT_KERNEL=${DEFAULT_KERNEL:-linux-image-generic}``
 
+Set the OSA repo for this script to retrieve:
+  ``OSA_REPO=${OSA_REPO:-https://git.openstack.org/openstack/openstack-ansible}``
+
 Set the OSA branch for this script to deploy:
   ``OSA_BRANCH=${OSA_BRANCH:-master}``
 
