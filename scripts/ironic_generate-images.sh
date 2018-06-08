@@ -64,7 +64,7 @@ pushd ~/dib
   # install dib
   pip install pbr  # newton pbr is too old
   if [[ ! -d ~/dib/diskimage-builder ]]; then
-    git clone https://github.com/openstack/diskimage-builder/
+    git clone https://github.com/openstack/diskimage-builder/ -b 2.10.1
   fi
   # let's use a newer kernel for interfaces we may need
   if ! grep -q linux-image-generic-lts-xenial ~/dib/diskimage-builder/diskimage_builder/elements/ubuntu/package-installs.yaml; then
