@@ -18,6 +18,11 @@ path.data: /var/lib/elasticsearch
 #path.logs: /var/lib/elasticsearch/logs/
 path.logs: /var/log/elasticsearch/
 
+# Set the global default index store. More information on these settings can be
+# found here:
+# <https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-store.html>
+index.store.type: niofs
+
 # ----------------------------------- Memory -----------------------------------
 #
 # Lock the memory on startup:
@@ -81,3 +86,17 @@ gateway.recover_after_nodes: {{ master_node_count | int // 2 }}
 # Require explicit names when deleting indices:
 #
 # action.destructive_requires_name: true
+
+# Thread pool settings. For more on this see the documentation at:
+# <https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-threadpool.html>
+{% set thread_pool_size = ansible_processor_cores * ((ansible_processor_threads_per_core > 0) | ternary(ansible_processor_threads_per_core, 1)) %}
+thread_pool:
+  search:
+    size: {{ thread_pool_size }}
+    queue_size: {{ thread_pool_size * 64 }}
+  index:
+    size: {{ thread_pool_size }}
+    queue_size: {{ thread_pool_size * 128 }}
+  bulk:
+    size: {{ thread_pool_size }}
+    queue_size: {{ thread_pool_size * 256 }}
