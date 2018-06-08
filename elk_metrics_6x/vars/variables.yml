@@ -35,7 +35,7 @@ kibana_server_name: "{{ ansible_hostname }}"
 
 # logstash vars
 logstash_beat_input_port: 5044
-
+logstash_deploy_filters: true
 
 # Beat options
 heartbeat_services:

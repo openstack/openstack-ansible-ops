@@ -86,6 +86,51 @@
       tags:
         - config
 
+    - name: Logstash Extra Patterns
+      template:
+        src: "{{ item }}"
+        dest: "/opt/logstash/patterns/{{ item }}"
+        owner: "logstash"
+        group: "logstash"
+      with_items:
+        - extras
+      when:
+        - logstash_deploy_filters
+      tags:
+        - logstash-filters
+        - config
+
+    - name: Deploy Logstash configuration files
+      template:
+        src: "{{ item }}"
+        dest: "/etc/logstash/conf.d/{{ item }}"
+      with_items:
+        - 02-general.conf
+        - 03-nova.conf
+        - 04-neutron.conf
+        - 05-glance.conf
+        - 06-cinder.conf
+        - 07-libvirt.conf
+        - 08-apache.conf
+        - 09-heat.conf
+        - 10-mysql.conf
+        - 11-auth.conf
+        - 12-logstash.conf
+        - 13-swift.conf
+        - 14-keystone.conf
+        - 16-elasticsearch.conf
+        - 17-rabbitmq.conf
+        - 18-ceph.conf
+        - 19-nginx.conf
+        - 20-magnum.conf
+        - 21-octavia.conf
+        - 98-traceback.conf
+      when:
+        - logstash_deploy_filters
+      tags:
+        - logstash-filters
+        - config
+
     - name: Ensure logstash ownership
       file:
         path: /var/lib/logstash
