@@ -39,7 +39,7 @@ lines.
 .. code-block:: yaml
 
     haproxy_extra_services:
-     - service:
+      - service:
           haproxy_service_name: kibana
           haproxy_ssl: False
           haproxy_backend_nodes: "{{ groups['kibana'] | default([]) }}"
@@ -64,7 +64,7 @@ lines.
 Optional | add OSProfiler to an OpenStack-Ansible deployment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To initalize the `OSProfiler` module within openstack the following overrides
+To initialize the `OSProfiler` module within openstack the following overrides
 can be applied to the to a user variables file. The hmac key needs to be defined
 consistently throughout the environment.
 
@@ -106,7 +106,7 @@ OpenStack-Ansible deployment.
     trove_config_overrides: *os_profiler
 
 
-If a deployer wishes to use multiple keys they can do so by with comma seperated
+If a deployer wishes to use multiple keys they can do so by with comma separated
 list.
 
 .. code-block:: yaml

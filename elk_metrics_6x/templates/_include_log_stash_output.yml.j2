@@ -34,12 +34,11 @@ output.logstash:
   # if no error is encountered.
   slow_start: true
 
-{% if _named_index is defined %}
+{% if named_index is defined %}
   # Optional index name. The default index name is set to {{ named_index }}
   # in all lowercase.
   index: '{{ named_index }}'
 {% endif %}
-
   # SOCKS5 proxy server URL
   #proxy_url: socks5://user:password@socks5-server:2233
 
