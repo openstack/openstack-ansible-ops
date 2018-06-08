@@ -3,6 +3,9 @@ elk_repo:
   repo: 'deb https://artifacts.elastic.co/packages/6.x/apt stable main'
   state: "{{ elk_package_state | default('present') }}"
 
+#metricbeats monitoring endpoints
+elastic_metricbeat_haproxy_monitoring_hosts: '"unix:///var/run/haproxy.stat"'
+
 # elastic search vars
 elastic_port: 9200
 elastic_hap_port: 9201
