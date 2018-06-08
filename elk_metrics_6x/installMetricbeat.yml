@@ -89,6 +89,7 @@
         rabbitmq_enabled: "{{ rabbitmq.stat.exists | bool }}"
         uwsgi_enabled: "{{ uwsgi.stat.exists | bool }}"
 
+    # Apache 2 stats enablement
     - name: Drop apache2 stats site config
       template:
         src: apache-status.conf.j2
@@ -113,6 +114,26 @@
         name: apache2
         state: reloaded
       when: apache_enabled
+
+    # NGINX stats enablement
+    - name: Drop nginx stats site config
+      template:
+        src: nginx-status.conf.j2
+        dest: /etc/nginx/sites-available/nginx-status.conf
+      when: nginx_enabled
+
+    - name: Enable nginx stats site
+      file:
+        src: /etc/nginx/sites-available/nginx-status.conf
+        dest: /etc/nginx/sites-enabled/nginx-status.conf
+        state: link
+      when: nginx_enabled
+
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded
+      when: nginx_enabled
 
   post_tasks:
     - name: Drop metricbeat conf file
