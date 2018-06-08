@@ -321,7 +321,7 @@ metricbeat.modules:
 - module: memcached
   metricsets: ["stats"]
   period: 30s
-  hosts: ["127.0.0.1:11211"]
+  hosts: ["{{ ansible_hostname }}:11211"]
 
 {% endif %}
 ##------------------------------- MongoDB Module ------------------------------
