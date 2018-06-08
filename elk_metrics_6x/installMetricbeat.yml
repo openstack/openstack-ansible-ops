@@ -77,6 +77,13 @@
         path: /etc/uwsgi
       register: uwsgi
 
+    - name: Check for uwsgi stats sockets
+      find:
+        paths: /tmp
+        file_type: any
+        patterns: '*uwsgi-stats.sock'
+      register: uwsgi_find_sockets
+
     - name: Set discovery facts
       set_fact:
         apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
@@ -88,6 +95,7 @@
         nginx_enabled: "{{ nginx.stat.exists | bool }}"
         rabbitmq_enabled: "{{ rabbitmq.stat.exists | bool }}"
         uwsgi_enabled: "{{ uwsgi.stat.exists | bool }}"
+        uwsgi_sockets: "{{ uwsgi_find_sockets }}"
 
     # Apache 2 stats enablement
     - name: Drop apache2 stats site config

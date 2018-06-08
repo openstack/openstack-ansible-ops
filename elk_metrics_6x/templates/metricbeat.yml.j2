@@ -465,7 +465,11 @@ metricbeat.modules:
 - module: uwsgi
   metricsets: ["status"]
   period: 30s
+{%   if uwsgi_sockets.matched | int > 0 %}
+  hosts: [{% for file in uwsgi_sockets.files %}"unix://{{ file.path }}"{% if not loop.last %},{% endif %}{% endfor %}]
+{%   else %}
   hosts: ["tcp://127.0.0.1:9191"]
+{%   endif %}
 #
 {% endif %}
 ##------------------------------- vSphere Module ------------------------------
