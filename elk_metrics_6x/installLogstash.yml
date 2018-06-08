@@ -73,8 +73,8 @@
 
     - name: Drop Logstash conf for beats output
       template:
-        src: templates/30-elasticsearch-output.conf.j2
-        dest: /etc/logstash/conf.d/30-elasticsearch-output.conf
+        src: templates/99-elasticsearch-output.conf.j2
+        dest: /etc/logstash/conf.d/99-elasticsearch-output.conf
 
     - name: Drop elasticsearch conf file
       template:
@@ -85,6 +85,15 @@
           dest: /etc/logstash/jvm.options
       tags:
         - config
+
+    - name: Create patterns directory
+      file:
+        name: "/opt/logstash/patterns"
+        owner: "logstash"
+        group: "logstash"
+        state: directory
+      tags:
+        - logstash-patterns
 
     - name: Logstash Extra Patterns
       template:
