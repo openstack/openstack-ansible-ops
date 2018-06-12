@@ -10,6 +10,9 @@ mnaio1         ansible_host=10.0.2.1 ansible_connection=local
 infra1         ansible_host=10.0.236.100
 infra2         ansible_host=10.0.236.101
 infra3         ansible_host=10.0.236.102
+ceph1          ansible_host=10.0.236.145
+ceph2          ansible_host=10.0.236.146
+ceph3          ansible_host=10.0.236.147
 cinder1        ansible_host=10.0.236.130
 cinder2        ansible_host=10.0.236.131
 compute1       ansible_host=10.0.236.120
@@ -41,6 +44,9 @@ mnaio1
 # The group "pxe_servers" is used to create PXE specific configurations for
 #  each host machines.
 [pxe_servers]
+ceph1
+ceph2
+ceph3
 cinder1
 cinder2
 compute1
@@ -94,3 +100,33 @@ cinder2
 [compute_hosts]
 compute1
 compute2
+
+# The group "ceph_hosts" is used in the MNAIO setup to create the basic drive
+# setup for a ceph deployment
+[ceph_hosts]
+ceph1
+ceph2
+ceph3
+
+######################## CEPH-ANSIBLE RELATED GROUPINGS ########################
+
+# Used by ceph-ansible to determine which hosts to deploy to
+[ceph]
+ceph1 monitor_address=10.0.244.145
+ceph2 monitor_address=10.0.244.146
+ceph3 monitor_address=10.0.244.147
+
+# Where to install the ceph monitoring service for ceph-ansible
+[mons:children]
+infra_hosts
+
+# Where to install the osd services for ceph-ansible
+[osds:children]
+ceph
+
+# Where to install the radosgw services for ceph-ansible
+[rgws:children]
+ceph
+
+# Where to install the ceph metadata services if needed for ceph-ansible
+[mdss]

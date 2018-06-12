@@ -1,5 +1,4 @@
 ---
-
 # Tempest is being configured to use a known network
 tempest_public_subnet_cidr: 10.0.248.0/26
 
@@ -39,6 +38,40 @@ glance_glance_api_conf_overrides:
 # Reduce memory footprint for mnaio
 galera_innodb_buffer_pool_size: 1024M
 galera_gcache_size: 128M
+
+{% if enable_ceph_storage | bool %}
+### Ceph Config Overrides
+## Ceph cluster fsid (must be generated before first run)
+generate_fsid: true
+
+## ceph-ansible settings
+## See https://github.com/ceph/ceph-ansible/tree/master/group_vars for
+## additional configuration options availble.
+monitor_address_block: 10.0.236.0/22
+public_network: 10.0.236.0/22
+cluster_network: 10.0.244.0/22
+osd_scenario: lvm
+journal_size: {{ ceph_journal_size }}
+# ceph-ansible automatically creates pools & keys for OpenStack services
+openstack_config: true
+cinder_ceph_client: cinder
+glance_ceph_client: glance
+glance_default_store: rbd
+glance_rbd_store_pool: images
+nova_libvirt_images_rbd_pool: vms
+{% raw %}
+cinder_backends:
+  ceph:
+    volume_driver: cinder.volume.drivers.rbd.RBDDriver
+    rbd_pool: volumes
+    rbd_ceph_conf: /etc/ceph/ceph.conf
+    rbd_store_chunk_size: 8
+    volume_backend_name: rbddriver
+    rbd_user: "{{ cinder_ceph_client }}"
+    rbd_secret_uuid: "{{ cinder_ceph_client_uuid }}"
+    report_discard_supported: true
+{% endraw %}
+{% endif %}
 
 {% if osa_enable_elk_metrics | bool %}
 # NOTE(d34dh0r53): The disk detection to determine the logstash_queue_type

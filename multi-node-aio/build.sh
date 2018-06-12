@@ -26,6 +26,9 @@ ansible vm_hosts \
 
 export MNAIO_ANSIBLE_PARAMETERS=${MNAIO_ANSIBLE_PARAMETERS:-""}
 
+# TODO(odyssey4me):
+# Replace this build override mechanism to just respect the
+# group_vars instead of duplicating defaults here.
 ansible-playbook -vv \
                  -i ${MNAIO_INVENTORY:-"playbooks/inventory"} \
                  -e setup_host=${SETUP_HOST:-"true"} \
@@ -52,10 +55,11 @@ ansible-playbook -vv \
                  -e default_ubuntu_mirror_directory=${DEFAULT_MIRROR_DIR:-"/ubuntu"} \
                  -e cinder_vm_server_ram=${CINDER_VM_SERVER_RAM:-"2048"} \
                  -e compute_vm_server_ram=${COMPUTE_VM_SERVER_RAM:-"8196"} \
-                 -e infra_vm_server_ram=${INFRA_VM_SERVER_RAM:-"8196"} \
+                 -e infra_vm_server_ram=${INFRA_VM_SERVER_RAM:-"16384"} \
                  -e loadbalancer_vm_server_ram=${LOADBALANCER_VM_SERVER_RAM:-"2048"} \
                  -e logging_vm_server_ram=${LOGGING_VM_SERVER_RAM:-"2048"} \
                  -e swift_vm_server_ram=${SWIFT_VM_SERVER_RAM:-"2048"} \
+                 -e enable_ceph_storage=${ENABLE_CEPH_STORAGE=-"false"} \
                  -e container_tech=${CONTAINER_TECH:-"lxc"} \
                  -e ipxe_kernel_base_url=${IPXE_KERNEL_BASE_URL:-"http://boot.ipxe.org"} \
                  -e ipxe_path_url=${IPXE_PATH_URL:-""} ${MNAIO_ANSIBLE_PARAMETERS} \
