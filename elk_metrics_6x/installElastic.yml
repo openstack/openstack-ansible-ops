@@ -1,6 +1,6 @@
 ---
 - name: Install Elastic Search
-  hosts: "elastic-logstash"
+  hosts: "elastic-logstash:kibana"
   become: true
 
   vars_files:
@@ -8,16 +8,34 @@
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
+  pre_tasks:
+    - include_tasks: common_task_data_node_hosts.yml
+
   tasks:
-    - name: Set half memory fact
+    - name: Set memory fact to half
       set_fact:
-        h_mem: "{{ ansible_memtotal_mb // 2 }}"
+        h_mem: "{{ (ansible_memtotal_mb | int) // 2 }}"
+      tags:
+        - always
 
     - name: Set logstash facts
       set_fact:
         elastic_heap_size: "{{ ((h_mem | int) > 30720) | ternary(30720, h_mem) }}"
+      tags:
+        - always
+
+    - name: Set kibana elasticsearch facts
+      block:
+        - name: Set kibana as elasticsearch coordinators
+          set_fact:
+            elasticsearch_node_master: false
+            elasticsearch_node_data: false
+            elasticsearch_node_ingest: false
+            elastic_heap_size: "{{ (elastic_heap_size | int) // 3 }}"
       when:
-        - elastic_heap_size is undefined
+        - inventory_hostname in groups['kibana']
+      tags:
+        - always
 
     - name: Configure systcl vm.max_map_count=262144 on container hosts
       sysctl:

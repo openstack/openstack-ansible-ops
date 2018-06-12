@@ -11,6 +11,9 @@
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   pre_tasks:
+    - include_tasks: common_task_data_node_hosts.yml
+
+  tasks:
     - include_tasks: common_task_install_elk_repo.yml
 
     - name: Ensure heartbeat is installed
@@ -47,14 +50,10 @@
   tasks:
     - name: Load templates
       shell: >-
-        {% set IP_ARR=[] %}
-        {% for host in groups['elastic-logstash'] %}
-        {%   set _ = IP_ARR.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
-        {% endfor %}
         heartbeat setup
         {{ item }}
         -E 'output.logstash.enabled=false'
-        -E 'output.elasticsearch.hosts={{ IP_ARR | to_json }}'
+        -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
         -e -v
       with_items:
         - "--template"

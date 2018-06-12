@@ -2,9 +2,14 @@
 
 # Xms represents the initial size of total heap space
 # Xmx represents the maximum size of total heap space
-
+{% if (not (elasticsearch_node_master | default(master_node)) | bool) and (not (elasticsearch_node_data | default(data_node)) | bool) %}
+-Xms{{ (elastic_heap_size | int) // 2 }}m
+-Xmx{{ (elastic_heap_size | int) // 2 }}m
+{% else %}
 -Xms{{ elastic_heap_size }}m
 -Xmx{{ elastic_heap_size }}m
+{% endif %}
+
 
 ################################################################
 ## Expert settings
@@ -72,3 +77,6 @@
 # log GC status to a file with time stamps
 # ensure the directory exists
 #-Xloggc:${LS_GC_LOG_FILE}
+
+# Disable log4j because its not supported by elastic
+-Dlog4j2.disable.jmx=true

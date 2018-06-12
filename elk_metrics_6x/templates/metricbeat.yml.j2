@@ -172,7 +172,7 @@ metricbeat.modules:
 #  namespace: example
 #
 ##---------------------------- Elasticsearch Module ---------------------------
-{% if inventory_hostname in groups['elastic-logstash'] | default([]) %}
+{% if inventory_hostname in (groups['elastic-logstash'] | union(groups['kibana']) | unique) %}
 - module: elasticsearch
   metricsets: ["node", "node_stats"]
   period: 30s

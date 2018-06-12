@@ -25,6 +25,9 @@
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   pre_tasks:
+    - include_tasks: common_task_data_node_hosts.yml
+
+  tasks:
     - include_tasks: common_task_install_go1.10.1.yml
 
     - name: Ensure libsystemd-dev is installed
@@ -44,7 +47,6 @@
         - elk_package_state | default('present') == 'absent'
         - ansible_service_mgr == "systemd"
 
-  tasks:
     - name: create the system group
       group:
         name: "journalbeat"
@@ -130,13 +132,9 @@
 #   tasks:
 #     - name: Load templates
 #       shell: >-
-#         {% set IP_ARR=[] %}
-#         {% for host in groups['elastic-logstash'] %}
-#         {%   set _ = IP_ARR.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
-#         {% endfor %}
 #         /usr/local/bin/journalbeat -setup
 #         -E 'output.logstash.enabled=false'
-#         -E 'output.elasticsearch.hosts={{ IP_ARR | to_json }}'
+#         -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
 #         -e -v
 #       register: templates
 #       until: templates is success
