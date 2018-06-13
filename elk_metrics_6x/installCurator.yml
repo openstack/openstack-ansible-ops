@@ -25,11 +25,22 @@
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   pre_tasks:
+    - name: Ensure virtualenv is installed
+      apt:
+        name: "{{ item }}"
+        state: "present"
+        update_cache: true
+      with_items:
+        - python-virtualenv
+      tags:
+        - package_install
+
     - name: Ensure curator is installed
       pip:
-        name: elasticsearch-curator
+        name: "elasticsearch-curator<6"
         state: "{{ elk_package_state | default('present') }}"
         extra_args: --isolated
+        virtualenv: /opt/elasticsearch-curator
 
     - name: exit playbook after uninstall
       meta: end_play
@@ -87,7 +98,7 @@
         systemd_services:
           - service_name: "curator"
             execstarts:
-              - /usr/local/bin/curator
+              - /opt/elasticsearch-curator/bin/curator
                 --config /var/lib/curator/curator.yml
                 /var/lib/curator/actions.yml
             timer:
