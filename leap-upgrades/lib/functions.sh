@@ -172,8 +172,8 @@ function validate_upgrade_input {
 
     echo
     warning "Please enter the source series to upgrade from."
-    notice "JUNO, KILO or LIBERTY"
-    read -p 'Enter "JUNO", "KILO", or "LIBERTY" to continue: ' UPGRADE_FROM
+    notice "JUNO, KILO, LIBERTY or MITAKA"
+    read -p 'Enter "JUNO", "KILO", "LIBERTY" or "MITAKA" to continue: ' UPGRADE_FROM
     export INPUT_UPGRADE_FROM=${UPGRADE_FROM}
 
     if [[ ${INPUT_UPGRADE_FROM} == ${CODE_UPGRADE_FROM} ]]; then
@@ -206,19 +206,19 @@ function discover_code_version {
     else
         source /etc/openstack-release
         case "${DISTRIB_RELEASE%%.*}" in
-            *11)
+            *11|eol-kilo)
                 export CODE_UPGRADE_FROM="KILO"
                 notice "You seem to be running Kilo"
             ;;
-            *12)
+            *12|liberty-eol)
                 export CODE_UPGRADE_FROM="LIBERTY"
                 notice "You seem to be running Liberty"
             ;;
-            *13)
+            *13|mitaka-eol)
                 export CODE_UPGRADE_FROM="MITAKA"
                 notice "You seem to be running Mitaka"
             ;;
-            *14)
+            *14|newton-eol)
                 export CODE_UPGRADE_FROM="NEWTON"
                 notice "You seem to be running Newton"
             ;;
