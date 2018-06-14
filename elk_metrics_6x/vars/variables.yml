@@ -24,6 +24,10 @@ elastic_journalbeat_retention: 14
 elastic_metricbeat_retention: 3
 elastic_packetbeat_retention: 3
 
+# This is the URL external services can use to communicate with the
+# elasticsearch cluster.
+elastic_vip_url: "http://{{ internal_lb_vip_address is defined | ternary(internal_lb_vip_address + ':' + (elastic_hap_port | string), hostvars[groups['kibana'][0]]['ansible_host'] + ':' + (elastic_port | string)) }}"
+
 # kibana vars
 kibana_interface: 0.0.0.0
 kibana_port: 5601
@@ -286,7 +290,7 @@ grafana_datasources:
   - name: "all-Elasticsearch"
     type: "elasticsearch"
     access: "proxy"
-    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    url: "{{ elastic_vip_url }}"
     basicAuth: false
     basicAuthUser: ""
     basicAuthPassword: ""
@@ -301,7 +305,7 @@ grafana_datasources:
   - name: "auditbeat-Elasticsearch"
     type: "elasticsearch"
     access: "proxy"
-    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    url: "{{ elastic_vip_url }}"
     basicAuth: false
     basicAuthUser: ""
     basicAuthPassword: ""
@@ -316,7 +320,7 @@ grafana_datasources:
   - name: "filebeat-Elasticsearch"
     type: "elasticsearch"
     access: "proxy"
-    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    url: "{{ elastic_vip_url }}"
     basicAuth: false
     basicAuthUser: ""
     basicAuthPassword: ""
@@ -331,7 +335,7 @@ grafana_datasources:
   - name: "heartbeat-Elasticsearch"
     type: "elasticsearch"
     access: "proxy"
-    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    url: "{{ elastic_vip_url }}"
     basicAuth: false
     basicAuthUser: ""
     basicAuthPassword: ""
@@ -346,7 +350,7 @@ grafana_datasources:
   - name: "metricbeat-Elasticsearch"
     type: "elasticsearch"
     access: "proxy"
-    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    url: "{{ elastic_vip_url }}"
     basicAuth: false
     basicAuthUser: ""
     basicAuthPassword: ""
@@ -361,7 +365,7 @@ grafana_datasources:
   - name: "packetbeat-Elasticsearch"
     type: "elasticsearch"
     access: "proxy"
-    url: "http://{{ internal_lb_vip_address | default(hostvars[groups['elastic-logstash'][0]]['ansible_host']) }}:{{ elastic_hap_port }}"
+    url: "{{ elastic_vip_url }}"
     basicAuth: false
     basicAuthUser: ""
     basicAuthPassword: ""

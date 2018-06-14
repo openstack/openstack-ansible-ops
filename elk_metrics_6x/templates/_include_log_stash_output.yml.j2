@@ -1,13 +1,9 @@
-{% set IP_ARR=[] %}
-{% for host in groups['elastic-logstash'] %}
-{%   set _ = IP_ARR.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (logstash_beat_input_port | string))) %}
-{% endfor %}
 output.logstash:
   # Boolean flag to enable or disable the output module.
   enabled: true
 
   # The Logstash hosts
-  hosts: {{ IP_ARR | to_json }}
+  hosts: {{ logstash_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
 
   # Number of workers per Logstash host.
   worker: 1
@@ -33,6 +29,22 @@ output.logstash:
   # transaction.  The number of events to be sent increases up to `bulk_max_size`
   # if no error is encountered.
   slow_start: true
+
+{% set thread_pool_size = ansible_processor_cores * ((ansible_processor_threads_per_core > 0) | ternary(ansible_processor_threads_per_core, 1)) %}
+  # The maximum number of events to bulk in a single Logstash request. The
+  # default is the number of cores multiplied by the number of threads,
+  # the resultant is then multiplied again by 256 which results in a the defined
+  # bulk max size. If the Beat sends single events, the events are collected
+  # into batches. If the Beat publishes a large batch of events (larger than
+  # the value specified by bulk_max_size), the batch is split. Specifying a
+  # larger batch size can improve performance by lowering the overhead of
+  # sending events. However big batch sizes can also increase processing times,
+  # which might result in API errors, killed connections, timed-out publishing
+  # requests, and, ultimately, lower throughput. Setting bulk_max_size to values
+  # less than or equal to 0 disables the splitting of batches. When splitting
+  # is disabled, the queue decides on the number of events to be contained in a
+  # batch.
+  bulk_max_size: {{ thread_pool_size * 256 }}
 
 {% if named_index is defined %}
   # Optional index name. The default index name is set to {{ named_index }}

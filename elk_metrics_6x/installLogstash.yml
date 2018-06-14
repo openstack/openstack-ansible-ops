@@ -7,16 +7,21 @@
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
+  pre_tasks:
+    - include_tasks: common_task_data_node_hosts.yml
+
   tasks:
     - name: Set quarter memory fact
       set_fact:
-        q_mem: "{{ ansible_memtotal_mb // 4 }}"
+        q_mem: "{{ (ansible_memtotal_mb | int) // 4 }}"
+      tags:
+        - always
 
     - name: Set logstash facts
       set_fact:
         elastic_heap_size: "{{ ((q_mem | int) > 30720) | ternary(30720, q_mem) }}"
-      when:
-        - elastic_heap_size is undefined
+      tags:
+        - always
 
     - include_tasks: common_task_install_elk_repo.yml
 
@@ -71,7 +76,7 @@
         src: templates/10-syslog-filter.conf.j2
         dest: /etc/logstash/conf.d/10-syslog-filter.conf
 
-    - name: Drop Logstash conf for beats output
+    - name: Drop Logstash conf for elasticsearch output
       template:
         src: templates/99-elasticsearch-output.conf.j2
         dest: /etc/logstash/conf.d/99-elasticsearch-output.conf

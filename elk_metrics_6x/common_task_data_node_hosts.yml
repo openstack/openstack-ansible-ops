@@ -1,0 +1,70 @@
+---
+
+# the master node count takes half the available nodes or sets it's self as 1
+- name: Node count fact
+  set_fact:
+    storage_node_count: "{{ groups['elastic-logstash'] | length }}"
+
+- name: Master node pre-count fact
+  set_fact:
+    _master_node_count: "{{ ((storage_node_count | int) > 1) | ternary((((storage_node_count | int) // 2) | int), 1) }}"
+
+# if the master node count is even, add one to it otherwise use the provided value
+- name: Master node count fact
+  set_fact:
+    master_node_count: "{{ ((_master_node_count | int) % 2 != 0) | ternary((_master_node_count | int), ((_master_node_count | int) + 1)) }}"
+
+- name: Data nodes fact
+  set_fact:
+    data_nodes: "{{ (groups['elastic-logstash'][:master_node_count | int] + groups['elastic-logstash'][master_node_count | int::2]) }}"
+    master_nodes: "{{ groups['elastic-logstash'][:master_node_count | int] }}"
+    coordination_nodes: |-
+      {%   set nodes=[] %}
+      {%   for host in groups['kibana'] %}
+      {%     set _ = nodes.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
+      {%   endfor %}
+      {{ nodes }}
+    zen_nodes: |-
+      {%   set nodes=[] %}
+      {%   for host in (groups['elastic-logstash'] | union(groups['kibana'])) %}
+      {%     set _ = nodes.insert(loop.index, (hostvars[host]['ansible_host'] | string)) %}
+      {%   endfor %}
+      {{ nodes }}
+
+- name: Data node count fact
+  set_fact:
+    data_node_count: "{{ data_nodes | length }}"
+
+# if the master node count is even, add one to it otherwise use the provided value
+# set the data nodes to be all master and alternate through the remaining nodes
+- name: Node enablement
+  set_fact:
+    master_node: "{{ (inventory_hostname in master_nodes) | ternary(true, false) }}"
+    data_node: "{{ (inventory_hostname in data_nodes) | ternary(true, false) }}"
+
+# Set a data node facts. The data nodes, in the case of elasticsearch are also
+# ingest nodes.
+- name: Set data nodes
+  set_fact:
+    elasticsearch_data_hosts: |-
+      {% if inventory_hostname in data_nodes %}
+      {%   set data_hosts = ['127.0.0.1:' + (elastic_port | string)] %}
+      {% else %}
+      {%   set nodes=[] %}
+      {%   for host in data_nodes %}
+      {%     set _ = nodes.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
+      {%   endfor %}
+      {%   set data_hosts = nodes | shuffle(seed=inventory_hostname) %}
+      {% endif %}
+      {{ data_hosts }}
+    logstash_data_hosts: |-
+      {% if inventory_hostname in data_nodes %}
+      {%   set data_hosts = ['127.0.0.1:' + (logstash_beat_input_port | string)] %}
+      {% else %}
+      {%   set nodes=[] %}
+      {%   for host in data_nodes %}
+      {%     set _ = nodes.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (logstash_beat_input_port | string))) %}
+      {%   endfor %}
+      {%   set data_hosts = nodes | shuffle(seed=inventory_hostname) %}
+      {% endif %}
+      {{ data_hosts }}

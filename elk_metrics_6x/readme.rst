@@ -2,15 +2,15 @@ Install ELK with beats to gather metrics
 ########################################
 :tags: openstack, ansible
 
-
+..
 About this repository
 ---------------------
 
-This set of playbooks will deploy elk cluster (Elasticsearch, Logstash, Kibana)
-with topbeat to gather metrics from hosts metrics to the ELK cluster.
+This set of playbooks will deploy an elastic stack cluster (Elasticsearch,
+Logstash, Kibana) with beats to gather metrics from hosts and store them into
+the elastic stack.
 
 **These playbooks require Ansible 2.5+.**
-
 
 OpenStack-Ansible Integration
 -----------------------------
@@ -20,44 +20,53 @@ an OpenStack-Ansible deployment. For a simple example of standalone inventory,
 see ``inventory.example.yml``.
 
 
-Optional | Load balancer VIP address
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In order to use multi-node elasticsearch a loadbalancer is required. Haproxy can
-provide the load balancer functionality needed. The option
-`internal_lb_vip_address` is used as the endpoint (virtual IP address) services
-like Kibana will use when connecting to elasticsearch. If this option is
-omitted, the first node in the elasticsearch cluster will be used.
-
-
-Optional | configure haproxy endpoints
+Optional | Load balancer configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Edit the `/etc/openstack_deploy/user_variables.yml` file and add the following
-lines.
+Configure the Elasticsearch endpoints:
+  While the Elastic stack cluster does not need a load balancer to scale, it is
+  useful when accessing the Elasticsearch cluster using external tooling. Tools
+  like OSProfiler, Grafana, etc will all benefit from being able to interact
+  with Elasticsearch using the load balancer. This provides better fault
+  tolerance especially when compared to connecting to a single node.
+  The following section can be added to the `haproxy_extra_services` list to
+  create an Elasticsearch backend. The ingress port used to connect to
+  Elasticsearch is **9201**. The backend port is **9200**. If this backend is
+  setup make sure you set the `internal_lb_vip_address` on the CLI or within a
+  known variable file which will be sourced at runtime. If using HAProxy, edit
+  the `/etc/openstack_deploy/user_variables.yml` file and add the following
+  lines.
 
 .. code-block:: yaml
 
     haproxy_extra_services:
       - service:
-          haproxy_service_name: kibana
-          haproxy_ssl: False
-          haproxy_backend_nodes: "{{ groups['kibana'] | default([]) }}"
-          haproxy_port: 81  # This is set using the "kibana_nginx_port" variable
-          haproxy_balance_type: tcp
-      - service:
           haproxy_service_name: elastic-logstash
           haproxy_ssl: False
-          haproxy_backend_nodes: "{{ groups['elastic-logstash'] | default([]) }}"
-          haproxy_port: 5044  # This is set using the "logstash_beat_input_port" variable
-          haproxy_balance_type: tcp
-      - service:
-          haproxy_service_name: elastic-logstash
-          haproxy_ssl: False
-          haproxy_backend_nodes: "{{ groups['elastic-logstash'] | default([]) }}"
+          haproxy_backend_nodes: "{{ groups['Kibana'] | default([]) }}"  # Kibana nodes are also Elasticsearch coordination nodes
           haproxy_port: 9201  # This is set using the "elastic_hap_port" variable
           haproxy_check_port: 9200  # This is set using the "elastic_port" variable
           haproxy_backend_port: 9200  # This is set using the "elastic_port" variable
+          haproxy_balance_type: tcp
+
+
+Configure the Kibana endpoints:
+  It is recommended to use a load balancer with Kibana. Like Elasticsearch, a
+  load balancer is not required however without one users will need to directly
+  connect to a single Kibana node to access the dashboard. If a load balancer is
+  present it can provide a highly available address for users to access a pool
+  of Kibana nodes which will provide a much better user experience. If using
+  HAProxy, edit the `/etc/openstack_deploy/user_variables.yml` file and add the
+  following lines.
+
+.. code-block:: yaml
+
+    haproxy_extra_services:
+      - service:
+          haproxy_service_name: Kibana
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['Kibana'] | default([]) }}"
+          haproxy_port: 81  # This is set using the "Kibana_nginx_port" variable
           haproxy_balance_type: tcp
 
 
@@ -78,7 +87,7 @@ OpenStack-Ansible deployment.
         enabled: true
         trace_sqlalchemy: true
         hmac_keys: "UNIQUE_HMACKEY"  # This needs to be set consistently throughout the deployment
-        connection_string: "elasticsearch://{{ internal_lb_vip_address }}:9201"
+        connection_string: "Elasticsearch://{{ internal_lb_vip_address }}:9201"
         es_doc_type: "notification"
         es_scroll_time: "2m"
         es_scroll_size: "10000"
@@ -125,7 +134,7 @@ can be added or dynamcally appended to a given hash using `yaml` tags.
       profiler:
         enabled: true
         hmac_keys: "UNIQUE_HMACKEY"  # This needs to be set consistently throughout the deployment
-        connection_string: "elasticsearch://{{ internal_lb_vip_address }}:9201"
+        connection_string: "Elasticsearch://{{ internal_lb_vip_address }}:9201"
         es_doc_type: "notification"
         es_scroll_time: "2m"
         es_scroll_size: "10000"
@@ -138,18 +147,21 @@ can be added or dynamcally appended to a given hash using `yaml` tags.
       <<: *os_profiler
 
 
-While the `osprofiler` and `elasticsearch` libraries should be installed
+While the `osprofiler` and `Elasticsearch` libraries should be installed
 within all virtual environments by default, it's possible they're missing
 within a given deployment. To install these dependencies throughout the
 cluster without having to invoke a *repo-build* run the following *adhoc*
 Ansible command can by used.
 
+  The version of the Elasticsearch python library should match major version of
+  of Elasticsearch being deployed within the environment.
+
 .. code-block:: bash
 
-    ansible -m shell -a 'find /openstack/venvs/* -maxdepth 0 -type d -exec {}/bin/pip install osprofiler elasticsearch \;' all
+    ansible -m shell -a 'find /openstack/venvs/* -maxdepth 0 -type d -exec {}/bin/pip install osprofiler "elasticsearch>=6.0.0,<7.0.0" --isolated \;' all
 
 
-Once the overides are inplace the **openstack-ansible** playbooks will need to
+Once the overrides are in-place the **openstack-ansible** playbooks will need to
 be rerun. To simply inject these options into the system a deployer will be able
 to use the `*-config` tags that are apart of all `os_*` roles. The following
 example will run the **config** tag on **ALL** openstack playbooks.
@@ -220,8 +232,8 @@ Copy the conf.d file into place
     cp conf.d/elk.yml /etc/openstack_deploy/conf.d/
 
 In **elk.yml**, list your logging hosts under elastic-logstash_hosts to create
-the elasticsearch cluster in multiple containers and one logging host under
-kibana_hosts to create the kibana container
+the Elasticsearch cluster in multiple containers and one logging host under
+`kibana_hosts` to create the Kibana container
 
 .. code-block:: bash
 
@@ -232,7 +244,7 @@ Create the containers
 .. code-block:: bash
 
    cd /opt/openstack-ansible/playbooks
-   openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:kibana:apm-server'
+   openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:Kibana:apm-server'
 
 
 Deploying | Installing with embedded Ansible
@@ -271,8 +283,8 @@ environment variable `ANSIBLE_ACTION_PLUGINS` or through the use of an
 Deploying | The environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install master/data elasticsearch nodes on the elastic-logstash containers,
-deploy logstash, deploy kibana, and then deploy all of the service beats.
+Install master/data Elasticsearch nodes on the elastic-logstash containers,
+deploy logstash, deploy Kibana, and then deploy all of the service beats.
 
 .. code-block:: bash
 
@@ -295,10 +307,6 @@ Config overrides can be used to make uwsgi stats available on unix
 domain sockets. Any /tmp/*uwsgi-stats.sock will be picked up by Metricsbeat.
 
 .. code-block:: yaml
-
-    nova_api_metadata_uwsgi_ini_overrides:
-      uwsgi:
-        stats: "/tmp/nova-api-metadata-uwsgi-stats.sock"
 
     keystone_uwsgi_ini_overrides:
       uwsgi:
@@ -348,8 +356,14 @@ domain sockets. Any /tmp/*uwsgi-stats.sock will be picked up by Metricsbeat.
       uwsgi:
         stats: "/tmp/magnum-api-uwsgi-stats.sock"
 
-Rerun all of the **openstack-ansible** playbooks to enable these stats. Use the *-config
-tags on all of the `os_*` roles.
+Rerun all of the **openstack-ansible** playbooks to enable these stats. Use
+the `${service_name}-config` tags on all of the `os_*` roles. It's possible to
+auto-generate the tags list with the following command.
+
+.. code-block:: bash
+
+    openstack-ansible setup-openstack.yml --tags "$(cat setup-openstack.yml | grep -wo 'os-.*' | awk -F'-' '{print $2 "-config"}' | tr '\n' ',')"
+
 
 Optional | add Grafana visualizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -384,4 +398,4 @@ If everything goes bad, you can clean up with the following command
 .. code-block:: bash
 
      openstack-ansible /opt/openstack-ansible-ops/elk_metrics_6x/site.yml -e "elk_package_state=absent" --tags package_install
-     openstack-ansible /opt/openstack-ansible/playbooks/lxc-containers-destroy.yml --limit=kibana:elastic-logstash_all
+     openstack-ansible /opt/openstack-ansible/playbooks/lxc-containers-destroy.yml --limit=Kibana:elastic-logstash_all
