@@ -59,12 +59,24 @@
         state: "{{ elk_package_state | default('present') }}"
         install_recommends: yes
         update_cache: yes
+      register: _apt_task
+      until: _apt_task is success
+      retries: 3
+      delay: 2
+      tags:
+        - package_install
 
     - name: Ensure Logstash is installed
       apt:
         name: logstash
         state: "{{ elk_package_state | default('present') }}"
         update_cache: yes
+      register: _apt_task
+      until: _apt_task is success
+      retries: 3
+      delay: 2
+      tags:
+        - package_install
 
     - name: Drop Logstash conf for beats input
       template:

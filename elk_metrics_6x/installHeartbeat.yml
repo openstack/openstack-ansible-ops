@@ -21,6 +21,10 @@
         name: "heartbeat-elastic"
         state: "{{ elk_package_state | default('present') }}"
         update_cache: true
+      register: _apt_task
+      until: _apt_task is success
+      retries: 3
+      delay: 2
       tags:
         - package_install
 

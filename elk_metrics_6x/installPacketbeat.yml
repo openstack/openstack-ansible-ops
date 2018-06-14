@@ -24,6 +24,10 @@
       with_items:
         - tcpdump
         - packetbeat
+      register: _apt_task
+      until: _apt_task is success
+      retries: 3
+      delay: 2
       tags:
         - package_install
 
