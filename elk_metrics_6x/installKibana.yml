@@ -13,7 +13,7 @@
     - name: Ensure Nginx is installed
       apt:
         name: "{{ item }}"
-        state: present
+        state: "{{ elk_package_state | default('present') }}"
         update_cache: yes
       with_items:
         - nginx
@@ -42,7 +42,7 @@
     - name: Ensure kibana  is installed
       apt:
         name: kibana
-        state: present
+        state: "{{ elk_package_state | default('present') }}"
         update_cache: yes
 
     - name: Drop kibana conf file

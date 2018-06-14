@@ -56,14 +56,14 @@
     - name: Ensure Java is installed
       apt:
         name: openjdk-8-jre
-        state: present
+        state: "{{ elk_package_state | default('present') }}"
         install_recommends: yes
         update_cache: yes
 
     - name: Ensure Logstash is installed
       apt:
         name: logstash
-        state: present
+        state: "{{ elk_package_state | default('present') }}"
         update_cache: yes
 
     - name: Drop Logstash conf for beats input

@@ -390,6 +390,18 @@ Example command using the embedded Ansible from within the grafana directory.
                                   -e 'galera_address={{ internal_lb_vip_address }}'
 
 
+Upgrading the cluster
+---------------------
+
+To upgrade the packages throughout the elastic search cluster set the package
+state variable, `elk_package_state`, to latest.
+
+.. code-block:: bash
+
+    cd /opt/openstack-ansible-ops/elk_metrics_6x
+    ansible-playbook site.yml $USER_VARS -e 'elk_package_state="latest"'
+
+
 Trouble shooting
 ----------------
 

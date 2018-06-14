@@ -68,7 +68,7 @@
     - name: Ensure Java is installed
       apt:
         name: openjdk-8-jre
-        state: present
+        state: "{{ elk_package_state | default('present') }}"
         install_recommends: yes
         update_cache: yes
 
@@ -77,7 +77,7 @@
     - name: Ensure Elastic search is installed
       apt:
         name: elasticsearch
-        state: present
+        state: "{{ elk_package_state | default('present') }}"
         update_cache: yes
 
     - name: Drop elasticsearch conf file
