@@ -20,7 +20,7 @@ auditbeat.config.modules:
   reload.period: 60s
 
   # Set to true to enable config reloading
-  reload.enabled: false
+  reload.enabled: true
 
 # Maximum amount of time to randomly delay the start of a metricset. Use 0 to
 # disable startup delay.
@@ -38,7 +38,7 @@ auditbeat.modules:
   backlog_limit: 8196
   rate_limit: 0
   include_raw_message: false
-  include_warnings: false
+  include_warnings: true
 
 {% if not apply_security_hardening | default(true) | bool %}
   audit_rules: |
@@ -74,18 +74,26 @@ auditbeat.modules:
 - module: file_integrity
   paths:
   - /bin
+  - /etc/ansible/roles
   - /etc/apt
+  - /etc/apache2
+  - /etc/httpd
   - /etc/network
+  - /etc/nginx
+  - /etc/mysql
   - /etc/openstack_deploy
   - /etc/sysconfig
   - /etc/systemd
+  - /etc/uwsgi
   - /etc/yum
   - /etc/zypp
   - /openstack/venvs
+  - /opt/openstack-ansible
   - /sbin
   - /usr/bin
   - /usr/local/bin
   - /usr/sbin
+  - /var/lib/lxc
 
   # List of regular expressions to filter out notifications for unwanted files.
   # Wrap in single quotes to workaround YAML escaping rules. By default no files
