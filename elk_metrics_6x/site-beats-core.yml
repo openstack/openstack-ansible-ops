@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- import_playbook: site-elka.yml
-- import_playbook: site-beats-core.yml
-- import_playbook: site-beats-community.yml
+- import_playbook: installMetricbeat.yml
+- import_playbook: installPacketbeat.yml
+- import_playbook: installAuditbeat.yml
+- import_playbook: installHeartbeat.yml
+- import_playbook: installFilebeat.yml

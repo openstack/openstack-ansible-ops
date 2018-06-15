@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- import_playbook: site-elka.yml
-- import_playbook: site-beats-core.yml
-- import_playbook: site-beats-community.yml
+- import_playbook: installElastic.yml
+- import_playbook: installCurator.yml
+- import_playbook: installLogstash.yml
+- import_playbook: installKibana.yml
+- import_playbook: installAPMserver.yml
+- import_playbook: createElasticIndexes.yml
