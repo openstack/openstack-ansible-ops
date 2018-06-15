@@ -30,7 +30,10 @@ default_container_tech: "{{ container_tech | default('lxc') }}"
 
 ipxe_kernel_url: "http://boot.ipxe.org/ipxe.lkrn"
 
- # IP address, or domain name of the TFTP server
+# The timeout for the SSH check to the vm_servers
+vm_ssh_timeout: 1500
+
+# IP address, or domain name of the TFTP server
 tftp_server: "{{ hostvars[groups['pxe_hosts'][0]]['ansible_host'] | default(ansible_host) }}"
 # tftp_ssh_key: ''  # user defined ssh key, used to access the host
 tftp_port: 69

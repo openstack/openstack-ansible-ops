@@ -1,5 +1,5 @@
 ---
-# Copyright 2017, Rackspace US, Inc.
+# Copyright 2018, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -215,30 +215,32 @@
       with_dict: "{{ mnaio_host_networks }}"
       when: mnaio_bridges is changed
 
-    - name: Disable virsh default network
-      shell: |
-        if virsh net-list |  grep -qw "default"; then
-          virsh net-autostart default --disable
-          virsh net-destroy default
-        fi
+    - name: Disable default virt network
+      virt_net:
+        name: "default"
+        state: inactive
+        autostart: no
 
-    - name: Drop virsh network configs
-      template:
-        src: "kvm/libvirt-network-template.xml"
-        dest: "/etc/libvirt/qemu/networks/{{ item.value.iface }}.xml"
-        mode: "0644"
-        owner: root
-        group: root
-      with_dict: "{{ mnaio_host_networks }}"
+    - name: List virt network(s)
+      virt_net:
+        command: list_nets
+      register: vm_networks
 
-    - name: Enable new virsh network(s)
-      shell: |
-        if ! virsh net-list |  grep -qw "{{ item.value.iface }}"; then
-          virsh net-define --file /etc/libvirt/qemu/networks/{{ item.value.iface }}.xml
-          virsh net-create --file /etc/libvirt/qemu/networks/{{ item.value.iface }}.xml
-          virsh net-autostart {{ item.value.iface }} || ture
-        fi
+    - name: Define virt network(s)
+      virt_net:
+        command: define
+        name: "{{ item.value.iface }}"
+        xml: "{{ lookup('template', 'kvm/libvirt-network-template.xml.j2') }}"
       with_dict: "{{ mnaio_host_networks }}"
+      when: "item.value.iface not in vm_networks.list_nets"
+
+    - name: Create virt network(s)
+      virt_net:
+        command: create
+        name: "{{ item.value.iface }}"
+        autostart: true
+      with_dict: "{{ mnaio_host_networks }}"
+      when: "item.value.iface not in vm_networks.list_nets"
 
     - name: Locate data volume
       command: "vgdisplay vg01"
@@ -276,27 +278,47 @@
         - default_vm_disk_mode | default('lvm') == "lvm"
         - data_volume.rc != 0
 
-    - name: Locate virsh data volume
-      command: "virsh pool-info vg01"
+    - name: Locate virt data volume
+      virt_pool:
+        name: "vg01"
+        command: info
       failed_when: false
       when:
         - default_vm_disk_mode | default('lvm') == "lvm"
-      register: virsh_data_volume
+      register: virt_data_volume
 
     - name: Create /etc/libvirt/storage directory
       file:
         path: "/etc/libvirt/storage/"
         state: "directory"
 
-    - name: Create virsh data volume
-      shell: |
-        virsh pool-create-as vg01 logical
-        virsh pool-dumpxml vg01 > /etc/libvirt/storage/vg01.xml
-        virsh pool-define /etc/libvirt/storage/vg01.xml
-        virsh pool-autostart vg01 || true
+    - name: Create virt data volume
+      block:
+        - name: Create virt pool
+          virt_pool:
+            command: create
+            name: vg01
+
+        - name: Get virt pool xml
+          virt_pool:
+            command: get_xml
+            name: vg01
+          register: virt_pool_xml
+
+        - name: Write data volume xml
+          copy:
+            content: "{{ virt_pool_xml.get_xml }}"
+            dest: "/etc/libvirt/storage/vg01.xml"
+
+        - name: Define virt data volume
+          virt_pool:
+            command: define
+            name: vg01
+            xml: "/etc/libvirt/storage/vg01.xml"
+            autostart: true
       when:
         - default_vm_disk_mode | default('lvm') == "lvm"
-        - virsh_data_volume.rc != 0
+        - virt_data_volume.pools is not defined
 
     - name: Load virtio kernel modules
       shell: |

@@ -1,5 +1,5 @@
 ---
-# Copyright 2017, Rackspace US, Inc.
+# Copyright 2018, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,9 @@
         - always
 
     - name: Stop running VMs
-      command: "virsh destroy {{ hostvars[item]['server_hostname'] }}"
+      virt:
+        name: "{{ hostvars[item]['server_hostname'] }}"
+        command: destroy
       failed_when: false
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
@@ -96,17 +98,6 @@
             - hostvars[item]['server_vm'] | default(false) | bool
           with_items: "{{ groups['pxe_servers'] }}"
 
-    - name: Create the VM template
-      template:
-        src: kvm/kvm-vm.xml
-        dest: "/etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
-        mode: 0644
-        owner: root
-        group: root
-      when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
-
     - name: Wait for guest capabilities to appear
       command: "virsh capabilities"
       register: virsh_caps
@@ -115,21 +106,35 @@
       delay: 10
 
     - name: Define the VM
-      command: "virsh define /etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
+      virt:
+        name: "{{ hostvars[item]['server_hostname'] }}"
+        command: define
+        xml: "{{ lookup('template', 'kvm/kvm-vm.xml.j2') }}"
       failed_when: false
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
-    - name: Create the VM
-      command: "virsh create /etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
-      failed_when: false
+    - name: Get the VM xml
+      virt:
+        command: get_xml
+        name: "{{ hostvars[item]['server_hostname'] }}"
+      register: vm_xml
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
+
+    - name: Write the VM xml
+      copy:
+        content: "{{ item.get_xml }}"
+        dest: "/etc/libvirt/qemu/{{ item.item }}.xml"
+      with_items: "{{ vm_xml.results }}"
 
     - name: Start the VM
-      command: "virsh start {{ hostvars[item]['server_hostname'] }}"
+      virt:
+        name: "{{ hostvars[item]['server_hostname'] }}"
+        command: start
+        state: running
       failed_when: false
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
@@ -142,6 +147,10 @@
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
+
+
+- name: Check VM Connectivity
+  import_playbook: vm-status.yml
 
 
 - name: Create vm_servers group
@@ -160,23 +169,12 @@
       with_items: "{{ groups['pxe_servers'] }}"
 
 
-- name: Wait for deploy host
+- name: VM Host Setup
   hosts: vm_servers
   gather_facts: false
   any_errors_fatal: true
   tasks:
-    - name: Wait for connectivity 1
-      local_action:
-        module: wait_for
-        host: "{{ ansible_host }}"
-        connect_timeout: 10
-        port: 22
-        sleep: 20
-        timeout: 1500
-        state: started
-        search_regex: OpenSSH
-
-    - name: copy host keys
+    - name: Copy Host Keys
       copy:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"

@@ -31,6 +31,7 @@ mnaio_host_distro_packages:
   - ntp
   - openssh-server
   - python2.7
+  - python-lxml
   - python-software-properties
   - qemu-kvm
   - qemu-utils
@@ -54,4 +55,3 @@ mnaio_pkg_cache_server_distro_packages:
 mnaio_host_iptables_service: "{{ (ansible_distribution | lower + '-' + ansible_distribution_version | lower == 'ubuntu-14.04') | ternary('iptables-persistent', 'netfilter-persistent') }}"
 
 ssh_service_name: ssh
-
