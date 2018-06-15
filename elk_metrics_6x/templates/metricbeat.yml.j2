@@ -61,6 +61,7 @@ metricbeat.modules:
     - uptime          # System Uptime
     - core            # Per CPU core usage
     - diskio          # Disk IO
+    - raid            # Raid
     - socket          # Sockets and connection info (linux only)
   enabled: true
   period: 30s
@@ -152,17 +153,19 @@ metricbeat.modules:
 #  hosts: ["localhost:8091"]
 #
 ##------------------------------- Docker Module -------------------------------
-#- module: docker
-#  metricsets: ["container", "cpu", "diskio", "healthcheck", "info", "memory", "network"]
-#  hosts: ["unix:///var/run/docker.sock"]
-#  period: 30s
-#
-#  # To connect to Docker over TLS you must specify a client and CA certificate.
-#  #ssl:
-#    #certificate_authority: "/etc/pki/root/ca.pem"
-#    #certificate:           "/etc/pki/client/cert.pem"
-#    #key:                   "/etc/pki/client/cert.key"
-#
+{% if docker_enabled | default(false) | bool %}
+- module: docker
+  metricsets: ["container", "cpu", "diskio", "healthcheck", "info", "memory", "network"]
+  hosts: ["unix:///var/run/docker.sock"]
+  period: 30s
+
+  # To connect to Docker over TLS you must specify a client and CA certificate.
+  #ssl:
+    #certificate_authority: "/etc/pki/root/ca.pem"
+    #certificate:           "/etc/pki/client/cert.pem"
+    #key:                   "/etc/pki/client/cert.key"
+
+{% endif %}
 ##----------------------------- Dropwizard Module -----------------------------
 #- module: dropwizard
 #  metricsets: ["collector"]
@@ -180,12 +183,13 @@ metricbeat.modules:
 #
 {% endif %}
 ##-------------------------------- Etcd Module --------------------------------
-#- module: etcd
-#  metricsets: ["leader", "self", "store"]
-#  period: 30s
-#  hosts: ["localhost:2379"]
+{% if etcd_enabled | default(false) | bool %}
+- module: etcd
+  metricsets: ["leader", "self", "store"]
+  period: 30s
+  hosts: ["localhost:2379"]
 #
-#
+{% endif %}
 ##------------------------------- Golang Module -------------------------------
 #- module: golang
 #  metricsets: ["expvar","heap"]
@@ -306,6 +310,17 @@ metricbeat.modules:
 #  metricsets:
 #    - event
 #
+#--------------------------------- kvm Module --------------------------------
+{% if kvm_enabled | default(false) | bool %}
+- module: kvm
+  metricsets: ["dommemstat"]
+  enabled: false
+  period: 10s
+  hosts: ["localhost"]
+
+  # Timeout to connect to Libvirt server
+  #timeout: 1s
+{% endif %}
 ##------------------------------ Logstash Module ------------------------------
 {% if inventory_hostname in groups['elastic-logstash'] | default([]) %}
 - module: logstash
@@ -341,6 +356,14 @@ metricbeat.modules:
 #
 #  # Password to use when connecting to MongoDB. Empty by default.
 #  #password: pass
+#
+##-------------------------------- Munin Module -------------------------------
+#- module: munin
+#  metricsets: ["node"]
+#  enabled: true
+#  period: 10s
+#  hosts: ["localhost:4949"]
+#  node.namespace: node
 #
 ##-------------------------------- MySQL Module -------------------------------
 {% if (mysql_enabled | default(false) | bool) and galera_root_user is defined and galera_root_password is defined %}
