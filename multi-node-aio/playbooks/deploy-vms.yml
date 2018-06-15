@@ -45,16 +45,14 @@
       failed_when: false
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
-        - default_vm_disk_mode | default('lvm') == "lvm"
       with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Delete VM Disk Image
-      command: |
-        rm -f /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img
-      failed_when: false
+      file:
+        path: "/var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img"
+        state: absent
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
-        - default_vm_disk_mode | default('lvm') == "file"
       with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Create VM LV
