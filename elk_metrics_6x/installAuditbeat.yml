@@ -56,26 +56,7 @@
         enabled: "{{ not inventory_hostname in groups['kibana'] | default([]) }}"
         state: restarted
 
-
-- name: Load Auditbeat Dashboards
-  hosts: hosts[0]
-  become: true
-  vars_files:
-    - vars/variables.yml
-  tasks:
-    - name: Load templates
-      shell: >-
-        auditbeat setup
-        {{ item }}
-        -E 'output.logstash.enabled=false'
-        -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
-        -e -v
-      with_items:
-        - "--template"
-        - "--dashboards"
-      register: templates
-      until: templates is success
-      retries: 3
-      delay: 2
   tags:
-    - beat-setup
+    - beat-install
+
+- import_playbook: setupAuditbeat.yml

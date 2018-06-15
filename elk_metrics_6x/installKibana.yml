@@ -68,3 +68,6 @@
         name: "kibana"
         enabled: true
         state: restarted
+
+  tags:
+    - server-install

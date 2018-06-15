@@ -1,0 +1,29 @@
+---
+
+- name: Load Auditbeat Dashboards
+  hosts: hosts[0]
+  gather_facts: false
+  vars_files:
+    - vars/variables.yml
+
+  pre_tasks:
+    - include_tasks: common_task_data_node_hosts.yml
+
+  tasks:
+    - name: Load templates
+      shell: >-
+        auditbeat setup
+        {{ item }}
+        -E 'output.logstash.enabled=false'
+        -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
+        -e -v
+      with_items:
+        - "--template"
+        - "--dashboards"
+      register: templates
+      until: templates is success
+      retries: 3
+      delay: 2
+
+  tags:
+    - beat-setup
