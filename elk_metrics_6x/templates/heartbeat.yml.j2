@@ -18,16 +18,16 @@ heartbeat.monitors:
              # configured hosts
 
   # Monitor name used for job name and document type.
-  #name: icmp
+  name: icmp
 
   # Enable/Disable monitor
-  #enabled: true
+  enabled: true
 
   # Configure task schedule using cron-like syntax
   schedule: '@every 30s' # every 30 seconds from start of beat
 
   # List of hosts to ping
-  hosts: [{{ icmp_hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+  hosts: {{ icmp_hosts | to_json }}
   # Configure IP protocol types to ping on if hostnames are configured.
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
   ipv4: true
@@ -43,7 +43,7 @@ heartbeat.monitors:
     #interval: 5s
 
   # Total running time per ping test.
-  timeout: {{ groups['hosts'] | length }}s
+  timeout: {{ icmp_hosts | length }}s
 
   # Waiting duration until another ICMP Echo Request is emitted.
   wait: 1s
@@ -82,7 +82,7 @@ heartbeat.monitors:
   name: "{{ item.name }}"
 
   # Enable/Disable monitor
-  #enabled: true
+  enabled: true
 
   # Configure task schedule
   schedule: '@every 45s' # every 30 seconds from start of beat
@@ -103,7 +103,7 @@ heartbeat.monitors:
   #     Using `tls`/`ssl`, an SSL connection is established. If no ssl is configured,
   #     system defaults will be used (not supported on windows).
   #     If `port` is missing in url, the ports setting is required.
-  hosts: [{{ hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+  hosts: {{ hosts | to_json }}
 
   # Configure IP protocol types to ping on if hostnames are configured.
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
@@ -163,13 +163,13 @@ heartbeat.monitors:
   name: "{{ item.name }}"
 
   # Enable/Disable monitor
-  #enabled: true
+  enabled: true
 
   # Configure task schedule
   schedule: '@every 60s' # every 30 seconds from start of beat
 
   # Configure URLs to ping
-  urls: [{{ hosts | map('regex_replace', '$', '"') | map('regex_replace', '^', '"') | list | join(',' ) }}]
+  urls: {{ hosts | to_json }}
 
   # Configure IP protocol types to ping on if hostnames are configured.
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
@@ -238,7 +238,7 @@ heartbeat.monitors:
 heartbeat.scheduler:
   # Limit number of concurrent tasks executed by heartbeat. The task limit if
   # disabled if set to 0. The default is 0.
-  limit: {{ groups['hosts'] | length // 4 }}
+  limit: {{ icmp_hosts | length // 4 }}
 
   # Set the scheduler it's timezone
   #location: ''
