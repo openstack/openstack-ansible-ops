@@ -35,6 +35,10 @@
         name: "{{ item }}"
         state: "{{ elk_package_state | default('present') }}"
         update_cache: true
+      register: _apt_task
+      until: _apt_task is success
+      retries: 3
+      delay: 2
       with_items:
         - git
         - libsystemd-dev

@@ -71,6 +71,12 @@
         state: "{{ elk_package_state | default('present') }}"
         install_recommends: yes
         update_cache: yes
+      register: _apt_task
+      until: _apt_task is success
+      retries: 3
+      delay: 2
+      tags:
+        - package_install
 
     - include_tasks: common_task_install_elk_repo.yml
 
@@ -79,6 +85,12 @@
         name: elasticsearch
         state: "{{ elk_package_state | default('present') }}"
         update_cache: yes
+      register: _apt_task
+      until: _apt_task is success
+      retries: 3
+      delay: 2
+      tags:
+        - package_install
 
     - name: Drop elasticsearch conf file
       template:

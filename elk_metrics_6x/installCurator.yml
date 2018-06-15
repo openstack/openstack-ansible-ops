@@ -41,6 +41,12 @@
         state: "{{ elk_package_state | default('present') }}"
         extra_args: --isolated
         virtualenv: /opt/elasticsearch-curator
+      register: _pip_task
+      until: _pip_task is success
+      retries: 3
+      delay: 2
+      tags:
+        - package_install
 
     - name: exit playbook after uninstall
       meta: end_play

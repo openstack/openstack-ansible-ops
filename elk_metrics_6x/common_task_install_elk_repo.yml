@@ -17,15 +17,33 @@
   apt_key:
     url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
     state: "{{ ((elk_package_state | default('present')) == 'absent') | ternary('absent', 'present') }}"
+  register: _apt_task
+  until: _apt_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
 
 - name: enable apt-transport-https
   apt:
     name: apt-transport-https
     state: present
     update_cache: yes
+  register: _apt_task
+  until: _apt_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
 
 - name: add elk repo to apt sources list
   apt_repository:
     repo: "{{ elk_repo.repo }}"
     state: "{{ elk_repo.state }}"
     filename: "{{ elk_repo.filename | default(omit) }}"
+  register: _apt_task
+  until: _apt_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
