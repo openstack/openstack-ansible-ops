@@ -3,3 +3,15 @@ input {
     port => {{ logstash_beat_input_port }}
   }
 }
+
+filter {
+  if [source.ip] {
+    geoip {
+      source => "source.ip"
+    }
+  } else if [ip] {
+    geoip {
+      source => "ip"
+    }
+  }
+}

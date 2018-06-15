@@ -99,9 +99,12 @@ thread_pool:
   search:
     size: {{ thread_pool_size }}
     queue_size: {{ thread_pool_size * 64 }}
-  index:
-    size: {{ thread_pool_size }}
-    queue_size: {{ thread_pool_size * 128 }}
-  bulk:
+  search:
     size: {{ thread_pool_size }}
     queue_size: {{ thread_pool_size * 256 }}
+  index:
+    size: {{ thread_pool_size }}
+    queue_size: {{ thread_pool_size * 256 }}
+  bulk:
+    size: {{ thread_pool_size }}
+    queue_size: {{ thread_pool_size * 512 }}
