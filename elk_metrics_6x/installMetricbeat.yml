@@ -39,20 +39,30 @@
         path: /etc/ceph
       register: ceph
 
-    - name: Check for haproxy
+    - name: Check for etcd
       stat:
-        path: /etc/haproxy
-      register: haproxy
+        path: /etc/etcd
+      register: etcd
 
     - name: Check for docker
       stat:
         path: /var/run/docker.sock
       register: docker
 
+    - name: Check for haproxy
+      stat:
+        path: /etc/haproxy
+      register: haproxy
+
     - name: Check for httpd
       stat:
         path: /etc/httpd
       register: httpd
+
+    - name: Check for kvm
+      stat:
+        path: /var/run/libvirt/libvirt-sock
+      register: kvm
 
     - name: Check for memcached
       stat:
@@ -91,7 +101,9 @@
         apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
         ceph_enabled: "{{ ceph.stat.exists | bool }}"
         docker_enabled: "{{ docker.stat.exists | bool }}"
+        etcd_enabled: "{{ etcd.stat.exists | bool }}"
         haproxy_enabled: "{{ haproxy.stat.exists | bool }}"
+        kvm_enabled: "{{ kvm.stat.exists | bool }}"
         memcached_enabled: "{{ memcached.stat.exists | bool }}"
         mysql_enabled: "{{ mysql.stat.exists | bool }}"
         nginx_enabled: "{{ nginx.stat.exists | bool }}"
