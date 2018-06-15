@@ -82,16 +82,16 @@ packetbeat.protocols:
 
   # Hide the header fields in header frames.
   # Default: false
-  #parse_headers: false
+  parse_headers: true
 
   # Hide the additional arguments of method frames.
   # Default: false
-  #parse_arguments: false
+  parse_arguments: true
 
   # Hide all methods relative to connection negotiation between server and
   # client.
   # Default: true
-  #hide_connection_information: true
+  hide_connection_information: false
 
   # If this option is enabled, the raw message of the request (`request` field)
   # is sent to Elasticsearch. The default is false.
@@ -192,11 +192,11 @@ packetbeat.protocols:
 
   # A list of header names to capture and send to Elasticsearch. These headers
   # are placed under the `headers` dictionary in the resulting JSON.
-  #send_headers: false
+  send_headers: true
 
   # Instead of sending a white list of headers to Elasticsearch, you can send
   # all headers by setting this option to true. The default is false.
-  #send_all_headers: false
+  send_all_headers: true
 
   # The list of content types for which Packetbeat includes the full HTTP
   # payload in the response field.
