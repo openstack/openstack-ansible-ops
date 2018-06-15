@@ -1,8 +1,8 @@
 output {
   elasticsearch {
     hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
-    sniffing => true
-    manage_template => false
+    sniffing => {{ (not data_node | bool) | lower }}
+    manage_template => {{ (not data_node | bool) | lower }}
     index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
   }
 }
