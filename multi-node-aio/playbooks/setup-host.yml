@@ -28,13 +28,55 @@
       tags:
         - always
 
-    - name: Install host distro packages
+    - name: Install pre-requisite host distro packages
       package:
-        pkg: "{{ item }}"
+        name: "{{ mnaio_host_required_distro_packages }}"
         state: "latest"
         update_cache: yes
         cache_valid_time: 600
-      with_items: "{{ mnaio_host_distro_packages }}"
+      register: _install_required_host_packages
+      until: _install_required_host_packages | success
+      retries: 3
+      delay: 15
+      when:
+        - "mnaio_host_required_distro_packages | length > 0"
+
+    - name: Add/Remove/Update apt repositories
+      apt_repository:
+        repo: "{{ repo.repo }}"
+        state: "{{ repo.state | default('present') }}"
+        filename: "{{ repo.filename | default(omit) }}"
+        update_cache: no
+      with_items: "{{ mnaio_host_package_repos }}"
+      loop_control:
+        loop_var: repo
+      register: _add_apt_repo
+      when:
+        - "ansible_os_family == 'Debian'"
+        - "mnaio_host_package_repos | length > 0"
+        - "(repo.condition | default(True)) | bool"
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      register: _update_apt_cache
+      until: _update_apt_cache | success
+      retries: 3
+      delay: 15
+      when:
+        - "ansible_os_family == 'Debian'"
+        - "_add_apt_repo | changed"
+
+    - name: Install host distro packages
+      package:
+        name: "{{ mnaio_host_distro_packages }}"
+        state: "latest"
+        update_cache: yes
+        cache_valid_time: 600
+      register: _install_host_packages
+      until: _install_host_packages | success
+      retries: 3
+      delay: 15
 
   tasks:
     - name: Ensure root has a .ssh directory
