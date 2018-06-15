@@ -114,3 +114,6 @@
         state: restarted
       tags:
         - config
+
+  tags:
+    - server-install

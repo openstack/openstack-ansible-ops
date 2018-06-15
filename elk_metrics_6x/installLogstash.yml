@@ -157,3 +157,6 @@
         name: "logstash"
         enabled: true
         state: restarted
+
+  tags:
+    - server-install
