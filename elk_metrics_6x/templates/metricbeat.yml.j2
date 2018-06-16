@@ -123,6 +123,7 @@ metricbeat.modules:
 {% if apache_enabled | default(false) | bool %}
 - module: apache
   metricsets: ["status"]
+  enabled: true
   period: 30s
 #
 #  # Apache hosts
@@ -142,6 +143,7 @@ metricbeat.modules:
 {% if ceph_enabled | default(false) | bool %}
 - module: ceph
   metricsets: ["cluster_disk", "cluster_health", "monitor_health", "pool_disk", "osd_tree"]
+  enabled: true
   period: 30s
   hosts: ["localhost:5000"]
 #
@@ -156,6 +158,7 @@ metricbeat.modules:
 {% if docker_enabled | default(false) | bool %}
 - module: docker
   metricsets: ["container", "cpu", "diskio", "healthcheck", "info", "memory", "network"]
+  enabled: true
   hosts: ["unix:///var/run/docker.sock"]
   period: 30s
 
@@ -178,6 +181,7 @@ metricbeat.modules:
 {% if inventory_hostname in (groups['elastic-logstash'] | union(groups['kibana']) | unique) %}
 - module: elasticsearch
   metricsets: ["node", "node_stats"]
+  enabled: true
   period: 30s
   hosts: ["localhost:9200"]
 #
@@ -186,6 +190,7 @@ metricbeat.modules:
 {% if etcd_enabled | default(false) | bool %}
 - module: etcd
   metricsets: ["leader", "self", "store"]
+  enabled: true
   period: 30s
   hosts: ["localhost:2379"]
 #
@@ -216,6 +221,7 @@ metricbeat.modules:
 {% if haproxy_enabled | default(false) | bool %}
 - module: haproxy
   metricsets: ["info", "stat"]
+  enabled: true
   period: 30s
   hosts: [ {{ elastic_metricbeat_haproxy_monitoring_hosts }} ]
 #
@@ -276,6 +282,7 @@ metricbeat.modules:
 {% if inventory_hostname in groups['kibana'] | default([]) %}
 - module: kibana
   metricsets: ["status"]
+  enabled: true
   period: 30s
   hosts: ["localhost:{{ kibana_port }}"]
 #
@@ -314,7 +321,7 @@ metricbeat.modules:
 {% if kvm_enabled | default(false) | bool %}
 - module: kvm
   metricsets: ["dommemstat"]
-  enabled: false
+  enabled: true
   period: 10s
   hosts: ["localhost"]
 
@@ -325,7 +332,7 @@ metricbeat.modules:
 {% if inventory_hostname in groups['elastic-logstash'] | default([]) %}
 - module: logstash
   metricsets: ["node", "node_stats"]
-  enabled: false
+  enabled: true
   period: 30s
   hosts: ["localhost:9600"]
 #
@@ -335,6 +342,7 @@ metricbeat.modules:
 {% if memcached_enabled | default(false) | bool %}
 - module: memcached
   metricsets: ["stats"]
+  enabled: true
   period: 30s
   hosts: ["{{ ansible_hostname }}:11211"]
 
@@ -369,6 +377,7 @@ metricbeat.modules:
 {% if (mysql_enabled | default(false) | bool) and galera_root_user is defined and galera_root_password is defined %}
 - module: mysql
   metricsets: ["status"]
+  enabled: true
   period: 30s
 #
 #  # Host DSN should be defined as "user:pass@tcp(127.0.0.1:3306)/"
@@ -445,6 +454,7 @@ metricbeat.modules:
 {% if (rabbitmq_enabled | default(false) | bool) and (rabbitmq_monitoring_password is defined) %}
 - module: rabbitmq
   metricsets: ["node", "queue"]
+  enabled: true
   period: 30s
   hosts: [ {{ elastic_metricbeat_rabbitmq_monitoring_hosts }} ]
   username: {{ rabbitmq_monitoring_userid | default('monitoring') }}
@@ -487,6 +497,7 @@ metricbeat.modules:
 {% if uwsgi_enabled | default(false) | bool %}
 - module: uwsgi
   metricsets: ["status"]
+  enabled: true
   period: 30s
 {%   if uwsgi_sockets.matched | int > 0 %}
   hosts: [{% for file in uwsgi_sockets.files %}"unix://{{ file.path }}"{% if not loop.last %},{% endif %}{% endfor %}]
