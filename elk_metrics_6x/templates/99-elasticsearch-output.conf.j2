@@ -1,8 +1,17 @@
 output {
-  elasticsearch {
-    hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
-    sniffing => {{ (not data_node | bool) | lower }}
-    manage_template => {{ (data_node | bool) | lower }}
-    index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+  if [@metadata][version] {
+    elasticsearch {
+      hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
+      sniffing => {{ (not data_node | bool) | lower }}
+      manage_template => {{ (data_node | bool) | lower }}
+      index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+    }
+  } else {
+    elasticsearch {
+      hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
+      sniffing => {{ (not data_node | bool) | lower }}
+      manage_template => {{ (data_node | bool) | lower }}
+      index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+    }
   }
 }
