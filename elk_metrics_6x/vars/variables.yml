@@ -41,6 +41,10 @@ kibana_server_name: "{{ ansible_hostname }}"
 logstash_beat_input_port: 5044
 logstash_deploy_filters: true
 
+# APM vars
+apm_interface: 0.0.0.0
+apm_port: 8200
+
 # Beat options
 heartbeat_services:
   - group: "{{ groups['galera_all'] | default([]) }}"

@@ -4,7 +4,7 @@
 
 apm-server:
   # Defines the host and port the server is listening on
-  #host: "localhost:8200"
+  host: "{{ apm_interface }}:{{ apm_port }}"
 
   # Maximum permitted size in bytes of an unzipped request accepted by the server to be processed.
   #max_unzipped_size: 52428800

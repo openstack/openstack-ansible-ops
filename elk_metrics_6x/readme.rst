@@ -69,6 +69,22 @@ Configure the Kibana endpoints:
           haproxy_port: 81  # This is set using the "Kibana_nginx_port" variable
           haproxy_balance_type: tcp
 
+Configure the APM endpoints:
+  It is recommented to use a load balancer for submitting Application
+  Performance Monitoring data to the APM server. A load balancer will provide
+  a highly available address which APM clients can use to connect to a pool of
+  APM nodes. If using HAProxy, edit the `/etc/openstack_deploy/user_variables.yml`
+  and add the following lines
+
+.. code-block:: yaml
+
+    haproxy_extra_services:
+      - service:
+          haproxy_service_name: apm-server
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['apm-server'] | default([]) }}"
+          haproxy_port: 8200 # this is set using the "apm_port" variable
+          haproxy_balance_type: tcp
 
 Optional | add OSProfiler to an OpenStack-Ansible deployment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
