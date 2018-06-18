@@ -98,9 +98,6 @@ gateway.recover_after_nodes: {{ ((master_node_count | int) // 2) + 1 }}
 thread_pool:
   search:
     size: {{ thread_pool_size }}
-    queue_size: {{ thread_pool_size * 64 }}
-  search:
-    size: {{ thread_pool_size }}
     queue_size: {{ thread_pool_size * 256 }}
   index:
     size: {{ thread_pool_size }}
