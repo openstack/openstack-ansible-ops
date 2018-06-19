@@ -12,6 +12,14 @@ the elastic stack.
 
 **These playbooks require Ansible 2.5+.**
 
+Highlevel overview of the Elastic-Stack infrastructure these playbooks will
+build and operate against.
+
+.. image:: assets/Elastic-Stack-Diagram.svg
+    :scale: 50 %
+    :alt: Elasticsearch Architecture Diagram
+    :align: center
+
 OpenStack-Ansible Integration
 -----------------------------
 
@@ -315,6 +323,15 @@ deploy logstash, deploy Kibana, and then deploy all of the service beats.
 The individual playbooks found within this repository can be independently run
 at anytime.
 
+Architecture | Data flow
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This diagram outlines the data flow from within an Elastic-Stack deployment.
+
+.. image:: assets/Elastic-dataflow.svg
+    :scale: 50 %
+    :alt: Elastic-Stack Data Flow Diagram
+    :align: center
 
 Optional | Enable uwsgi stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
