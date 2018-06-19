@@ -1,25 +1,38 @@
 ---
 
-# the master node count takes half the available nodes or sets it's self as 1
+# storage node count is equal to the cluster size
 - name: Node count fact
   set_fact:
     storage_node_count: "{{ groups['elastic-logstash'] | length }}"
   tags:
     - always
 
-- name: Master node pre-count fact
-  set_fact:
-    _master_node_count: "{{ ((storage_node_count | int) > 1) | ternary((((storage_node_count | int) // 2) | int), 1) }}"
-  tags:
-    - always
-
-# if the master node count is even, add one to it otherwise use the provided value
+# the elasticserch cluster elects one master from all those which are marked as master-eligible
+# 1 node cluster can only have one master
+# 2 node clusters have 1 master-eligable nodes to avoid split-brain
+# 3 node clusters have 3 master-eligable nodes
+# >3 node clusters have (nodes // 2) eligable masters rounded up to the next odd number
 - name: Master node count fact
   set_fact:
-    master_node_count: "{{ ((_master_node_count | int) % 2 != 0) | ternary((_master_node_count | int), ((_master_node_count | int) + 1)) }}"
+    master_node_count: |-
+      {% set masters = 0 %}
+      {% if (storage_node_count | int) < 3 %}
+      {%   set masters = 1 %}
+      {% elif (storage_node_count | int) == 3 %}
+      {%   set masters = 3 %}
+      {% else %}
+      {%   set masters = (storage_node_count | int ) // 2 %}
+      {%   if ((masters | int) % 2 == 0) %}
+      {%     set masters = (masters | int) + 1 %}
+      {%   endif %}
+      {% endif %}
+      {{ masters }}
   tags:
     - always
 
+# assign node roles
+# the first 'master_node_count' hosts in groups['elastic-logstash'] become master-eligible nodes
+# the first 'master_node_count' and subsequent alternate hosts in groups['elastic-logstash'] becomes data nodes
 - name: Data nodes fact
   set_fact:
     data_nodes: "{{ (groups['elastic-logstash'][:master_node_count | int] + groups['elastic-logstash'][master_node_count | int::2]) }}"
@@ -39,14 +52,7 @@
   tags:
     - always
 
-- name: Data node count fact
-  set_fact:
-    data_node_count: "{{ data_nodes | length }}"
-  tags:
-    - always
-
-# if the master node count is even, add one to it otherwise use the provided value
-# set the data nodes to be all master and alternate through the remaining nodes
+# based on the assignment of roles to hosts, set per host booleans
 - name: Node enablement
   set_fact:
     master_node: "{{ (inventory_hostname in master_nodes) | ternary(true, false) }}"
