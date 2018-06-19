@@ -28,6 +28,8 @@
       meta: end_play
 
     - include_tasks: common_task_data_node_hosts.yml
+      tags:
+        - always
 
   tasks:
     - name: Load templates
