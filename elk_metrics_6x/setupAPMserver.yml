@@ -8,6 +8,8 @@
 
   pre_tasks:
     - include_tasks: common_task_data_node_hosts.yml
+      tags:
+        - always
 
   tasks:
     - name: Load templates
