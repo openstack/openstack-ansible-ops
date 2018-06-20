@@ -23,7 +23,7 @@ export JUNO_RELEASE="${JUNO_RELEASE:-eol-juno}"
 export KILO_RELEASE="${KILO_RELEASE:-11.2.17}"  # eol-kilo has swift in upper-constraints, preventing venv building
 export LIBERTY_RELEASE="${LIBERTY_RELEASE:-liberty-eol}"
 export MITAKA_RELEASE="${MITAKA_RELEASE:-mitaka-eol}"
-export NEWTON_RELEASE="${NEWTON_RELEASE:-14.2.7}"
+export NEWTON_RELEASE="${NEWTON_RELEASE:-newton-eol}"
 
 ## Environment Vars ------------------------------------------------------------------
 # main path changes with releases leaping
