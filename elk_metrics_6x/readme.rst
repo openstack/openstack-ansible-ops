@@ -398,6 +398,57 @@ auto-generate the tags list with the following command.
     openstack-ansible setup-openstack.yml --tags "$(cat setup-openstack.yml | grep -wo 'os-.*' | awk -F'-' '{print $2 "-config"}' | tr '\n' ',')"
 
 
+Optional | add Kafka Output format
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To send data from Logstash to Kafka create the `logstash_kafka_options`
+variable. This variable will be used as a generator and create a Kafka output
+configuration file using the key/value pairs as options.
+
+.. code-block:: yaml
+
+    logstash_kafka_options:
+      codec: json
+      topic_id: "elk_kafka"
+      ssl_key_password: "{{ logstash_kafka_ssl_key_password }}"
+      ssl_keystore_password: "{{ logstash_kafka_ssl_keystore_password }}"
+      ssl_keystore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_keystore_location | basename }}"
+      ssl_truststore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_truststore_location | basename }}"
+      ssl_truststore_password: "{{ logstash_kafka_ssl_truststore_password }}"
+      bootstrap_servers:
+        - server1.local:9092
+        - server2.local:9092
+        - server3.local:9092
+      client_id: "elk_metrics_6x"
+      compression_type: "gzip"
+      security_protocol: "SSL"
+
+
+For a complete list of all options available within the Logstash Kafka output
+plugin please review the `following documentation <https://www.elastic.co/guide/en/logstash/current/plugins-outputs-kafka.html>`_.
+
+Optional config:
+  The following variables are optional and correspond to the example
+  `logstash_kafka_options` variable.
+
+.. code-block:: yaml
+
+    logstash_kafka_ssl_key_password: "secrete"
+    logstash_kafka_ssl_keystore_password: "secrete"
+    logstash_kafka_ssl_truststore_password: "secrete"
+
+    # SSL certificates in Java KeyStore format
+    logstash_kafka_ssl_keystore_location: "/root/kafka/keystore.jks"
+    logstash_kafka_ssl_truststore_location: "/root/kafka/truststore.jks"
+
+
+When using the kafka output plugin the options,
+`logstash_kafka_ssl_keystore_location` and
+`logstash_kafka_ssl_truststore_location` will automatically copy a local SSL key
+to the logstash nodes. These options are string value and assume the deployment
+nodes have local access to the files.
+
+
 Optional | add Grafana visualizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

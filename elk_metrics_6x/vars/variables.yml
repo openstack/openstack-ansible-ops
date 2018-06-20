@@ -41,6 +41,32 @@ kibana_server_name: "{{ ansible_hostname }}"
 logstash_beat_input_port: 5044
 logstash_deploy_filters: true
 
+## Logstash config showing a complete kafka setup using SSL for authentication.
+# logstash_kafka_options:
+#   codec: json
+#   topic_id: "elk_kafka"
+#   ssl_key_password: "{{ logstash_kafka_ssl_key_password }}"
+#   ssl_keystore_password: "{{ logstash_kafka_ssl_keystore_password }}"
+#   ssl_keystore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_keystore_location | basename }}"
+#   ssl_truststore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_truststore_location | basename }}"
+#   ssl_truststore_password: "{{ logstash_kafka_ssl_truststore_password }}"
+#   bootstrap_servers:
+#     - server1.local:9092
+#     - server2.local:9092
+#     - server3.local:9092
+#   client_id: "elk_metrics_6x"
+#   compression_type: "gzip"
+#   security_protocol: "SSL"
+
+## The following variables are options that correspond to the
+## `logstash_kafka_options` variable.
+# logstash_kafka_ssl_key_password: "secrete"
+# logstash_kafka_ssl_keystore_password: "secrete"
+# logstash_kafka_ssl_truststore_password: "secrete"
+# logstash_kafka_ssl_keystore_location: "/root/kafka/keystore.jks"
+# logstash_kafka_ssl_truststore_location: "/root/kafka/truststore.jks"
+
+
 # APM vars
 apm_interface: 0.0.0.0
 apm_port: 8200
