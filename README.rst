@@ -28,3 +28,9 @@ Galaxy roles
  This role will perform backups for OpenStack-Ansible deployments and it needs
  to run on the deploy node. It will backup data on container and then
  synchronize backup files to the deploy node.
+
+Release notes
+~~~~~~~~~~~~
+
+Release notes for the project can be found at:
+https://docs.openstack.org/releasenotes/openstack-ansible-ops/
