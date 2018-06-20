@@ -32,6 +32,7 @@
         update_cache: true
       with_items:
         - python-virtualenv
+        - virtualenv
       tags:
         - package_install
 
