@@ -56,6 +56,7 @@
           regexp: "^{{ item.key }}"
           line: "{{ item.key }}: {{ item.value }}"
           state: present
+          create: yes
         with_items:
           - key: "default_bind_mount_logs"
             value: false
