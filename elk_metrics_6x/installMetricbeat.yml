@@ -45,6 +45,21 @@
         path: /etc/ceph
       register: ceph
 
+    # gather ceph stats from localhost
+    # except when a list of mons is provided
+    - name: Set ceph stats hosts
+      set_fact:
+        ceph_stats_hosts: |-
+          {% set ceph_stats = [] %}
+          {% if (ceph_mons is defined) and (ceph_mons | length > 0) %}
+          {%   for mon in ceph_mons %}
+          {%     set _ = ceph_stats.insert(loop.index, (mon + ":5000")) %}
+          {%   endfor %}
+          {% else %}
+          {%   set ceph_stats = [ ansible_hostname + ":5000" ] %}
+          {% endif %}
+          {{ ceph_stats }}
+
     - name: Check for etcd
       stat:
         path: /etc/etcd
@@ -105,7 +120,18 @@
     - name: Set discovery facts
       set_fact:
         apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
-        ceph_enabled: "{{ ceph.stat.exists | bool }}"
+
+        # enable ceph on:  cinder volume hosts when we have a list of ceph mons
+        #      otherwise:  all hosts which have /etc/ceph
+        ceph_enabled: |-
+          {% set ceph_detect = false %}
+          {% if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups['cinder_volume'])  %}
+          {%   set ceph_detect = true %}
+          {% else %}
+          {%   set ceph_detect = ceph.stats.exists | bool %}
+          {% endif %}
+          {{ ceph_detect }}
+
         docker_enabled: "{{ docker.stat.exists | bool }}"
         etcd_enabled: "{{ etcd.stat.exists | bool }}"
         haproxy_enabled: "{{ haproxy.stat.exists | bool }}"
