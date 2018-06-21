@@ -35,23 +35,32 @@ if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
     virtualenv "${ANSIBLE_EMBED_HOME}"
   fi
   eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade --force pip"
-  eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade ansible==2.5.2.0 --isolated"
+  eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade ansible==2.5.5.0 --isolated"
   echo "Ansible can be found here: ${ANSIBLE_EMBED_HOME}/bin"
 fi
 
 if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/ansible-config_template" ]]; then
   mkdir -p "${ANSIBLE_EMBED_HOME}/repositories"
   git clone https://git.openstack.org/openstack/ansible-config_template "${ANSIBLE_EMBED_HOME}/repositories/ansible-config_template"
+  pushd "${ANSIBLE_EMBED_HOME}/repositories/ansible-config_template"
+    git checkout a5c9d97e18683f0fdf9769d94ba174c72e2d093c  # HEAD of master from 20-06-18
+  popd
 fi
 
 if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/openstack_ansible_plugins" ]]; then
   mkdir -p "${ANSIBLE_EMBED_HOME}/repositories"
   git clone https://git.openstack.org/openstack/openstack-ansible-plugins "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins"
+  pushd "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins"
+    git checkout cef7946b3b3b3e4d02406c228741985a94b72cff  # HEAD of master from 20-06-18
+  popd
 fi
 
 if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_service" ]]; then
   mkdir -p "${ANSIBLE_EMBED_HOME}/repositories"
   git clone https://git.openstack.org/openstack/ansible-role-systemd_service "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_service"
+  pushd "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_service"
+    git checkout 02f5ff1c0e073af53bed2141a045e608162970ea  # HEAD of master from 20-06-18
+  popd
 fi
 
 if [[ -f "/etc/openstack_deploy/openstack_inventory.json" ]]; then
