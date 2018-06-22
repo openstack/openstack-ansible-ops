@@ -13,9 +13,5 @@
 # limitations under the License.
 
 - project:
-    check:
-      jobs:
-        - openstack-ansible-linters
-    gate:
-      jobs:
-        - openstack-ansible-linters
+    templates:
+      - openstack-ansible-role-jobs
