@@ -422,6 +422,24 @@ Example command using the embedded Ansible from within the grafana directory.
                                   -e galera_root_user=root \
                                   -e 'galera_address={{ internal_lb_vip_address }}'
 
+Optional | add kibana custom dashboard
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to use a custom dashboard directly on your kibana,
+you can run the playbook bellow. The dashboard uses filebeat to
+collect the logs of your deployment.
+
+.. code-block:: bash
+
+   ansible-playbook setupKibanaDashboard.yml $USER_VARS
+
+Overview of kibana custom dashboard
+
+.. image:: assets/openstack-kibana-custom-dashboard.png
+    :scale: 50 %
+    :alt: Kibana Custom Dashboard
+    :align: center
+
 
 Upgrading the cluster
 ---------------------

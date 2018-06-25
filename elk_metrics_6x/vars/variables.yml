@@ -35,7 +35,7 @@ kibana_username: admin
 kibana_password: admin
 kibana_nginx_port: 81
 kibana_server_name: "{{ ansible_hostname }}"
-
+kibana_index_on_elasticsearch: "http://{{ hostvars[groups['elastic-logstash'][0]]['container_address'] }}:{{ elastic_port}}/.kibana"
 
 # logstash vars
 logstash_beat_input_port: 5044
