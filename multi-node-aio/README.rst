@@ -195,26 +195,18 @@ install the base OS.
     virsh start "${VM_NAME}"
 
 
-To rekick all VMs, the following command can be used on the host machine to
-cycle through all found VMs and re-provision them.
+To rekick all VMs, simply re-execute the ``deploy-vms.yml`` playbook and it will
+do it automatically.
 
 .. code-block:: bash
 
-    for VM_NAME in $(virsh list --all | awk '/running/ || /shut/ {print $2}'); do
-      virsh destroy "${VM_NAME}"
-      lvremove -f "/dev/mapper/vg01-${VM_NAME}"
-      lvcreate -L 92160M vg01 -n "${VM_NAME}"
-      virsh start "${VM_NAME}"
-    done
-
+    ansible-playbook -i playbooks/inventory playbooks/deploy-vms.yml
 
 Rerunning the build script
 --------------------------
 
-The build script can be rerun at any time. If you have a successful run before
-and simply want to re-kick everything I recommend nuking VMs and then executing
-the build script.
-
+The build script can be rerun at any time. By default it will re-kick the entire
+system, destroying all existing VM's.
 
 Deploying OpenStack into the environment
 ----------------------------------------
