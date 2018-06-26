@@ -59,8 +59,10 @@ LINUX:
     QEMU/KVM:SSH
 
 OSX:
-    If you're running a MAC you can get virt-manager via X11 forwarding to the
-    host or install it via BREW. http://stackoverflow.com/questions/3921814/is-there-a-virt-manager-alternative-for-mac-os-x
+    If you're running a MAC you can install https://www.xquartz.org/ to have
+    access to a X11 client, then make use of X over SSH to connect to the
+    virt-manager application. Using X over SSH is covered in
+    https://www.cyberciti.biz/faq/apple-osx-mountain-lion-mavericks-install-xquartz-server/
 
 WINDOWS:
     If you're running Windows, you can install virt-viewer from the KVM Download
