@@ -1,0 +1,37 @@
+---
+- name: Install Kibana Dashboards
+  hosts: "elastic-logstash"
+  become: true
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  tasks:
+    - name: Add nodejs 6.x source
+      shell: "curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -"
+
+    - name: Install nodejs
+      apt:
+        name: nodejs
+        state: "present"
+        update_cache: yes
+      register: _apt_task
+      until: _apt_task is success
+      retries: 3
+      delay: 2
+
+    - name: Install elasticdump
+      npm:
+        name: elasticdump
+        path: /opt/elasticdump
+        state: "present"
+
+    - block:
+      - name: Copy openstack dashboard json template to /tmp dir
+        template:
+          src: templates/openstack-log-dashboard.json
+          dest: /tmp/openstack-log-dashboard.json
+
+      - name: Upload Custom Openstack Log Dashboard
+        shell: "/opt/elasticdump/node_modules/elasticdump/bin/elasticdump --input=/tmp/openstack-log-dashboard.json --output={{ kibana_index_on_elasticsearch  }} --type=data"
