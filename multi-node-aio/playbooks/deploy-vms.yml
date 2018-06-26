@@ -67,13 +67,34 @@
         - default_vm_disk_mode | default('lvm') == "lvm"
       with_items: "{{ groups['pxe_servers'] }}"
 
-    - name: Create VM Disk Image
-      command: |
-        qemu-img create -f qcow2 /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img {{ default_vm_storage }}m
+    - name: Setup file-based disk images
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
         - default_vm_disk_mode | default('lvm') == "file"
-      with_items: "{{ groups['pxe_servers'] }}"
+      block:
+        - name: Find existing base image files
+          find:
+            paths: /var/lib/libvirt/images
+            patterns: '*-base.img'
+          register: _base_images
+
+        - name: Set vm_use_snapshot if it's not defined
+          set_fact:
+            vm_use_snapshot: "{{ _base_images['matched'] > 0 }}"
+          when:
+            - vm_use_snapshot is not defined
+
+        - name: Create VM Disk Image
+          command: >-
+            qemu-img create
+            -f qcow2
+            {% if vm_use_snapshot | bool %}
+            -b /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}-base.img
+            {% endif %}
+            /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img
+            {{ default_vm_storage }}m
+          when:
+            - hostvars[item]['server_vm'] | default(false) | bool
+          with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Create the VM template
       template:

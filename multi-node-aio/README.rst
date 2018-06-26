@@ -258,3 +258,22 @@ backing store) for the VM's, then set the following option before executing
 
     export MNAIO_ANSIBLE_PARAMETERS="-e default_vm_disk_mode=file"
     ./build.sh
+
+If you wish to save the current file-based images in order to implement a
+thin-provisioned set of VM's which can be saved and re-used, then use the
+``save-vms.yml`` playbook. This will stop the VM's and save the files to
+``/var/lib/libvirt/images/*-base.img``. Re-executing the ``deploy-vms.yml``
+playbook afterwards will rebuild the VMs from those images.
+
+.. code-block:: bash
+
+    ansible-playbook -i playbooks/inventory playbooks/save-vms.yml
+    ansible-playbook -i playbooks/inventory -e default_vm_disk_mode=file playbooks/deploy-vms.yml
+
+To disable this default functionality when re-running ``build.sh`` set the
+build not to use the snapshots as follows.
+
+.. code-block:: bash
+
+    export MNAIO_ANSIBLE_PARAMETERS="-e default_vm_disk_mode=file -e vm_use_snapshot=no"
+    ./build.sh

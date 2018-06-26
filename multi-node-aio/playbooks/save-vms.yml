@@ -1,0 +1,48 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in witing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Save VM disk images for re-use
+  hosts: vm_hosts
+  gather_facts: "{{ gather_facts | default(true) }}"
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - save-vms
+  tasks:
+    - name: Gather variables for each operating system
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
+      tags:
+        - always
+
+    - name: Stop running VMs
+      command: "virsh destroy {{ hostvars[item]['server_hostname'] }}"
+      failed_when: false
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
+
+    - name: Save VM Disk Image
+      command: >-
+        mv
+        /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img
+        /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}-base.img
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
