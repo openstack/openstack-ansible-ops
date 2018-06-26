@@ -13,30 +13,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- include: setup-host.yml
+- import_playbook: setup-host.yml
   when:
     - setup_host | default(true) | bool
 
-- include: deploy-acng.yml
+- import_playbook: deploy-acng.yml
   when:
     - setup_pxeboot | default(true) | bool
 
-- include: deploy-pxe.yml
+- import_playbook: deploy-pxe.yml
   when:
     - setup_pxeboot | default(true) | bool
 
-- include: deploy-dhcp.yml
+- import_playbook: deploy-dhcp.yml
   when:
     - setup_dhcpd | default(true) | bool
 
-- include: deploy-vms.yml
+- import_playbook: deploy-vms.yml
   when:
     - deploy_vms | default(true) | bool
 
-- include: deploy-osa.yml
+- import_playbook: deploy-osa.yml
   when:
     - deploy_osa | default(true) | bool
 
-- include: openstack-service-setup.yml
+- import_playbook: openstack-service-setup.yml
   when:
     - configure_openstack | default(true) | bool

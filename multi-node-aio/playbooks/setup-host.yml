@@ -38,7 +38,7 @@
         update_cache: yes
         cache_valid_time: 600
       register: _install_required_host_packages
-      until: _install_required_host_packages | success
+      until: _install_required_host_packages is success
       retries: 3
       delay: 15
       when:
@@ -63,12 +63,12 @@
       apt:
         update_cache: yes
       register: _update_apt_cache
-      until: _update_apt_cache | success
+      until: _update_apt_cache is success
       retries: 3
       delay: 15
       when:
         - "ansible_os_family == 'Debian'"
-        - "_add_apt_repo | changed"
+        - "_add_apt_repo is changed"
 
     - name: Install host distro packages
       package:
@@ -77,7 +77,7 @@
         update_cache: yes
         cache_valid_time: 600
       register: _install_host_packages
-      until: _install_host_packages | success
+      until: _install_host_packages is success
       retries: 3
       delay: 15
 
@@ -213,7 +213,7 @@
     - name: Set the host intefaces up
       command: "/sbin/ifup {{ item.value.iface }}"
       with_dict: "{{ mnaio_host_networks }}"
-      when: mnaio_bridges | changed
+      when: mnaio_bridges is changed
 
     - name: Disable virsh default network
       shell: |

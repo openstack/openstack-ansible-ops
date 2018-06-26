@@ -38,7 +38,7 @@
         update_cache: yes
         cache_valid_time: 600
       register: _install_host_packages
-      until: _install_host_packages | success
+      until: _install_host_packages is success
       retries: 3
       delay: 15
 

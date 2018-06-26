@@ -110,7 +110,7 @@
       - create_networks
 
 # Install some Linux system images
-  - include: ./openstack-image-setup.yml
+  - include_tasks: "{{ playbook_dir }}/openstack-image-setup.yml"
     with_items: "{{ images }}"
     tags:
       - create_images
