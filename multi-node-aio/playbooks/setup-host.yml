@@ -110,6 +110,30 @@
         user: "root"
         key: "{{ root_public_key }}"
 
+    - name: Setup SSH client to disable strict host key checks
+      lineinfile:
+        path: /etc/ssh/ssh_config
+        regexp: "^.*StrictHostKeyChecking.*$"
+        line: "    StrictHostKeyChecking no"
+        insertafter: "^Host \\*$"
+        state: present
+
+    - name: Setup SSH client to have a non-persistant known hosts file
+      lineinfile:
+        path: /etc/ssh/ssh_config
+        regexp: "^.*UserKnownHostsFile.*$"
+        line: "    UserKnownHostsFile=/dev/null"
+        insertafter: "^Host \\*$"
+        state: present
+
+    - name: Setup SSH client to disable DNS host key checks
+      lineinfile:
+        path: /etc/ssh/ssh_config
+        regexp: "^.*VerifyHostKeyDNS.*$"
+        line: "    VerifyHostKeyDNS no"
+        insertafter: "^Host \\*$"
+        state: present
+
     - name: Add sysctl options
       sysctl:
         name: net.ipv4.ip_forward
