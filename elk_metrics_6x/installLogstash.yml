@@ -158,6 +158,29 @@
         - logstash-filters
         - config
 
+    - name: Run kafka output block
+      block:
+        - name: Copy kafka keystore into place
+          copy:
+            src: "{{ logstash_kafka_ssl_keystore_location }}"
+            dest: "/var/lib/logstash/{{ logstash_kafka_ssl_keystore_location | basename }}"
+          when:
+            - logstash_kafka_ssl_keystore_location is defined
+
+        - name: Copy kafka truststore into place
+          copy:
+            src: "{{ logstash_kafka_ssl_truststore_location }}"
+            dest: "/var/lib/logstash/{{ logstash_kafka_ssl_truststore_location | basename }}"
+          when:
+            - logstash_kafka_ssl_truststore_location is defined
+
+        - name: Deploy Logstash kafka configuration files
+          template:
+            src: "templates/99-kafka-output.conf"
+            dest: "/etc/logstash/conf.d/99-kafka-output.conf"
+      when:
+        - logstash_kafka_options is defined
+
     - name: Ensure logstash ownership
       file:
         path: /var/lib/logstash
