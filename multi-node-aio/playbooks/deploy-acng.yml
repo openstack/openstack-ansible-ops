@@ -30,9 +30,14 @@
   tasks:
     - name: Install repo caching server packages
       package:
-        name: "{{ item }}"
+        name: "{{ mnaio_pkg_cache_server_distro_packages }}"
         state: "latest"
-      with_items: "{{ mnaio_pkg_cache_server_distro_packages }}"
+        update_cache: yes
+        cache_valid_time: 600
+      register: _install_host_packages
+      until: _install_host_packages | success
+      retries: 3
+      delay: 15
 
     - name: Create cache directory
       file:

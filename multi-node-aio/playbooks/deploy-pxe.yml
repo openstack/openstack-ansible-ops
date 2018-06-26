@@ -30,11 +30,14 @@
 
     - name: Install host distro packages
       package:
-        pkg: "{{ item }}"
+        name: "{{ mnaio_pxe_distro_packages }}"
         state: "latest"
         update_cache: yes
         cache_valid_time: 600
-      with_items: "{{ mnaio_pxe_distro_packages }}"
+      register: _install_host_packages
+      until: _install_host_packages | success
+      retries: 3
+      delay: 15
 
     - name: Create base directories
       file:
