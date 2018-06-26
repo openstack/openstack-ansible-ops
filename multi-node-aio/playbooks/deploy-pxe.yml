@@ -203,11 +203,13 @@
       with_dict: "{{ images }}"
 
     - name: Ensure permissions are correct
-      shell: |
-        # Fix perms if needed
-        find /var/lib/tftpboot -type d -exec chmod 0755 {} \;
-        find /var/lib/tftpboot -type f -exec chmod 0644 {} \;
-        find /var/www/pxe -type d -exec chmod 0755 {} \;
+      file:
+        dest: "{{ item }}"
+        mode: u=rwX,g=rX,o=rX
+        recurse: yes
+      with_items:
+        - "/var/lib/tftpboot"
+        - "/var/www/pxe"
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
