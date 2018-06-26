@@ -142,7 +142,7 @@
         - tmux new-session -d -s build-osa
         - tmux select-pane -t 0
         - tmux send-keys "ulimit -n 10240" C-m
-        - tmux send-keys "openstack-ansible setup-everything.yml" C-m
+        - tmux send-keys "openstack-ansible setup-hosts.yml setup-infrastructure.yml setup-openstack.yml" C-m
       when:
         - inventory_hostname == groups['deploy_hosts'][0]
         - run_osa | default(true) | bool
