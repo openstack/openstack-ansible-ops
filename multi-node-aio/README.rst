@@ -246,3 +246,15 @@ command or the following bash loop to restore everything to a known point.
     for instance in $(virsh list --all --name); do
       virsh snapshot-revert --snapshotname $instance-kilo-snap --running $instance
     done
+
+Using a file-based backing store with thin-provisioned VM's
+-----------------------------------------------------------
+
+If you wish to use a file-based backing store (instead of the default LVM-based
+backing store) for the VM's, then set the following option before executing
+``build.sh``.
+
+.. code-block:: bash
+
+    export MNAIO_ANSIBLE_PARAMETERS="-e default_vm_disk_mode=file"
+    ./build.sh
