@@ -14,7 +14,10 @@
 - name: Gather facts
   hosts: dhcp_hosts
   gather_facts: "{{ gather_facts | default(true) }}"
-  pre_tasks:
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-dhcpd
+  tasks:
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
       with_first_found:
@@ -43,7 +46,6 @@
         enabled: yes
       with_items: "{{ mnaio_dhcp_distro_packages }}"
 
-  tasks:
     - name: Create a template in /etc/dhcp/dhcpd.conf
       template:
         src: dhcp/dhcpd.conf.j2
@@ -62,14 +64,9 @@
         group: root
       notify: restart dhcpd
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
   handlers:
     - name: restart dhcpd
       service:
         name: "{{ item }}"
         state: restarted
       with_items: "{{ mnaio_dhcp_distro_packages }}"
-
-  tags:
-    - deploy-dhcpd

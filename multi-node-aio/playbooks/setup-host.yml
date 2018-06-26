@@ -16,7 +16,10 @@
 - name: Gather facts
   hosts: mnaio_hosts
   gather_facts: "{{ gather_facts | default(true) }}"
-  pre_tasks:
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - setup-host
+  tasks:
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
       with_first_found:
@@ -78,7 +81,6 @@
       retries: 3
       delay: 15
 
-  tasks:
     - name: Ensure root has a .ssh directory
       file:
         path: /root/.ssh
@@ -281,8 +283,3 @@
             echo ${module} | tee -a /etc/modules
           fi
         done
-
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - setup-host

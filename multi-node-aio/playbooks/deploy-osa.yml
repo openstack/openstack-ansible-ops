@@ -16,7 +16,10 @@
 - name: Setup deploy host
   hosts: deploy_hosts
   gather_facts: "{{ gather_facts | default(true) }}"
-  pre_tasks:
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-osa
+  tasks:
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
       with_first_found:
@@ -28,7 +31,6 @@
       tags:
         - always
 
-  tasks:
     # Example read-write git checkout from github
     - name: Get OSA
       git:
@@ -154,8 +156,3 @@
           to the {{ groups['deploy_hosts'][0] }} VM and attach to the "build-osa" tmux session.
       when:
         - run_osa | default(true) | bool
-
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - deploy-osa

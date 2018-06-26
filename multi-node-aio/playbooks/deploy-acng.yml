@@ -15,7 +15,10 @@
 
 - name: Gather facts
   hosts: pxe_hosts
-  pre_tasks:
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-acng
+  tasks:
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
       with_first_found:
@@ -27,7 +30,6 @@
       tags:
         - always
 
-  tasks:
     - name: Install repo caching server packages
       package:
         name: "{{ mnaio_pkg_cache_server_distro_packages }}"
@@ -87,7 +89,6 @@
       notify:
         - reload acng
 
-  post_tasks:
     - name: Drop apt package manager proxy
       copy:
         content: 'Acquire::http { Proxy "{{ default_ubuntu_mirror_proxy }}"; };'
@@ -97,14 +98,9 @@
       apt:
         update_cache: yes
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
   handlers:
     - name: reload acng
       service:
         name: "apt-cacher-ng"
         state: restarted
         enabled: yes
-
-  tags:
-    - deploy-acng

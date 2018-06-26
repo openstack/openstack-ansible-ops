@@ -16,7 +16,10 @@
 - name: Gather facts
   hosts: vm_hosts
   gather_facts: "{{ gather_facts | default(true) }}"
-  pre_tasks:
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
+  tasks:
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
       with_first_found:
@@ -28,7 +31,6 @@
       tags:
         - always
 
-  tasks:
     - name: Stop running VMs
       command: "virsh destroy {{ hostvars[item]['server_hostname'] }}"
       failed_when: false
@@ -123,15 +125,13 @@
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - deploy-vms
-
 
 - name: Create vm_servers group
   hosts: localhost
   gather_facts: false
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
   tasks:
     - name: VM Servers group
       add_host:
@@ -141,17 +141,12 @@
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - deploy-vms
-
 
 - name: Wait for deploy host
   hosts: vm_servers
   gather_facts: false
   any_errors_fatal: true
-  pre_tasks:
+  tasks:
     - name: Wait for connectivity 1
       local_action:
         module: wait_for
@@ -162,7 +157,7 @@
         timeout: 1500
         state: started
         search_regex: OpenSSH
-  tasks:
+
     - name: copy host keys
       copy:
         src: "{{ item.src }}"
@@ -174,12 +169,16 @@
         - src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
           dest: /root/.ssh/id_rsa.pub
 
+
 # In vm-post-install-script.sh.j2 we chattr +i the interfaces file to prevent
 # the preseed system from overwriting the file after we've modified it.  The
 # task below simply removes the immutable attribute.
 - name: Remove immutable attr from /etc/network/interfaces
   hosts: vm_servers
   gather_facts: true
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
   tasks:
     - file:
         path: /etc/network/interfaces
@@ -188,16 +187,14 @@
         - ansible_distribution | lower == "ubuntu"
         - ansible_distribution_release | lower == "trusty"
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - deploy-vms
-
 
 - name: Set MaxSessions and MaxStartups to reduce connection failures
   hosts: vm_servers
   gather_facts: "{{ gather_facts | default(true) }}"
-  pre_tasks:
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
+  tasks:
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
       with_first_found:
@@ -208,7 +205,7 @@
         - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
       tags:
         - always
-  tasks:
+
     - lineinfile:
         path: /etc/ssh/sshd_config
         line: MaxStartups 100
@@ -216,6 +213,7 @@
         regexp: '^MaxStartups.*$'
       notify:
         - restart sshd
+
     - lineinfile:
         path: /etc/ssh/sshd_config
         line: MaxSessions 100
@@ -223,21 +221,20 @@
         regexp: '^MaxSessions.*$'
       notify:
         - restart sshd
+
   handlers:
     - name: restart sshd
       service:
         name: "{{ ssh_service_name }}"
         state: restarted
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - deploy-vms
-
 
 - name: Setup cinder host volume
   hosts: cinder_hosts:swift_hosts
   gather_facts: false
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
   tasks:
     - name: un-mount deleteme mount
       mount:
@@ -256,15 +253,13 @@
         force: true
         state: absent
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - deploy-vms
-
 
 - name: Setup cinder host volume
   hosts: cinder_hosts
   gather_facts: false
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
   tasks:
     - name: Create cinder-volumes lv
       lvol:
@@ -278,15 +273,13 @@
         vg: cinder-volumes
         pvs: "/dev/vmvg00/cinder-volumes00"
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - deploy-vms
-
 
 - name: Setup swift host volume
   hosts: swift_hosts
   gather_facts: false
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
   tasks:
     - name: Remove deleteme lv
       lvol:
@@ -329,8 +322,3 @@
         - disk1
         - disk2
         - disk3
-
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tags:
-    - deploy-vms

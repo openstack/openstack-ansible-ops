@@ -16,7 +16,10 @@
 - name: Gather facts
   hosts: pxe_hosts
   gather_facts: "{{ gather_facts | default(true) }}"
-  pre_tasks:
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-pxe
+  tasks:
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
       with_first_found:
@@ -69,7 +72,6 @@
       when:
         - tftp_ssh_key is undefined
 
-  tasks:
     - name: Drop NGINX config
       copy:
         src: "pxe/sites-enabled.default"
@@ -211,8 +213,6 @@
         - "/var/lib/tftpboot"
         - "/var/www/pxe"
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
   handlers:
     - name: restart nginx
       service:
@@ -231,6 +231,3 @@
         name: "inetutils-inetd"
         state: restarted
         enabled: yes
-
-  tags:
-    - deploy-pxe
