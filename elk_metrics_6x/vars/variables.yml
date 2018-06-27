@@ -147,7 +147,6 @@ heartbeat_services:
     name: keystone api
     ports:
       - 5000
-      - 35357
     type: http
     method: HEAD
     path: "/"
