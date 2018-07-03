@@ -145,7 +145,7 @@ metricbeat.modules:
   metricsets: ["cluster_disk", "cluster_health", "monitor_health", "pool_disk", "osd_tree"]
   enabled: true
   period: 30s
-  hosts: ["localhost:5000"]
+  hosts: {{ ceph_stats_hosts | to_json }}
 #
 {% endif %}
 ##------------------------------ Couchbase Module -----------------------------
