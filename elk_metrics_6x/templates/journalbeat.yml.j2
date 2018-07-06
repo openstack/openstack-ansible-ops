@@ -68,8 +68,9 @@ journalbeat:
   # If you want to open Journal from directory just pass an array consisting of one element
   # representing the path. See: https://www.freedesktop.org/software/systemd/man/sd_journal_open.html
   # By default this setting is empty thus journalbeat will attempt to find all journal files automatically
+{% if journal_dir.stat.exists and journal_dir.stat.isdir %}
   journal_paths: ["/var/log/journal"]
-
+{% endif %}
   #default_type: journal
 
 #================================ General ======================================

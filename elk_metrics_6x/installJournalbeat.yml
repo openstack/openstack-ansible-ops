@@ -32,6 +32,11 @@
   tasks:
     - include_tasks: common_task_install_go1.10.1.yml
 
+    - name: Check for journal directory
+      stat:
+        path: /var/log/journal
+      register: journal_dir
+
     - name: Ensure libsystemd-dev is installed
       apt:
         name: "{{ item }}"
