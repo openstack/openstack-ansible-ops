@@ -83,7 +83,8 @@ name: journalbeat
 # The tags of the shipper are included in their own field with each
 # transaction published. Tags make it easy to group servers by different
 # logical properties.
-#tags: ["service-X", "web-tier"]
+tags:
+  - journald
 
 # Optional fields that you can specify to add additional information to the
 # output. Fields can be scalar values, arrays, dictionaries, or any nested

@@ -15,12 +15,14 @@
     - name: Set quarter memory fact
       set_fact:
         q_mem: "{{ (ansible_memtotal_mb | int) // 4 }}"
+        q_storage: "{{ ansible_processor_cores }}"
       tags:
         - always
 
     - name: Set logstash facts
       set_fact:
         elastic_heap_size: "{{ ((q_mem | int) > 30720) | ternary(30720, q_mem) }}"
+        logstash_queue_size: "{{ (((q_storage | int) > 16) | ternary(16, q_storage) | int) * 1024 }}"
       tags:
         - always
 
@@ -79,21 +81,6 @@
       tags:
         - package_install
 
-    - name: Drop Logstash conf for beats input
-      template:
-        src: templates/02-beats-input.conf.j2
-        dest: /etc/logstash/conf.d/02-beats-input.conf
-
-    - name: Drop Logstash conf for beats input
-      template:
-        src: templates/10-syslog-filter.conf.j2
-        dest: /etc/logstash/conf.d/10-syslog-filter.conf
-
-    - name: Drop Logstash conf for elasticsearch output
-      template:
-        src: templates/99-elasticsearch-output.conf.j2
-        dest: /etc/logstash/conf.d/99-elasticsearch-output.conf
-
     - name: Drop elasticsearch conf file
       template:
         src: "{{ item.src }}"
@@ -101,6 +88,14 @@
       with_items:
         - src: templates/jvm.options.j2
           dest: /etc/logstash/jvm.options
+        - src: templates/99-elasticsearch-output.conf.j2
+          dest: /etc/logstash/conf.d/99-elasticsearch-output.conf
+        - src: templates/02-beats-input.conf.j2
+          dest: /etc/logstash/conf.d/02-beats-input.conf
+        - src: templates/logstash.yml.j2
+          dest: /etc/logstash/logstash.yml
+      notify:
+        - Enable and restart logstash
       tags:
         - config
 
@@ -123,16 +118,19 @@
         - extras
       when:
         - logstash_deploy_filters
+      notify:
+        - Enable and restart logstash
       tags:
         - logstash-filters
         - config
 
     - name: Deploy Logstash configuration files
-      template:
-        src: "{{ item }}"
+      copy:
+        src: "files/{{ item }}"
         dest: "/etc/logstash/conf.d/{{ item }}"
       with_items:
         - 02-general.conf
+        - 02-journald.conf
         - 03-nova.conf
         - 04-neutron.conf
         - 05-glance.conf
@@ -141,6 +139,7 @@
         - 08-apache.conf
         - 09-heat.conf
         - 10-mysql.conf
+        - 10-syslog-filter.conf
         - 11-auth.conf
         - 12-logstash.conf
         - 13-swift.conf
@@ -154,6 +153,8 @@
         - 98-traceback.conf
       when:
         - logstash_deploy_filters
+      notify:
+        - Enable and restart logstash
       tags:
         - logstash-filters
         - config
@@ -178,6 +179,8 @@
           template:
             src: "templates/99-kafka-output.conf"
             dest: "/etc/logstash/conf.d/99-kafka-output.conf"
+          notify:
+            - Enable and restart logstash
       when:
         - logstash_kafka_options is defined
 
@@ -187,7 +190,12 @@
         owner: logstash
         group: logstash
         recurse: true
+      register: l_perms
+      until: l_perms is success
+      retries: 3
+      delay: 1
 
+  handlers:
     - name: Enable and restart logstash
       systemd:
         name: "logstash"
