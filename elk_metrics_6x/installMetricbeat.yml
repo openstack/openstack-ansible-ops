@@ -128,7 +128,7 @@
           {% if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups['cinder_volume'])  %}
           {%   set ceph_detect = true %}
           {% else %}
-          {%   set ceph_detect = ceph.stats.exists | bool %}
+          {%   set ceph_detect = ceph.stat.exists | bool %}
           {% endif %}
           {{ ceph_detect }}
 
