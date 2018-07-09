@@ -16,6 +16,10 @@
         body: "{{ item.index_options | to_json }}"
         status_code: 200,400
         body_format: json
+      register: elk_indexes
+      until: elk_indexes is success
+      retries: 3
+      delay: 5
       with_items:
         - name: "osprofiler-notifications"
           index_options:

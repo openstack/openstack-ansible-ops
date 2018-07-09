@@ -1011,8 +1011,11 @@ filebeat.prospectors:
   # Make sure not file is defined twice as this can lead to unexpected behaviour.
   paths:
     - /var/log/beats/*.log
+    - /openstack/log/*/beats/*.log
     - /var/log/curator/curator
+    - /openstack/log/*/curator/curator
     - /var/log/elasticsearch/*.log
+    - /openstack/log/*/elasticsearch/*.log
 
   # Optional additional fields. These fields can be freely picked
   # to add additional information to the crawled log files for filtering
