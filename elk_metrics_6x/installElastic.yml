@@ -35,7 +35,7 @@
             elasticsearch_node_ingest: false
             elastic_heap_size: "{{ (elastic_heap_size | int) // 3 }}"
       when:
-        - inventory_hostname in groups['kibana']
+        - inventory_hostname in (groups['kibana'] | difference(groups['elastic-logstash']))
       tags:
         - always
 

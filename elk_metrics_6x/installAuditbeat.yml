@@ -44,18 +44,10 @@
         src: templates/auditbeat.yml.j2
         dest: /etc/auditbeat/auditbeat.yml
 
-    - name: Stop auditd
-      systemd:
-        name: "auditd"
-        enabled: "{{ not inventory_hostname in groups['kibana'] | default([]) }}"
-        state: stopped
-      when:
-        - not apply_security_hardening | default(true) | bool
-
     - name: Enable and restart auditbeat
       systemd:
         name: "auditbeat"
-        enabled: "{{ not inventory_hostname in groups['kibana'] | default([]) }}"
+        enabled: "true"
         state: restarted
 
   tags:
