@@ -439,7 +439,7 @@ packetbeat.protocols:
 
 - type: nfs
   # Enable NFS monitoring. Default: true
-{% set ns = namespace(enabled=((inventory_hostname in groups['glance_all'] | default([])) or (inventory_hostname in groups['nova_compute'] | default([])))) %}
+{% set ns = namespace(enabled=((inventory_hostname in groups['glance_all'] | default([])) or (inventory_hostname in groups['nova_compute'] | default([])) or 'nfs4' in (ansible_mounts | map(attribute='fstype') | list))) %}
 {% if not ns.enabled | bool %}
 {%   for _item in groups['glance_all'] | default([]) + groups['nova_compute'] | default([]) %}
 {%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
