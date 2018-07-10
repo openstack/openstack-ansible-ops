@@ -34,3 +34,16 @@ Release notes
 
 Release notes for the project can be found at:
 https://docs.openstack.org/releasenotes/openstack-ansible-ops/
+
+==============================
+Ops role for OpenStack-Ansible
+==============================
+
+Documentation for the project can be found at:
+  https://docs.openstack.org/openstack-ansible-ops/latest/
+
+Release notes for the project can be found at:
+  https://docs.openstack.org/releasenotes/openstack-ansible-ops/
+
+The project home is at:
+  https://launchpad.net/openstack-ansible
