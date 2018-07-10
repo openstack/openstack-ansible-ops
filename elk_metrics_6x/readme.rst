@@ -317,13 +317,23 @@ deploy logstash, deploy Kibana, and then deploy all of the service beats.
 
 
 * The `openstack-ansible` command can be used if the version of ansible on the
-  system is greater than **2.5**.
+  system is greater than **2.5**. This will automatically pick up the necessary
+  group_vars for hosts in an OSA deployment.
 
 * If required add ``-e@/opt/openstack-ansible/inventory/group_vars/all/all.yml``
   to import sufficient OSA group variables to define the OpenStack release.
   Journalbeat will then deploy onto all hosts/containers for releases prior to
   Rocky, and hosts only for Rocky onwards. If the variable ``openstack_release``
   is undefined the default behaviour is to deploy Journalbeat to hosts only.
+
+* Alternatively if using the embedded ansible, create a symlink to include all
+  of the OSA group_vars. These are not available by default with the embedded
+  ansible and can be symlinked into the ops repo.
+
+.. code-block:: bash
+
+    ln -s /opt/openstack-ansible/inventory/group_vars /opt/openstack-ansible-ops/elk_metrics_6x/group_vars
+
 
 The individual playbooks found within this repository can be independently run
 at anytime.
