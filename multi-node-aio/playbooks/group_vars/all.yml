@@ -40,6 +40,29 @@ tftp_port: 69
 
 # Default ISO images
 images:
+  ubuntu-18.04-amd64:
+    image_type: "debian"
+    image_os: "ubuntu"
+    image-version: "bionic"
+    image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
+    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
+    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
+    image_configs:
+      mnaio:
+        url: "http://{{ tftp_server }}/configs/mnaio.config"
+        template_name: "mnaio.config"
+      vm:
+        url: "http://{{ tftp_server }}/configs/vm.config"
+        template_name: "vm.config"
+      vm-compute:
+        url: "http://{{ tftp_server }}/configs/vm-compute.config"
+        template_name: "vm-compute.config"
+      compute:
+        url: "http://{{ tftp_server }}/configs/compute.config"
+        template_name: "compute.config"
+      infra:
+        url: "http://{{ tftp_server }}/configs/infra.config"
+        template_name: "infra.config"
   ubuntu-16.04-amd64:
     image_type: "debian"
     image_os: "ubuntu"
