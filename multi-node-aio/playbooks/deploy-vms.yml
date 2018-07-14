@@ -245,29 +245,47 @@
         state: restarted
 
 
-- name: Setup cinder host volume
+- name: Make space for swift and cinder volumes
   hosts: cinder_hosts:swift_hosts
   gather_facts: false
   environment: "{{ deployment_environment_variables | default({}) }}"
   tags:
     - deploy-vms
   tasks:
-    - name: un-mount deleteme mount
+    - name: Unmount lxc and machines mounts
       mount:
-        name: "/var/lib/lxc"
+        name: "{{ item }}"
         state: unmounted
+      with_items:
+        - "/var/lib/lxc"
+        - "/var/lib/machines"
 
-    - name: remote deleteme mount
+    - name: Remove lxc mount directory
       mount:
         name: "/var/lib/lxc"
         state: absent
 
-    - name: Remove deleteme lv
+    - name: Shrink machines00 mount
+      lvol:
+        vg: vmvg00
+        lv: machines00
+        size: 8192
+        shrink: yes
+        force: yes
+
+    - name: Remove lxc00 volume group
       lvol:
         vg: vmvg00
         lv: lxc00
         force: true
         state: absent
+
+    - name: Re-mount machines00 mount
+      mount:
+        path: /var/lib/machines
+        src: /dev/mapper/vmvg00-machines00
+        state: mounted
+        fstype: btrfs
 
 
 - name: Setup cinder host volume
