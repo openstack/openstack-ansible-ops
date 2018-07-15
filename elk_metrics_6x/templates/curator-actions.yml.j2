@@ -13,156 +13,112 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-actions:
-  1:
-    action: delete_indices
-    description: >-
-      Delete indices older than 60 days (based on index name), for logstash-
-      prefixed indices. Ignore the error if the filter does not result in an
-      actionable list of indices (ignore_empty_list) and exit cleanly.
-    options:
-      ignore_empty_list: True
-      disable_action: False
-    filters:
-    - filtertype: pattern
-      kind: prefix
-      value: logstash-
-    - filtertype: age
-      source: name
-      direction: older
-      timestring: '%Y.%m.%d'
-      unit: days
-      unit_count: {{ elastic_logstash_retention }}
-  2:
-    action: delete_indices
-    description: >-
-      Delete indices older than 10 days (based on index name), for apm-
-      prefixed indices. Ignore the error if the filter does not result in an
-      actionable list of indices (ignore_empty_list) and exit cleanly.
-    options:
-      ignore_empty_list: True
-      disable_action: False
-    filters:
-    - filtertype: pattern
-      kind: prefix
-      value: apm-
-    - filtertype: age
-      source: name
-      direction: older
-      timestring: '%Y.%m.%d'
-      unit: days
-      unit_count: {{ elastic_apm_retention }}
-  3:
-    action: delete_indices
-    description: >-
-      Delete indices older than 15 days (based on index name), for auditbeat-
-      prefixed indices. Ignore the error if the filter does not result in an
-      actionable list of indices (ignore_empty_list) and exit cleanly.
-    options:
-      ignore_empty_list: True
-      disable_action: False
-    filters:
-    - filtertype: pattern
-      kind: prefix
-      value: auditbeat-
-    - filtertype: age
-      source: name
-      direction: older
-      timestring: '%Y.%m.%d'
-      unit: days
-      unit_count: {{ elastic_auditbeat_retention }}
-  4:
-    action: delete_indices
-    description: >-
-      Delete indices older than 15 days (based on index name), for filebeat-
-      prefixed indices. Ignore the error if the filter does not result in an
-      actionable list of indices (ignore_empty_list) and exit cleanly.
-    options:
-      ignore_empty_list: True
-      disable_action: False
-    filters:
-    - filtertype: pattern
-      kind: prefix
-      value: filebeat-
-    - filtertype: age
-      source: name
-      direction: older
-      timestring: '%Y.%m.%d'
-      unit: days
-      unit_count: {{ elastic_filebeat_retention }}
-  5:
-    action: delete_indices
-    description: >-
-      Delete indices older than 10 days (based on index name), for heartbeat-
-      prefixed indices. Ignore the error if the filter does not result in an
-      actionable list of indices (ignore_empty_list) and exit cleanly.
-    options:
-      ignore_empty_list: True
-      disable_action: False
-    filters:
-    - filtertype: pattern
-      kind: prefix
-      value: heartbeat-
-    - filtertype: age
-      source: name
-      direction: older
-      timestring: '%Y.%m.%d'
-      unit: days
-      unit_count: {{ elastic_heartbeat_retention }}
-  6:
-    action: delete_indices
-    description: >-
-      Delete indices older than 15 days (based on index name), for journalbeat-
-      prefixed indices. Ignore the error if the filter does not result in an
-      actionable list of indices (ignore_empty_list) and exit cleanly.
-    options:
-      ignore_empty_list: True
-      disable_action: False
-    filters:
-    - filtertype: pattern
-      kind: prefix
-      value: journalbeat-
-    - filtertype: age
-      source: name
-      direction: older
-      timestring: '%Y.%m.%d'
-      unit: days
-      unit_count: {{ elastic_journalbeat_retention }}
-  7:
-    action: delete_indices
-    description: >-
-      Delete indices older than 10 days (based on index name), for metricbeat-
-      prefixed indices. Ignore the error if the filter does not result in an
-      actionable list of indices (ignore_empty_list) and exit cleanly.
-    options:
-      ignore_empty_list: True
-      disable_action: False
-    filters:
-    - filtertype: pattern
-      kind: prefix
-      value: metricbeat-
-    - filtertype: age
-      source: name
-      direction: older
-      timestring: '%Y.%m.%d'
-      unit: days
-      unit_count: {{ elastic_metricbeat_retention }}
-  8:
-    action: delete_indices
-    description: >-
-      Delete indices older than 5 days (based on index name), for packetbeat-
-      prefixed indices. Ignore the error if the filter does not result in an
-      actionable list of indices (ignore_empty_list) and exit cleanly.
-    options:
-      ignore_empty_list: True
-      disable_action: False
-    filters:
-    - filtertype: pattern
-      kind: prefix
-      value: packetbeat-
-    - filtertype: age
-      source: name
-      direction: older
-      timestring: '%Y.%m.%d'
-      unit: days
-      unit_count: {{ elastic_packetbeat_retention }}
+{% set action_items = [] -%}
+{# Delete index loop #}
+{% for key in elastic_beat_retention_policy_hosts.keys() -%}
+{%   set delete_indices = {} -%}
+{%   set index_retention = hostvars[inventory_hostname]['elastic_' + key + '_retention'] -%}
+{%   set _ = delete_indices.update(
+   {
+    'action': 'delete_indices',
+    'description': 'Prune indices for ' + key + ' after ' ~ ((index_retention | int) * 2) ~ ' days.',
+    'options': {
+      'ignore_empty_list': true,
+      'disable_action': false
+    }
+   }
+  )
+-%}
+{# add the filter loop #}
+{%   set filters = [] -%}
+{%   set _ = filters.append(
+   {
+    'filtertype': 'pattern',
+    'kind': 'prefix',
+    'value': key + '-'
+   }
+  )
+-%}
+{%   set _ = filters.append(
+   {
+    'filtertype': 'age',
+    'source': 'name',
+    'direction': 'older',
+    'timestring': '%Y.%m.%d',
+    'unit': 'days',
+    'unit_count': (index_retention | int)
+   }
+  )
+-%}
+{%   set _ = delete_indices.update({'filters': filters}) -%}
+{%   set _ = action_items.append(delete_indices) -%}
+
+{# Set shrink curator options #}
+{%   set shrink_indices = {} -%}
+{%   set _ = shrink_indices.update(
+   {
+     'action': 'shrink',
+     'description': 'Shrink ' + key + ' indices older than ' ~ (index_retention | int) // 4 ~ ' days',
+     'options': {
+       "disable_action": false,
+       "ignore_empty_list": true,
+       "shrink_node": "DETERMINISTIC",
+       "node_filters": {
+         "permit_masters": ((master_nodes | length) < (data_nodes | length)) | ternary(true, false),
+         "exclude_nodes": (groups['kibana'] | map('extract', hostvars, 'ansible_host') | list)
+       },
+       "number_of_shards": 1,
+       "number_of_replicas": 1,
+       "shrink_suffix": '-shrink',
+       "copy_aliases": true,
+       "delete_after": true,
+       "post_allocation": {
+         "allocation_type": "include",
+         "key": "node_tag",
+         "value": "cold"
+       },
+       "wait_for_active_shards": 1,
+       "extra_settings": {
+         "settings": {
+           "index.codec": "best_compression"
+         }
+       },
+       "wait_for_completion": true,
+       "wait_for_rebalance": true,
+       "wait_interval": 9,
+       "max_wait": -1
+     }
+   }
+  )
+-%}
+{%   set filters = [] -%}
+{%   set _ = filters.append(
+   {
+    'filtertype': 'pattern',
+    'kind': 'prefix',
+    'value': key + '-'
+   }
+  )
+-%}
+{%   set _ = filters.append(
+   {
+    'filtertype': 'age',
+    'source': 'creation_date',
+    'direction': 'older',
+    'unit': 'days',
+    'unit_count': (index_retention | int) // 4
+   }
+  )
+-%}
+{%   set _ = shrink_indices.update({'filters': filters}) -%}
+{%   set _ = action_items.append(shrink_indices) -%}
+{% endfor -%}
+
+{% set actions = {} -%}
+{% for action_item in action_items -%}
+{%   set _ = actions.update({loop.index: action_item}) -%}
+{% endfor -%}
+
+{# Render all actions #}
+{% set curator_actions = {'actions': actions} -%}
+{{ curator_actions | to_nice_yaml(indent=2) }}

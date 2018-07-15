@@ -13,16 +13,39 @@ elastic_hap_port: 9201
 cluster_name: openstack_elk
 node_name: ${HOSTNAME}
 
-# elastic curator vars
-# all retention options are in days
-elastic_logstash_retention: 14
-elastic_apm_retention: 3
-elastic_auditbeat_retention: 7
-elastic_filebeat_retention: 7
-elastic_heartbeat_retention: 7
-elastic_journalbeat_retention: 14
-elastic_metricbeat_retention: 3
-elastic_packetbeat_retention: 3
+### Elastic curator variables
+## Default retention policy options. All retention options are in days.
+#  elastic_logstash_retention: 1
+#  elastic_apm_retention: 1
+#  elastic_auditbeat_retention: 1
+#  elastic_filebeat_retention: 1
+#  elastic_heartbeat_retention: 1
+#  elastic_journalbeat_retention: 1
+#  elastic_metricbeat_retention: 1
+#  elastic_packetbeat_retention: 1
+
+# This is used to calculate the storage a beat could generate per node, per day.
+# This constant is used as a multiplier. If the expected storage is larger than
+# the actual available storage after the buffer is calculated the multiplier
+# will be doubled there-by cutting the potential storage days in half.
+elastic_beat_storage_constant: 512
+
+## If any retention policy option is undefined a dynamic fact will be generated.
+## Fact will be generated for the general retention using the storage constant
+## per node, per index, where a given collector is expected to be deployed. The
+## equation used will take the total available storage from the ES data nodes
+## subtract 25% divided by the total number of data nodes. That is then divided
+## by number of hosts assumed to be a beat target which is multiplied by the
+## storage constant.
+elastic_beat_retention_policy_hosts:
+  logstash: "{{ groups['elastic-logstash'] | default([null]) | length }}"
+  apm: "{{ groups['apm-server'] | default([null]) | length }}"
+  auditbeat: "{{ groups['hosts'] | default([null]) | length }}"
+  filebeat: "{{ groups['hosts'] | default([null]) | length }}"
+  heartbeat: "{{ groups['utility_all'] | default([null]) | length }}"
+  journalbeat: "{{ groups['all'] | default([null]) | length }}"
+  metricbeat: "{{ groups['all'] | default([null]) | length }}"
+  packetbeat: "{{ groups['hosts'] | default([null]) | length }}"
 
 # This is the URL external services can use to communicate with the
 # elasticsearch cluster.
