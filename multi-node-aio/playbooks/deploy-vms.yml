@@ -272,6 +272,8 @@
         size: 8192
         shrink: yes
         force: yes
+      when:
+        - default_container_tech | default('lxc') == 'nspawn'
 
     - name: Remove lxc00 volume group
       lvol:
