@@ -3,9 +3,14 @@ component_skel:
   apm-server:
     belongs_to:
       - elk_all
+      - apm_all
   elastic-logstash:
     belongs_to:
       - elk_all
+      - elasticsearch
+      - elasticsearch_all
+      - logstash
+      - logstash_all
   kibana:
     belongs_to:
       - elk_all

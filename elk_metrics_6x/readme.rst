@@ -268,7 +268,7 @@ Create the containers
 .. code-block:: bash
 
    cd /opt/openstack-ansible/playbooks
-   openstack-ansible lxc-containers-create.yml -e 'container_group=elastic-logstash:Kibana:apm-server'
+   openstack-ansible lxc-containers-create.yml --limit elk_all
 
 
 Deploying | Installing with embedded Ansible
@@ -485,7 +485,7 @@ Example command using the embedded Ansible from within the grafana directory.
 
     ansible-playbook ${USER_VARS} installGrafana.yml \
                                   -e @../elk_metrics_6x/vars/variables.yml \
-                                  -e galera_root_user=root \
+                                  -e 'galera_root_user="root"' \
                                   -e 'galera_address={{ internal_lb_vip_address }}'
 
 Optional | add kibana custom dashboard
@@ -526,5 +526,5 @@ If everything goes bad, you can clean up with the following command
 
 .. code-block:: bash
 
-     openstack-ansible /opt/openstack-ansible-ops/elk_metrics_6x/site.yml -e "elk_package_state=absent" --tags package_install
-     openstack-ansible /opt/openstack-ansible/playbooks/lxc-containers-destroy.yml --limit=Kibana:elastic-logstash_all
+     openstack-ansible /opt/openstack-ansible-ops/elk_metrics_6x/site.yml -e 'elk_package_state="absent"' --tags package_install
+     openstack-ansible /opt/openstack-ansible/playbooks/lxc-containers-destroy.yml --limit elk_all
