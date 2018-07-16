@@ -1,0 +1,6 @@
+fleet_hosts:
+  logging1:
+    ip: 172.22.8.27
+mariadb_hosts:
+  logging1:
+    ip: 172.22.8.27

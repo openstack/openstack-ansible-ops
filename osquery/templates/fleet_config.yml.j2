@@ -1,0 +1,15 @@
+mysql:
+  address: {{ hostvars[groups['mariadb'][0]]['ansible_host'] }}:3306
+  database: {{ kolide_fleet_db_name }}
+  username: {{ kolide_fleet_db_user }}
+  password: {{ kolide_fleet_db_password }}
+redis:
+  address: localhost:6379
+auth:
+  jwt_key: {{ kolide_fleet_jwt_key }}
+server:
+  address: {{ kolide_fleet_address }}
+  cert: {{ kolide_fleet_ssl_cert }}
+  key: {{ kolide_fleet_ssl_key }}
+logging:
+  json: true

@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Install osquery
-  hosts: hosts
+- name: Install MariaDB server
+  hosts: mariadb
   become: true
   vars_files:
     - vars/variables.yml
@@ -22,29 +22,8 @@
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   gather_facts: "{{ osa_gather_facts | default(True) }}"
-
-  pre_tasks:
-    - name: create osquery dir
-      file:
-        path: /etc/osquery/ssl
-        state: directory
-
-    - name: Debug fleet_config
-      debug:
-        var: hostvars[groups['fleet'][0]]['ansible_host']
-        verbosity: 2
-
-    - name: Distribute self signed ssl cert
-      copy:
-        dest: "{{ kolide_fleet_ssl_cert }}"
-        content: "{{ hostvars[groups['fleet'][0]]['kolide_fleet_ssl_cert_fact'] | b64decode }}"
-        mode: "0640"
-
-    - name: write enroll secret
-      copy:
-        dest: "{{ osquery_enroll_secret_dir }}"
-        content: "{{ hostvars[groups['fleet'][0]]['kolide_fleet_enroll_secret'] }}"
-        mode: "0640"
+  serial: 1
+  user: root
 
   roles:
-    - role: "osquery"
+    - role: "mariadb"
