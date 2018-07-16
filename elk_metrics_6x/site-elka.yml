@@ -18,4 +18,3 @@
 - import_playbook: installCurator.yml
 - import_playbook: installKibana.yml
 - import_playbook: installAPMserver.yml
-- import_playbook: createElasticIndexes.yml

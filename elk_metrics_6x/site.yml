@@ -16,3 +16,4 @@
 - import_playbook: site-elka.yml
 - import_playbook: site-beats-core.yml
 - import_playbook: site-beats-community.yml
+- import_playbook: createElasticIndexes.yml

@@ -5,6 +5,9 @@
   vars_files:
     - vars/variables.yml
 
+  vars:
+    temp_dir: /var/lib/logstash/tmp
+
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   pre_tasks:
@@ -214,6 +217,14 @@
       until: l_perms is success
       retries: 3
       delay: 1
+
+    - name: Ensure logstash tmp dir
+      file:
+        path: "/var/lib/logstash/tmp"
+        state: directory
+        owner: "logstash"
+        group: "logstash"
+        mode: "0750"
 
   handlers:
     - name: Enable and restart logstash

@@ -13,6 +13,8 @@ elastic_hap_port: 9201
 cluster_name: openstack_elk
 node_name: ${HOSTNAME}
 
+elastic_data_interface: "{{ ansible_default_ipv4['alias'] }}"
+
 ### Elastic curator variables
 ## Default retention policy options. All retention options are in days.
 #  elastic_logstash_retention: 1

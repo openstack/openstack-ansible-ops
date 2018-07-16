@@ -1,5 +1,5 @@
 ---
-- name: Create known indexes in Elasticsearch
+- name: Create/Setup known indexes in Elasticsearch
   hosts: "elastic-logstash[0]"
   become: true
 
@@ -31,3 +31,9 @@
                     limit: "10000"
                 refresh_interval: "5s"
                 number_of_replicas: "1"
+        - name: "_all/_settings?preserve_existing=true"
+          index_options:
+            index.refresh_interval: "1m"
+        - name: "_all/_settings?preserve_existing=true"
+          index_options:
+            index.queries.cache.enabled: "false"

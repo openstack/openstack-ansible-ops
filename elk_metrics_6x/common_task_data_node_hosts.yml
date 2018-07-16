@@ -49,6 +49,39 @@
       {%     set _ = nodes.insert(loop.index, (hostvars[host]['ansible_host'] | string)) %}
       {%   endfor %}
       {{ nodes }}
+    elasticserch_interface_speed: |-
+      {% set default_interface_fact = hostvars[inventory_hostname]['ansible_' + (elastic_data_interface | replace('-', '_'))] %}
+      {% set speeds = [] %}
+      {% if default_interface_fact['type'] == 'bridge' %}
+      {%   for interface in default_interface_fact['interfaces'] %}
+      {%     set interface_fact = hostvars[inventory_hostname]['ansible_' + (interface | replace('-', '_'))] %}
+      {%     if 'speed' in interface_fact %}
+      {%       set speed = (interface_fact['speed'] | default(1000)) | string %}
+      {%       if speed == "-1" %}
+      {%         set _ = speeds.append(1000) %}
+      {%       else %}
+      {%         set _ = speeds.append(speed | int) %}
+      {%       endif %}
+      {%       if 'module' in interface_fact %}
+      {%         set _ = speeds.append((interface_fact['speed'] | default(1000)) | int) %}
+      {%       else %}
+      {%         set _ = speeds.append(1000) %}
+      {%       endif %}
+      {%     endif %}
+      {%   endfor %}
+      {% else %}
+      {%   if ('module' in default_interface_fact) or (default_interface_fact['type'] == 'bond') %}
+      {%     set speed = (default_interface_fact['speed'] | default(1000)) | string %}
+      {%     if speed == "-1" %}
+      {%       set _ = speeds.append(1000) %}
+      {%     else %}
+      {%       set _ = speeds.append(speed | int) %}
+      {%     endif %}
+      {%   else %}
+      {%     set _ = speeds.append(1000) %}
+      {%   endif %}
+      {% endif %}
+      {{ ((speeds | min) * 0.75) | int }}
   tags:
     - always
 

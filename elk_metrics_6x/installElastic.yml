@@ -6,6 +6,9 @@
   vars_files:
     - vars/variables.yml
 
+  vars:
+    temp_dir: /var/lib/elasticsearch/tmp
+
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   pre_tasks:
@@ -142,6 +145,14 @@
       delay: 1
       tags:
         - config
+
+    - name: Ensure logstash tmp dir
+      file:
+        path: "/var/lib/elasticsearch/tmp"
+        state: directory
+        owner: "elasticsearch"
+        group: "elasticsearch"
+        mode: "0750"
 
   handlers:
     - name: Enable and restart elastic
