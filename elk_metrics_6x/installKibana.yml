@@ -54,20 +54,44 @@
       until: _apt_task is success
       retries: 3
       delay: 2
+      notify:
+        - Enable and restart kibana
       tags:
         - package_install
+
+    - name: Create kibana systemd service config dir
+      file:
+        path: "/etc/systemd/system/kibana.service.d"
+        state: "directory"
+        group: "root"
+        owner: "root"
+        mode: "0755"
+
+    - name: Apply systemd options
+      template:
+        src: "{{ item.src }}"
+        dest: "/etc/systemd/system/kibana.service.d/{{ item.dest }}"
+        mode: "0644"
+      with_items:
+        - { src: "systemd.kibana-overrides.conf.j2", dest: "kibana-overrides.conf" }
+      notify:
+        - Enable and restart kibana
 
     - name: Drop kibana conf file
       template:
         src: templates/kibana.yml.j2
         dest: /etc/kibana/kibana.yml
         mode: "0666"
+      notify:
+        - Enable and restart kibana
 
+  handlers:
     - name: Enable and restart kibana
       systemd:
         name: "kibana"
         enabled: true
         state: restarted
+        daemon_reload: true
 
   tags:
     - server-install

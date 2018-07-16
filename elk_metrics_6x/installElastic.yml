@@ -82,7 +82,7 @@
 
     - include_tasks: common_task_install_elk_repo.yml
 
-    - name: Ensure Elastic search is installed
+    - name: Ensure elasticsearch is installed
       apt:
         name: elasticsearch
         state: "{{ elk_package_state | default('present') }}"
@@ -91,8 +91,28 @@
       until: _apt_task is success
       retries: 3
       delay: 2
+      notify:
+        - Enable and restart elastic
       tags:
         - package_install
+
+    - name: Create elasticsearch systemd service config dir
+      file:
+        path: "/etc/systemd/system/elasticsearch.service.d"
+        state: "directory"
+        group: "root"
+        owner: "root"
+        mode: "0755"
+
+    - name: Apply systemd options
+      template:
+        src: "{{ item.src }}"
+        dest: "/etc/systemd/system/elasticsearch.service.d/{{ item.dest }}"
+        mode: "0644"
+      with_items:
+        - { src: "systemd.elasticsearch-overrides.conf.j2", dest: "elasticsearch-overrides.conf" }
+      notify:
+        - Enable and restart elastic
 
     - name: Drop elasticsearch conf file
       template:
@@ -105,6 +125,8 @@
           dest: /etc/elasticsearch/jvm.options
         - src: templates/es-log4j2.properties.j2
           dest: /etc/elasticsearch/log4j2.properties
+      notify:
+        - Enable and restart elastic
       tags:
         - config
 
@@ -121,11 +143,13 @@
       tags:
         - config
 
+  handlers:
     - name: Enable and restart elastic
       systemd:
         name: "elasticsearch"
         enabled: true
         state: restarted
+        daemon_reload: true
       tags:
         - config
 

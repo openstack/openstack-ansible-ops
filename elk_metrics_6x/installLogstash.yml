@@ -78,8 +78,28 @@
       until: _apt_task is success
       retries: 3
       delay: 2
+      notify:
+        - Enable and restart logstash
       tags:
         - package_install
+
+    - name: Create logstash systemd service config dir
+      file:
+        path: "/etc/systemd/system/logstash.service.d"
+        state: "directory"
+        group: "root"
+        owner: "root"
+        mode: "0755"
+
+    - name: Apply systemd options
+      template:
+        src: "{{ item.src }}"
+        dest: "/etc/systemd/system/logstash.service.d/{{ item.dest }}"
+        mode: "0644"
+      with_items:
+        - { src: "systemd.logstash-overrides.conf.j2", dest: "logstash-overrides.conf" }
+      notify:
+        - Enable and restart logstash
 
     - name: Drop elasticsearch conf file
       template:
@@ -201,6 +221,7 @@
         name: "logstash"
         enabled: true
         state: restarted
+        daemon_reload: true
 
   tags:
     - server-install
