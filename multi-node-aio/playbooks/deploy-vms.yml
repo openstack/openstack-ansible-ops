@@ -265,7 +265,7 @@
         name: "/var/lib/lxc"
         state: absent
 
-    - name: Shrink machines00 mount
+    - name: Shrink machines00 logical volume
       lvol:
         vg: vmvg00
         lv: machines00
@@ -275,14 +275,14 @@
       when:
         - default_container_tech | default('lxc') == 'nspawn'
 
-    - name: Remove lxc00 volume group
+    - name: Remove lxc00 logical volume
       lvol:
         vg: vmvg00
         lv: lxc00
         force: true
         state: absent
 
-    - name: Re-mount machines00 mount
+    - name: Re-mount machines00 logical volume
       mount:
         path: /var/lib/machines
         src: /dev/mapper/vmvg00-machines00
