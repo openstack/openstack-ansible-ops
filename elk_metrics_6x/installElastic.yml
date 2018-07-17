@@ -99,6 +99,12 @@
       tags:
         - package_install
 
+    - name: exit playbook after uninstall
+      meta: end_play
+      when:
+        - (elk_package_state | default('present')) == 'absent'
+
+  post_tasks:
     - name: Create elasticsearch systemd service config dir
       file:
         path: "/etc/systemd/system/elasticsearch.service.d"
@@ -161,6 +167,8 @@
         enabled: true
         state: restarted
         daemon_reload: true
+      when:
+        - (elk_package_state | default('present')) != 'absent'
       tags:
         - config
 
