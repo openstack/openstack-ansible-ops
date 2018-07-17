@@ -16,7 +16,7 @@
 - name: Install Curator
   hosts: "elastic-logstash"
   become: true
-  gather_facts: false
+  gather_facts: true
   vars:
     haproxy_ssl: false
 
