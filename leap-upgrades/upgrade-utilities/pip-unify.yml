@@ -42,7 +42,7 @@
         force: "yes"
         validate_certs: "{{ pip_validate_certs }}"
       register: get_pip
-      until: get_pip  is success
+      until: get_pip is success
       failed_when: false
       retries: 5
       delay: 2
@@ -57,7 +57,7 @@
         - get_pip  is failed
         - pip_fallback_url is defined
       register: get_pip_fallback
-      until: get_pip_fallback  is success
+      until: get_pip_fallback is success
       retries: 5
       delay: 2
 
