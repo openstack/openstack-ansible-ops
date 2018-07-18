@@ -73,6 +73,7 @@
       retries: 3
       delay: 2
       with_items:
+        - gcc
         - git
         - libsystemd-dev
       tags:

@@ -1,5 +1,9 @@
 ---
 
+- name: Refresh minimal facts
+  setup:
+    gather_subset: '!all,!any,network,virtual'
+
 # storage node count is equal to the cluster size
 - name: Node count fact
   set_fact:

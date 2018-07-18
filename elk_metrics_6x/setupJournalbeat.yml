@@ -40,8 +40,8 @@
         -e -v
       register: templates
       until: templates is success
-      retries: 3
-      delay: 2
+      retries: 5
+      delay: 5
 
   tags:
     - beat-setup

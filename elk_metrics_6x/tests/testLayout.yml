@@ -1,7 +1,13 @@
 ---
+
+- import_playbook: run-setup.yml
+
 - name: Test host layout
   hosts: localhost
   become: true
+
+  environment:
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
 
   vars:
     storage_node_count: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]

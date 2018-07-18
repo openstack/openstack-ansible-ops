@@ -1,0 +1,140 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- import_playbook: run-setup.yml
+
+- name: Basic setup
+  hosts: "all"
+  become: true
+
+  environment:
+    # ZUUL_PROJECT is used by tests/get-ansible-role-requirements to
+    # determine when CI provided repos should be used.
+    ZUUL_PROJECT: "{{ zuul.project.short_name }}"
+    ANSIBLE_PACKAGE: "{{ ansible_package | default('') }}"
+    ANSIBLE_HOST_KEY_CHECKING: "False"
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+
+  pre_tasks:
+    - name: Create swap file
+      command: "dd if=/dev/zero of=/swap.img bs=1M count=4096"
+      args:
+        creates: /swap.img
+      register: swap_create
+
+    - name: Format the swap file
+      command: mkswap /swap.img
+      when:
+        - swap_create is changed
+      tags:
+        - swap-format
+        - skip_ansible_lint
+
+    - name: Enable swap file
+      command: swapon /swap.img
+      failed_when: false
+      tags:
+        - swap-format
+        - skip_ansible_lint
+
+    - name: Set system swappiness
+      sysctl:
+        name: vm.swappiness
+        value: 10
+        state: present
+
+    - name: Flush iptables rules
+      command: "{{ item }}"
+      args:
+        creates: "/tmp/elk-metrics-6x-logs/iptables.flushed"
+      with_items:
+        - "iptables -F"
+        - "iptables -X"
+        - "iptables -t nat -F"
+        - "iptables -t nat -X"
+        - "iptables -t mangle -F"
+        - "iptables -t mangle -X"
+        - "iptables -P INPUT ACCEPT"
+        - "iptables -P FORWARD ACCEPT"
+        - "iptables -P OUTPUT ACCEPT"
+        - "touch /tmp/elk-metrics-6x-logs/iptables.flushed"
+
+  tasks:
+    - name: Run embedded ansible installation
+      become: yes
+      become_user: root
+      command: "./bootstrap-embedded-ansible.sh"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
+
+    - name: Run ansible-galaxy
+      become: yes
+      become_user: root
+      command: "/root/ansible25/bin/ansible-galaxy install --force -r ansible-role-requirements.yml"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
+
+    - name: Install netaddr
+      pip:
+        name: netaddr
+        virtualenv: "/root/ansible25"
+
+    - name: Run environment setup
+      become: yes
+      become_user: root
+      command: "/root/ansible25/bin/ansible-playbook -i inventory/test-inventory.yml -e @test-vars.yml _container-setup.yml"
+      environment:
+        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
+
+    - name: Wait 15 seconds
+      command: "sleep 15"
+      changed_when: false
+
+    - name: Log all facts
+      become: yes
+      become_user: root
+      command: "/root/ansible25/bin/ansible -m setup -i tests/inventory/test-inventory.yml all"
+      environment:
+        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-facts.log"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
+
+    - name: Run functional test
+      become: yes
+      become_user: root
+      command: "/root/ansible25/bin/ansible-playbook -i tests/inventory/test-inventory.yml -e @tests/test-vars.yml site.yml"
+      environment:
+        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-deployment.log"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
+
+    - name: Show cluster state
+      become: yes
+      become_user: root
+      command: "/root/ansible25/bin/ansible-playbook -i tests/inventory/test-inventory.yml -e @tests/test-vars.yml showElasticCluster.yml"
+      environment:
+        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-show-cluster.log"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"

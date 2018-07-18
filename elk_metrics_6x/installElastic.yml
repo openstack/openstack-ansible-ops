@@ -20,6 +20,8 @@
     - name: Set memory fact to half
       set_fact:
         h_mem: "{{ (ansible_memtotal_mb | int) // 2 }}"
+      when:
+        - h_mem is not defined
       tags:
         - always
 

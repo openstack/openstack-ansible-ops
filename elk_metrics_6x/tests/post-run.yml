@@ -1,4 +1,5 @@
-# Copyright 2017, Rackspace US, Inc.
+---
+# Copyright 2018, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- project:
-    templates:
-      - openstack-ansible-role-jobs
-    check:
-      jobs:
-        - "openstack-ansible-ops:elk_metrics_6x"
-    gate:
-      jobs:
-        - "openstack-ansible-ops:elk_metrics_6x"
+- import_playbook: run-setup.yml
+
+- name: Run post tasks
+  hosts: "all"
+  tasks:
+    - name: Copy logs back to the executor
+      synchronize:
+        src: "/tmp/elk-metrics-6x-logs"
+        dest: "{{ zuul.executor.log_root }}/"
+        mode: pull
+        rsync_opts:
+          - "--quiet"

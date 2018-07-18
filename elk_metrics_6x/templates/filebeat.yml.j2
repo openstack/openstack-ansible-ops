@@ -258,7 +258,8 @@ filebeat.modules:
     # If true, all fields created by this module are prefixed with
     # `osquery.result`. Set to false to copy the fields in the root
     # of the document. The default is true.
-    var.use_namespace: true
+    # NOTE(cloudull): This option is commented out because it is broken
+    #var.use_namespace: true
 
 #----------------------------- PostgreSQL Module -----------------------------
 #- module: postgresql

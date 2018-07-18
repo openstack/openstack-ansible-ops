@@ -25,7 +25,7 @@ OpenStack-Ansible Integration
 
 These playbooks can be used as standalone inventory or as an integrated part of
 an OpenStack-Ansible deployment. For a simple example of standalone inventory,
-see ``inventory.example.yml``.
+see [test-inventory.yml](tests/inventory/test-inventory.yml).
 
 
 Optional | Load balancer configuration
@@ -528,3 +528,36 @@ If everything goes bad, you can clean up with the following command
 
      openstack-ansible /opt/openstack-ansible-ops/elk_metrics_6x/site.yml -e 'elk_package_state="absent"' --tags package_install
      openstack-ansible /opt/openstack-ansible/playbooks/lxc-containers-destroy.yml --limit elk_all
+
+
+Local testing
+-------------
+
+To test these playbooks within a local environment you will need a single server
+with at leasts 8GiB of RAM and 40GiB of storage on root. Running an `m1.medium`
+(openstack) flavor size is generally enough to get an environment online.
+
+To run the local functional tests execute the `run-tests.sh` script out of the
+tests directory. This will create a 4 node elasaticsearch cluster, 1 kibana node
+with an elasticsearch coordination process, and 1 APM node. The beats will be
+deployed to the environment as if this was a production installation.
+
+.. code-block:: bash
+
+    tests/run-tests.sh
+
+
+After the test build is completed the cluster will test it's layout and ensure
+processes are functioning normally. Logs for the cluster can be found at
+`/tmp/elk-metrics-6x-logs`.
+
+To rerun the playbooks after a test build, source the `tests/manual-test.rc`
+file and follow the onscreen instructions.
+
+To clean-up a test environment and start from a bare server slate the
+`run-cleanup.sh` script can be used. This script is distructive and will purge
+all `elk_metrics_6x` related services within the local test environment.
+
+.. code-block:: bash
+
+   tests/run-cleanup.sh
