@@ -1,0 +1,17 @@
+[Unit]
+Requires=redis.service
+After=redis.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker pull kolide/fleet:{{ kolide_fleet_version }}
+ExecStartPre=-/usr/bin/docker kill fleet_service
+ExecStartPre=-/usr/bin/docker rm fleet_service
+ExecStart=/usr/bin/docker run -v /etc/fleet:/etc/fleet --name fleet_service kolide/fleet:{{ kolide_fleet_version }} --config=/etc/fleet/fleet_config.yml
+
+ExecStop=-/usr/bin/docker stop fleet_fleet
+
+ExecReload=/usr/bin/docker restart fleet_service
+
+[Install]
+WantedBy=multi-user.target

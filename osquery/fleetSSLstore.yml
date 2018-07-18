@@ -1,0 +1,29 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Store ssl cert
+  slurp:
+    src: "{{ kolide_fleet_ssl_cert }}"
+  register: _kolide_fleet_ssl_cert
+
+- name: Store ssl key
+  slurp:
+    src: "{{ kolide_fleet_ssl_key }}"
+  register: _kolide_fleet_ssl_key
+
+- name: Register a fact for the cert and key
+  set_fact:
+    kolide_fleet_ssl_cert_fact: "{{ _kolide_fleet_ssl_cert.content }}"
+    kolide_fleet_ssl_key_fact: "{{ _kolide_fleet_ssl_key.content }}"

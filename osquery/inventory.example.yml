@@ -1,5 +1,32 @@
 ---
-# This is the location where osquery(s) will live
-osquery_hosts:
+
+################################## ALL HOSTS ##################################
+all:
+  hosts:
+    # Local host
+    localhost:
+      ansible_connection: local
+
+################################## REQUIRED ###################################
+    logging01:
+      ansible_host: 172.16.27.100
+      ansible_user: root
+
+  vars: {}
+
+
+################################### GROUPS ####################################
+
+# The hosts group is used to target physical host machines. Enter all physical
+# host machines here.
+hosts:
+  hosts:
+    logging01:
+
+# This is the location where fleet(s) will live
+fleet:
+  hosts:
+    logging01:
+osquery:
   hosts:
     all:
