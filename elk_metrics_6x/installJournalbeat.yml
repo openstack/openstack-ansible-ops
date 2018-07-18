@@ -81,8 +81,26 @@
     - name: exit playbook after uninstall
       meta: end_play
       when:
-        - elk_package_state | default('present') == 'absent'
-        - ansible_service_mgr == "systemd"
+        - (elk_package_state | default('present')) == 'absent'
+
+  post_tasks:
+    - name: Create journalbeat systemd service config dir
+      file:
+        path: "/etc/systemd/system/journalbeat.service.d"
+        state: "directory"
+        group: "root"
+        owner: "root"
+        mode: "0755"
+
+    - name: Apply systemd options
+      template:
+        src: "{{ item.src }}"
+        dest: "/etc/systemd/system/journalbeat.service.d/{{ item.dest }}"
+        mode: "0644"
+      with_items:
+        - { src: "systemd.general-overrides.conf.j2", dest: "journalbeat-overrides.conf" }
+      notify:
+        - Enable and restart journalbeat
 
     - name: create the system group
       group:
@@ -136,6 +154,7 @@
         name: systemd_service
         private: true
       vars:
+        systemd_service_enabled: "{{ ((elk_package_state | default('present')) != 'absent') | ternary(true, false) }}"
         systemd_service_restart_changed: false
         systemd_services:
           - service_name: "journalbeat"
@@ -161,6 +180,10 @@
         enabled: true
         state: restarted
         daemon_reload: yes
+      when:
+        - (elk_package_state | default('present')) != 'absent'
+      tags:
+        - config
 
   tags:
     - beat-install

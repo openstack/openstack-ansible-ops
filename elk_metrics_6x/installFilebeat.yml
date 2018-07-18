@@ -29,13 +29,34 @@
       until: _apt_task is success
       retries: 3
       delay: 2
+      notify:
+        - Enable and restart filebeat
       tags:
         - package_install
 
     - name: exit playbook after uninstall
       meta: end_play
       when:
-        - elk_package_state | default('present') == 'absent'
+        - (elk_package_state | default('present')) == 'absent'
+
+  post_tasks:
+    - name: Create filebeat systemd service config dir
+      file:
+        path: "/etc/systemd/system/filebeat.service.d"
+        state: "directory"
+        group: "root"
+        owner: "root"
+        mode: "0755"
+
+    - name: Apply systemd options
+      template:
+        src: "{{ item.src }}"
+        dest: "/etc/systemd/system/filebeat.service.d/{{ item.dest }}"
+        mode: "0644"
+      with_items:
+        - { src: "systemd.general-overrides.conf.j2", dest: "filebeat-overrides.conf" }
+      notify:
+        - Enable and restart filebeat
 
     - name: Check for apache
       stat:
@@ -147,18 +168,24 @@
         designate_enabled: "{{ (designate.stat.exists | bool) or (inventory_hostname in groups['designate_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*designate.*') | list | length) > 0) }}"
         osquery_enabled: "{{ osquery.stat.exists | bool }}"
 
-
-  post_tasks:
     - name: Drop Filebeat conf file
       template:
         src: templates/filebeat.yml.j2
         dest: /etc/filebeat/filebeat.yml
+      notify:
+        - Enable and restart filebeat
 
-    - name: Enable and restart Filebeat
+  handlers:
+    - name: Enable and restart filebeat
       systemd:
         name: "filebeat"
         enabled: true
         state: restarted
+        daemon_reload: true
+      when:
+        - (elk_package_state | default('present')) != 'absent'
+      tags:
+        - config
 
   tags:
     - beat-install

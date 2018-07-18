@@ -70,7 +70,7 @@
     - name: Ensure virtualenv is installed
       apt:
         name: "{{ item }}"
-        state: "present"
+        state: "{{ elk_package_state | default('present') }}"
         update_cache: true
       with_items:
         - python-virtualenv
@@ -94,7 +94,7 @@
     - name: exit playbook after uninstall
       meta: end_play
       when:
-        - elk_package_state | default('present') == 'absent'
+        - (elk_package_state | default('present')) == 'absent'
 
   tasks:
     - name: create the system group
@@ -141,7 +141,8 @@
         name: systemd_service
         private: true
       vars:
-        systemd_service_enabled: true
+        systemd_service_enabled: "{{ ((elk_package_state | default('present')) != 'absent') | ternary(true, false) }}"
+        systemd_service_restart_changed: false
         systemd_user_name: curator
         systemd_group_name: curator
         systemd_services:
@@ -162,6 +163,10 @@
         name: "curator.timer"
         enabled: true
         state: restarted
+      when:
+        - (elk_package_state | default('present')) != 'absent'
+      tags:
+        - config
 
   tags:
     - beat-install

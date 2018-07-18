@@ -23,6 +23,8 @@
       until: _apt_task is success
       retries: 3
       delay: 2
+      notify:
+        - Enable and restart nginx
       tags:
         - package_install
 
@@ -38,12 +40,8 @@
       template:
         src: templates/nginx_default.j2
         dest: /etc/nginx/sites-available/default
-
-    - name: Enable and restart nginx
-      service:
-        name: "nginx"
-        enabled: true
-        state: restarted
+      notify:
+        - Enable and restart nginx
 
     - name: Ensure kibana  is installed
       apt:
@@ -59,6 +57,12 @@
       tags:
         - package_install
 
+    - name: exit playbook after uninstall
+      meta: end_play
+      when:
+        - (elk_package_state | default('present')) == 'absent'
+
+  post_tasks:
     - name: Create kibana systemd service config dir
       file:
         path: "/etc/systemd/system/kibana.service.d"
@@ -73,7 +77,7 @@
         dest: "/etc/systemd/system/kibana.service.d/{{ item.dest }}"
         mode: "0644"
       with_items:
-        - { src: "systemd.kibana-overrides.conf.j2", dest: "kibana-overrides.conf" }
+        - { src: "systemd.general-overrides.conf.j2", dest: "kibana-overrides.conf" }
       notify:
         - Enable and restart kibana
 
@@ -92,6 +96,20 @@
         enabled: true
         state: restarted
         daemon_reload: true
+      when:
+        - (elk_package_state | default('present')) != 'absent'
+      tags:
+        - config
+
+    - name: Enable and restart nginx
+      systemd:
+        name: "nginx"
+        enabled: true
+        state: restarted
+      when:
+        - (elk_package_state | default('present')) != 'absent'
+      tags:
+        - config
 
   tags:
     - server-install

@@ -27,13 +27,34 @@
       until: _apt_task is success
       retries: 3
       delay: 2
+      notify:
+        - Enable and restart metricbeat
       tags:
         - package_install
 
     - name: exit playbook after uninstall
       meta: end_play
       when:
-        - elk_package_state | default('present') == 'absent'
+        - (elk_package_state | default('present')) == 'absent'
+
+  post_tasks:
+    - name: Create metricbeat systemd service config dir
+      file:
+        path: "/etc/systemd/system/metricbeat.service.d"
+        state: "directory"
+        group: "root"
+        owner: "root"
+        mode: "0755"
+
+    - name: Apply systemd options
+      template:
+        src: "{{ item.src }}"
+        dest: "/etc/systemd/system/metricbeat.service.d/{{ item.dest }}"
+        mode: "0644"
+      with_items:
+        - { src: "systemd.general-overrides.conf.j2", dest: "metricbeat-overrides.conf" }
+      notify:
+        - Enable and restart metricbeat
 
     - name: Check for apache
       stat:
@@ -189,17 +210,25 @@
         state: reloaded
       when: nginx_enabled
 
-  post_tasks:
     - name: Drop metricbeat conf file
       template:
         src: templates/metricbeat.yml.j2
         dest: /etc/metricbeat/metricbeat.yml
+      notify:
+        - Enable and restart metricbeat
 
+  handlers:
     - name: Enable and restart metricbeat
       systemd:
         name: "metricbeat"
         enabled: true
         state: restarted
+        daemon_reload: true
+      when:
+        - (elk_package_state | default('present')) != 'absent'
+      tags:
+        - config
+
   tags:
     - beat-install
 

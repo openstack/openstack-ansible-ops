@@ -33,19 +33,45 @@
     - name: exit playbook after uninstall
       meta: end_play
       when:
-        - elk_package_state | default('present') == 'absent'
+        - (elk_package_state | default('present')) == 'absent'
 
   post_tasks:
+    - name: Create heartbeat systemd service config dir
+      file:
+        path: "/etc/systemd/system/heartbeat.service.d"
+        state: "directory"
+        group: "root"
+        owner: "root"
+        mode: "0755"
+
+    - name: Apply systemd options
+      template:
+        src: "{{ item.src }}"
+        dest: "/etc/systemd/system/heartbeat.service.d/{{ item.dest }}"
+        mode: "0644"
+      with_items:
+        - { src: "systemd.general-overrides.conf.j2", dest: "heartbeat-overrides.conf" }
+      notify:
+        - Enable and restart heartbeat
+
     - name: Drop heartbeat conf file
       template:
         src: templates/heartbeat.yml.j2
         dest: /etc/heartbeat/heartbeat.yml
+      notify:
+        - Enable and restart heartbeat
 
+  handlers:
     - name: Enable and restart heartbeat
       systemd:
         name: "heartbeat-elastic"
         enabled: true
         state: restarted
+        daemon_reload: true
+      when:
+        - (elk_package_state | default('present')) != 'absent'
+      tags:
+        - config
 
   tags:
     - beat-install
