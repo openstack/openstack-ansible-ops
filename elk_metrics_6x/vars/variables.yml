@@ -44,7 +44,7 @@ elastic_beat_retention_policy_hosts:
   apm: "{{ groups['apm-server'] | default([null]) | length }}"
   auditbeat: "{{ groups['hosts'] | default([null]) | length }}"
   filebeat: "{{ groups['hosts'] | default([null]) | length }}"
-  heartbeat: "{{ groups['utility_all'] | default([null]) | length }}"
+  heartbeat: "{{ groups['kibana'][:3] | default([null]) | length }}"
   journalbeat: "{{ groups['all'] | default([null]) | length }}"
   metricbeat: "{{ groups['all'] | default([null]) | length }}"
   packetbeat: "{{ groups['hosts'] | default([null]) | length }}"

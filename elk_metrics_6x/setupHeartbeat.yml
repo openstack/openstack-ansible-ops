@@ -1,7 +1,7 @@
 ---
 
 - name: Load Heartbeat Dashboards
-  hosts: utility_all[0]
+  hosts: kibana[0]
   gather_facts: false
   vars_files:
     - vars/variables.yml

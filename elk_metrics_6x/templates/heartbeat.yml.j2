@@ -65,16 +65,15 @@ heartbeat.monitors:
   #fields_under_root: false
 
 {% for item in heartbeat_services %}
-{%   if inventory_hostname in groups['utility_all'] | default([]) %}
-{%     if item.type == 'tcp' %}
-{%       set hosts = [] %}
-{%       for port in item.ports | default([])  %}
-{%         for backend in item.group | default([])  %}
-{%           set backend_host = hostvars[backend]['ansible_host'] %}
-{%           set _ = hosts.extend([backend_host + ":" + (port | string)]) %}
-{%         endfor %}
+{%   if item.type == 'tcp' %}
+{%     set hosts = [] %}
+{%     for port in item.ports | default([])  %}
+{%       for backend in item.group | default([])  %}
+{%         set backend_host = hostvars[backend]['ansible_host'] %}
+{%         set _ = hosts.extend([backend_host + ":" + (port | string)]) %}
 {%       endfor %}
-{%       if hosts | length > 0 %}
+{%     endfor %}
+{%     if hosts | length > 0 %}
 - type: tcp # monitor type `tcp`. Connect via TCP and optionally verify endpoint
             # by sending/receiving a custom payload
 
@@ -147,16 +146,16 @@ heartbeat.monitors:
 
     # Required TLS protocols
     #supported_protocols: ["TLSv1.0", "TLSv1.1", "TLSv1.2"]
-{%       endif %}
-{%     elif item.type == 'http' %}
-{%       set hosts = [] %}
-{%       for port in item.ports | default([])  %}
-{%         for backend in item.group | default([])  %}
-{%           set backend_host = hostvars[backend]['ansible_host'] %}
-{%           set _ = hosts.extend(["http://" + backend_host + ":" + (port | string) + item.path]) %}
-{%         endfor %}
+{%     endif %}
+{%   elif item.type == 'http' %}
+{%     set hosts = [] %}
+{%     for port in item.ports | default([])  %}
+{%       for backend in item.group | default([])  %}
+{%         set backend_host = hostvars[backend]['ansible_host'] %}
+{%         set _ = hosts.extend(["http://" + backend_host + ":" + (port | string) + item.path]) %}
 {%       endfor %}
-{%       if hosts | length > 0 %}
+{%     endfor %}
+{%     if hosts | length > 0 %}
 - type: http # monitor type `http`. Connect via HTTP an optionally verify response
 
   # Monitor name used for job name and document type
@@ -217,7 +216,7 @@ heartbeat.monitors:
     #body:
 
   # Expected response settings
-{%         if item.check_response is defined %}
+{%       if item.check_response is defined %}
   check.response: {{ item.check_response }}
   #check.response:
     # Expected status code. If not configured or set to 0 any status code not
@@ -229,7 +228,6 @@ heartbeat.monitors:
 
     # Required response contents.
     #body:
-{%         endif %}
 {%       endif %}
 {%     endif %}
 {%   endif %}

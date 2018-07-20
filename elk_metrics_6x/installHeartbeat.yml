@@ -1,6 +1,22 @@
 ---
+
+- name: Set heartbeat host deployment group
+  hosts: kibana
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: Add hosts to dynamic inventory group
+      group_by:
+        key: heatbeat_deployment_targets
+        parents: kibana
+      when:
+        - inventory_hostname in groups['kibana'][:3]
+
+  tags:
+    - always
+
 - name: Install Heartbeat
-  hosts: utility_all
+  hosts: heatbeat_deployment_targets
   become: true
   vars:
     haproxy_ssl: false
