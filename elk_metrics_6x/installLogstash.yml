@@ -251,6 +251,59 @@
         src: "templates/logrotate.j2"
         dest: "/etc/logrotate.d/logstash"
 
+    - name: Run arcsight output block
+      block:
+        - name: Initialise arcsight local facts
+          ini_file:
+            dest: "/etc/ansible/facts.d/logstash.fact"
+            section: arcsight
+            option: "initialise"
+            value: true
+
+        - name: refresh local facts
+          setup:
+            filter: ansible_local
+            gather_subset: "!all"
+          tags:
+            - nova-config
+
+        - name: Setup arcsight smart connector
+          shell: >-
+            /usr/local/bin/logstash --modules arcsight {{ (ansible_local['arcsight'][item.host] is defined) | ternary('', '--setup') }}
+              -M "arcsight.var.input.smartconnector.bootstrap_servers={{ item.host }}:{{ item.port }}"
+              -M "arcsight.var.elasticsearch.hosts=localhost:{{ elastic_port }}"
+              -M "arcsight.var.kibana.host={{ hostvars[groups['kibana'][0]]['ansible_host'] }}:{{ kibana_port }}"
+          with_items: "{{ logstash_arcsight_smart_connectors }}"
+          run_once: true
+          register: smart_connector
+          until: smart_connector is success
+          retries: 5
+          delay: 5
+
+        - name: Setup arcsight event broker
+          shell: >-
+            /usr/local/bin/logstash --modules arcsight {{ (ansible_local['arcsight'][item.host] is defined) | ternary('', '--setup') }}
+              -M "arcsight.var.input.eventbroker.bootstrap_servers={{ item.host }}:{{ item.port }}"
+              -M "arcsight.var.elasticsearch.hosts=localhost:{{ elastic_port }}"
+              -M "arcsight.var.kibana.host={{ hostvars[groups['kibana'][0]]['ansible_host'] }}:{{ kibana_port }}"
+          with_items: "{{ logstash_arcsight_event_brokers }}"
+          run_once: true
+          register: event_broker
+          until: event_broker is success
+          retries: 5
+          delay: 5
+
+        - name: Set arcsight local facts
+          ini_file:
+            dest: "/etc/ansible/facts.d/logstash.fact"
+            section: arcsight
+            option: "{{ item.host }}"
+            value: "{{ item.port }}"
+          with_items: "{{ logstash_arcsight_smart_connectors | union(logstash_arcsight_event_brokers) }}"
+      when:
+        - logstash_arcsight_smart_connectors or
+          logstash_arcsight_event_brokers
+
   handlers:
     - name: Enable and restart logstash
       systemd:

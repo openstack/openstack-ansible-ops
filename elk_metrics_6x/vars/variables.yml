@@ -107,6 +107,21 @@ logstash_deploy_filters: true
 # logstash_kafka_ssl_keystore_location: "/root/kafka/keystore.jks"
 # logstash_kafka_ssl_truststore_location: "/root/kafka/truststore.jks"
 
+## Setup servers that read events from the Smart Connector directly. This
+## supports multiple entries in list format using the "host" and "port" for the
+## smart connector.
+# logstash_arcsight_smart_connectors:
+#   - host: 127.0.0.1
+#     port: 5000
+logstash_arcsight_smart_connectors: []
+
+## Setup servers to read events from the Eevnt Broker Stream. This
+## multiple entries in list format using the "host" and "port" for the
+## for the event brokers.
+# logstash_arcsight_event_brokers:
+#   - host: 127.0.0.1
+#     port: 5000
+logstash_arcsight_event_brokers: []
 
 # APM vars
 apm_interface: 0.0.0.0
