@@ -94,6 +94,7 @@
   set_fact:
     master_node: "{{ (inventory_hostname in master_nodes) | ternary(true, false) }}"
     data_node: "{{ (inventory_hostname in data_nodes) | ternary(true, false) }}"
+    elastic_thread_pool_size: "{{ ((ansible_processor_cores | int) > 24) | ternary(24, ansible_processor_cores) }}"
   tags:
     - always
 

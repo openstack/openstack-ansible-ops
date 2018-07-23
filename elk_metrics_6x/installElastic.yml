@@ -25,7 +25,7 @@
       tags:
         - always
 
-    - name: Set logstash facts
+    - name: Set heap facts
       set_fact:
         elastic_heap_size: "{{ ((h_mem | int) > 30720) | ternary(30720, h_mem) }}"
       tags:
@@ -39,6 +39,7 @@
             elasticsearch_node_data: false
             elasticsearch_node_ingest: false
             elastic_heap_size: "{{ (elastic_heap_size | int) // 3 }}"
+            elastic_thread_pool_size: "{{ ((ansible_processor_cores | int) > 4) | ternary(4, 1) }}"
       when:
         - inventory_hostname in (groups['kibana'] | difference(groups['elastic-logstash']))
       tags:
