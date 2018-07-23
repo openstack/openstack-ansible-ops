@@ -7,4 +7,7 @@ initrd {{ image_properties['image_netboot_initrd_url'] }}
 {%     if image_properties['image_type'] == 'debian' %}
 imgargs linux hostname={{ server_vars['server_hostname'] }} {{ image_properties['image_kernel_options'] }} preseed/url={{ image_properties['image_configs'][server_vars['server_preseed_ks']]['url'] }} preseed/interactive=false netcfg/choose_interface={{ server_vars['server_default_interface'] }} netcfg/get_domain={{ server_vars['server_domain_name'] }} initrd=initrd.gz {{ server_vars['server_extra_options'] | default('') }}
 {%     endif %}
+{%     if image_properties['image_type'] == 'redhat' %}
+imgargs vmlinuz hostname={{ server_vars['server_hostname'] }} {{ image_properties['image_kernel_options'] }} ks={{ image_properties['image_configs'][server_vars['server_preseed_ks']]['url'] }} BOOTIF=${netX/mac} initrd=initrd.img {{ server_vars['server_extra_options'] | default('') }}
+{%     endif %}
 boot

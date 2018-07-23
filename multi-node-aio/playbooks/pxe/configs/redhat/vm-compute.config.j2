@@ -1,0 +1,63 @@
+# Server Kickstart - compute
+install
+text
+lang en_US
+keyboard us
+timezone --utc Etc/UTC
+auth --useshadow --enablemd5
+selinux --disabled
+firewall --disabled
+services --enabled=NetworkManager,sshd
+eula --agreed
+ignoredisk --only-use=vda
+reboot
+
+bootloader --location=mbr
+zerombr
+clearpart --all --initlabel
+part /boot --fstype ext3 --size=512
+part pv.01 --size=1 --grow
+volgroup vmvg00 pv.01
+logvol / --fstype ext4 --name=root00 --vgname=vmvg00 --size=8192
+logvol swap --fstype swap --name=swap00 --vgname=vmvg00 --size=2048
+logvol /openstack --fstype ext4 --name=openstack00 --vgname=vmvg00 --size=16384
+logvol /var/lib/nova --fstype xfs --name=nova00 --vgname=vmvg00 --size=8192 --grow
+rootpw secrete
+repo --name=base --baseurl={{ images[default_vm_image]['image_repo_base_url'] }}/os/x86_64/
+repo --name=updates --baseurl={{ images[default_vm_image]['image_repo_base_url'] }}/updates/x86_64/
+url --url="{{ images[default_vm_image]['image_repo_base_url'] }}/os/x86_64/" --proxy {{ default_proxy_url }}
+
+%packages --nobase --ignoremissing
+@core
+wget
+bridge-utils
+dstat
+git
+python
+systemd-networkd
+systemd-resolved
+tmux
+vim
+%end
+
+%post
+(set -x
+echo
+echo "################################"
+echo "# Running Post Configuration   #"
+echo "################################"
+# install ssh key
+mkdir -m0700 /root/.ssh/
+cat <<EOF >/root/.ssh/authorized_keys
+{{ tftp_ssh_key }}
+EOF
+chmod 0600 /root/.ssh/authorized_keys
+
+# set apt-cacher-ng proxy
+sed -i '/\[main\]/a proxy={{ default_proxy_url }}' /etc/yum.conf
+
+wget --no-proxy http://{{ tftp_server }}/scripts/general-post-install-redhat-script.sh -O /opt/general-post-install-script.sh
+chmod +x /opt/general-post-install-script.sh
+/opt/general-post-install-script.sh
+) > /root/post_install.log 2>&1
+%end

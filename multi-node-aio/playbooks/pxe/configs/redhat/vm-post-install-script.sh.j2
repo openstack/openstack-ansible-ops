@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+wget --no-proxy http://{{ tftp_server }}/networking/$(cat /etc/hostname)-systemd-network.sh -O /opt/systemd-network.sh
+chmod +x /opt/systemd-network.sh
+/opt/systemd-network.sh
