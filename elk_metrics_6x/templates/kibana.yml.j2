@@ -79,3 +79,14 @@
 # Set the value of this setting to true to log all events, including system usage information
 # and all requests.
 # logging.verbose: false
+
+# ---------------------------------- X-Pack ------------------------------------
+# X-Pack Monitoring
+# https://www.elastic.co/guide/en/kibana/6.3/monitoring-settings-kb.html
+ xpack.monitoring.enabled: true
+ xpack.xpack_main.telemetry.enabled: false
+ xpack.monitoring.kibana.collection.enabled: true
+ xpack.monitoring.kibana.collection.interval: 30000
+ xpack.monitoring.min_interval_seconds: 30
+ xpack.monitoring.ui.enabled: true
+ xpack.monitoring.ui.container.elasticsearch.enabled: true
