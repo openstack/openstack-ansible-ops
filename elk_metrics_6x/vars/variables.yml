@@ -42,12 +42,12 @@ elastic_beat_storage_constant: 512
 elastic_beat_retention_policy_hosts:
   logstash: "{{ groups['elastic-logstash'] | default([null]) | length }}"
   apm: "{{ groups['apm-server'] | default([null]) | length }}"
-  auditbeat: "{{ groups['hosts'] | default([null]) | length }}"
-  filebeat: "{{ groups['hosts'] | default([null]) | length }}"
+  auditbeat: "{{ (groups['hosts'] | default([null]) | length) * 2 }}"
+  filebeat: "{{ (groups['hosts'] | default([null]) | length) * 2 }}"
   heartbeat: "{{ groups['kibana'][:3] | default([null]) | length }}"
-  journalbeat: "{{ groups['all'] | default([null]) | length }}"
-  metricbeat: "{{ groups['all'] | default([null]) | length }}"
-  packetbeat: "{{ groups['hosts'] | default([null]) | length }}"
+  journalbeat: "{{ (groups['all'] | default([null]) | length) * 1.5 }}"
+  metricbeat: "{{ (groups['all'] | default([null]) | length) * 1.5 }}"
+  packetbeat: "{{ (groups['hosts'] | default([null]) | length) * 5 }}"
 
 # This is the URL external services can use to communicate with the
 # elasticsearch cluster.
