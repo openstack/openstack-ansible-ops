@@ -25,9 +25,10 @@
       tags:
         - always
 
-    - name: Set heap facts
+    - name: Set elasticsearch facts
       set_fact:
         elastic_heap_size: "{{ ((h_mem | int) > 30720) | ternary(30720, h_mem) }}"
+        elastic_log_rotate_path: "/var/log/elasticsearch"
       tags:
         - always
 
@@ -90,9 +91,12 @@
 
     - name: Ensure elasticsearch is installed
       apt:
-        name: elasticsearch
+        name: "{{ item }}"
         state: "{{ elk_package_state | default('present') }}"
         update_cache: yes
+      with_items:
+        - logrotate
+        - elasticsearch
       register: _apt_task
       until: _apt_task is success
       retries: 3
@@ -162,6 +166,11 @@
         owner: "elasticsearch"
         group: "elasticsearch"
         mode: "0750"
+
+    - name: Create logrotate config
+      template:
+        src: "templates/logrotate.j2"
+        dest: "/etc/logrotate.d/elasticsearch"
 
   handlers:
     - name: Enable and restart elastic

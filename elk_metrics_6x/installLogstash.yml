@@ -36,6 +36,7 @@
       set_fact:
         elastic_heap_size: "{{ ((q_mem | int) > 30720) | ternary(30720, q_mem) }}"
         logstash_queue_size: "{{ (((q_storage | int) > 16) | ternary(16, q_storage) | int) * 1024 }}"
+        elastic_log_rotate_path: "/var/log/logstash"
       tags:
         - always
 
@@ -84,9 +85,12 @@
 
     - name: Ensure Logstash is installed
       apt:
-        name: logstash
+        name: "{{ item }}"
         state: "{{ elk_package_state | default('present') }}"
         update_cache: yes
+      with_items:
+        - logrotate
+        - logstash
       register: _apt_task
       until: _apt_task is success
       retries: 3
@@ -241,6 +245,11 @@
         owner: "logstash"
         group: "logstash"
         mode: "0750"
+
+    - name: Create logrotate config
+      template:
+        src: "templates/logrotate.j2"
+        dest: "/etc/logrotate.d/logstash"
 
   handlers:
     - name: Enable and restart logstash
