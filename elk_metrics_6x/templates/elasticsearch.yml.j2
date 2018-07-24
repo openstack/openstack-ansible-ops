@@ -113,3 +113,9 @@ indices.memory.index_buffer_size: 30%
 # Connection throttling on recovery is limited to 75% of the detected interface
 # speed. This will improce search speeds and reduce general cluster pressure.
 indices.recovery.max_bytes_per_sec: {{ elasticserch_interface_speed }}mb
+
+# ---------------------------------- X-Pack ------------------------------------
+# X-Pack Monitoring
+# https://www.elastic.co/guide/en/elasticsearch/reference/6.3/monitoring-settings.html
+xpack.monitoring.collection.enabled: true
+xpack.monitoring.collection.interval: 30s

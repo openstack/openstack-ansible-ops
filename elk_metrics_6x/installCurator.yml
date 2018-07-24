@@ -36,7 +36,7 @@
         method: GET
       register: elk_data
       until: elk_data is success
-      retries: 3
+      retries: 5
       delay: 5
       run_once: true
 
