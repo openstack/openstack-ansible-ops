@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: add Elastic search public GPG key (same for Metricsbeat)
+- name: add Elastic search public GPG key
   apt_key:
     url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
     state: "{{ ((elk_package_state | default('present')) == 'absent') | ternary('absent', 'present') }}"
