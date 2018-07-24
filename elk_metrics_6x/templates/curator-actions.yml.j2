@@ -21,7 +21,7 @@
 {%   set _ = delete_indices.update(
    {
     'action': 'delete_indices',
-    'description': 'Prune indices for ' + key + ' after ' ~ ((index_retention | int) * 2) ~ ' days.',
+    'description': 'Prune indices for ' + key + ' after ' ~ (index_retention | int) ~ ' days.',
     'options': {
       'ignore_empty_list': true,
       'disable_action': false
