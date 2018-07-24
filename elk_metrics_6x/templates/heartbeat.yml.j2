@@ -769,64 +769,14 @@ heartbeat.scheduler:
 #path.logs: ${path.home}/logs
 
 #============================== Dashboards =====================================
-# These settings control loading the sample dashboards to the Kibana index. Loading
-# the dashboards are disabled by default and can be enabled either by setting the
-# options here, or by using the `-setup` CLI flag or the `setup` command.
-setup.dashboards.enabled: true
+{% with beat_name="heartbeat" %}
+{%   include 'templates/_include_setup_dashboards.yml.j2' %}
+{% endwith %}
 
-# The directory from where to read the dashboards. The default is the `kibana`
-# folder in the home path.
-#setup.dashboards.directory: ${path.home}/kibana
-
-# The URL from where to download the dashboards archive. It is used instead of
-# the directory if it has a value.
-#setup.dashboards.url:
-
-# The file archive (zip file) from where to read the dashboards. It is used instead
-# of the directory when it has a value.
-#setup.dashboards.file:
-
-# In case the archive contains the dashboards from multiple Beats, this lets you
-# select which one to load. You can load all the dashboards in the archive by
-# setting this to the empty string.
-#setup.dashboards.beat: heartbeat
-
-# The name of the Kibana index to use for setting the configuration. Default is ".kibana"
-#setup.dashboards.kibana_index: .kibana
-
-# The Elasticsearch index name. This overwrites the index name defined in the
-# dashboards and index pattern. Example: testbeat-*
-#setup.dashboards.index:
-
-# Always use the Kibana API for loading the dashboards instead of autodetecting
-# how to install the dashboards by first querying Elasticsearch.
-#setup.dashboards.always_kibana: false
-
-#============================== Template =====================================
-
-# A template is used to set the mapping in Elasticsearch
-# By default template loading is enabled and the template is loaded.
-# These settings can be adjusted to load your own template or overwrite existing ones.
-
-# Set to false to disable template loading.
-setup.template.enabled: true
-
-# Template name. By default the template name is "heartbeat-%{[beat.version]}"
-# The template name and pattern has to be set in case the elasticsearch index pattern is modified.
-setup.template.name: "heartbeat-%{[beat.version]}"
-
-# Template pattern. By default the template pattern is "-%{[beat.version]}-*" to apply to the default index settings.
-# The first part is the version of the beat and then -* is used to match all daily indices.
-# The template name and pattern has to be set in case the elasticsearch index pattern is modified.
-setup.template.pattern: "heartbeat-%{[beat.version]}-*"
-
-# Path to fields.yml file to generate the template
-setup.template.fields: "${path.config}/fields.yml"
-
-# Overwrite existing template
-setup.template.overwrite: true
-
-{% include 'templates/_include_setup_template.yml.j2' %}
+#=============================== Template ======================================
+{% with beat_name="heartbeat" %}
+{%   include 'templates/_include_setup_template.yml.j2' %}
+{% endwith %}
 
 #============================== Kibana =====================================
 {% include 'templates/_include_kibana_setup.yml.j2' %}

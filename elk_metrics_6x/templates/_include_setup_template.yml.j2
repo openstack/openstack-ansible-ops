@@ -1,3 +1,25 @@
+# A template is used to set the mapping in Elasticsearch
+# By default template loading is enabled and the template is loaded.
+# These settings can be adjusted to load your own template or overwrite existing ones.
+
+# Set to false to disable template loading.
+setup.template.enabled: false
+
+# Template name. By default the template name is "{{ beat_name }}-%{[beat.version]}"
+# The template name and pattern has to be set in case the elasticsearch index pattern is modified.
+setup.template.name: "{{ beat_name }}-%{[beat.version]}"
+
+# Template pattern. By default the template pattern is "-%{[beat.version]}-*" to apply to the default index settings.
+# The first part is the version of the beat and then -* is used to match all daily indices.
+# The template name and pattern has to be set in case the elasticsearch index pattern is modified.
+setup.template.pattern: "{{ beat_name }}-%{[beat.version]}-*"
+
+# Path to fields.yml file to generate the template
+setup.template.fields: "${path.config}/fields.yml"
+
+# Overwrite existing template
+setup.template.overwrite: false
+
 {% set shards = ((data_nodes | length) * 3) | int %}
 
 # Elasticsearch template settings
