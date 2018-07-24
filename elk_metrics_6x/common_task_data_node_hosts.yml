@@ -41,18 +41,16 @@
   set_fact:
     data_nodes: "{{ (groups['elastic-logstash'][:master_node_count | int] + groups['elastic-logstash'][master_node_count | int::2]) }}"
     master_nodes: "{{ groups['elastic-logstash'][:master_node_count | int] }}"
-    coordination_nodes: |-
-      {%   set nodes=[] %}
-      {%   for host in groups['kibana'] %}
-      {%     set _ = nodes.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
-      {%   endfor %}
-      {{ nodes }}
-    zen_nodes: |-
-      {%   set nodes=[] %}
-      {%   for host in (groups['elastic-logstash'] | union(groups['kibana'])) %}
-      {%     set _ = nodes.insert(loop.index, (hostvars[host]['ansible_host'] | string)) %}
-      {%   endfor %}
-      {{ nodes }}
+    coordination_nodes: >-
+      {{
+        (groups['kibana'] | map('extract', hostvars, 'ansible_host') | list)
+          | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port)
+          | list
+      }}
+    zen_nodes: >-
+      {{
+        (groups['elastic-logstash'] | union(groups['kibana'])) | map('extract', hostvars, 'ansible_host') | list
+      }}
     elasticserch_interface_speed: |-
       {% set default_interface_fact = hostvars[inventory_hostname]['ansible_' + (elastic_data_interface | replace('-', '_'))] %}
       {% set speeds = [] %}
@@ -85,16 +83,28 @@
       {%     set _ = speeds.append(1000) %}
       {%   endif %}
       {% endif %}
-      {{ ((speeds | min) * 0.75) | int }}
+      {% set interface_speed = ((speeds | min) * 0.20) | int %}
+      {{ ((interface_speed | int) > 750) | ternary(750, interface_speed) }}
   tags:
     - always
+
+- name: Set data node details
+  set_fact:
+    elasticsearch_data_node_details: >-
+      {{
+        (data_nodes | map('extract', hostvars, 'ansible_host') | list) | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port) | list
+      }}
+    logstash_data_node_details: >-
+      {{
+        (data_nodes | map('extract', hostvars, 'ansible_host') | list) | map('regex_replace', '(.*)' ,'\1:' ~ logstash_beat_input_port) | list
+      }}
 
 # based on the assignment of roles to hosts, set per host booleans
 - name: Node enablement
   set_fact:
     master_node: "{{ (inventory_hostname in master_nodes) | ternary(true, false) }}"
     data_node: "{{ (inventory_hostname in data_nodes) | ternary(true, false) }}"
-    elastic_thread_pool_size: "{{ ((ansible_processor_cores | int) > 24) | ternary(24, ansible_processor_cores) }}"
+    elastic_thread_pool_size: "{{ ((ansible_processor_cores | int) >= 24) | ternary(24, ansible_processor_cores) }}"
   tags:
     - always
 
@@ -103,26 +113,18 @@
 - name: Set data nodes
   set_fact:
     elasticsearch_data_hosts: |-
+      {% set nodes = elasticsearch_data_node_details %}
       {% if inventory_hostname in data_nodes %}
-      {%   set data_hosts = ['127.0.0.1:' + (elastic_port | string)] %}
-      {% else %}
-      {%   set nodes=[] %}
-      {%   for host in data_nodes %}
-      {%     set _ = nodes.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (elastic_port | string))) %}
-      {%   endfor %}
-      {%   set data_hosts = nodes | shuffle(seed=inventory_hostname) %}
+      {%   set _ = nodes.insert(0, '127.0.0.1:' ~ elastic_port) %}
       {% endif %}
+      {% set data_hosts = nodes | shuffle(seed=inventory_hostname) %}
       {{ data_hosts }}
     logstash_data_hosts: |-
+      {% set nodes = logstash_data_node_details %}
       {% if inventory_hostname in data_nodes %}
-      {%   set data_hosts = ['127.0.0.1:' + (logstash_beat_input_port | string)] %}
-      {% else %}
-      {%   set nodes=[] %}
-      {%   for host in data_nodes %}
-      {%     set _ = nodes.insert(loop.index, ((hostvars[host]['ansible_host'] | string) + ":" + (logstash_beat_input_port | string))) %}
-      {%   endfor %}
-      {%   set data_hosts = nodes | shuffle(seed=inventory_hostname) %}
+      {%   set _ = nodes.insert(0, '127.0.0.1:' ~ logstash_beat_input_port) %}
       {% endif %}
+      {% set data_hosts = nodes | shuffle(seed=inventory_hostname) %}
       {{ data_hosts }}
   tags:
     - always

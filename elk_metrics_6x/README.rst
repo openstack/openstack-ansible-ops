@@ -437,6 +437,7 @@ configuration file using the key/value pairs as options.
       client_id: "elk_metrics_6x"
       compression_type: "gzip"
       security_protocol: "SSL"
+      id: "UniqueOutputID"
 
 
 For a complete list of all options available within the Logstash Kafka output

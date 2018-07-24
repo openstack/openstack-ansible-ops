@@ -2,7 +2,7 @@
 
 - name: Load Metricsbeat Dashboards
   hosts: all[0]
-  gather_facts: false
+  gather_facts: true
   vars_files:
     - vars/variables.yml
 

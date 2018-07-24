@@ -1,6 +1,16 @@
+filter {
+  fingerprint {
+    source => "message"
+    target => "[@metadata][fingerprint]"
+    method => "SHA1"
+    key => "{{ cluster_name | replace(' ', '_') }}"
+    base64encode => true
+  }
+}
 output {
   if [@metadata][version] {
     elasticsearch {
+      document_id => "%{[@metadata][fingerprint]}"
       hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
       sniffing => {{ (not data_node | bool) | lower }}
       manage_template => {{ (data_node | bool) | lower }}
@@ -8,6 +18,7 @@ output {
     }
   } else {
     elasticsearch {
+      document_id => "%{[@metadata][fingerprint]}"
       hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
       sniffing => {{ (not data_node | bool) | lower }}
       manage_template => {{ (data_node | bool) | lower }}

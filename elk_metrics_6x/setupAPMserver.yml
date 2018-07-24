@@ -2,7 +2,7 @@
 
 - name: Load apm-server Dashboards
   hosts: apm-server[0]
-  gather_facts: false
+  gather_facts: true
   vars_files:
     - vars/variables.yml
 
