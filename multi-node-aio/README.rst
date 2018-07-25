@@ -20,7 +20,7 @@ Process
 -------
 
 Create at least one physical host that has public network access and is running
-the Ubuntu 14/6.04 LTS Operating system. System assumes that you have an
+an Ubuntu 14.04/16.04/18.04 LTS Operating system. System assumes that you have an
 unpartitioned device with at least 1TB of storage, however you can customize the
 size of each VM volume by setting the option ``${VM_DISK_SIZE}``. If you're
 using the Rackspace OnMetal servers the drive partitioning will be done for you
