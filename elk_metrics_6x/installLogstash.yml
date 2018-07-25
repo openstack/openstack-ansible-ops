@@ -220,7 +220,7 @@
 
         - name: Deploy Logstash kafka configuration files
           template:
-            src: "templates/99-kafka-output.conf"
+            src: "templates/99-kafka-output.conf.j2"
             dest: "/etc/logstash/conf.d/99-kafka-output.conf"
           notify:
             - Enable and restart logstash
