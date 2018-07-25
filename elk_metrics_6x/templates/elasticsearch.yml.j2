@@ -17,6 +17,15 @@ path.data: /var/lib/elasticsearch
 # path.logs: /path/to/logs
 #path.logs: /var/lib/elasticsearch/logs/
 path.logs: /var/log/elasticsearch/
+#
+# Path to shared filesystem repos
+#
+# path.repo: ["/mount/backups", "/mount/longterm_backups"]
+#
+
+{% if elastic_shared_fs_repos is defined and elastic_shared_fs_repos|length > 0 %}
+path.repo: {{ elastic_shared_fs_repos | json_query("[*].path") | to_json }}
+{% endif %}
 
 # Set the global default index store. More information on these settings can be
 # found here:

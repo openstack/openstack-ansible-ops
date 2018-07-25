@@ -8,6 +8,7 @@
 
   vars:
     temp_dir: /var/lib/elasticsearch/tmp
+    nfs_query: "[?fstype=='nfs' || fstype=='nfs4']"
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
@@ -171,6 +172,26 @@
       template:
         src: "templates/logrotate.j2"
         dest: "/etc/logrotate.d/elasticsearch"
+
+    - name: Ensure nfs client is available if necessary
+      package:
+        name: nfs-common
+        state: present
+      when:
+        - elastic_shared_fs_repos is defined
+        - (elastic_shared_fs_repos|json_query(nfs_query)) | length > 0
+
+    - name: Ensure backup filesystems are mounted
+      mount:
+        fstype: "{{ item.fstype }}"
+        src: "{{ item.src }}"
+        opts: "{{ item.opts }}"
+        path: "{{ item.path }}"
+        state: "{{ item.state }}"
+      with_items:
+        - "{{ elastic_shared_fs_repos }}"
+      when:
+        - elastic_shared_fs_repos is defined and elastic_shared_fs_repos | length > 0
 
   handlers:
     - name: Enable and restart elastic

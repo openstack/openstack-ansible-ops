@@ -58,6 +58,16 @@ elastic_vip_url: >-
   http://{{ hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ elastic_port }}
   {% endif %}
 
+#define this in host/group vars as needed to mount remote filesystems
+#set the client address as appropriate, eth1 assumes osa container mgmt network
+#mountpoints and server paths are just examples
+#elastic_shared_fs_repos:
+#  - fstype: nfs4
+#    src: "<nfs-server-ip>:/esbackup"
+#    opts: clientaddr="{{ ansible_eth1['ipv4']['address'] }}"
+#    path: "/elastic-backup"
+#    state: mounted
+
 # kibana vars
 kibana_interface: 0.0.0.0
 kibana_port: 5601
