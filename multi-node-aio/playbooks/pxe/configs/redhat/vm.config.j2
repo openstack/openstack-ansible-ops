@@ -1,0 +1,76 @@
+# Server Kickstart - vm
+install
+text
+lang en_US
+keyboard us
+timezone --utc Etc/UTC
+auth --useshadow --enablemd5
+selinux --disabled
+firewall --disabled
+services --enabled=NetworkManager,sshd
+eula --agreed
+ignoredisk --only-use=vda
+reboot
+
+bootloader --location=mbr
+zerombr
+clearpart --all --initlabel
+part /boot --fstype ext3 --size=512
+part pv.01 --size=1 --grow
+volgroup vmvg00 pv.01
+logvol / --fstype ext4 --name=root00 --vgname=vmvg00 --size=8192
+logvol swap --fstype swap --name=swap00 --vgname=vmvg00 --size=2048
+logvol /openstack --fstype ext4 --name=openstack00 --vgname=vmvg00 --size=16384
+{% if default_container_tech == 'nspawn' %}
+logvol /var/lib/machines --fstype ext4 --name=machines00 --vgname=vmvg00 --size=8192 --grow
+{% elif default_container_tech == 'lxc' %}
+logvol /var/lib/machines --fstype ext4 --name=machines00 --vgname=vmvg00 --size=4096
+logvol /var/lib/lxc --fstype ext4 --name=lxc00 --vgname=vmvg00 --size=8192 --grow
+{% endif %}
+rootpw secrete
+repo --name=base --baseurl={{ images[default_vm_image]['image_repo_base_url'] }}/os/x86_64/
+repo --name=updates --baseurl={{ images[default_vm_image]['image_repo_base_url'] }}/updates/x86_64/
+url --url="{{ images[default_vm_image]['image_repo_base_url'] }}/os/x86_64/" --proxy {{ default_proxy_url }}
+
+%packages --nobase --ignoremissing
+@core
+wget
+bridge-utils
+btrfs-progs
+dstat
+git
+python
+systemd-networkd
+systemd-resolved
+tmux
+vim
+%end
+
+%post
+(set -x
+echo
+echo "################################"
+echo "# Running Post Configuration   #"
+echo "################################"
+# install ssh key
+mkdir -m0700 /root/.ssh/
+cat <<EOF >/root/.ssh/authorized_keys
+{{ tftp_ssh_key }}
+EOF
+chmod 0600 /root/.ssh/authorized_keys
+
+# set apt-cacher-ng proxy
+sed -i '/\[main\]/a proxy={{ default_proxy_url }}' /etc/yum.conf
+
+# kickstart has issues setting fstype to btrfs, so this converts the machines lvm partition to btrfs
+modprobe btrfs
+umount /dev/vmvg00/machines00
+btrfs-convert /dev/vmvg00/machines00
+sed -i '/vmvg00-machines00/d' /etc/fstab
+echo "/dev/mapper/vmvg00-machines00 /var/lib/machines       btrfs    defaults        1 2" >> /etc/fstab
+
+wget --no-proxy http://{{ tftp_server }}/scripts/vm-post-install-redhat-script.sh -O /opt/vm-post-install-script.sh
+chmod +x /opt/vm-post-install-script.sh
+/opt/vm-post-install-script.sh
+) > /root/post_install.log 2>&1
+%end

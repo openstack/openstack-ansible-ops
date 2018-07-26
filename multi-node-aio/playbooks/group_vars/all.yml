@@ -26,6 +26,8 @@ default_ubuntu_mirror_proxy: 'http://10.0.2.1:3142/'
 default_ubuntu_mirror_hostname: archive.ubuntu.com
 default_ubuntu_mirror_directory: /ubuntu
 
+default_proxy_url: 'http://10.0.2.1:3142/'
+
 default_container_tech: "{{ container_tech | default('lxc') }}"
 
 ipxe_kernel_url: "http://boot.ipxe.org/ipxe.lkrn"
@@ -48,21 +50,12 @@ images:
     image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
     image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
     image_configs:
-      mnaio:
-        url: "http://{{ tftp_server }}/configs/mnaio.config"
-        template_name: "mnaio.config"
       vm:
         url: "http://{{ tftp_server }}/configs/vm.config"
         template_name: "vm.config"
       vm-compute:
         url: "http://{{ tftp_server }}/configs/vm-compute.config"
         template_name: "vm-compute.config"
-      compute:
-        url: "http://{{ tftp_server }}/configs/compute.config"
-        template_name: "compute.config"
-      infra:
-        url: "http://{{ tftp_server }}/configs/infra.config"
-        template_name: "infra.config"
   ubuntu-16.04-amd64:
     image_type: "debian"
     image_os: "ubuntu"
@@ -71,21 +64,12 @@ images:
     image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
     image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
     image_configs:
-      mnaio:
-        url: "http://{{ tftp_server }}/configs/mnaio.config"
-        template_name: "mnaio.config"
       vm:
         url: "http://{{ tftp_server }}/configs/vm.config"
         template_name: "vm.config"
       vm-compute:
         url: "http://{{ tftp_server }}/configs/vm-compute.config"
         template_name: "vm-compute.config"
-      compute:
-        url: "http://{{ tftp_server }}/configs/compute.config"
-        template_name: "compute.config"
-      infra:
-        url: "http://{{ tftp_server }}/configs/infra.config"
-        template_name: "infra.config"
   ubuntu-14.04-amd64:
     image_type: "debian"
     image_os: "ubuntu"
@@ -94,21 +78,27 @@ images:
     image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
     image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
     image_configs:
-      mnaio:
-        url: "http://{{ tftp_server }}/configs/mnaio.config"
-        template_name: "mnaio.config"
       vm:
         url: "http://{{ tftp_server }}/configs/vm.config"
         template_name: "vm.config"
       vm-compute:
         url: "http://{{ tftp_server }}/configs/vm-compute.config"
         template_name: "vm-compute.config"
-      compute:
-        url: "http://{{ tftp_server }}/configs/compute.config"
-        template_name: "compute.config"
-      infra:
-        url: "http://{{ tftp_server }}/configs/infra.config"
-        template_name: "infra.config"
+  centos-7-amd64:
+    image_type: "redhat"
+    image_version: 7
+    image_netboot_kernel_url: "http://mirrors.edge.kernel.org/centos/7/os/x86_64/images/pxeboot/vmlinuz"
+    image_netboot_initrd_url: "http://mirrors.edge.kernel.org/centos/7/os/x86_64/images/pxeboot/initrd.img"
+    image_repo_base_url: "http://mirrors.edge.kernel.org/centos/7"
+    image_kernel_options: ""
+    image_configs:
+      vm:
+        url: "http://{{ tftp_server }}/configs/vm.config"
+        template_name: "vm.config"
+      vm-compute:
+        url: "http://{{ tftp_server }}/configs/vm-compute.config"
+        template_name: "vm-compute.config"
+
 # mnaio_data_disk: 'sdc'  # str - not required, set this to define a given data disk if no data disk
 #                                               is defined the largest unpartitioned disk will be used.
 mnaio_host_networks:

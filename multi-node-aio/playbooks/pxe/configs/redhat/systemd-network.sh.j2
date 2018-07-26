@@ -1,0 +1,52 @@
+#!/bin/bash
+# this script generates the networking using systemd-networkd
+{% set server_networks = hostvars[item]['server_networks'] %}
+
+mkdir -p /etc/systemd/network
+systemctl disable network
+systemctl disable NetworkManager
+systemctl enable systemd-networkd
+systemctl enable systemd-resolved
+systemctl start systemd-resolved
+rm -f /etc/resolv.conf
+ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+{% if hostvars[item]['server_hostname'] == 'loadbalancer1' %}
+# set nonlocal binding for haproxy
+echo "net.ipv4.ip_nonlocal_bind=1" >> /etc/sysctl.conf
+sysctl -p
+{% endif %}
+
+{% for key, value in server_networks.items()|sort(attribute='1.iface') %}
+# generate physical network devices
+cat <<EOF >/etc/systemd/network/{{ value.iface }}.network
+[Match]
+Name={{ value.iface }}
+
+[Network]
+Bridge=br-{{ key }}
+EOF
+
+# generate bridge net devices
+cat <<EOF >/etc/systemd/network/br-{{ key }}.netdev
+[NetDev]
+Name=br-{{ key }}
+Kind=bridge
+EOF
+
+# generate network files
+cat <<EOF >/etc/systemd/network/br-{{ key }}.network
+[Match]
+Name=br-{{ key }}
+
+[Network]
+{%   if value.inet_type == 'dhcp' %}
+DHCP=yes
+
+[DHCP]
+UseDNS=yes
+UseNTP=yes
+{%   elif value.address is defined %}
+Address={{ value.address }}
+{%   endif %}
+EOF
+{% endfor %}

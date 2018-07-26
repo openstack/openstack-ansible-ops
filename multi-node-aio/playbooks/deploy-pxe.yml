@@ -106,49 +106,60 @@
         owner: root
         group: root
 
-    - name: network scripts for pxe
+    - name: Generate PXE network scripts for Debian Family
       template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/{{ item.src }}"
+        src: "pxe/configs/debian/{{ item.src }}"
         dest: /var/www/pxe/{{ item.dir }}/{{ item.dest }}
         mode: "0644"
         owner: root
         group: root
       with_items:
         - src: basic-interface.cfg
-          dest: "basic-{{ ansible_os_family | lower }}-interface.cfg"
+          dest: "basic-debian-interface.cfg"
           dir: networking
         - src: vm-post-install-script.sh.j2
-          dest: "vm-post-install-{{ ansible_os_family | lower }}-script.sh"
+          dest: "vm-post-install-debian-script.sh"
           dir: scripts
         - src: general-post-install-script.sh.j2
-          dest: "general-post-install-{{ ansible_os_family | lower }}-script.sh"
+          dest: "general-post-install-debian-script.sh"
           dir: scripts
+      when: images[default_vm_image]['image_type'] | lower == "debian"
 
-    - name: network scripts for an MNAIO
+    - name: Generate guest networking scripts for Debian Family
       template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/{{ item.src }}"
-        dest: /var/www/pxe/{{ item.dir }}/{{ item.dest }}
-        mode: "0644"
-        owner: root
-        group: root
-      when:
-        - groups['mnaio_hosts'] | default([]) | length > 0
-      with_items:
-        - src: mnaio-bridges.cfg.j2
-          dest: mnaio-bridges.cfg
-          dir: networking
-        - src: mnaio-post-install-script.sh.j2
-          dest: mnaio-post-install-{{ ansible_os_family | lower }}-script.sh
-          dir: scripts
-
-    - name: network scripts for servers
-      template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/vm-bridges.cfg.j2"
+        src: "pxe/configs/debian/vm-bridges.cfg.j2"
         dest: /var/www/pxe/networking/{{ hostvars[item]['server_hostname'] }}-bridges.cfg
         mode: "0644"
         owner: root
         group: root
       with_items: "{{ groups['pxe_servers'] }}"
+      when: images[default_vm_image]['image_type'] | lower == "debian"
+
+    - name: Generate PXE network scripts for RedHat Family
+      template:
+        src: "pxe/configs/redhat/{{ item.src }}"
+        dest: /var/www/pxe/{{ item.dir }}/{{ item.dest }}
+        mode: "0644"
+        owner: root
+        group: root
+      with_items:
+        - src: vm-post-install-script.sh.j2
+          dest: "vm-post-install-redhat-script.sh"
+          dir: scripts
+        - src: general-post-install-script.sh.j2
+          dest: "general-post-install-redhat-script.sh"
+          dir: scripts
+      when: images[default_vm_image]['image_type'] | lower == "redhat"
+
+    - name: Generate systemd-network scripts for Red Hat Family
+      template:
+        src: "pxe/configs/redhat/systemd-network.sh.j2"
+        dest: /var/www/pxe/networking/{{ hostvars[item]['server_hostname'] }}-systemd-network.sh
+        mode: "0644"
+        owner: root
+        group: root
+      with_items: "{{ groups['pxe_servers'] }}"
+      when: images[default_vm_image]['image_type'] | lower == "redhat"
 
     - name: tftp configs for servers
       template:
@@ -159,18 +170,9 @@
         group: root
       with_items: "{{ groups['pxe_servers'] }}"
 
-    - name: Preseeds for pxe mnaio
-      template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/mnaio.config.j2"
-        dest: /var/www/pxe/configs/mnaio.config
-        mode: "0644"
-        owner: root
-        group: root
-      with_dict: "{{ images }}"
-
     - name: Preseeds for pxe vm
       template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/vm.config.j2"
+        src: "pxe/configs/{{ images[default_vm_image]['image_type'] | lower }}/vm.config.j2"
         dest: /var/www/pxe/configs/vm.config
         mode: "0644"
         owner: root
@@ -179,26 +181,8 @@
 
     - name: Preseeds for pxe vm-compute
       template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/vm-compute.config.j2"
+        src: "pxe/configs/{{ images[default_vm_image]['image_type'] | lower }}/vm-compute.config.j2"
         dest: /var/www/pxe/configs/vm-compute.config
-        mode: "0644"
-        owner: root
-        group: root
-      with_dict: "{{ images }}"
-
-    - name: Preseeds for pxe compute
-      template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/compute.config.j2"
-        dest: /var/www/pxe/configs/compute.config
-        mode: "0644"
-        owner: root
-        group: root
-      with_dict: "{{ images }}"
-
-    - name: Preseeds for pxe infra
-      template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/infra.config.j2"
-        dest: /var/www/pxe/configs/infra.config
         mode: "0644"
         owner: root
         group: root
