@@ -1,6 +1,41 @@
 ---
-- name: Install Elastic Search
+
+- name: Run serialization detection
   hosts: "elastic-logstash:kibana"
+  gather_facts: true
+
+  vars_files:
+    - vars/variables.yml
+
+  tasks:
+    - include_tasks: common_task_data_node_hosts.yml
+
+    - name: Group by stand alone masters
+      group_by:
+        key: elastic_masters
+        parents: elastic-logstash
+      when:
+        - inventory_hostname in master_nodes
+
+    - name: Group by non stand alone masters
+      group_by:
+        key: elastic_non_masters
+        parents: elastic-logstash
+      when:
+        - inventory_hostname in (data_nodes | difference(master_nodes))
+
+    - name: Group by coordinators
+      group_by:
+        key: elastic_coordinators
+        parents: elastic-logstash
+      when:
+        - inventory_hostname in groups['kibana']
+  tags:
+    - always
+
+- name: Install Elastic Search
+  hosts: "elastic_coordinators:elastic_masters:elastic_non_masters"
+  serial: "33%"
   become: true
 
   vars_files:
@@ -11,11 +46,6 @@
     nfs_query: "[?fstype=='nfs' || fstype=='nfs4']"
 
   environment: "{{ deployment_environment_variables | default({}) }}"
-
-  pre_tasks:
-    - include_tasks: common_task_data_node_hosts.yml
-      tags:
-        - always
 
   tasks:
     - name: Set memory fact to half
@@ -40,10 +70,12 @@
             elasticsearch_node_master: false
             elasticsearch_node_data: false
             elasticsearch_node_ingest: false
+            elastic_coordination_node: true
             elastic_heap_size: "{{ (elastic_heap_size | int) // 3 }}"
-            elastic_thread_pool_size: "{{ ((ansible_processor_cores | int) > 4) | ternary(4, 1) }}"
+            elastic_thread_pool_size: "{{ ((ansible_processor_cores | int) > 4) | ternary(4, (ansible_processor_cores // 2)) }}"
       when:
-        - inventory_hostname in (groups['kibana'] | difference(groups['elastic-logstash']))
+        - inventory_hostname in (groups['kibana'] | default([])) and
+          not inventory_hostname in (groups['elastic-logstash'] | default([]))
       tags:
         - always
 

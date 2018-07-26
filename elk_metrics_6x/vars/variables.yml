@@ -68,6 +68,11 @@ elastic_vip_url: >-
 #    path: "/elastic-backup"
 #    state: mounted
 
+# EXPERIMENTAL - When the heap size for a given elastic node is graeter than
+#                4GiB the G1 garbage collector can be enabled. This is an
+#                experimental feature and may be removed later.
+elastic_g1gc_enabled: false
+
 # kibana vars
 kibana_interface: 0.0.0.0
 kibana_port: 5601

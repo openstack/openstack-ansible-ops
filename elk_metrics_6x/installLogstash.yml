@@ -1,6 +1,7 @@
 ---
 - name: Install Logstash
   hosts: elastic-logstash
+  serial: "50%"
   become: true
   vars_files:
     - vars/variables.yml
@@ -18,7 +19,7 @@
   tasks:
     - name: Set quarter memory fact
       set_fact:
-        q_mem: "{{ (ansible_memtotal_mb | int) // 4 }}"
+        q_mem: "{{ (ansible_memtotal_mb | int) // 3 }}"
       when:
         - q_mem is not defined
       tags:
@@ -26,7 +27,7 @@
 
     - name: Set processor cores fact
       set_fact:
-        q_storage: "{{ ansible_processor_cores }}"
+        q_storage: "{{ (ansible_processor_cores | int) * 2 }}"
       when:
         - q_storage is not defined
       tags:
@@ -124,7 +125,7 @@
       notify:
         - Enable and restart logstash
 
-    - name: Drop elasticsearch conf file
+    - name: Drop logstash conf file(s)
       template:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"

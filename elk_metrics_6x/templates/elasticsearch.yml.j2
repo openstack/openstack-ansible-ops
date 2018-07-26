@@ -101,26 +101,35 @@ gateway.recover_after_nodes: {{ ((master_node_count | int) // 2) + 1 }}
 #
 # action.destructive_requires_name: true
 
+{% set processors = ((elastic_thread_pool_size | int) > 0) | ternary(elastic_thread_pool_size, 1) %}
+{% if not (elastic_coordination_node | default(false)) | bool %}
 # Thread pool settings. For more on this see the documentation at:
 # <https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-threadpool.html>
 thread_pool:
-  search:
-    size: {{ (elastic_thread_pool_size | int) }}
-    queue_size: {{ (elastic_thread_pool_size | int) * 256 }}
   index:
-    size: {{ (elastic_thread_pool_size | int) }}
-    queue_size: {{ (elastic_thread_pool_size | int) * 256 }}
-  bulk:
-    size: {{ (elastic_thread_pool_size | int) }}
-    queue_size: {{ (elastic_thread_pool_size | int) * 512 }}
+    queue_size: {{ (processors | int) * 256 }}
+  get:
+    queue_size: {{ (processors | int) * 256 }}
+  write:
+    queue_size: {{ (processors | int) * 512 }}
+{% else %}
+# The number of processors is automatically detected, and the thread pool
+# settings are automatically set based on it. In some cases it can be useful to
+# override the number of detected processors. This can be done by explicitly
+# setting the processors setting. On Kibana hosts where elasticsearch is running
+# as a coordination node, the processor count is limited.
+processors: {{ processors }}
+{% endif %}
 
-# Accepts either a percentage or a byte size value. Set to 30%, meaning that 30%
+
+# Accepts either a percentage or a byte size value. Set to 20%, meaning that 20%
 # of the total heap allocated to a node will be used as the indexing buffer size
 # shared across all shards.
-indices.memory.index_buffer_size: 30%
+indices.memory.index_buffer_size: 20%
 
-# Connection throttling on recovery is limited to 75% of the detected interface
-# speed. This will improce search speeds and reduce general cluster pressure.
+# Connection throttling on recovery is limited to 20% of the detected interface
+# speed with a cap of 750mb. This will improce search speeds and reduce general
+# cluster pressure.
 indices.recovery.max_bytes_per_sec: {{ elasticserch_interface_speed }}mb
 
 # ---------------------------------- X-Pack ------------------------------------

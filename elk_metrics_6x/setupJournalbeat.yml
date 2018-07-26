@@ -15,7 +15,7 @@
 
 - name: Load Journalbeat Dashboards
   hosts: hosts[0]
-  gather_facts: false
+  gather_facts: true
   vars_files:
     - vars/variables.yml
 
