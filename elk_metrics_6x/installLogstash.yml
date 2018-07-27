@@ -8,6 +8,7 @@
 
   vars:
     temp_dir: /var/lib/logstash/tmp
+    logstash_pipelines: "{{lookup('template', 'templates/logstash-pipelines.yml.j2') }}"
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
@@ -27,7 +28,7 @@
 
     - name: Set processor cores fact
       set_fact:
-        q_storage: "{{ (ansible_processor_cores | int) * 2 }}"
+        q_storage: "{{ (ansible_processor_cores | int) * (ansible_processor_threads_per_core | int) * 2 }}"
       when:
         - q_storage is not defined
       tags:
@@ -36,7 +37,7 @@
     - name: Set logstash facts
       set_fact:
         elastic_heap_size: "{{ ((q_mem | int) > 30720) | ternary(30720, q_mem) }}"
-        logstash_queue_size: "{{ (((q_storage | int) > 16) | ternary(16, q_storage) | int) * 1024 }}"
+        logstash_queue_size: "{{ ((((q_storage | int) >= 2) | ternary(q_storage, 2) | int) * 1024) // ((logstash_pipelines | from_yaml) | length) }}"
         elastic_log_rotate_path: "/var/log/logstash"
       tags:
         - always
@@ -125,24 +126,6 @@
       notify:
         - Enable and restart logstash
 
-    - name: Drop logstash conf file(s)
-      template:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-      with_items:
-        - src: templates/jvm.options.j2
-          dest: /etc/logstash/jvm.options
-        - src: templates/99-elasticsearch-output.conf.j2
-          dest: /etc/logstash/conf.d/99-elasticsearch-output.conf
-        - src: templates/02-beats-input.conf.j2
-          dest: /etc/logstash/conf.d/02-beats-input.conf
-        - src: templates/logstash.yml.j2
-          dest: /etc/logstash/logstash.yml
-      notify:
-        - Enable and restart logstash
-      tags:
-        - config
-
     - name: Create patterns directory
       file:
         name: "/opt/logstash/patterns"
@@ -168,41 +151,6 @@
         - logstash-filters
         - config
 
-    - name: Deploy Logstash configuration files
-      copy:
-        src: "files/{{ item }}"
-        dest: "/etc/logstash/conf.d/{{ item }}"
-      with_items:
-        - 02-general.conf
-        - 02-journald.conf
-        - 03-nova.conf
-        - 04-neutron.conf
-        - 05-glance.conf
-        - 06-cinder.conf
-        - 07-libvirt.conf
-        - 08-apache.conf
-        - 09-heat.conf
-        - 10-mysql.conf
-        - 10-syslog-filter.conf
-        - 11-auth.conf
-        - 12-logstash.conf
-        - 13-swift.conf
-        - 14-keystone.conf
-        - 16-elasticsearch.conf
-        - 17-rabbitmq.conf
-        - 18-ceph.conf
-        - 19-nginx.conf
-        - 20-magnum.conf
-        - 21-octavia.conf
-        - 98-traceback.conf
-      when:
-        - logstash_deploy_filters
-      notify:
-        - Enable and restart logstash
-      tags:
-        - logstash-filters
-        - config
-
     - name: Run kafka output block
       block:
         - name: Copy kafka keystore into place
@@ -219,14 +167,26 @@
           when:
             - logstash_kafka_ssl_truststore_location is defined
 
-        - name: Deploy Logstash kafka configuration files
-          template:
-            src: "templates/99-kafka-output.conf.j2"
-            dest: "/etc/logstash/conf.d/99-kafka-output.conf"
-          notify:
-            - Enable and restart logstash
       when:
         - logstash_kafka_options is defined
+
+    - name: Drop logstash conf file(s)
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - src: templates/jvm.options.j2
+          dest: /etc/logstash/jvm.options
+        - src: templates/logstash.yml.j2
+          dest: /etc/logstash/logstash.yml
+        - src: templates/logstash-pipelines.yml.j2
+          dest: /etc/logstash/pipelines.yml
+        - src: "templates/logrotate.j2"
+          dest: "/etc/logrotate.d/logstash"
+      notify:
+        - Enable and restart logstash
+      tags:
+        - config
 
     - name: Ensure logstash ownership
       file:
@@ -246,11 +206,6 @@
         owner: "logstash"
         group: "logstash"
         mode: "0750"
-
-    - name: Create logrotate config
-      template:
-        src: "templates/logrotate.j2"
-        dest: "/etc/logrotate.d/logstash"
 
     - name: Run arcsight output block
       block:
