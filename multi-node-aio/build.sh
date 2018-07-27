@@ -33,13 +33,17 @@ ansible-playbook -vv \
                  -e setup_dhcpd=${SETUP_DHCPD:-"true"} \
                  -e deploy_vms=${DEPLOY_VMS:-"true"} \
                  -e deploy_osa=${DEPLOY_OSA:-"true"} \
+                 -e deploy_elk=${DEPLOY_ELK:-"false"} \
                  -e osa_repo=${OSA_REPO:-"https://git.openstack.org/openstack/openstack-ansible"} \
+                 -e os_ops_repo=${OS_OPS_REPO:-"https://git.openstack.org/openstack/openstack-ansible-ops"} \
                  -e osa_branch=${OSA_BRANCH:-"master"} \
+                 -e os_ops_branch=${OS_OPS_BRANCH:-"master"} \
                  -e default_network=${DEFAULT_NETWORK:-"eth0"} \
                  -e default_image=${DEFAULT_IMAGE:-"ubuntu-16.04-amd64"} \
                  -e vm_disk_size=${VM_DISK_SIZE:-92160} \
                  -e http_proxy=${http_proxy:-''} \
                  -e run_osa=${RUN_OSA:-"true"} \
+                 -e run_elk=${RUN_ELK:-"false"} \
                  -e pre_config_osa=${PRE_CONFIG_OSA:-"true"} \
                  -e configure_openstack=${CONFIGURE_OPENSTACK:-"true"} \
                  -e config_prerouting=${CONFIG_PREROUTING:-"false"} \

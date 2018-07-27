@@ -37,6 +37,10 @@
   when:
     - deploy_osa | default(true) | bool
 
+- import_playbook: deploy-elk.yml
+  when:
+    - deploy_elk | default(false) | bool
+
 - import_playbook: openstack-service-setup.yml
   when:
     - configure_openstack | default(true) | bool

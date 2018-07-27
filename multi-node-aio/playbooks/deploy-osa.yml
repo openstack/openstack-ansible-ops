@@ -98,6 +98,28 @@
         - pre_config_osa | default(true) | bool
         - osa_disable_serial | default(false) | bool
 
+    - name: Drop ELK env.d config
+      template:
+        src: "osa/elk-envd.yml"
+        dest: "/etc/openstack_deploy/env.d/elk.yml"
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - pre_config_osa | default(true) | bool
+        - osa_enable_elk_metrics | default(false) | bool
+
+    - name: Drop ELK conf.d config
+      template:
+        src: "osa/elk-confd.yml"
+        dest: "/etc/openstack_deploy/conf.d/elk.yml"
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - pre_config_osa | default(true) | bool
+        - osa_enable_elk_metrics | default(false) | bool
+
     - name: Ensure the user_variables file is populated
       lineinfile:
         path: /etc/openstack_deploy/user_variables.yml

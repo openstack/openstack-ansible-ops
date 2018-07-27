@@ -38,6 +38,11 @@
   tags:
     - package_install
 
+- name: Create the virtualenv (if it does not exist)
+  command: "virtualenv --never-download --no-site-packages /opt/elasticsearch-curator"
+  args:
+    creates: "/opt/elasticsearch-curator/bin/activate"
+
 - name: Ensure curator is installed
   pip:
     name: "elasticsearch-curator<6"

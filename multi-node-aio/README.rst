@@ -117,7 +117,6 @@ Instruct the system do all of the required PXE setup:
 Instruct the system do all of the required DHCPD setup:
   ``SETUP_DHCPD=${SETUP_DHCPD:-true}``
 
-
 Instruct the system to Kick all of the VMs:
   ``DEPLOY_VMS=${DEPLOY_VMS:-true}``
 
@@ -130,11 +129,20 @@ Instruct the VM to use the selected kernel meta package, eg. linux-generic:
 Set the OSA repo for this script to retrieve:
   ``OSA_REPO=${OSA_REPO:-https://git.openstack.org/openstack/openstack-ansible}``
 
+Set the openstack-ansible-ops repo to retrieve for the ELK stack:
+  ``OS_OPS_REPO=${OS_OPS_REPO:-https://git.openstack.org/openstack/openstack-ansible-ops}``
+
 Set the OSA branch for this script to deploy:
   ``OSA_BRANCH=${OSA_BRANCH:-master}``
 
+Set the openstack-ansible-ops branch for this script to deploy:
+  ``OS_OPS_BRANCH=${OS_OPS_BRANCH:-master}``
+
 Instruct the system to deploy OpenStack Ansible:
   ``DEPLOY_OSA=${DEPLOY_OSA:-true}``
+
+Instruct the system to deploy the ELK Stack:
+  ``DEPLOY_ELK=${DEPLOY_ELK:-false}``
 
 Instruct the system to pre-config the envs for running OSA playbooks:
   ``PRE_CONFIG_OSA=${PRE_CONFIG_OSA:-true}``
@@ -142,6 +150,9 @@ Instruct the system to pre-config the envs for running OSA playbooks:
 Instruct the system to run the OSA playbooks, if you want to deploy other OSA
 powered cloud, you can set it to false:
   ``RUN_OSA=${RUN_OSA:-true}``
+
+Instruct the system to run the ELK playbooks:
+  ``RUN_ELK=${RUN_ELK:-false}``
 
 Instruct the system to configure the completed OpenStack deployment with some
 example flavors, images, networks, etc.:

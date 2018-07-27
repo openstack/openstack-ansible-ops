@@ -1,0 +1,64 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in witing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Setup deploy host
+  hosts: deploy_hosts
+  gather_facts: "{{ gather_facts | default(true) }}"
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-osa
+  tasks:
+    - name: Gather variables for each operating system
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
+      tags:
+        - always
+
+    # Example read-write git checkout from github
+    - name: Get openstack-ansible-ops
+      git:
+        repo: "{{ os_ops_repo | default('https://git.openstack.org/openstack/openstack-ansible-ops') }}"
+        dest: /opt/openstack-ansible-ops
+        version: "{{ os_ops_branch | default('master') }}"
+        force: true
+      when:
+        - deploy_elk | default(false) | bool
+
+    - name: Run ELK
+      command: "{{ item }}"
+      args:
+        chdir: /opt/openstack-ansible-ops/elk_metrics_6x
+      with_items:
+        - tmux attach -t build-osa
+        - tmux select-pane -t 0
+        - tmux send-keys "openstack-ansible playbooks/lxc-containers-create --limit elk_all" C-m
+        - tmux send-keys "cd /opt/openstack-ansible-ops/elk_metrics_6x" C-m
+        - tmux send-keys "openstack-ansible site.yml" C-m
+      when:
+        - inventory_hostname == groups['deploy_hosts'][0]
+        - run_elk | default(false) | bool
+
+    - name: Finished notice
+      debug:
+        msg: |
+          ELK deploy running. To check on the state of this deployment, login
+          to the {{ groups['deploy_hosts'][0] }} VM and attach to the "build-osa" tmux session.
+      when:
+        - run_elk | default(false) | bool
