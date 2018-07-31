@@ -59,6 +59,15 @@
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
+    - name: Undefine the VM
+      virt:
+        name: "{{ hostvars[item]['server_hostname'] }}"
+        command: undefine
+      failed_when: false
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
+
     - name: Create VM LV
       lvol:
         vg: "{{ default_vm_disk_vg }}"
