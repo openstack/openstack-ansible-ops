@@ -8,6 +8,11 @@
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
+  pre_tasks:
+    - include_tasks: common_task_data_node_hosts.yml
+      tags:
+        - always
+
   tasks:
     - name: Create basic indexes
       uri:
@@ -30,7 +35,6 @@
                   total_fields:
                     limit: "10000"
                 refresh_interval: "5s"
-                number_of_replicas: "1"
         - name: "_all/_settings?preserve_existing=true"
           index_options:
             index.refresh_interval: "10s"
@@ -38,3 +42,6 @@
           index_options:
             index.queries.cache.enabled: "true"
             indices.queries.cache.size: "5%"
+        - name: "_all/_settings"
+          index_options:
+            index.number_of_replicas: "{{ elasticsearch_number_of_replicas }}"

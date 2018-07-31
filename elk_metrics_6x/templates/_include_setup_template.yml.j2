@@ -33,6 +33,9 @@ setup.template.settings:
     codec: best_compression
     # This provides for an index split of up to 2 times the number of available shards
     number_of_routing_shards: {{ (shards | int) * 2 }}
+    # The default number of replicas will be based on the number of data nodes
+    # within the environment with a limit of 2 replicas.
+    number_of_replicas: {{ elasticsearch_number_of_replicas }}
 
   # A dictionary of settings for the _source field. For more details, please check
   # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html

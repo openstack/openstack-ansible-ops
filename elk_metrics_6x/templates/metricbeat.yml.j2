@@ -46,7 +46,7 @@ metricbeat.max_start_delay: 10s
 
 #==========================  Modules configuration ============================
 metricbeat.modules:
-
+{% if (not physical_host is defined) or (physical_host is defined and physical_host == inventory_hostname) %}
 #------------------------------- System Module -------------------------------
 - module: system
   metricsets:
@@ -111,7 +111,7 @@ metricbeat.modules:
   socket.reverse_lookup.enabled: true
   socket.reverse_lookup.success_ttl: 60s
   socket.reverse_lookup.failure_ttl: 60s
-
+{% endif %}
 ##------------------------------ Aerospike Module -----------------------------
 #- module: aerospike
 #  metricsets: ["namespace"]
