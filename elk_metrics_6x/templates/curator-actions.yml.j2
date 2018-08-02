@@ -68,7 +68,7 @@
          "exclude_nodes": (groups['kibana'] | map('extract', hostvars, 'ansible_host') | list)
        },
        "number_of_shards": 1,
-       "number_of_replicas": elasticsearch_number_of_replicas,
+       "number_of_replicas": (elasticsearch_number_of_replicas | int),
        "shrink_suffix": '-shrink',
        "copy_aliases": true,
        "delete_after": true,

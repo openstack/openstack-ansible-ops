@@ -3,7 +3,7 @@
 # These settings can be adjusted to load your own template or overwrite existing ones.
 
 # Set to false to disable template loading.
-setup.template.enabled: false
+setup.template.enabled: {{ inventory_hostname == data_nodes[0] }}
 
 # Template name. By default the template name is "{{ beat_name }}-%{[beat.version]}"
 # The template name and pattern has to be set in case the elasticsearch index pattern is modified.
@@ -18,7 +18,7 @@ setup.template.pattern: "{{ beat_name }}-%{[beat.version]}-*"
 setup.template.fields: "${path.config}/fields.yml"
 
 # Overwrite existing template
-setup.template.overwrite: false
+setup.template.overwrite: {{ inventory_hostname == data_nodes[0] }}
 
 {% set shards = ((data_nodes | length) * 3) | int %}
 
@@ -35,7 +35,7 @@ setup.template.settings:
     number_of_routing_shards: {{ (shards | int) * 2 }}
     # The default number of replicas will be based on the number of data nodes
     # within the environment with a limit of 2 replicas.
-    number_of_replicas: {{ elasticsearch_number_of_replicas }}
+    number_of_replicas: {{ elasticsearch_number_of_replicas | int }}
 
   # A dictionary of settings for the _source field. For more details, please check
   # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html

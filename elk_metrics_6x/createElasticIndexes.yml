@@ -44,4 +44,4 @@
             indices.queries.cache.size: "5%"
         - name: "_all/_settings"
           index_options:
-            index.number_of_replicas: "{{ elasticsearch_number_of_replicas }}"
+            index.number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
