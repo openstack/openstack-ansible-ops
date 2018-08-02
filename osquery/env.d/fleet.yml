@@ -7,8 +7,8 @@ component_skel:
     belongs_to:
       - fleet_all
   osquery:
-    belogs_to:
-      - all
+    belongs_to:
+      - fleet_all
 
 container_skel:
   mariadb_container:
