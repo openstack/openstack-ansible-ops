@@ -52,13 +52,6 @@ fi
 # Setup Hosts
 RUN_TASKS+=("openstack-hosts-setup.yml -e redeploy_rerun=true")
 
-# Run the security-hardening playbook in redeployment
-if [[ -n "${SKIP_HARDENING_TAGS}" ]]; then
-  RUN_TASKS+=("security-hardening.yml --skip-tags=${SKIP_HARDENING_TAGS}")
-else
-  RUN_TASKS+=("security-hardening.yml")
-fi
-
 # Ensure the same pip everywhere, even if requirement met or above
 RUN_TASKS+=("${UPGRADE_UTILS}/pip-unify.yml -e release_version=\"${NEWTON_RELEASE}\"")
 
