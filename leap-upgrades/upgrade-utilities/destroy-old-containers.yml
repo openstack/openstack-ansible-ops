@@ -76,7 +76,3 @@
       failed_when: false
     - name: Update apt-cache
       command: apt-get update
-    - name: Search for and destroy reminent RPC grouped containers
-      shell: >-
-        lxc-ls -f | awk '/rpc/ {print $1}' | grep -v -e "neutron_agent" -e "ceph" | xargs -n 1 lxc-destroy -fn
-      failed_when: false
