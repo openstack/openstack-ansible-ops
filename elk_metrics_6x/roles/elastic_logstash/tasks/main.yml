@@ -1,0 +1,129 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Ensure Logstash is installed
+  package:
+    name: "{{ logstash_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: yes
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  notify:
+    - Enable and restart logstash
+  tags:
+    - package_install
+
+- name: Create logstash systemd service config dir
+  file:
+    path: "/etc/systemd/system/logstash.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "/etc/systemd/system/logstash.service.d/{{ item.dest }}"
+    mode: "0644"
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "logstash-overrides.conf"
+  notify:
+    - Enable and restart logstash
+
+- name: Create patterns directory
+  file:
+    name: "/opt/logstash/patterns"
+    owner: "logstash"
+    group: "logstash"
+    state: directory
+  tags:
+    - logstash-patterns
+
+- name: Logstash Extra Patterns
+  template:
+    src: "extras"
+    dest: "/opt/logstash/patterns/extras"
+    owner: "logstash"
+    group: "logstash"
+  when:
+    - logstash_deploy_filters
+  notify:
+    - Enable and restart logstash
+  tags:
+    - logstash-filters
+    - config
+
+- name: Run kafka ssl deployment
+  include_tasks: logstash_kafka_ssl.yml
+  when:
+    - logstash_kafka_options is defined
+    - logstash_kafka_ssl_keystore_location is defined
+
+- name: Drop logstash conf file(s)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: templates/logstash.yml.j2
+      dest: /etc/logstash/logstash.yml
+    - src: templates/logstash-pipelines.yml.j2
+      dest: /etc/logstash/pipelines.yml
+    - src: "templates/logrotate.j2"
+      dest: "/etc/logrotate.d/logstash"
+  notify:
+    - Enable and restart logstash
+  tags:
+    - config
+
+- name: Ensure logstash ownership
+  file:
+    path: "/var/lib/logstash/"
+    owner: logstash
+    group: logstash
+    recurse: true
+  register: l_perms
+  until: l_perms is success
+  retries: 3
+  delay: 1
+
+- name: Ensure logstash tmp dir
+  file:
+    path: "/var/lib/logstash/tmp"
+    state: directory
+    owner: "logstash"
+    group: "logstash"
+    mode: "0750"
+
+- name: Deploy arcsight collector
+  include_tasks: logstash_arcsight.yml
+  when:
+    - logstash_arcsight_smart_connectors or
+      logstash_arcsight_event_brokers

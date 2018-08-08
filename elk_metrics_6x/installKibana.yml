@@ -1,4 +1,16 @@
 ---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 - name: Install Kibana
   hosts: kibana
   become: true
@@ -7,109 +19,8 @@
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
-  tasks:
-    - include_tasks: common_task_install_elk_repo.yml
-
-    - name: Ensure Nginx is installed
-      apt:
-        name: "{{ item }}"
-        state: "{{ elk_package_state | default('present') }}"
-        update_cache: yes
-      with_items:
-        - nginx
-        - apache2-utils
-        - python-passlib
-      register: _apt_task
-      until: _apt_task is success
-      retries: 3
-      delay: 2
-      notify:
-        - Enable and restart nginx
-      tags:
-        - package_install
-
-    - name: create kibana user to access web interface
-      htpasswd:
-        path: "/etc/nginx/htpasswd.users"
-        name: "{{ kibana_username }}"
-        password: "{{ kibana_password }}"
-        owner: root
-        mode: 0644
-
-    - name: Drop Nginx default conf file
-      template:
-        src: templates/nginx_default.j2
-        dest: /etc/nginx/sites-available/default
-      notify:
-        - Enable and restart nginx
-
-    - name: Ensure kibana  is installed
-      apt:
-        name: kibana
-        state: "{{ elk_package_state | default('present') }}"
-        update_cache: yes
-      register: _apt_task
-      until: _apt_task is success
-      retries: 3
-      delay: 2
-      notify:
-        - Enable and restart kibana
-      tags:
-        - package_install
-
-    - name: exit playbook after uninstall
-      meta: end_play
-      when:
-        - (elk_package_state | default('present')) == 'absent'
-
-  post_tasks:
-    - name: Create kibana systemd service config dir
-      file:
-        path: "/etc/systemd/system/kibana.service.d"
-        state: "directory"
-        group: "root"
-        owner: "root"
-        mode: "0755"
-
-    - name: Apply systemd options
-      template:
-        src: "{{ item.src }}"
-        dest: "/etc/systemd/system/kibana.service.d/{{ item.dest }}"
-        mode: "0644"
-      with_items:
-        - { src: "systemd.general-overrides.conf.j2", dest: "kibana-overrides.conf" }
-      notify:
-        - Enable and restart kibana
-
-    - name: Drop kibana conf file
-      template:
-        src: templates/kibana.yml.j2
-        dest: /etc/kibana/kibana.yml
-        mode: "0666"
-      notify:
-        - Enable and restart kibana
-
-  handlers:
-    - name: Enable and restart kibana
-      systemd:
-        name: "kibana"
-        enabled: true
-        state: restarted
-        daemon_reload: true
-      when:
-        - (elk_package_state | default('present')) != 'absent'
-      tags:
-        - config
-
-    - name: Enable and restart nginx
-      systemd:
-        name: "nginx"
-        enabled: true
-        state: restarted
-      when:
-        - (elk_package_state | default('present')) != 'absent'
-      tags:
-        - config
+  roles:
+    - role: elastic_kibana
 
   tags:
     - server-install

@@ -1,4 +1,15 @@
 ---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 - name: Set heartbeat host deployment group
   hosts: kibana
@@ -11,7 +22,6 @@
         parents: kibana
       when:
         - inventory_hostname in groups['kibana'][:3]
-
   tags:
     - always
 
@@ -26,70 +36,10 @@
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
-  pre_tasks:
-    - include_tasks: common_task_data_node_hosts.yml
-      tags:
-        - always
-
-  tasks:
-    - include_tasks: common_task_install_elk_repo.yml
-
-    - name: Ensure heartbeat is installed
-      apt:
-        name: "heartbeat-elastic"
-        state: "{{ elk_package_state | default('present') }}"
-        update_cache: true
-      register: _apt_task
-      until: _apt_task is success
-      retries: 3
-      delay: 2
-      tags:
-        - package_install
-
-    - name: exit playbook after uninstall
-      meta: end_play
-      when:
-        - (elk_package_state | default('present')) == 'absent'
-
-  post_tasks:
-    - name: Create heartbeat systemd service config dir
-      file:
-        path: "/etc/systemd/system/heartbeat.service.d"
-        state: "directory"
-        group: "root"
-        owner: "root"
-        mode: "0755"
-
-    - name: Apply systemd options
-      template:
-        src: "{{ item.src }}"
-        dest: "/etc/systemd/system/heartbeat.service.d/{{ item.dest }}"
-        mode: "0644"
-      with_items:
-        - { src: "systemd.general-overrides.conf.j2", dest: "heartbeat-overrides.conf" }
-      notify:
-        - Enable and restart heartbeat
-
-    - name: Drop heartbeat conf file
-      template:
-        src: templates/heartbeat.yml.j2
-        dest: /etc/heartbeat/heartbeat.yml
-      notify:
-        - Enable and restart heartbeat
-
-  handlers:
-    - name: Enable and restart heartbeat
-      systemd:
-        name: "heartbeat-elastic"
-        enabled: true
-        state: restarted
-        daemon_reload: true
-      when:
-        - (elk_package_state | default('present')) != 'absent'
-      tags:
-        - config
+  roles:
+    - role: elastic_heartbeat
+    - role: elastic_rollup
+      index_name: heartbeat
 
   tags:
     - beat-install
-
-- import_playbook: setupHeartbeat.yml

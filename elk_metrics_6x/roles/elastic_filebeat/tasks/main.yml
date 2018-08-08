@@ -1,0 +1,177 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Ensure beat is installed
+  package:
+    name: "{{ filebeat_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: true
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  notify:
+    - Enable and restart filebeat
+  tags:
+    - package_install
+
+- name: Create filebeat systemd service config dir
+  file:
+    path: "/etc/systemd/system/filebeat.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "/etc/systemd/system/filebeat.service.d/{{ item.dest }}"
+    mode: "0644"
+  with_items:
+    - { src: "systemd.general-overrides.conf.j2", dest: "filebeat-overrides.conf" }
+  notify:
+    - Enable and restart filebeat
+
+- name: Check for apache
+  stat:
+    path: /etc/apache2
+  register: apache2
+
+- name: Check for auditd
+  stat:
+    path: /etc/audit
+  register: audit
+
+- name: Check for ceph
+  stat:
+    path: /var/log/ceph
+  register: ceph
+
+- name: Check for cinder
+  stat:
+    path: /var/log/cinder
+  register: cinder
+
+- name: Check for glance
+  stat:
+    path: /var/log/glance
+  register: glance
+
+- name: Check for heat
+  stat:
+    path: /var/log/heat
+  register: heat
+
+- name: Check for horizon
+  stat:
+    path: /var/log/horizon
+  register: horizon
+
+- name: Check for httpd
+  stat:
+    path: /var/log/httpd
+  register: httpd
+
+- name: Check for keystone
+  stat:
+    path: /var/log/keystone
+  register: keystone
+
+- name: Check for mysql
+  stat:
+    path: /var/lib/mysql
+  register: mysql
+
+- name: Check for neutron
+  stat:
+    path: /var/log/neutron
+  register: neutron
+
+- name: Check for nginx
+  stat:
+    path: /var/log/nginx
+  register: nginx
+
+- name: Check for nova
+  stat:
+    path: /var/log/nova
+  register: nova
+
+- name: Check for octavia
+  stat:
+    path: /var/log/octavia
+  register: octavia
+
+- name: Check for swift
+  stat:
+    path: /var/log/swift
+  register: swift
+
+- name: Check for rabbitmq
+  stat:
+    path: /var/lib/rabbitmq
+  register: rabbitmq
+
+- name: Check for designate
+  stat:
+    path: /var/log/designate
+  register: designate
+
+- name: Check for osquery
+  stat:
+    path: /var/log/osquery/osqueryd.results.log
+  register: osquery
+
+- name: Set discovery facts
+  set_fact:
+    apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
+    nginx_enabled: "{{ nginx.stat.exists | bool }}"
+    auditd_enabled: "{{ audit.stat.exists | bool }}"
+    mysql_enabled: "{{ (mysql.stat.exists | bool) or (inventory_hostname in groups['galera_all'] | default([])) }}"
+    ceph_enabled: "{{ (ceph.stat.exists | bool) or (inventory_hostname in groups['ceph_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*ceph.*') | list | length) > 0) }}"
+    cinder_enabled: "{{ (cinder.stat.exists | bool) or (inventory_hostname in groups['cinder_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*cinder.*') | list | length) > 0) }}"
+    glance_enabled: "{{ (glance.stat.exists | bool) or (inventory_hostname in groups['glance_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*glance.*') | list | length) > 0) }}"
+    heat_enabled: "{{ (heat.stat.exists | bool) or (inventory_hostname in groups['heat_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*heat.*') | list | length) > 0) }}"
+    horizon_enabled: "{{ (horizon.stat.exists | bool) or (inventory_hostname in groups['horizon_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*horizon.*') | list | length) > 0) }}"
+    keystone_enabled: "{{ (keystone.stat.exists | bool) or (inventory_hostname in groups['keystone_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*keystone.*') | list | length) > 0) }}"
+    neutron_enabled: "{{ (neutron.stat.exists | bool) or (inventory_hostname in groups['neutron_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*neutron.*') | list | length) > 0) }}"
+    nova_enabled: "{{ (nova.stat.exists | bool) or (inventory_hostname in groups['nova_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*nova.*') | list | length) > 0) }}"
+    octavia_enabled: "{{ (octavia.stat.exists | bool) or (inventory_hostname in groups['octavia_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*octavia.*') | list | length) > 0) }}"
+    swift_enabled: "{{ (swift.stat.exists | bool) or (inventory_hostname in groups['swift_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*swift.*') | list | length) > 0) }}"
+    rabbitmq_enabled: "{{ (rabbitmq.stat.exists | bool) or (inventory_hostname in groups['rabbitmq_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*rabbit.*') | list | length) > 0) }}"
+    designate_enabled: "{{ (designate.stat.exists | bool) or (inventory_hostname in groups['designate_all'] | default([])) or (((groups[inventory_hostname + '-host_containers'] | default([])) | select('match', '.*designate.*') | list | length) > 0) }}"
+    osquery_enabled: "{{ osquery.stat.exists | bool }}"
+
+- name: Drop Filebeat conf file
+  template:
+    src: templates/filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml
+  notify:
+    - Enable and restart filebeat
+
+- include_tasks: filebeat_setup.yml

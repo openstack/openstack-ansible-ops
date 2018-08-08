@@ -1,0 +1,162 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Check for service_name var
+  fail:
+    msg: >-
+      The required variable [ service_name ] is undefined.
+  when:
+    - service_name is undefined
+
+- name: Check for service_owner var
+  fail:
+    msg: >-
+      The required variable [ service_owner ] is undefined.
+  when:
+    - service_owner is undefined
+
+- name: Check for service_group var
+  fail:
+    msg: >-
+      The required variable [ service_group ] is undefined.
+  when:
+    - service_group is undefined
+
+- name: Load service variables
+  include_vars: "vars_{{ service_name }}.yml"
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Set elastic heap defaults
+  set_fact:
+    elastic_heap_size_default: "{{ _elastic_heap_size_default }}"
+
+- name: Configure systcl vm.max_map_count=262144 on container hosts
+  sysctl:
+    name: "vm.max_map_count"
+    value: "262144"
+    state: "present"
+    reload: "yes"
+  delegate_to: "{{ physical_host }}"
+  tags:
+    - sysctl
+
+- name: Physical host block
+  block:
+    - name: Check for directory
+      stat:
+        path: "/var/lib/{{ service_name }}"
+      register: service_dir
+
+    - name: Check for existing rollup job
+      debug:
+        msg: >-
+          The service data directory [ /var/lib/{{ service_name }} ] already
+          exists. To ensure no data is lost, the linked directory path to
+          [ /openstack/{{ inventory_hostname }}/{{ service_name }} ] will not be
+          created for this host.
+      when:
+        - service_dir.stat.isdir is defined and
+          service_dir.stat.isdir
+
+    - name: Ensure service directories data-path exists
+      file:
+        path: "/openstack/{{ inventory_hostname }}/{{ service_name }}"
+        state: "directory"
+        owner: "{{ service_owner }}"
+        group: "{{ service_group }}"
+      when:
+        - service_dir.stat.isdir is defined and
+          not service_dir.stat.isdir
+
+    - name: Ensure data link exists
+      file:
+        src: "/openstack/{{ inventory_hostname }}/{{ service_name }}"
+        dest: "/var/lib/{{ service_name }}"
+        owner: "{{ service_owner }}"
+        group: "{{ service_group }}"
+        state: link
+      when:
+        - service_dir.stat.isdir is defined and
+          not service_dir.stat.isdir
+  when:
+    - physical_host == inventory_hostname
+
+- name: elasticsearch datapath bind mount
+  lxc_container:
+    name: "{{ inventory_hostname }}"
+    container_command: |
+      [[ ! -d "/var/lib/{{ service_name }}" ]] && mkdir -p "/var/lib/{{ service_name }}"
+    container_config:
+      - "lxc.mount.entry=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
+  delegate_to: "{{ physical_host }}"
+  when:
+    - physical_host != inventory_hostname
+    - container_tech | default('lxc') == 'lxc'
+
+- name: Ensure Java is installed
+  package:
+    name: "{{ elastic_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    install_recommends: yes
+    update_cache: yes
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
+- name: Create the system group
+  group:
+    name: "{{ service_group }}"
+    gid: "{{ service_group_gid | default(omit) }}"
+    state: "present"
+    system: "yes"
+
+- name: Create the system user
+  user:
+    name: "{{ service_owner }}"
+    uid: "{{ service_owner_uid | default(omit) }}"
+    group: "{{ service_group }}"
+    shell: "/bin/false"
+    system: "yes"
+    createhome: "yes"
+    home: "/var/lib/{{ service_name }}"
+
+- name: Ensure service directories exists
+  file:
+    path: "/etc/{{ service_name }}"
+    state: "directory"
+    owner: "{{ service_owner }}"
+    group: "{{ service_group }}"
+
+- name: Drop jvm conf file(s)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: templates/jvm.options.j2
+      dest: /etc/{{ service_name }}/jvm.options

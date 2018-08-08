@@ -1,0 +1,236 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Ensure beat is installed
+  package:
+    name: "{{ metricbeat_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: true
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  notify:
+    - Enable and restart metricbeat
+  tags:
+    - package_install
+
+- name: Check for apache
+  stat:
+    path: /etc/apache2/sites-available
+  register: apache2
+
+- name: Check for ceph
+  stat:
+    path: /etc/ceph
+  register: ceph
+
+# gather ceph stats from localhost
+# except when a list of mons is provided
+- name: Set ceph stats hosts
+  set_fact:
+    ceph_stats_hosts: |-
+      {% set ceph_stats = [] %}
+      {% if (ceph_mons is defined) and (ceph_mons | length > 0) %}
+      {%   for mon in ceph_mons %}
+      {%     set _ = ceph_stats.insert(loop.index, (mon + ":5000")) %}
+      {%   endfor %}
+      {% else %}
+      {%   set ceph_stats = [ ansible_hostname + ":5000" ] %}
+      {% endif %}
+      {{ ceph_stats }}
+
+- name: Check for etcd
+  stat:
+    path: /etc/etcd
+  register: etcd
+
+- name: Check for docker
+  stat:
+    path: /var/run/docker.sock
+  register: docker
+
+- name: Check for haproxy
+  stat:
+    path: /etc/haproxy
+  register: haproxy
+
+- name: Check for httpd
+  stat:
+    path: /etc/httpd
+  register: httpd
+
+- name: Check for kvm
+  stat:
+    path: /var/run/libvirt/libvirt-sock
+  register: kvm
+
+- name: Check for memcached
+  stat:
+    path: /etc/memcached.conf
+  register: memcached
+
+- name: Check for mysql
+  stat:
+    path: /var/lib/mysql
+  register: mysql
+
+- name: Check for nginx
+  stat:
+    path: /etc/nginx/nginx.conf
+  register: nginx
+
+- name: Check for rabbitmq
+  stat:
+    path: /var/lib/rabbitmq
+  register: rabbitmq
+
+- name: Check for uwsgi
+  stat:
+    path: /etc/uwsgi
+  register: uwsgi
+
+- name: Check for uwsgi stats sockets
+  find:
+    paths: /tmp
+    file_type: any
+    patterns: '*uwsgi-stats.sock'
+  register: uwsgi_find_sockets
+
+- name: Set discovery facts
+  set_fact:
+    apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
+
+    # enable ceph on:  cinder volume hosts when we have a list of ceph mons
+    #      otherwise:  all hosts which have /etc/ceph
+    ceph_enabled: |-
+      {% set ceph_detect = false %}
+      {% if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups['cinder_volume'])  %}
+      {%   set ceph_detect = true %}
+      {% else %}
+      {%   set ceph_detect = ceph.stat.exists | bool %}
+      {% endif %}
+      {{ ceph_detect }}
+
+    docker_enabled: "{{ docker.stat.exists | bool }}"
+    etcd_enabled: "{{ etcd.stat.exists | bool }}"
+    haproxy_enabled: "{{ haproxy.stat.exists | bool }}"
+    kvm_enabled: "{{ kvm.stat.exists | bool }}"
+    memcached_enabled: "{{ memcached.stat.exists | bool }}"
+    mysql_enabled: "{{ mysql.stat.exists | bool }}"
+    nginx_enabled: "{{ nginx.stat.exists | bool }}"
+    rabbitmq_enabled: "{{ rabbitmq.stat.exists | bool }}"
+    uwsgi_enabled: "{{ uwsgi.stat.exists | bool }}"
+    uwsgi_sockets: "{{ uwsgi_find_sockets }}"
+
+# Apache 2 stats enablement
+- name: Drop apache2 stats site config
+  template:
+    src: apache-status.conf.j2
+    dest: /etc/apache2/sites-available/apache-status.conf
+  when: apache_enabled
+
+- name: Enable apache2 stats site
+  file:
+    src: /etc/apache2/sites-available/apache-status.conf
+    dest: /etc/apache2/sites-enabled/apache-status.conf
+    state: link
+  when: apache_enabled
+
+- name: Ensure apache2 stats mode is enabled
+  apache2_module:
+    name: status
+    state: present
+  register: apache_status_mod
+  when: apache_enabled
+
+- name: Reload apache2
+  service:
+    name: apache2
+    state: reloaded
+  when:
+    - apache_enabled
+    - apache_status_mod is changed
+
+# NGINX stats enablement
+- name: Drop nginx stats site config
+  template:
+    src: nginx-status.conf.j2
+    dest: /etc/nginx/sites-available/nginx-status.conf
+  when: nginx_enabled
+
+- name: Enable nginx stats site
+  file:
+    src: /etc/nginx/sites-available/nginx-status.conf
+    dest: /etc/nginx/sites-enabled/nginx-status.conf
+    state: link
+  register: nginx_status
+  when: nginx_enabled
+
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded
+  when:
+    - nginx_enabled
+    - nginx_status is changed
+
+- name: Create metricbeat systemd service config dir
+  file:
+    path: "/etc/systemd/system/metricbeat.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "/etc/systemd/system/metricbeat.service.d/metricbeat-overrides.conf"
+  notify:
+    - Enable and restart metricbeat
+
+- name: Drop metricbeat conf file
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  with_items:
+    - src: templates/metricbeat.yml.j2
+      dest: /etc/metricbeat/metricbeat.yml
+  notify:
+    - Enable and restart metricbeat
+
+- include_tasks: metricbeat_setup.yml

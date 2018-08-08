@@ -1,8 +1,8 @@
 ## JVM configuration
 {% if (not (elasticsearch_node_master | default(master_node)) | bool) and (not (elasticsearch_node_data | default(data_node)) | bool) %}
-{%   set heap_size = (elastic_heap_size | int) // 2 %}
+{%   set heap_size = (elastic_heap_size_default | int) // 2 %}
 {% else %}
-{%   set heap_size = (elastic_heap_size | int) %}
+{%   set heap_size = (elastic_heap_size_default | int) %}
 {% endif %}
 # Xms represents the initial size of total heap space
 -Xms{{ heap_size }}m
