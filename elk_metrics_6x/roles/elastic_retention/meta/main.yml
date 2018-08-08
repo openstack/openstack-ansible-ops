@@ -23,6 +23,7 @@ galaxy_info:
     - name: Ubuntu
       versions:
         - xenial
+        - bionic
   categories:
     - cloud
     - development
