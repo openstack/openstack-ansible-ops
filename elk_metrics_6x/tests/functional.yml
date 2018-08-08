@@ -27,6 +27,10 @@
     ANSIBLE_HOST_KEY_CHECKING: "False"
     ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
 
+  vars:
+    # inventory_file: "inventory/test-{{ (ansible_service_mgr == 'systemd') | ternary('container', 'metal') }}-inventory.yml"
+    inventory_file: "inventory/test-metal-inventory.yml"
+
   pre_tasks:
     - name: Create swap file
       command: "dd if=/dev/zero of=/swap.img bs=1M count=4096"
@@ -71,6 +75,12 @@
         - "iptables -P OUTPUT ACCEPT"
         - "touch /tmp/elk-metrics-6x-logs/iptables.flushed"
 
+    - name: First ensure apt cache is always refreshed
+      apt:
+        update_cache: yes
+      when:
+        - ansible_pkg_mgr == 'apt'
+
   tasks:
     - name: Run embedded ansible installation
       become: yes
@@ -94,33 +104,39 @@
     - name: Run environment setup
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i inventory/test-inventory.yml -e @test-vars.yml _container-setup.yml"
+      command: "/root/ansible25/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _key-setup.yml"
       environment:
         ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
         ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
+      when:
+        - ansible_service_mgr != 'systemd'
+
+    - name: Run environment setup
+      become: yes
+      become_user: root
+      command: "/root/ansible25/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _container-setup.yml"
+      environment:
+        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
+      when:
+        - ansible_service_mgr == 'systemd'
 
     - name: Wait 15 seconds
       command: "sleep 15"
       changed_when: false
-
-    - name: Log all facts
-      become: yes
-      become_user: root
-      command: "/root/ansible25/bin/ansible -m setup -i tests/inventory/test-inventory.yml all"
-      environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
-        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-facts.log"
-      args:
-        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
+      when:
+        - ansible_service_mgr == 'systemd'
 
     - name: Run functional test
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i tests/inventory/test-inventory.yml -e @tests/test-vars.yml site.yml"
+      command: "/root/ansible25/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml site.yml"
       environment:
         ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
         ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
@@ -131,7 +147,7 @@
     - name: Show cluster state
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i tests/inventory/test-inventory.yml -e @tests/test-vars.yml showElasticCluster.yml"
+      command: "/root/ansible25/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml showElasticCluster.yml"
       environment:
         ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
         ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"

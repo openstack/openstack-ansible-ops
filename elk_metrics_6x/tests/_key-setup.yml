@@ -13,22 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Setup host for nspawn
+- name: Setup host keys
   hosts: physical_hosts
   connection: local
   become: true
-  vars:
-    nspawn_networks:
-      nspawn_address:
-        bridge: "nspawn0"
-        private_device: true
-        enable_dhcp: true
-        dhcp_range: 10.100.101.2,10.100.101.129
-        address: 10.100.101.1
-        netmask: 255.255.255.0
-        macvlan_mode: bridge
-
-  pre_tasks:
+  tasks:
     - name: Ensure root ssh key
       user:
         name: "{{ ansible_env.USER | default('root') }}"
@@ -50,24 +39,3 @@
         user: "{{ ansible_env.USER | default('root') }}"
         key: "{{ nspawn_container_ssh_key }}"
         manage_dir: no
-
-  roles:
-    - role: "nspawn_hosts"
-
-
-- name: Create container(s)
-  hosts: all_containers
-  gather_facts: false
-  become: true
-  pre_tasks:
-    - name: Show container facts
-      debug:
-        var: hostvars
-
-  roles:
-    - role: "nspawn_container_create"
-
-  post_tasks:
-    - name: Rescan quotas
-      command: "btrfs quota rescan -w /var/lib/machines"
-      delegate_to: "{{ physical_host }}"

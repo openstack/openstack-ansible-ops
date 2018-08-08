@@ -17,8 +17,9 @@ export OPTS=()
 export ANSIBLE_EMBED_HOME="${HOME}/ansible25"
 OPTS+=('ANSIBLE_EMBED_HOME')
 
+source /etc/os-release
 if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
-  if [  ${DISTRIB_RELEASE} = "14.04" ]; then
+  if [  ${VERSION_ID} = "14.04" ]; then
     apt-get update
     apt-get -y install python-virtualenv
     echo "done installing python-virtualenv"

@@ -222,11 +222,13 @@
   notify:
     - Enable and restart metricbeat
 
-- name: Drop metricbeat conf file
+- name: Drop metricbeat conf files
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
   with_items:
     - src: templates/metricbeat.yml.j2
       dest: /etc/metricbeat/metricbeat.yml
@@ -234,3 +236,6 @@
     - Enable and restart metricbeat
 
 - include_tasks: metricbeat_setup.yml
+
+- name: Force beat handlers
+  meta: flush_handlers

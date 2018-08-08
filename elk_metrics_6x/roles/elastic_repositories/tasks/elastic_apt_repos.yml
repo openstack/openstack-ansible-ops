@@ -35,3 +35,8 @@
   delay: 2
   tags:
     - package_install
+
+- name: Add PPA (legacy)
+  apt_repository:
+    repo: "{{ item }}"
+  with_items: "{{ elastic_repo_ppas }}"

@@ -22,6 +22,3 @@ q_mem: 128
 h_mem: 512
 
 osa_test_repo: "openstack/openstack-ansible-ops"
-
-# Set the data interface to a known value
-elastic_data_interface: "{{ (inventory_hostname == 'localhost') | ternary('mv-mgmt', 'mv-mv-mgmt') }}"

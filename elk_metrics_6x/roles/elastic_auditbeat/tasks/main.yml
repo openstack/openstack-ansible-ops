@@ -46,12 +46,16 @@
     group: "root"
     owner: "root"
     mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "/etc/systemd/system/auditbeat.service.d/{{ item.dest }}"
     mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
   with_items:
     - src: "systemd.general-overrides.conf.j2"
       dest: "auditbeat-overrides.conf"
@@ -66,3 +70,6 @@
     - Enable and restart auditbeat
 
 - include_tasks: auditbeat_setup.yml
+
+- name: Force beat handlers
+  meta: flush_handlers

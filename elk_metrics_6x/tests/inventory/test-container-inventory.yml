@@ -10,11 +10,12 @@ hosts:
           ansible_user: root
       vars:
         physical_host: localhost
+        management_cidr: "172.29.236.0/24"
         container_networks:
           management_address:
             address: "172.29.236.1"
             netmask: "255.255.255.0"
-            bridge: "br-mgmt"
+            bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
 
 
 all_containers:
@@ -25,7 +26,7 @@ all_containers:
       management_address:
         address: "{{ ansible_host }}"
         netmask: "255.255.255.0"
-        bridge: "br-mgmt"
+        bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
 
   children:
     elastic-logstash:

@@ -13,13 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Enable and restart metricbeat
+- name: Enable and restart metricbeat (systemd)
   systemd:
     name: "metricbeat"
     enabled: true
     state: restarted
     daemon_reload: true
   when:
-    - (elk_package_state | default('present')) != 'absent'
-  tags:
-    - config
+    - ansible_service_mgr == 'systemd'
+  listen: Enable and restart metricbeat
+
+- name: Enable and restart metricbeat (upstart)
+  service:
+    name: "elasticsearch"
+    state: restarted
+    enabled: yes
+  when:
+    - ansible_service_mgr == 'upstart'
+  listen: Enable and restart metricbeat

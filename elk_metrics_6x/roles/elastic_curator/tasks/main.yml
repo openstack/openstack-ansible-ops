@@ -25,6 +25,11 @@
   tags:
     - always
 
+- name: exit playbook after uninstall
+  meta: end_play
+  when:
+      ansible_service_mgr != 'systemd'
+
 - name: Ensure virtualenv is installed
   package:
     name: "{{ curator_distro_packages }}"
@@ -88,24 +93,4 @@
   notify:
     - Enable and restart curator.timer
 
-- name: Run the systemd service role
-  include_role:
-    name: systemd_service
-    private: true
-  vars:
-    systemd_service_enabled: "{{ ((elk_package_state | default('present')) != 'absent') | ternary(true, false) }}"
-    systemd_service_restart_changed: false
-    systemd_user_name: curator
-    systemd_group_name: curator
-    systemd_services:
-      - service_name: "curator"
-        execstarts:
-          - /opt/elasticsearch-curator/bin/curator
-            --config /var/lib/curator/curator.yml
-            /var/lib/curator/actions.yml
-        timer:
-          state: "started"
-          options:
-            OnBootSec: 30min
-            OnUnitActiveSec: 24h
-            Persistent: true
+- include_tasks: "curator_{{ ansible_service_mgr }}.yml"

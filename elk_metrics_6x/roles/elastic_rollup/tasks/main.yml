@@ -56,7 +56,7 @@
         body_format: json
       register: elk_indexes
       until: elk_indexes is success
-      retries: 3
+      retries: 5
       delay: 5
       when:
         - hostvars[inventory_hostname]['elastic_' + index_name + '_retention'] > days_until_rollup
@@ -75,7 +75,7 @@
           index_options: {}
         - url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}"
           method: PUT
-          status_code: 200
+          status_code: 200,400
           index_options:
             index_pattern: "{{ index_name }}-*"
             rollup_index: "rollup_{{ index_name }}"
@@ -88,7 +88,7 @@
                 delay: "{{ days_until_rollup }}d"
         - url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}/_start"
           method: POST
-          status_code: 200
+          status_code: 200,404
           index_options: {}
       run_once: true
   when:

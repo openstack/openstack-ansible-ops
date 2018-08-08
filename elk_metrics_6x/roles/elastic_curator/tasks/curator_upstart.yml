@@ -13,22 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-galaxy_info:
-  author: OpenStack
-  description: Elastic v6.x rollup role
-  company: Rackspace
-  license: Apache2
-  min_ansible_version: 2.5
-  platforms:
-    - name: Ubuntu
-      versions:
-        - trusty
-        - xenial
-        - bionic
-  categories:
-    - cloud
-    - development
-    - elasticsearch
-    - elastic-stack
-dependencies:
-  - role: elastic_retention
+- name: Create cron job for curator
+  cron:
+    name: "Run curator"
+    minute: 0
+    hour: 2
+    user: "curator"
+    job: "/opt/elasticsearch-curator/bin/curator --config /var/lib/curator/curator.yml /var/lib/curator/actions.yml"
+    cron_file: "elasticsearch-curator"

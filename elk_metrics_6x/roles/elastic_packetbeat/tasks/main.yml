@@ -46,6 +46,21 @@
     group: "root"
     owner: "root"
     mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "/etc/systemd/system/packetbeat.service.d/packetbeat-overrides.conf"
+  notify:
+    - Enable and restart packetbeat
 
 - name: Drop packetbeat conf files
   template:
@@ -53,11 +68,12 @@
     dest: "{{ item.dest }}"
     mode: "0644"
   with_items:
-    - src: "systemd.general-overrides.conf.j2"
-      dest: "/etc/systemd/system/packetbeat.service.d/packetbeat-overrides.conf"
     - src: templates/packetbeat.yml.j2
       dest: /etc/packetbeat/packetbeat.yml
   notify:
     - Enable and restart packetbeat
 
 - include_tasks: packetbeat_setup.yml
+
+- name: Force beat handlers
+  meta: flush_handlers

@@ -13,22 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-galaxy_info:
-  author: OpenStack
-  description: Elastic v6.x rollup role
-  company: Rackspace
-  license: Apache2
-  min_ansible_version: 2.5
-  platforms:
-    - name: Ubuntu
-      versions:
-        - trusty
-        - xenial
-        - bionic
-  categories:
-    - cloud
-    - development
-    - elasticsearch
-    - elastic-stack
-dependencies:
-  - role: elastic_retention
+elastic_repo_distro_packages:
+  - apt-transport-https
+
+elastic_repo_ppas:
+  - "ppa:openjdk-r/ppa"

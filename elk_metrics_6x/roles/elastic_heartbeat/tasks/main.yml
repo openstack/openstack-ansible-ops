@@ -46,18 +46,36 @@
     group: "root"
     owner: "root"
     mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "/etc/systemd/system/heartbeat.service.d/heartbeat-overrides.conf"
+  notify:
+    - Enable and restart heartbeat
 
 - name: Create heartbeat configs
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
   with_items:
-    - src: "systemd.general-overrides.conf.j2"
-      dest: "/etc/systemd/system/heartbeat.service.d/heartbeat-overrides.conf"
     - src: templates/heartbeat.yml.j2
       dest: /etc/heartbeat/heartbeat.yml
   notify:
     - Enable and restart heartbeat
 
 - include_tasks: heartbeat_setup.yml
+
+- name: Force beat handlers
+  meta: flush_handlers

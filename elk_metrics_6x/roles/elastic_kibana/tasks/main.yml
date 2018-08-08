@@ -63,15 +63,19 @@
     group: "root"
     owner: "root"
     mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
-    dest: "/etc/systemd/system/kibana.service.d/{{ item.dest }}"
+    dest: "{{ item.dest }}"
     mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
   with_items:
     - src: "systemd.general-overrides.conf.j2"
-      dest: "kibana-overrides.conf"
+      dest: "/etc/systemd/system/kibana.service.d/kibana-overrides.conf"
   notify:
     - Enable and restart services
 

@@ -46,14 +46,19 @@
     group: "root"
     owner: "root"
     mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "/etc/systemd/system/filebeat.service.d/{{ item.dest }}"
     mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
   with_items:
-    - { src: "systemd.general-overrides.conf.j2", dest: "filebeat-overrides.conf" }
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "filebeat-overrides.conf"
   notify:
     - Enable and restart filebeat
 
@@ -175,3 +180,6 @@
     - Enable and restart filebeat
 
 - include_tasks: filebeat_setup.yml
+
+- name: Force beat handlers
+  meta: flush_handlers

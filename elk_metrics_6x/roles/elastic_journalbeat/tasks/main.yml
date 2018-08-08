@@ -33,7 +33,8 @@
 - name: exit playbook after uninstall
   meta: end_play
   when:
-    - not journal_dir.stat.exists | bool
+    - not (journal_dir.stat.exists | bool) or
+      ansible_service_mgr != 'systemd'
 
 - name: Ensure beat is installed
   package:
@@ -94,7 +95,7 @@
     owner: "root"
     mode: "0755"
 
-- name: Drop journalbeat conf files
+- name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
@@ -102,6 +103,15 @@
   with_items:
     - src: "systemd.general-overrides.conf.j2"
       dest: "/etc/systemd/system/journalbeat.service.d/journalbeat-overrides.conf"
+  notify:
+    - Enable and restart journalbeat
+
+- name: Drop journalbeat conf files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  with_items:
     - src: templates/journalbeat.yml.j2
       dest: /etc/journalbeat/journalbeat.yml
   notify:
@@ -132,3 +142,6 @@
             After: network-online.target
 
 - include_tasks: journalbeat_setup.yml
+
+- name: Force beat handlers
+  meta: flush_handlers

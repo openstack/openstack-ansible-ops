@@ -70,7 +70,7 @@
         path: "/var/lib/{{ service_name }}"
       register: service_dir
 
-    - name: Check for existing rollup job
+    - name: Check for data directory
       debug:
         msg: >-
           The service data directory [ /var/lib/{{ service_name }} ] already
