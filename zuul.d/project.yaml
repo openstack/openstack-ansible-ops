@@ -17,7 +17,8 @@
       - openstack-ansible-role-jobs
     check:
       jobs:
-        - "openstack-ansible-ops:elk_metrics_6x"
+        - "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+        - "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
     gate:
       jobs:
-        - "openstack-ansible-ops:elk_metrics_6x"
+        - "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"

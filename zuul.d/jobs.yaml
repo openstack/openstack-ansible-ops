@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_6x"
+    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
     parent: base
     description: "Runs a gate test on the elk_metrics_6x project."
     run: "elk_metrics_6x/tests/test.yml"
@@ -23,3 +23,21 @@
       - ^elk_metrics_6x/.*
     vars:
       osa_test_repo: "openstack/openstack-ansible-ops"
+
+# - job:
+#     name: "openstack-ansible-ops:elk_metrics_6x-centos-7"
+#     parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+#     nodeset: centos-7
+#     voting: false
+#
+# - job:
+#     name: "openstack-ansible-ops:elk_metrics_6x-opensuse-423"
+#     parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+#     nodeset: opensuse-423
+#     voting: false
+
+- job:
+    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
+    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+    nodeset: ubuntu-bionic
+    voting: false
