@@ -63,9 +63,11 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]] && [[ "${UPGR
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustments-kilo.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${KILO_RELEASE}'")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/host-adjustments.yml")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/remove-juno-log-rotate.yml || true")
-  if [ "$(ansible 'swift_hosts' --list-hosts)" != "No hosts matched" ]; then
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-ring-adjustments.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-repo-adjustments.yml")
+  if [ "${SKIP_SWIFT_UPGRADE}" != "yes" ]; then
+    if [ "$(ansible 'swift_hosts' --list-hosts)" != "No hosts matched" ]; then
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-ring-adjustments.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-repo-adjustments.yml")
+    fi
   fi
   run_items "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   tag_leap_success "${KILO_RELEASE}-prep"

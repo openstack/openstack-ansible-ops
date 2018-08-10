@@ -28,7 +28,6 @@
         - barbican
         - magnum
         - ironic
-        - swift
         - gnocchi
         - designate
         - aodh
@@ -44,3 +43,13 @@
       failed_when: false
       args:
         executable: /bin/bash
+
+    - name: Stop swift if not skipped
+      shell: |
+        for i in $(ls /etc/init /etc/init.d | grep "swift"); do
+          service ${i%".conf"*} stop || true;
+        done
+      failed_when: false
+      args:
+        executable: /bin/bash
+      when: not lookup('env', 'SKIP_SWIFT_UPGRADE') | bool
