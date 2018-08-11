@@ -137,14 +137,21 @@
     system: "yes"
 
 - name: Create the system user
-  user:
-    name: "{{ service_owner }}"
-    uid: "{{ service_owner_uid | default(omit) }}"
-    group: "{{ service_group }}"
-    shell: "/bin/false"
-    system: "yes"
-    createhome: "yes"
-    home: "/var/lib/{{ service_name }}"
+  block:
+    - name: Create the system user
+      user:
+        name: "{{ service_owner }}"
+        uid: "{{ service_owner_uid | default(omit) }}"
+        group: "{{ service_group }}"
+        shell: "/bin/false"
+        system: "yes"
+        createhome: "yes"
+        home: "/var/lib/{{ service_name }}"
+  rescue:
+    - name: Ensure the system user exists
+      user:
+        name: "{{ service_owner }}"
+        group: "{{ service_group }}"
 
 - name: Ensure service directories exists
   file:
