@@ -8,6 +8,35 @@
 {% endif %}
 {% set output_pipeline = output_pipeline | to_json %}
 
+{% if logstash_syslog_input_enabled | bool %}
+- pipeline.id: "syslog-intake"
+  queue.type: persisted
+  config.string: |
+    input {
+      tcp {
+        id => "inputSyslogTcp"
+        port => {{ logstash_syslog_input_port }}
+        type => syslog
+      }
+      udp {
+        id => "inputSyslogUdp"
+        port => {{ logstash_syslog_input_port }}
+        type => syslog
+      }
+    }
+    filter {
+      mutate {
+        add_tag => ["syslog"]
+      }
+    }
+    output {
+      pipeline {
+        id => "sendDistributorPipeline"
+        send_to => [distributor]
+      }
+    }
+{% endif %}
+
 - pipeline.id: "beats-intake"
   queue.type: persisted
   config.string: |
@@ -702,7 +731,7 @@
           manage_template => {{ (data_node | bool) | lower }}
           index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
         }
-      } else {
+      } else if [@metadata][beat] {
         elasticsearch {
           id => "elasticsearchLegacyOutputPipeline"
           document_id => "%{[@metadata][fingerprint]}"
@@ -710,6 +739,24 @@
           sniffing => {{ (not data_node | bool) | lower }}
           manage_template => {{ (data_node | bool) | lower }}
           index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+        }
+      } else if "syslog" in [tags] {
+        elasticsearch {
+          id => "elasticsearchSyslogOutputPipeline"
+          document_id => "%{[@metadata][fingerprint]}"
+          hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
+          sniffing => {{ (not data_node | bool) | lower }}
+          manage_template => {{ (data_node | bool) | lower }}
+          index => "syslog-%{+YYYY.MM.dd}"
+        }
+      } else {
+        elasticsearch {
+          id => "elasticsearchUndefinedOutputPipeline"
+          document_id => "%{[@metadata][fingerprint]}"
+          hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
+          sniffing => {{ (not data_node | bool) | lower }}
+          manage_template => {{ (data_node | bool) | lower }}
+          index => "undefined-%{+YYYY.MM.dd}"
         }
       }
     }

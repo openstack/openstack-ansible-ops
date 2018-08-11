@@ -22,3 +22,12 @@ q_storage: "{{ (ansible_processor_cores | int) * (ansible_processor_threads_per_
 # Set logstash facts
 logstash_queue_size: "{{ ((((q_storage | int) >= 2) | ternary(q_storage, 2) | int) * 1024) // ((logstash_pipelines | from_yaml) | length) }}"
 elastic_log_rotate_path: "/var/log/logstash"
+
+# Enable direct syslog input into logstash. When this is enabled syslog messages
+# can be sent directly to logstash via TCP or UDP.
+logstash_syslog_input_enabled: false
+# The typical syslog port is 514 however that is not available to logstash
+# because it's a "privledged" port. For this reason 1514 is used as the default.
+# Changing this port to 514 will require overrides to the service files making
+# logstash run as root (not recommended).
+logstash_syslog_input_port: 1514
