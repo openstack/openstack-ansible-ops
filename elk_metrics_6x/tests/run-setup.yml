@@ -42,6 +42,10 @@
       when:
         - osa_test_repo is not defined
 
+    - name: Set inventory for test
+      set_fact:
+        contianer_inventory: "{{ test_clustered_elk | default(false) | bool }}"
+
   post_tasks:
     - name: Ensure the log directory exists
       file:

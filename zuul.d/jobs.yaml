@@ -23,6 +23,7 @@
       - ^elk_metrics_6x/.*
     vars:
       osa_test_repo: "openstack/openstack-ansible-ops"
+      test_clustered_elk: false
 
 # - job:
 #     name: "openstack-ansible-ops:elk_metrics_6x-centos-7"
@@ -46,4 +47,21 @@
     name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
     parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
     nodeset: ubuntu-bionic
+    voting: true
+
+- job:
+    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial-clustered"
+    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
     voting: false
+    vars:
+      osa_test_repo: "openstack/openstack-ansible-ops"
+      test_clustered_elk: true
+
+- job:
+    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic-clustered"
+    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+    nodeset: ubuntu-bionic
+    voting: false
+    vars:
+      osa_test_repo: "openstack/openstack-ansible-ops"
+      test_clustered_elk: true

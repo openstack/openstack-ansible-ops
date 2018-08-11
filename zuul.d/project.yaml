@@ -20,6 +20,8 @@
         - "openstack-ansible-ops:elk_metrics_6x-ubuntu-trusty"
         - "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
         - "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
+        - "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial-clustered"
+        - "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic-clustered"
     gate:
       jobs:
         - "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
