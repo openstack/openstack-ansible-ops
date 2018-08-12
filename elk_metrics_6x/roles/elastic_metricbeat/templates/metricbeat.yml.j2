@@ -178,12 +178,12 @@ metricbeat.modules:
 #  namespace: example
 #
 ##---------------------------- Elasticsearch Module ---------------------------
-{% if inventory_hostname in (groups['elastic-logstash'] | union(groups['kibana']) | unique) %}
+{% if inventory_hostname in (groups['elastic-logstash'] | union(groups['kibana'])) %}
 - module: elasticsearch
   metricsets: ["node", "node_stats"]
   enabled: true
   period: 30s
-  hosts: ["localhost:9200"]
+  hosts: ["localhost:{{ elastic_port }}"]
 #
 {% endif %}
 ##-------------------------------- Etcd Module --------------------------------

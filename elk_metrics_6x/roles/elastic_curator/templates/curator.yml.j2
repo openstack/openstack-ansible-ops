@@ -15,7 +15,7 @@
 client:
   hosts:
     - {{ ansible_host }}
-  port: 9200
+  port: {{ elastic_port }}
   url_prefix: ""
   use_ssl: false
   ssl_no_validate: true

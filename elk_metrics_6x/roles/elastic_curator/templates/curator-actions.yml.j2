@@ -15,7 +15,7 @@
 
 {% set action_items = [] -%}
 {# Delete index loop #}
-{% for key in elastic_beat_retention_policy_hosts.keys() -%}
+{% for key in elastic_beat_retention_policy_keys -%}
 {%   set delete_indices = {} -%}
 {%   set index_retention = hostvars[inventory_hostname]['elastic_' + key + '_retention'] -%}
 {%   set _ = delete_indices.update(

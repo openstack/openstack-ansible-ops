@@ -31,3 +31,47 @@ logstash_syslog_input_enabled: false
 # Changing this port to 514 will require overrides to the service files making
 # logstash run as root (not recommended).
 logstash_syslog_input_port: 1514
+
+logstash_beat_input_port: 5044
+logstash_deploy_filters: true
+
+## Logstash config showing a complete kafka setup using SSL for authentication.
+# logstash_kafka_options:
+#   codec: json
+#   topic_id: "elk_kafka"
+#   ssl_key_password: "{{ logstash_kafka_ssl_key_password }}"
+#   ssl_keystore_password: "{{ logstash_kafka_ssl_keystore_password }}"
+#   ssl_keystore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_keystore_location | basename }}"
+#   ssl_truststore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_truststore_location | basename }}"
+#   ssl_truststore_password: "{{ logstash_kafka_ssl_truststore_password }}"
+#   bootstrap_servers:
+#     - server1.local:9092
+#     - server2.local:9092
+#     - server3.local:9092
+#   client_id: "elk_metrics_6x"
+#   compression_type: "gzip"
+#   security_protocol: "SSL"
+
+## The following variables are options that correspond to the
+## `logstash_kafka_options` variable.
+# logstash_kafka_ssl_key_password: "secrete"
+# logstash_kafka_ssl_keystore_password: "secrete"
+# logstash_kafka_ssl_truststore_password: "secrete"
+# logstash_kafka_ssl_keystore_location: "/root/kafka/keystore.jks"
+# logstash_kafka_ssl_truststore_location: "/root/kafka/truststore.jks"
+
+## Setup servers that read events from the Smart Connector directly. This
+## supports multiple entries in list format using the "host" and "port" for the
+## smart connector.
+# logstash_arcsight_smart_connectors:
+#   - host: 127.0.0.1
+#     port: 5000
+logstash_arcsight_smart_connectors: []
+
+## Setup servers to read events from the Eevnt Broker Stream. This
+## multiple entries in list format using the "host" and "port" for the
+## for the event brokers.
+# logstash_arcsight_event_brokers:
+#   - host: 127.0.0.1
+#     port: 5000
+logstash_arcsight_event_brokers: []

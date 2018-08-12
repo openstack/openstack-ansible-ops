@@ -18,3 +18,9 @@ elastic_repo_distro_packages:
 
 elastic_repo_ppas:
   - "ppa:openjdk-r/ppa"
+
+# elk apt repo
+elastic_repo:
+  repo: 'deb https://artifacts.elastic.co/packages/6.x/apt stable main'
+  state: "{{ ((elk_package_state | default('present')) == 'absent') | ternary('absent', 'present') }}"
+  key_url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"

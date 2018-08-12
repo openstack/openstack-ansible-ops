@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+cluster_name: openstack_elk
 elastic_log_rotate_path: "/var/log/elasticsearch"
 
 temp_dir: /var/lib/elasticsearch/tmp

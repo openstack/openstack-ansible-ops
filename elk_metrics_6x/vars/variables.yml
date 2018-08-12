@@ -1,53 +1,12 @@
-# elk apt repo
-elk_repo:
-  repo: 'deb https://artifacts.elastic.co/packages/6.x/apt stable main'
-  state: "{{ ((elk_package_state | default('present')) == 'absent') | ternary('absent', 'present') }}"
+---
 
-#metricbeats monitoring endpoints
-elastic_metricbeat_rabbitmq_monitoring_hosts: '"localhost:15672"'
-elastic_metricbeat_haproxy_monitoring_hosts: '"unix:///var/run/haproxy.stat"'
-
-# elastic search vars
+apm_port: 8200
 elastic_port: 9200
 elastic_hap_port: 9201
-cluster_name: openstack_elk
-node_name: ${HOSTNAME}
-
-elastic_data_interface: "{{ ansible_default_ipv4['alias'] }}"
-
-### Elastic curator variables
-## Default retention policy options. All retention options are in days.
-#  elastic_logstash_retention: 1
-#  elastic_apm_retention: 1
-#  elastic_auditbeat_retention: 1
-#  elastic_filebeat_retention: 1
-#  elastic_heartbeat_retention: 1
-#  elastic_journalbeat_retention: 1
-#  elastic_metricbeat_retention: 1
-#  elastic_packetbeat_retention: 1
-
-# This is used to calculate the storage a beat could generate per node, per day.
-# This constant is used as a multiplier. If the expected storage is larger than
-# the actual available storage after the buffer is calculated the multiplier
-# will be doubled there-by cutting the potential storage days in half.
-elastic_beat_storage_constant: 512
-
-## If any retention policy option is undefined a dynamic fact will be generated.
-## Fact will be generated for the general retention using the storage constant
-## per node, per index, where a given collector is expected to be deployed. The
-## equation used will take the total available storage from the ES data nodes
-## subtract 25% divided by the total number of data nodes. That is then divided
-## by number of hosts assumed to be a beat target which is multiplied by the
-## storage constant.
-elastic_beat_retention_policy_hosts:
-  logstash: "{{ groups['elastic-logstash'] | default([null]) | length }}"
-  apm: "{{ groups['apm-server'] | default([null]) | length }}"
-  auditbeat: "{{ (groups['hosts'] | default([null]) | length) * 2 }}"
-  filebeat: "{{ (groups['hosts'] | default([null]) | length) * 2 }}"
-  heartbeat: "{{ groups['kibana'][:3] | default([null]) | length }}"
-  journalbeat: "{{ (groups['all'] | default([null]) | length) * 1.5 }}"
-  metricbeat: "{{ (groups['all'] | default([null]) | length) * 1.5 }}"
-  packetbeat: "{{ (groups['hosts'] | default([null]) | length) * 5 }}"
+logstash_beat_input_port: 5044
+logstash_syslog_input_port: 1514
+kibana_port: 5601
+kibana_nginx_port: 81
 
 # This is the URL external services can use to communicate with the
 # elasticsearch cluster.
@@ -57,80 +16,6 @@ elastic_vip_url: >-
   {% else %}
   http://{{ hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ elastic_port }}
   {% endif %}
-
-#define this in host/group vars as needed to mount remote filesystems
-#set the client address as appropriate, eth1 assumes osa container mgmt network
-#mountpoints and server paths are just examples
-#elastic_shared_fs_repos:
-#  - fstype: nfs4
-#    src: "<nfs-server-ip>:/esbackup"
-#    opts: clientaddr="{{ ansible_eth1['ipv4']['address'] }}"
-#    path: "/elastic-backup"
-#    state: mounted
-
-# EXPERIMENTAL - When the heap size for a given elastic node is graeter than
-#                4GiB the G1 garbage collector can be enabled. This is an
-#                experimental feature and may be removed later.
-elastic_g1gc_enabled: false
-
-# kibana vars
-kibana_interface: 0.0.0.0
-kibana_port: 5601
-kibana_username: admin
-kibana_password: admin
-kibana_nginx_port: 81
-kibana_server_name: "{{ ansible_hostname }}"
-kibana_index_on_elasticsearch: "http://{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }}:{{ elastic_port}}/.kibana"
-kibana_elastic_request_timeout: 600000
-
-# logstash vars
-logstash_beat_input_port: 5044
-logstash_deploy_filters: true
-
-## Logstash config showing a complete kafka setup using SSL for authentication.
-# logstash_kafka_options:
-#   codec: json
-#   topic_id: "elk_kafka"
-#   ssl_key_password: "{{ logstash_kafka_ssl_key_password }}"
-#   ssl_keystore_password: "{{ logstash_kafka_ssl_keystore_password }}"
-#   ssl_keystore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_keystore_location | basename }}"
-#   ssl_truststore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_truststore_location | basename }}"
-#   ssl_truststore_password: "{{ logstash_kafka_ssl_truststore_password }}"
-#   bootstrap_servers:
-#     - server1.local:9092
-#     - server2.local:9092
-#     - server3.local:9092
-#   client_id: "elk_metrics_6x"
-#   compression_type: "gzip"
-#   security_protocol: "SSL"
-
-## The following variables are options that correspond to the
-## `logstash_kafka_options` variable.
-# logstash_kafka_ssl_key_password: "secrete"
-# logstash_kafka_ssl_keystore_password: "secrete"
-# logstash_kafka_ssl_truststore_password: "secrete"
-# logstash_kafka_ssl_keystore_location: "/root/kafka/keystore.jks"
-# logstash_kafka_ssl_truststore_location: "/root/kafka/truststore.jks"
-
-## Setup servers that read events from the Smart Connector directly. This
-## supports multiple entries in list format using the "host" and "port" for the
-## smart connector.
-# logstash_arcsight_smart_connectors:
-#   - host: 127.0.0.1
-#     port: 5000
-logstash_arcsight_smart_connectors: []
-
-## Setup servers to read events from the Eevnt Broker Stream. This
-## multiple entries in list format using the "host" and "port" for the
-## for the event brokers.
-# logstash_arcsight_event_brokers:
-#   - host: 127.0.0.1
-#     port: 5000
-logstash_arcsight_event_brokers: []
-
-# APM vars
-apm_interface: 0.0.0.0
-apm_port: 8200
 
 # Beat options
 heartbeat_services:
@@ -361,11 +246,6 @@ heartbeat_services:
     type: http
     method: HEAD
     path: "/"
-
-
-# apm
-apm_token: SuperSecrete
-
 
 # Grafana
 grafana_dashboards:

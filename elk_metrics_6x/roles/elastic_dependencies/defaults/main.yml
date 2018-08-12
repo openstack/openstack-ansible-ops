@@ -20,3 +20,18 @@ q_mem: "{{ (ansible_memtotal_mb | int) // 3 }}"
 
 # Option to define half memory
 h_mem: "{{ (ansible_memtotal_mb | int) // 2 }}"
+
+#define this in host/group vars as needed to mount remote filesystems
+#set the client address as appropriate, eth1 assumes osa container mgmt network
+#mountpoints and server paths are just examples
+#elastic_shared_fs_repos:
+#  - fstype: nfs4
+#    src: "<nfs-server-ip>:/esbackup"
+#    opts: clientaddr="{{ ansible_eth1['ipv4']['address'] }}"
+#    path: "/elastic-backup"
+#    state: mounted
+
+# EXPERIMENTAL - When the heap size for a given elastic node is graeter than
+#                4GiB the G1 garbage collector can be enabled. This is an
+#                experimental feature and may be removed later.
+elastic_g1gc_enabled: false
