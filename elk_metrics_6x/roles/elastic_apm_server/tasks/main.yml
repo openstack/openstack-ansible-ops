@@ -64,8 +64,8 @@
 
 - name: Drop apm-server conf file
   template:
-    src: templates/apm-server.yml.j2
-    dest: /etc/apm-server/apm-server.yml
+    src: "apm-server.yml.j2"
+    dest: "/etc/apm-server/apm-server.yml"
   notify:
     - Enable and restart apm server
 

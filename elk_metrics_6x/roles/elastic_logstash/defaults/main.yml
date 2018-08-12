@@ -14,7 +14,7 @@
 # limitations under the License.
 
 temp_dir: /var/lib/logstash/tmp
-logstash_pipelines: "{{lookup('template', 'templates/logstash-pipelines.yml.j2') }}"
+logstash_pipelines: "{{lookup('template', 'logstash-pipelines.yml.j2') }}"
 
 # Set processor cores fact
 q_storage: "{{ (ansible_processor_cores | int) * (ansible_processor_threads_per_core | int) * 2 }}"

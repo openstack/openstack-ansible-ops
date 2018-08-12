@@ -96,12 +96,10 @@
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   with_items:
-    - src: templates/logstash.yml.j2
-      dest: /etc/logstash/logstash.yml
-    - src: templates/logstash-pipelines.yml.j2
-      dest: /etc/logstash/pipelines.yml
-    - src: "templates/logrotate.j2"
-      dest: "/etc/logrotate.d/logstash"
+    - src: "logstash.yml.j2"
+      dest: "/etc/logstash/logstash.yml"
+    - src: "logstash-pipelines.yml.j2"
+      dest: "/etc/logstash/pipelines.yml"
   notify:
     - Enable and restart logstash
   tags:

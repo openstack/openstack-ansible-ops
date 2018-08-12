@@ -68,8 +68,8 @@
     dest: "{{ item.dest }}"
     mode: "0644"
   with_items:
-    - src: templates/packetbeat.yml.j2
-      dest: /etc/packetbeat/packetbeat.yml
+    - src: "packetbeat.yml.j2"
+      dest: "/etc/packetbeat/packetbeat.yml"
   notify:
     - Enable and restart packetbeat
 

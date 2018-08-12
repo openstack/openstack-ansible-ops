@@ -52,6 +52,7 @@
 - name: Set elastic heap defaults
   set_fact:
     elastic_heap_size_default: "{{ _elastic_heap_size_default }}"
+    elastic_log_rotate_path: "/var/log/{{ service_name }}"
 
 - name: Configure systcl vm.max_map_count=262144 on container hosts
   sysctl:
@@ -165,5 +166,7 @@
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   with_items:
-    - src: templates/jvm.options.j2
-      dest: /etc/{{ service_name }}/jvm.options
+    - src: "jvm.options.j2"
+      dest: "/etc/{{ service_name }}/jvm.options"
+    - src: "templates/logrotate.j2"
+      dest: "/etc/logrotate.d/{{ service_name }}"

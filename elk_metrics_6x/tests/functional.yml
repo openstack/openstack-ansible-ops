@@ -111,7 +111,8 @@
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
       when:
-        - ansible_service_mgr != 'systemd'
+        - ansible_service_mgr != 'systemd' or
+          not (contianer_inventory | bool)
 
     - name: Run environment setup
       become: yes
@@ -125,6 +126,7 @@
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
       when:
         - ansible_service_mgr == 'systemd'
+        - contianer_inventory | bool
 
     - name: Wait 15 seconds
       command: "sleep 15"

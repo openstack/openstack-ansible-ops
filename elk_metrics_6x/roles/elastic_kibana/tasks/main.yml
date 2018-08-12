@@ -51,8 +51,8 @@
 
 - name: Drop Nginx default conf file
   template:
-    src: templates/nginx_default.j2
-    dest: /etc/nginx/sites-available/default
+    src: "nginx_default.j2"
+    dest: "/etc/nginx/sites-available/default"
   notify:
     - Enable and restart services
 
@@ -81,8 +81,8 @@
 
 - name: Drop kibana conf file
   template:
-    src: templates/kibana.yml.j2
-    dest: /etc/kibana/kibana.yml
+    src: "kibana.yml.j2"
+    dest: "/etc/kibana/kibana.yml"
     mode: "0666"
   notify:
     - Enable and restart services

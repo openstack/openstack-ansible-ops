@@ -112,8 +112,8 @@
     dest: "{{ item.dest }}"
     mode: "0644"
   with_items:
-    - src: templates/journalbeat.yml.j2
-      dest: /etc/journalbeat/journalbeat.yml
+    - src: "journalbeat.yml.j2"
+      dest: "/etc/journalbeat/journalbeat.yml"
   notify:
     - Enable and restart journalbeat
 

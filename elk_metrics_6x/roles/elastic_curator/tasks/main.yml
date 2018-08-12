@@ -79,17 +79,15 @@
     - "/var/log/curator"
     - "/etc/curator"
 
-- name: Drop curator conf file
+- name: Drop curator conf file(s)
   template:
-    src: templates/curator.yml.j2
-    dest: /var/lib/curator/curator.yml
-  notify:
-    - Enable and restart curator.timer
-
-- name: Drop curator action file
-  template:
-    src: templates/curator-actions.yml.j2
-    dest: /var/lib/curator/actions.yml
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "curator.yml.j2"
+      dest: /var/lib/curator/curator.yml
+    - src: "curator-actions.yml.j2"
+      dest: /var/lib/curator/actions.yml
   notify:
     - Enable and restart curator.timer
 

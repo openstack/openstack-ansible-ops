@@ -70,8 +70,8 @@
   when:
     - ansible_service_mgr == 'systemd'
   with_items:
-    - src: templates/heartbeat.yml.j2
-      dest: /etc/heartbeat/heartbeat.yml
+    - src: "heartbeat.yml.j2"
+      dest: "/etc/heartbeat/heartbeat.yml"
   notify:
     - Enable and restart heartbeat
 

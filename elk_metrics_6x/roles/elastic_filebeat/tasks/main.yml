@@ -174,8 +174,8 @@
 
 - name: Drop Filebeat conf file
   template:
-    src: templates/filebeat.yml.j2
-    dest: /etc/filebeat/filebeat.yml
+    src: "filebeat.yml.j2"
+    dest: "/etc/filebeat/filebeat.yml"
   notify:
     - Enable and restart filebeat
 

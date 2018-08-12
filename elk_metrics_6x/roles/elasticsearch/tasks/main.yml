@@ -73,12 +73,10 @@
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   with_items:
-    - src: templates/elasticsearch.yml.j2
-      dest: /etc/elasticsearch/elasticsearch.yml
-    - src: templates/jvm.options.j2
-      dest: /etc/elasticsearch/jvm.options
-    - src: templates/es-log4j2.properties.j2
-      dest: /etc/elasticsearch/log4j2.properties
+    - src: "elasticsearch.yml.j2"
+      dest: "/etc/elasticsearch/elasticsearch.yml"
+    - src: "es-log4j2.properties.j2"
+      dest: "/etc/elasticsearch/log4j2.properties"
   notify:
     - Enable and restart elastic
   tags:
@@ -104,11 +102,6 @@
     owner: "elasticsearch"
     group: "elasticsearch"
     mode: "0750"
-
-- name: Create logrotate config
-  template:
-    src: "templates/logrotate.j2"
-    dest: "/etc/logrotate.d/elasticsearch"
 
 - include_tasks: "elasticsearch_nfs_setup.yml"
   when:
