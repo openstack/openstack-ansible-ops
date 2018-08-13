@@ -210,7 +210,7 @@
         dest: "/etc/network/interfaces"
         regexp: "^source /etc/network/interfaces.d/.*"
 
-    - name: Set the host intefaces up
+    - name: Set the host interfaces up
       command: "/sbin/ifup {{ item.value.iface }}"
       with_dict: "{{ mnaio_host_networks }}"
       when: mnaio_bridges is changed
@@ -246,37 +246,31 @@
       command: "vgdisplay vg01"
       failed_when: false
       when:
-        - default_vm_disk_mode | default('lvm') == "lvm"
+        - default_vm_disk_mode == "lvm"
       register: data_volume
 
-    - name: Locate data disk
-      shell: >
-        lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | awk '/d[b-z]+ disk +0/{ if ($4>m){m=$4; d=$1}}; END{print d}'
-      register: lsblk
+    - name: Setup the data volume (LVM)
       when:
-        - default_vm_disk_mode | default('lvm') == "lvm"
+        - default_vm_disk_mode == "lvm"
         - data_volume.rc != 0
-        - mnaio_data_disk is undefined
+      block:
+        - name: Locate data disk
+          shell: >
+            lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | awk '/d[b-z]+ disk +0/{ if ($4>m){m=$4; d=$1}}; END{print d}'
+          register: lsblk
+          when:
+            - mnaio_data_disk is undefined
 
-    - name: Create data disk label
-      command: "parted --script /dev/{{ mnaio_data_disk | default(lsblk.stdout) }} mklabel gpt"
-      when:
-        - default_vm_disk_mode | default('lvm') == "lvm"
-        - data_volume.rc != 0
+        - name: Create data disk label
+          command: "parted --script /dev/{{ mnaio_data_disk | default(lsblk.stdout) }} mklabel gpt"
 
-    - name: Create data disk partition
-      command: "parted --align optimal --script /dev/{{ mnaio_data_disk | default(lsblk.stdout) }} mkpart data1 ext4 0% 100%"
-      when:
-        - default_vm_disk_mode | default('lvm') == "lvm"
-        - data_volume.rc != 0
+        - name: Create data disk partition
+          command: "parted --align optimal --script /dev/{{ mnaio_data_disk | default(lsblk.stdout) }} mkpart data1 ext4 0% 100%"
 
-    - name: Create data volume group
-      lvg:
-        vg: vg01
-        pvs: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
-      when:
-        - default_vm_disk_mode | default('lvm') == "lvm"
-        - data_volume.rc != 0
+        - name: Create data volume group
+          lvg:
+            vg: vg01
+            pvs: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
 
     - name: Locate virt data volume
       virt_pool:
@@ -284,7 +278,7 @@
         command: info
       failed_when: false
       when:
-        - default_vm_disk_mode | default('lvm') == "lvm"
+        - default_vm_disk_mode == "lvm"
       register: virt_data_volume
 
     - name: Create /etc/libvirt/storage directory
@@ -317,7 +311,7 @@
             xml: "/etc/libvirt/storage/vg01.xml"
             autostart: true
       when:
-        - default_vm_disk_mode | default('lvm') == "lvm"
+        - default_vm_disk_mode == "lvm"
         - virt_data_volume.pools is not defined
 
     - name: Load virtio kernel modules

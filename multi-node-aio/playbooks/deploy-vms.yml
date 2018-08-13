@@ -75,12 +75,12 @@
         size: "{{ default_vm_storage }}"
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
-        - default_vm_disk_mode | default('lvm') == "lvm"
+        - default_vm_disk_mode == "lvm"
       with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Setup file-based disk images
       when:
-        - default_vm_disk_mode | default('lvm') == "file"
+        - default_vm_disk_mode == "file"
       block:
         - name: Find existing base image files
           find:
