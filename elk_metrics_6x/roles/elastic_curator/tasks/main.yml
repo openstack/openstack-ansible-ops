@@ -34,7 +34,7 @@
   package:
     name: "{{ curator_distro_packages }}"
     state: "{{ elk_package_state | default('present') }}"
-    update_cache: true
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
   tags:
     - package_install
 

@@ -29,7 +29,7 @@
   package:
     name: "{{ elastic_repo_distro_packages }}"
     state: present
-    update_cache: yes
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
   register: _apt_task
   until: _apt_task is success
   retries: 3

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-kibana_nginx_vhost_path: /etc/nginx/sites-available
+kibana_nginx_vhost_path: /etc/nginx/vhosts.d
 kibana_distro_packages:
   - apache2-utils
   - kibana

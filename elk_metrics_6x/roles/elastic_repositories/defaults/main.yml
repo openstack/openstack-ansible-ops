@@ -15,3 +15,6 @@
 
 # List of PPA repositories used on ubuntu based systems
 elastic_repo_ppas: []
+
+# List of packages to install
+elastic_repo_distro_packages: []

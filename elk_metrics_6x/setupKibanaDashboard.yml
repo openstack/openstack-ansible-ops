@@ -19,17 +19,26 @@
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
+  vars:
+    disto_packages:
+      zypper:
+        - nodejs6
+      apt:
+        - nodejs
+
   tasks:
     - name: Add nodejs 6.x source
       shell: "curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -"
+      when:
+        - ansible_pkg_mgr == 'apt'
 
     - name: Install nodejs
-      apt:
-        name: nodejs
+      package:
+        name: "{{ disto_packages[ansible_pkg_mgr] }}"
         state: "present"
-        update_cache: yes
-      register: _apt_task
-      until: _apt_task is success
+        update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+      register: _pkg_task
+      until: _pkg_task is success
       retries: 3
       delay: 2
 

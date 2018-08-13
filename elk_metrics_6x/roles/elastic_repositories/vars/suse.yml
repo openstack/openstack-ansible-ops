@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-kibana_nginx_vhost_path: /etc/nginx/sites-available
-kibana_distro_packages:
-  - apache2-utils
-  - kibana
-  - nginx
-  - python-passlib
+# elk apt repo
+elastic_repo:
+  repo: 'https://artifacts.elastic.co/packages/6.x/yum'
+  state: "{{ ((elk_package_state | default('present')) == 'absent') | ternary('absent', 'present') }}"
+  key_url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"

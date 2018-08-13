@@ -29,7 +29,7 @@
   package:
     name: "{{ kibana_distro_packages }}"
     state: "{{ elk_package_state | default('present') }}"
-    update_cache: yes
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
   register: _package_task
   until: _package_task is success
   retries: 3
@@ -52,7 +52,7 @@
 - name: Drop Nginx default conf file
   template:
     src: "nginx_default.j2"
-    dest: "/etc/nginx/sites-available/default"
+    dest: "{{ kibana_nginx_vhost_path }}/default"
   notify:
     - Enable and restart services
 

@@ -121,8 +121,8 @@
   package:
     name: "{{ elastic_distro_packages }}"
     state: "{{ elk_package_state | default('present') }}"
-    install_recommends: yes
-    update_cache: yes
+    install_recommends: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
   register: _package_task
   until: _package_task is success
   retries: 3
@@ -170,3 +170,15 @@
       dest: "/etc/{{ service_name }}/jvm.options"
     - src: "templates/logrotate.j2"
       dest: "/etc/logrotate.d/{{ service_name }}"
+
+- name: Ensure host can resolve itself
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^{{ item }}'
+    line: '{{ item }} {{ ansible_hostname }} {{ ansible_fqdn }}'
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - "127.0.2.1"
+    - "{{ ansible_host }}"

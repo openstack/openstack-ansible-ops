@@ -29,7 +29,7 @@
   package:
     name: "{{ auditbeat_distro_packages }}"
     state: "{{ elk_package_state | default('present') }}"
-    update_cache: true
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
   register: _package_task
   until: _package_task is success
   retries: 3

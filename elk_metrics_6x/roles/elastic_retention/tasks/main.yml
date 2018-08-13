@@ -36,4 +36,4 @@
 
 - name: Set retention keys fact
   set_fact:
-    elastic_beat_retention_policy_keys: "{{ elastic_beat_retention_policy_hosts.keys() }}"
+    elastic_beat_retention_policy_keys: "{{ elastic_beat_retention_policy_hosts.keys() | list }}"
