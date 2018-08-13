@@ -1,0 +1,58 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Add Elastic search public GPG key
+  rpm_key:
+    state: "{{ elastic_repo.state }}"
+    key: "{{ elastic_repo.key_url }}"
+  register: _zypp_task
+  until: _zypp_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
+# Force refresh of a repository
+- name: Add elk repo to yum sources list
+  yum_repository:
+    name: "elastic"
+    file: "elastic"
+    description: "Elastic repositories, you know, for ELK."
+    baseurl: "{{ elastic_repo.repo }}"
+    state: "{{ elastic_repo.state }}"
+    enabled: yes
+  register: _yum_task
+  until: _yum_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
+# Force refresh of a repository
+- name: Add nginx repo to yum sources list
+  yum_repository:
+    name: "nginx"
+    file: "nginx"
+    description: "NGINX repo"
+    baseurl: "{{ elastic_nginx_repo.repo }}"
+    state: "{{ elastic_nginx_repo.state }}"
+    enabled: yes
+    gpgcheck: no
+  register: _yum_task
+  until: _yum_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install

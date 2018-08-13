@@ -105,17 +105,26 @@
   when:
     - physical_host == inventory_hostname
 
-- name: elasticsearch datapath bind mount
-  lxc_container:
-    name: "{{ inventory_hostname }}"
-    container_command: |
-      [[ ! -d "/var/lib/{{ service_name }}" ]] && mkdir -p "/var/lib/{{ service_name }}"
-    container_config:
-      - "lxc.mount.entry=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
-  delegate_to: "{{ physical_host }}"
+- name: Container block
+  block:
+    - name: Ensure service directories data-path exists
+      file:
+        path: "/openstack/{{ inventory_hostname }}/{{ service_name }}"
+        state: "directory"
+      delegate_to: "{{ physical_host }}"
+
+    - name: elasticsearch datapath bind mount
+      lxc_container:
+        name: "{{ inventory_hostname }}"
+        container_command: |
+          [[ ! -d "/var/lib/{{ service_name }}" ]] && mkdir -p "/var/lib/{{ service_name }}"
+        container_config:
+          - "lxc.mount.entry=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
+      delegate_to: "{{ physical_host }}"
+      when:
+        - container_tech | default('lxc') == 'lxc'
   when:
     - physical_host != inventory_hostname
-    - container_tech | default('lxc') == 'lxc'
 
 - name: Ensure Java is installed
   package:
@@ -149,6 +158,17 @@
         createhome: "yes"
         home: "/var/lib/{{ service_name }}"
   rescue:
+    - name: Check for system user
+      debug:
+        msg: >-
+          The general user creation task failed. This typically means that the
+          user already exists and something in the user configuration provided
+          is changing the system user in way that is simply not possible at this
+          time. The playbooks will now simply ensure the user exists and before
+          carrying on to the next task. While it's not required, it may be
+          benificial to schedule a maintenance where the elastic services are
+          stopped.
+
     - name: Ensure the system user exists
       user:
         name: "{{ service_owner }}"
