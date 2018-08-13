@@ -17,10 +17,18 @@ mnaio_host_required_distro_packages:
   - ubuntu-cloud-keyring
 
 mnaio_host_package_repos:
+  - repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu {{ ansible_lsb.codename }}-updates/mitaka main"
+    state: present
+    filename: "uca"
+    condition: "{{ ansible_lsb.codename == 'trusty' }}"
   - repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu {{ ansible_lsb.codename }}-updates/queens main"
     state: present
     filename: "uca"
     condition: "{{ ansible_lsb.codename == 'xenial' }}"
+  - repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu {{ ansible_lsb.codename }}-updates/rocky main"
+    state: present
+    filename: "uca"
+    condition: "{{ ansible_lsb.codename == 'bionic' }}"
 
 mnaio_host_distro_packages:
   - bridge-utils
@@ -32,7 +40,6 @@ mnaio_host_distro_packages:
   - openssh-server
   - python2.7
   - python-lxml
-  - python-software-properties
   - qemu-kvm
   - qemu-utils
   - software-properties-common
@@ -52,6 +59,6 @@ mnaio_dhcp_distro_packages:
 mnaio_pkg_cache_server_distro_packages:
   - apt-cacher-ng
 
-mnaio_host_iptables_service: "{{ (ansible_distribution | lower + '-' + ansible_distribution_version | lower == 'ubuntu-14.04') | ternary('iptables-persistent', 'netfilter-persistent') }}"
+mnaio_host_iptables_service: "{{ (ansible_lsb.codename == 'trusty') | ternary('iptables-persistent', 'netfilter-persistent') }}"
 
 ssh_service_name: ssh
