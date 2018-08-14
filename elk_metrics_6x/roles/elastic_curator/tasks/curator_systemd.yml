@@ -32,5 +32,5 @@
           state: "started"
           options:
             OnBootSec: 30min
-            OnUnitActiveSec: 24h
+            OnUnitActiveSec: 6h
             Persistent: true

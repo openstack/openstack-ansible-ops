@@ -37,14 +37,19 @@
 
 - name: Create rollup block
   block:
-    - name: Set retention days fact
+    - name: Set min retention days fact
       set_fact:
-        days_until_rollup: |-
+        min_days_until_rollup: |-
           {% set index_retention = [] %}
           {% for item in ansible_play_hosts %}
-          {%   set _ = index_retention.append((hostvars[item]['elastic_' + index_name + '_retention'] | int) // 3) %}
+          {%   set _ = index_retention.append(hostvars[item]['elastic_' + index_name + '_retention'] | int) %}
           {% endfor %}
           {{ index_retention | min }}
+      run_once: true
+
+    - name: Set retention days fact
+      set_fact:
+        days_until_rollup: "{{ ((min_days_until_rollup | int) > 1) | ternary(((min_days_until_rollup | int) - 1), min_days_until_rollup) }}"
       run_once: true
 
     - name: Create rollup job
@@ -59,7 +64,7 @@
       retries: 5
       delay: 5
       when:
-        - hostvars[inventory_hostname]['elastic_' + index_name + '_retention'] > days_until_rollup
+        - (days_until_rollup | int) > 0
       with_items:
         - url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}/_stop"
           method: POST

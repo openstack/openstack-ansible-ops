@@ -17,7 +17,7 @@
   cron:
     name: "Run curator"
     minute: 0
-    hour: 2
+    hour: */6
     user: "curator"
     job: "/opt/elasticsearch-curator/bin/curator --config /var/lib/curator/curator.yml /var/lib/curator/actions.yml"
     cron_file: "elasticsearch-curator"

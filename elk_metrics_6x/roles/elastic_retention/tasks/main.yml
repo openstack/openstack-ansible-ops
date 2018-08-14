@@ -18,21 +18,32 @@
     url: "http://{{ coordination_nodes[0] }}/_nodes/{{ (data_nodes | map('extract', hostvars, 'ansible_host') | list) | join(',') }}/stats/fs"
     method: GET
   register: elk_data
-  until: elk_data is success
+  until:
+    - elk_data is success and elk_data['json'] is defined
   retries: 5
-  delay: 5
+  delay: 10
   run_once: true
 
-- name: Load data node variables
+- name: Set retention keys fact
+  set_fact:
+    es_storage_json: "{{ elk_data['json'] }}"
+
+- name: Load retention algo variables
   include_vars: "calculate_index_retention_{{ elastic_index_retention_algorithm }}.yml"
   tags:
     - always
 
-- name: Set retention facts
-  set_fact: "elastic_{{ item.key }}_retention={{ (es_assumed_usable_storage_per_node | int) // ((item.value | int) * (es_storage_multiplier | int)) }}"
+- name: Set retention facts (mb size)
+  set_fact: "elastic_{{ item.key }}_size={{ item.value }}"
   when:
-    - hostvars[inventory_hostname]["elastic_" + item.key + "_retention"] is undefined
-  with_dict: "{{ elastic_beat_retention_policy_hosts }}"
+    - hostvars[inventory_hostname]["elastic_" ~ item.key ~ "_size"] is undefined
+  with_dict: "{{ es_storage_per_index }}"
+
+- name: Set retention facts (days)
+  set_fact: "elastic_{{ item.key }}_retention={{ item.value }}"
+  when:
+    - hostvars[inventory_hostname]["elastic_" ~ item.key ~ "_retention"] is undefined
+  with_dict: "{{ es_days_per_index }}"
 
 - name: Set retention keys fact
   set_fact:

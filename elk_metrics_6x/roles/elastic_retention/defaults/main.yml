@@ -16,7 +16,9 @@
 elastic_index_retention_algorithm: default
 
 ### Elastic curator variables
-## Default retention policy options. All retention options are in days.
+## If any of these retention policy option are undefined a dynamic fact will be
+## generated.
+## These options are all in days.
 #  elastic_logstash_retention: 1
 #  elastic_apm_retention: 1
 #  elastic_auditbeat_retention: 1
@@ -26,25 +28,69 @@ elastic_index_retention_algorithm: default
 #  elastic_metricbeat_retention: 1
 #  elastic_packetbeat_retention: 1
 
-# This is used to calculate the storage a beat could generate per node, per day.
-# This constant is used as a multiplier. If the expected storage is larger than
-# the actual available storage after the buffer is calculated the multiplier
-# will be doubled there-by cutting the potential storage days in half.
-elastic_beat_storage_constant: 512
+## These options are all in megabytes.
+#  elastic_logstash_size: 1024
+#  elastic_apm_size: 1024
+#  elastic_auditbeat_size: 1024
+#  elastic_filebeat_size: 1024
+#  elastic_heartbeat_size: 1024
+#  elastic_journalbeat_size: 1024
+#  elastic_metricbeat_size: 1024
+#  elastic_packetbeat_size: 1024
 
-## If any retention policy option is undefined a dynamic fact will be generated.
-## Fact will be generated for the general retention using the storage constant
-## per node, per index, where a given collector is expected to be deployed. The
-## equation used will take the total available storage from the ES data nodes
-## subtract 25% divided by the total number of data nodes. That is then divided
-## by number of hosts assumed to be a beat target which is multiplied by the
-## storage constant.
+## WHen a static retention policy option is not defined these options will be
+## used for dynamic fact generation.
+##
+## Facts will be generated for the general retention using the total available
+## storage from the ES data nodes, subtracting 25%. Using the weights, each
+## index will be given a percentage of the total available storage. Indexes with
+## higher weights are expected to use more storage. The list of hosts in a given
+## index will be used to determine the number of days data can exist within an
+## index before it's pruned.
+
+## Example:
+#  es cluster has 4TiB of storage
+#  filebeat is deployed to 100 hosts
+#  filebeat has a weight of 10
+#  metricbeat is deployed to 125 hosts
+#  metricbeat has a weight of 2
+#
+#  es storage in MiB: 4194304
+#  hosts and weighting total: (100 + 125) x (10 + 2) = 2700
+#  filebeat pct: (100 x 10) / 2700 = 0.37
+#  filebeat storage allowed: 0.37 * 4194304 = 1551892.48 MiB
+#  filebeat days allowed: 1551892.48 / (100 * 1024) = 15.1552 Days
+#  filebeat result: 15 days of retention or 1.5TiB of storage, whatever comes first
+#  metricbeat pct: (125 x 2) / 2700 = 0.09
+#  metricbeat storage allowed: 0.09 * 4194304 = 377487.36 MiB
+#  metricbeat days allowed: 377487.36 / (125 * 1024) = 2.94912 Days
+#  metricbeat result: 2 days of retention or 38GiB of storage, whatever comes first
+
 elastic_beat_retention_policy_hosts:
-  logstash: "{{ groups['elastic-logstash'] | default([null]) | length }}"
-  apm: "{{ groups['apm-server'] | default([null]) | length }}"
-  auditbeat: "{{ (groups['hosts'] | default([null]) | length) * 2 }}"
-  filebeat: "{{ (groups['hosts'] | default([null]) | length) * 2 }}"
-  heartbeat: "{{ groups['kibana'][:3] | default([null]) | length }}"
-  journalbeat: "{{ (groups['all'] | default([null]) | length) * 1.5 }}"
-  metricbeat: "{{ (groups['all'] | default([null]) | length) * 1.5 }}"
-  packetbeat: "{{ (groups['hosts'] | default([null]) | length) * 5 }}"
+  logstash:
+    weight: 1
+    hosts: "{{ groups['elastic-logstash'] | default([]) }}"
+  apm:
+    weight: 1
+    hosts: "{{ groups['apm-server'] | default([]) }}"
+  auditbeat:
+    weight: 10
+    hosts: "{{ groups['hosts'] | default([]) }}"
+  filebeat:
+    weight: 10
+    hosts: "{{ groups['hosts'] | default([]) }}"
+  syslog:
+    weight: 1
+    hosts: "{{ groups['hosts'] | default([]) }}"
+  heartbeat:
+    weight: 1
+    hosts: "{{ groups['kibana'][:3] | default([]) }}"
+  journalbeat:
+    weight: 3
+    hosts: "{{ groups['all'] | default([]) }}"
+  metricbeat:
+    weight: 2
+    hosts: "{{ groups['all'] | default([]) }}"
+  packetbeat:
+    weight: 1
+    hosts: "{{ groups['hosts'] | default([]) }}"
