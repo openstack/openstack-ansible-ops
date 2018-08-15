@@ -127,7 +127,10 @@ if grep -rni "^gnocchi_storage_driver" /etc/openstack_deploy/*.{yaml,yml} | grep
   RUN_TASKS+=("os-gnocchi-install.yml -e gnocchi_identity_only=true")
 fi
 
-RUN_TASKS+=("os-swift-install.yml")
+if [ "${SKIP_SWIFT_UPGRADE}" != "yes" ]; then
+  RUN_TASKS+=("os-swift-install.yml")
+fi
+
 RUN_TASKS+=("os-gnocchi-install.yml")
 RUN_TASKS+=("os-ironic-install.yml")
 RUN_TASKS+=("os-magnum-install.yml")

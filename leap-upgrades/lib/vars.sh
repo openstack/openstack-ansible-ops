@@ -48,3 +48,8 @@ export ANSIBLE_LOG_PATH="/opt/leap42/ansible-${LEAP_TIMESTAMP}.log"
 
 ## Containers List to Destroy in destroy-old-containers.yml
 export CONTAINERS_TO_DESTROY='"'"${CONTAINERS_TO_DESTROY:-all_containers:!galera_all:!neutron_agent:!ceph_all:!rsyslog_all}"'"'
+
+# By default don't skip Swift Upgrade, this option is in place for operators who
+# who might want to maximize Swift availablity during the upgrade and want to
+# manually upgrade swift after the main deploy
+export SKIP_SWIFT_UPGRADE="${SKIP_SWIFT_UPGRADE:-no}"
