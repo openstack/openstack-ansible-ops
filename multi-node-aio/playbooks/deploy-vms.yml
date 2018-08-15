@@ -83,7 +83,7 @@
         - default_vm_disk_mode == "lvm"
       with_items: "{{ groups['pxe_servers'] }}"
 
-    - name: Setup file-based disk images
+    - name: Setup/clean-up file-based disk images
       when:
         - default_vm_disk_mode == "file"
       block:
@@ -98,6 +98,14 @@
             vm_use_snapshot: "{{ _base_images['matched'] > 0 }}"
           when:
             - vm_use_snapshot is not defined
+
+        - name: Clean up base image files if they are not being used
+          file:
+            path: "{{ item.path }}"
+            state: absent
+          with_items: "{{ _base_images.files }}"
+          when:
+            - not (vm_use_snapshot | bool)
 
         - name: Create VM Disk Image
           command: >-
@@ -123,7 +131,12 @@
       virt:
         name: "{{ hostvars[item]['server_hostname'] }}"
         command: define
-        xml: "{{ lookup('template', 'kvm/kvm-vm.xml.j2') }}"
+        xml: >-
+          {%- if vm_use_snapshot | bool %}
+          {{ lookup('file', _virt_pools.pools.default.path | default('/data') ~ '/' ~ hostvars[item]['server_hostname'] ~ '.xml') }}
+          {%- else %}
+          {{ lookup('template', 'kvm/kvm-vm.xml.j2') }}
+          {%- endif %}
       failed_when: false
       when:
         - hostvars[item]['server_vm'] | default(false) | bool

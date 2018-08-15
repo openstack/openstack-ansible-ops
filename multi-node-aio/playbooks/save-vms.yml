@@ -35,6 +35,8 @@
       virt_pool:
         command: info
       register: _virt_pools
+      tags:
+        - always
 
     - name: Stop running VMs
       virt:
@@ -45,10 +47,63 @@
       with_items: "{{ groups['pxe_servers'] }}"
 
     - name: Save VM Disk Image
-      command: >-
-        mv
-        {{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}.img
-        {{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}-base.img
+      shell: |
+        if [[ -e {{ hostvars[item]['server_hostname'] }}.img ]]; then
+          if [[ -e {{ hostvars[item]['server_hostname'] }}-base.img ]]; then
+            qemu-img commit {{ hostvars[item]['server_hostname'] }}.img
+          else
+            mv {{ hostvars[item]['server_hostname'] }}.img {{ hostvars[item]['server_hostname'] }}-base.img
+          fi
+          exit 2
+        fi
+      args:
+        executable: /bin/bash
+        chdir: "{{ _virt_pools.pools.default.path | default('/data') }}"
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
+      register: _save_disk_image
+      changed_when: _save_disk_image.rc == 2
+
+    - name: Save VM definition
+      copy:
+        src: "/etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
+        dest: "{{ _virt_pools.pools.default.path | default('/data') }}/"
+        remote_src: yes
+      when:
+        - hostvars[item]['server_vm'] | default(false) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
+
+    - name: Get the current SHA1 for the manifest
+      command: "git rev-parse HEAD"
+      args:
+        chdir: "{{ playbook_dir }}"
+      register: _repo_sha
+      changed_when: false
+
+    - name: Add pip freeze results to the data
+      shell: "pip --disable-pip-version-check freeze > pip-requirements.txt"
+      args:
+        executable: /bin/bash
+        chdir: "{{ _virt_pools.pools.default.path | default('/data') }}"
+      changed_when: false
+
+    - name: Find all the files for the manifest
+      find:
+        paths: "{{ _virt_pools.pools.default.path | default('/data') }}"
+        patterns:
+          - "*-base.img"
+          - "*.xml"
+          - "*.txt"
+        get_checksum: yes
+      register: _manifest_files
+
+    - name: Prepare the manifest file content
+      set_fact:
+        _manifest_content: >-
+          { 'openstack-ansible-ops_SHA1': '{{ _repo_sha.stdout }}', 'files': {{ _manifest_files.files | json_query('[*].{path: path, checksum: checksum}') | sort(attribute='path') }} }
+
+    - name: Write out the manifest file
+      copy:
+        content: "{{ _manifest_content | to_nice_json }}"
+        dest: "{{ _virt_pools.pools.default.path | default('/data') }}/manifest.json"
