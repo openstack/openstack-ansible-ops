@@ -31,6 +31,11 @@
       tags:
         - always
 
+    - name: Get info about the virt storage pools
+      virt_pool:
+        command: info
+      register: _virt_pools
+
     - name: Stop running VMs
       virt:
         name: "{{ hostvars[item]['server_hostname'] }}"
@@ -53,7 +58,7 @@
 
     - name: Delete VM Disk Image
       file:
-        path: "/var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img"
+        path: "{{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}.img"
         state: absent
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
@@ -84,7 +89,7 @@
       block:
         - name: Find existing base image files
           find:
-            paths: /var/lib/libvirt/images
+            paths: "{{ _virt_pools.pools.default.path | default('/data') }}"
             patterns: '*-base.img'
           register: _base_images
 
@@ -99,9 +104,9 @@
             qemu-img create
             -f qcow2
             {% if vm_use_snapshot | bool %}
-            -b /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}-base.img
+            -b {{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}-base.img
             {% endif %}
-            /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img
+            {{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}.img
             {{ default_vm_storage }}m
           when:
             - hostvars[item]['server_vm'] | default(false) | bool
