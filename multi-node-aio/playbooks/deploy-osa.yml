@@ -110,17 +110,8 @@
       when:
         - pre_config_osa | default(true) | bool
 
-    - name: Get pip2 and pw gen deps
-      shell: |
-        python2 /opt/get-pip.py
-        $(which pip2 || which pip) install setuptools pycrypto pyyaml
-      args:
-        chdir: /opt/openstack-ansible
-      when:
-        - pre_config_osa | default(true) | bool
-
     - name: Create passwords
-      command: python2 ./scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
+      command: ./scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
       args:
         chdir: /opt/openstack-ansible
       when:
