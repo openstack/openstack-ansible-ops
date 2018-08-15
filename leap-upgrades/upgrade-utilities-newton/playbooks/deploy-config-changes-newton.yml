@@ -50,15 +50,5 @@
         with_fileglob:
           - "/etc/openstack_deploy/user_*.yml"
 
-      - name: Write vars required for upgrade from Mitaka
-        lineinfile:
-          dest: /etc/openstack_deploy/user_variables.yml
-          regexp: "^{{ item.key }}"
-          line: "{{ item.key }}: {{ item.value }}"
-          state: present
-          create: yes
-        with_items:
-          - key: "default_bind_mount_logs"
-            value: false
   vars:
       repo_root_dir: "{{ osa_playbook_dir }}/"
