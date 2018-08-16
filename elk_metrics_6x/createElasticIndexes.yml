@@ -34,7 +34,7 @@
       register: elk_indexes
       until: elk_indexes is success
       retries: 3
-      delay: 5
+      delay: 10
       with_items:
         - name: "osprofiler-notifications"
           index_options:
@@ -55,3 +55,48 @@
         - name: "_all/_settings"
           index_options:
             index.number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+
+    - name: Check for basic index template
+      uri:
+        url: http://127.0.0.1:9200/_template/basic-index-template
+        method: HEAD
+      failed_when: false
+      register: check_basicIndexTemplate
+      register: check_basicIndexTemplate
+      until: check_basicIndexTemplate is success
+      retries: 3
+      delay: 10
+
+    - name: Check for basic index template
+      uri:
+        url: http://127.0.0.1:9200/_template/basic-index-template
+        method: DELETE
+        status_code: 200
+      register: delete_basicIndexTemplate
+      until: delete_basicIndexTemplate is success
+      retries: 3
+      delay: 10
+      when:
+        - check_basicIndexTemplate.status == 200
+
+    - name: Create basic index template
+      uri:
+        url: http://127.0.0.1:9200/_template/basic-index-template
+        method: PUT
+        body: "{{ index_option | to_json }}"
+        status_code: 200
+        body_format: json
+      register: create_basicIndexTemplate
+      until: create_basicIndexTemplate is success
+      retries: 3
+      delay: 10
+      vars:
+        index_option:
+          index_patterns: >-
+            {{
+              (elastic_beat_retention_policy_hosts.keys() | list)
+                | map('regex_replace', '(.*)', '\1-' ~ '*')
+                | list
+            }}
+          settings:
+            number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
