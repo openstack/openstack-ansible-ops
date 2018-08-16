@@ -31,6 +31,11 @@
       tags:
         - always
 
+    - name: Get info about the virt storage pools
+      virt_pool:
+        command: info
+      register: _virt_pools
+
     - name: Stop running VMs
       command: "virsh destroy {{ hostvars[item]['server_hostname'] }}"
       failed_when: false
@@ -41,8 +46,8 @@
     - name: Save VM Disk Image
       command: >-
         mv
-        /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}.img
-        /var/lib/libvirt/images/{{ hostvars[item]['server_hostname'] }}-base.img
+        {{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}.img
+        {{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}-base.img
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"

@@ -263,9 +263,9 @@ backing store) for the VM's, then set the following option before executing
 
 If you wish to save the current file-based images in order to implement a
 thin-provisioned set of VM's which can be saved and re-used, then use the
-``save-vms.yml`` playbook. This will stop the VM's and save the files to
-``/var/lib/libvirt/images/*-base.img``. Re-executing the ``deploy-vms.yml``
-playbook afterwards will rebuild the VMs from those images.
+``save-vms.yml`` playbook. This will stop the VM's and rename the files to
+``*-base.img``. Re-executing the ``deploy-vms.yml`` playbook afterwards will
+rebuild the VMs from those images.
 
 .. code-block:: bash
 
