@@ -19,15 +19,18 @@ OPTS+=('ANSIBLE_EMBED_HOME')
 
 source /etc/os-release
 if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
-  if [  ${VERSION_ID} = "14.04" ]; then
+  if [  ${ID} = "ubuntu" ]; then
     apt-get update
     apt-get -y install python-virtualenv
-    echo "done installing python-virtualenv"
+  elif [  ${ID} = "opensuse" ]; then
+    zypper install -y python-virtualenv
+  elif [ ${ID} = "centos" ] || [ ${ID} ="redhat" ]; then
+    yum install -y python-virtualenv
   else
-    apt-get update
-    apt-get -y install python3-virtualenv python-virtualenv
-    echo "done installing python-virtualenv python3-virtualenv"
+    echo "Unknown operating system"
+    exit 99
   fi
+  echo "done installing python-virtualenv"
   if [[ -f "/usr/bin/python2" ]]; then
     virtualenv --python="/usr/bin/python2" "${ANSIBLE_EMBED_HOME}"
   elif [[ -f "/usr/bin/python3" ]]; then
