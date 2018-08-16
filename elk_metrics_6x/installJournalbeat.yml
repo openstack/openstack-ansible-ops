@@ -48,6 +48,18 @@
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
+  pre_tasks:
+    - name: Check for journal directory
+      stat:
+        path: /var/log/journal
+      register: journal_dir
+
+    - name: exit playbook
+      meta: end_play
+      when:
+        - not (journal_dir.stat.exists | bool) or
+          ansible_service_mgr != 'systemd'
+
   roles:
     - role: elastic_journalbeat
     - role: elastic_rollup
