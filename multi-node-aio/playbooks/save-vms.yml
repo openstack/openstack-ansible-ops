@@ -37,8 +37,9 @@
       register: _virt_pools
 
     - name: Stop running VMs
-      command: "virsh destroy {{ hostvars[item]['server_hostname'] }}"
-      failed_when: false
+      virt:
+        name: "{{ hostvars[item]['server_hostname'] }}"
+        state: shutdown
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
