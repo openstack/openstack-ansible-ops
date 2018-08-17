@@ -45,26 +45,38 @@ metricbeat.max_start_delay: 10s
 #              hosts: ["${host}:2379"]
 
 #==========================  Modules configuration ============================
+
+{% set metric_sets = ['network', 'process', 'process_summary', 'uptime'] %}
+{% if physical_host is defined and physical_host != inventory_hostname %}
+{%   set host_mount_uuids = (hostvars[physical_host]['ansible_mounts'] | map(attribute='uuid') | list) %}
+{%   set container_mount_uuids = (ansible_mounts | map(attribute='uuid') | list | difference(['N/A']) ) %}
+{%   set container_mount_fs_types = (ansible_mounts | map(attribute='fstype') | list) %}
+{%   if (((container_mount_uuids | difference(host_mount_uuids)) | length) > 0) or 'nfs4' in container_mount_fs_types %}
+{%     set _ = metric_sets.extend(['filesystem', 'fsstat']) %}
+{%   endif %}
+{% else %}
+{%   set _ = metric_sets.extend(['cpu', 'load', 'memory', 'core', 'diskio', 'raid', 'socket', 'filesystem', 'fsstat']) %}
+{% endif %}
 metricbeat.modules:
-{% if (not physical_host is defined) or (physical_host is defined and physical_host == inventory_hostname) %}
 #------------------------------- System Module -------------------------------
+#  metricsets:
+#    - cpu             # CPU usage
+#    - filesystem      # File system usage for each mountpoint
+#    - fsstat          # File system summary metrics
+#    - load            # CPU load averages
+#    - memory          # Memory usage
+#    - network         # Network IO
+#    - process         # Per process metrics
+#    - process_summary # Process summary
+#    - uptime          # System Uptime
+#    - core            # Per CPU core usage
+#    - diskio          # Disk IO
+#    - raid            # Raid
+#    - socket          # Sockets and connection info (linux only)
 - module: system
-  metricsets:
-    - cpu             # CPU usage
-    - filesystem      # File system usage for each mountpoint
-    - fsstat          # File system summary metrics
-    - load            # CPU load averages
-    - memory          # Memory usage
-    - network         # Network IO
-    - process         # Per process metrics
-    - process_summary # Process summary
-    - uptime          # System Uptime
-    - core            # Per CPU core usage
-    - diskio          # Disk IO
-    - raid            # Raid
-    - socket          # Sockets and connection info (linux only)
+  metricsets: {{ metric_sets }}
   enabled: true
-  period: 30s
+  period: 60s
   processes: ['.*']
 
   # Configure the metric types that are included by these metricsets.
@@ -111,7 +123,7 @@ metricbeat.modules:
   socket.reverse_lookup.enabled: true
   socket.reverse_lookup.success_ttl: 60s
   socket.reverse_lookup.failure_ttl: 60s
-{% endif %}
+
 ##------------------------------ Aerospike Module -----------------------------
 #- module: aerospike
 #  metricsets: ["namespace"]

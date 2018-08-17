@@ -100,3 +100,7 @@
             }}
           settings:
             number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            index:
+              mapping:
+                total_fields:
+                  limit: "3072"
