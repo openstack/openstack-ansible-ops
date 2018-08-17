@@ -132,7 +132,7 @@
         name: "{{ hostvars[item]['server_hostname'] }}"
         command: define
         xml: >-
-          {%- if vm_use_snapshot | bool %}
+          {%- if (vm_use_snapshot | default(False)) | bool %}
           {{ lookup('file', _virt_pools.pools.default.path | default('/data') ~ '/' ~ hostvars[item]['server_hostname'] ~ '.xml') }}
           {%- else %}
           {{ lookup('template', 'kvm/kvm-vm.xml.j2') }}
