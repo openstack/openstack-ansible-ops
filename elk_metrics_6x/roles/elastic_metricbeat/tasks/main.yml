@@ -25,6 +25,15 @@
   tags:
     - always
 
+- name: Refresh physical host facts
+  setup: {}
+  delegate_to: "{{ physical_host }}"
+  delegate_facts: true
+  when:
+    - physical_host is defined and physical_host != inventory_hostname
+  tags:
+    - always
+
 - name: Ensure beat is installed
   package:
     name: "{{ metricbeat_distro_packages }}"
