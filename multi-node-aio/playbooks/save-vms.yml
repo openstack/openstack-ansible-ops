@@ -64,6 +64,7 @@
       with_items: "{{ groups['pxe_servers'] }}"
       register: _save_disk_image
       changed_when: _save_disk_image.rc == 2
+      failed_when: _save_disk_image.rc not in [0, 2]
 
     - name: Save VM definition
       copy:
