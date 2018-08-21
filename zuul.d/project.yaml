@@ -15,9 +15,12 @@
 - project:
     templates:
       - openstack-ansible-role-jobs
+      - check-requirements
+      - publish-openstack-sphinx-docs
+      - release-notes-jobs
     check:
       jobs:
-        - "openstack-ansible-ops:elk_metrics_6x"
+        - openstack-ansible-ops:elk_metrics_6x
     gate:
       jobs:
-        - "openstack-ansible-ops:elk_metrics_6x"
+        - openstack-ansible-ops:elk_metrics_6x
