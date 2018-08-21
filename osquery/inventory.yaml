@@ -9,7 +9,7 @@ all:
 
 ################################## REQUIRED ###################################
     logging01:
-      ansible_host: 172.16.27.100
+      ansible_host: 104.130.207.70
       ansible_user: root
 
   vars: {}

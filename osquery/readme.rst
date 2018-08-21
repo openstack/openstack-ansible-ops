@@ -22,7 +22,7 @@ an OpenStack all of the inventory needs will be provided for.
 Highlevel overview of Osquery & Kolide Fleet  infrastructure these playbooks will
 build and operate against.
 
-.. image:: assets/place-holder.svg
+.. image:: assets/overview-osquery.png
     :scale: 50 %
     :alt: Osquery & Kolide Fleet Architecture Diagram
     :align: center
@@ -70,15 +70,15 @@ Create the containers
 .. code-block:: bash
 
    cd /opt/openstack-ansible/playbooks
-   openstack-ansible lxc-containers-create.yml -e 'container_group=fleet'
+   openstack-ansible lxc-containers-create.yml --limit fleet_all
 
 
-Update the `/etc/hosts` file 
+Update the `/etc/hosts` file *(optional)*
 
 .. code-block:: bash
 
    cd /opt/openstack-ansible/playbooks
-   openstack-ansible openstack-hosts-setup.yml -e 'container_group=fleet'
+   openstack-ansible openstack-hosts-setup.yml
 
 
 
@@ -136,13 +136,20 @@ environment variable `ANSIBLE_ACTION_PLUGINS` or through the use of an
 Deploying | The environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Create some basic passwords keys that are needed by fleet
+.. code-block:: bashG
+
+    echo "kolide_fleet_jwt_key: $(openssl rand -base64 32)" > /etc/openstack_deploy/fleet_user_vars.yml
+    echo "mariadb_root_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/fleet_user_vars.yml
+
+
 Install master/data Fleet nodes on the elastic-logstash containers,
 deploy logstash, deploy Kibana, and then deploy all of the service beats.
 
 .. code-block:: bashG
 
     cd /opt/openstack-ansible-ops/osquery
-    ansible-playbook site.yml $USER_VARS
+    ansible-playbook site.yml -e@/etc/openstack_deploy/fleet_user_vars.yml
 
 
 * The `openstack-ansible` command can be used if the version of ansible on the
@@ -172,7 +179,7 @@ Architecture | Data flow
 
 This diagram outlines the data flow from within an Elastic-Stack deployment.
 
-.. image:: assets/place-holder.svg
+.. image:: assets/architecture-osquery.png
     :scale: 50 %
     :alt: Kolide & Osquery Data Flow Diagram
     :align: center
@@ -180,8 +187,9 @@ This diagram outlines the data flow from within an Elastic-Stack deployment.
 TODO
 ----
 The following is a list of open items.
- - [ ] Test Redhat familly Operating Systems
- - [ ] missing mariadb cluster (should all work needs additional vars)
+ - [x] Test Redhat familly Operating Systems
+ - [x] missing mariadb cluster (should all work needs additional vars)
  - [ ] use haproxy instead of the kolide fleet server ip
  - [ ] add/update tags
+ - [ ] convert to roles
  - [ ] add testing

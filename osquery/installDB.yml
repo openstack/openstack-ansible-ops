@@ -13,17 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Install MariaDB server
-  hosts: mariadb
+- name: Install MariaDB Galera Cluster
+  hosts: "mariadb"
   become: true
+  user: root
+  gather_facts: "{{ osa_gather_facts | default(True) }}"
+
   vars_files:
     - vars/variables.yml
 
-  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  gather_facts: "{{ osa_gather_facts | default(True) }}"
-  serial: 1
-  user: root
-
   roles:
-    - role: "mariadb"
+    - role: galera_server
+      galera_root_user: "{{ mariadb_root_user }}"
+      galera_root_password: "{{ mariadb_root_password }}"
+      galera_cluster_members: "{{ groups['mariadb'] }}"
+      galera_wsrep_node_name: "{{ inventory_hostname }}"
+      galera_cluster_name: telemetry_galera_cluster
+
+  environment: "{{ deployment_environment_variables | default({}) }}"

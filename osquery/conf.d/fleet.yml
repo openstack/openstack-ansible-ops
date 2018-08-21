@@ -1,6 +1,14 @@
 fleet_hosts:
   logging1:
-    ip: 172.22.8.27
+    ip: 10.0.236.110
+  logging2:
+    ip: 10.0.236.111
+  logging3:
+    ip: 10.0.236.112
 mariadb_hosts:
   logging1:
-    ip: 172.22.8.27
+    ip: 10.0.236.110
+  logging2:
+    ip: 10.0.236.111
+  logging3:
+    ip: 10.0.236.112

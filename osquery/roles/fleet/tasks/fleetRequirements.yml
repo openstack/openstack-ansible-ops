@@ -13,13 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#- name:    Install prerequisites
-#  apt:     name= {{item}} update_cache=yes
-#  with_items:
-#   - apt-transport-https
-#   - ca-certificates
-#   - curl
-#   - software-properties-common
 - name: Run the systemd service role
   include_role:
     name: redis

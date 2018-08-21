@@ -1,0 +1,33 @@
+---
+# install SSL certs
+- include_tasks: createFleetDB.yml
+
+# install SSL certs
+- include_tasks: fleetSSL.yml
+
+# install software requirements
+- include_tasks: fleetRequirements.yml
+
+# install kolide fleet server
+- include_tasks: fleetServerInstall.yml
+
+# drop the configuration
+- include_tasks: fleetConfig.yml
+
+# add files for systemd
+- include_tasks:  fleetService.yml
+  when:
+    - ansible_service_mgr == "systemd"
+
+# migrate the database
+- include_tasks:  fleetMigrateDB.yml
+  run_once: true
+
+# start fleet via systemd
+- include_tasks:  fleetStartService.yml
+
+# configure kolide fleet & set admin account
+- include_tasks:  fleetRegisterAdmin.yml
+
+# retrieve and set enrollment token
+- include_tasks:  fleetGetEnrollmentToken.yml

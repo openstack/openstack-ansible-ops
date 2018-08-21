@@ -3,7 +3,7 @@ haproxy_extra_services:
       haproxy_service_name: kolide-fleet
       haproxy_ssl: False
       haproxy_backend_nodes: "{{ groups['fleet'] | default([]) }}"  # Fleet nodes
-      haproxy_port: 8443  # This is set using the "kolide_fleet_port" variable
+      haproxy_port: 6443  # This is set using the "kolide_fleet_port" variable
       haproxy_check_port: 443  # This is set using the "kolide_fleet_port" variable
       haproxy_backend_port: 443  # This is set using the "kolide_fleet_port" variable
       haproxy_balance_type: tcp

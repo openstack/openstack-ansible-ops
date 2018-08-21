@@ -1,32 +1,17 @@
+mariadb_root_user: root
+
+#
 kolide_fleet_enable: true
-kolide_fleet_cluster: false
-
-# Kolide Fleet vars
-kolide_fleet_db_name: fleet
-kolide_fleet_db_user: fleet
-kolide_fleet_db_password: fleetSecrete
-
-kolide_fleet_port: "443"
-kolide_fleet_address: "0.0.0.0:{{ kolide_fleet_port }}"
-kolide_fleet_version: "2.0.0-rc3"
-kolide_fleet_url: "https://github.com/kolide/fleet/releases/download"
-
-kolide_fleet_admin_email: admin@openstack.org
-#kolide_fleet_admin_password: AdminSecrete
 
 kolide_fleet_ssl_cert: /etc/ssl/certs/fleet.cert
 kolide_fleet_ssl_key: /etc/ssl/private/fleet.key
 kolide_fleet_ssl_pem: /etc/ssl/private/fleet.pem
 kolide_fleet_ssl_ca_cert: /etc/ssl/certs/fleet-ca.pem
-kolide_fleet_ssl_self_signed_subject: "/C=US/ST=Texas/L=San Antonio/O=IT/CN={{ external_lb_vip_address }}/subjectAltName=IP.1={{ external_lb_vip_address }}/subjectAltName=IP.2={{ ansible_host }}}/subjectAltName=IP.3=localhost"
-
-kolide_fleet_ssl_protocol: "{{ ssl_protocol | default('ALL -SSLv2 -SSLv3') }}"
-kolide_fleet_ssl_cipher_suite: "{{ ssl_cipher_suite | default('ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:RSA+AESGCM:RSA+AES:!aNULL:!MD5:!DSS') }}"
-
-#kolide_fleet_osquery_enroll_secret: "{{ kolide_fleet_enroll_secret }}"
+kolide_fleet_ssl_self_signed_subject: "/C=US/ST=Texas/L=San Antonio/O=IT/CN={{ ansible_host }}/subjectAltName=IP.1={{ ansible_host }}/subjectAltName=IP.2=localhost"
 
 # Osquery vars
 osquery_enroll_secret_dir: /etc/osquery/osquery_enroll_secret
+osquery_debug_packages_install: false
 
 osquery_debug_packages_install: false
 
@@ -53,16 +38,3 @@ osquery_flags:
     - "--logger_tls_endpoint=/api/v1/osquery/log"
     - "--logger_tls_period=10"
     - "--enroll_secret_path={{ osquery_enroll_secret_dir }}"
-
-# MariaDB/Gallera Variables
-#mariadb_root_password: fleetSecrete
-mariadb_bind_address: "0.0.0.0"
-mariadb_root_remote: 1
-mariadb_databases:
-  - name: "{{ kolide_fleet_db_name }}"
-
-mariadb_users:
-  - name: "{{ kolide_fleet_db_user }}"
-    password: "{{ kolide_fleet_db_password }}"
-    priv: " {{ kolide_fleet_db_name }}.*:ALL"
-    host: "%"

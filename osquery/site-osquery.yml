@@ -1,6 +1,4 @@
 ---
-# Copyright 2018, Rackspace US, Inc.
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,5 +11,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- import_playbook: site-fleet.yml
-- import_playbook: site-osquery.yml
+- import_playbook: registerSSLcerts.yml
+- import_playbook: installOSquery.yml
