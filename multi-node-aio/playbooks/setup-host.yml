@@ -363,6 +363,14 @@
             state: mounted
             fstype: ext4
 
+        - name: Create the images directory
+          file:
+            path: /data/images
+            owner: root
+            group: root
+            mode: "0755"
+            state: directory
+
         - name: Define the default virt storage pool
           virt_pool:
             name: default
@@ -371,7 +379,7 @@
               <pool type='dir'>
                 <name>default</name>
                 <target>
-                  <path>/data</path>
+                  <path>/data/images</path>
                   <permissions>
                     <mode>0755</mode>
                     <owner>0</owner>

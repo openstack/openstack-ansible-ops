@@ -58,7 +58,7 @@
 
     - name: Delete VM Disk Image
       file:
-        path: "{{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}.img"
+        path: "{{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}.img"
         state: absent
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
@@ -89,7 +89,7 @@
       block:
         - name: Find existing base image files
           find:
-            paths: "{{ _virt_pools.pools.default.path | default('/data') }}"
+            paths: "{{ _virt_pools.pools.default.path | default('/data/images') }}"
             patterns: '*-base.img'
           register: _base_images
 
@@ -112,9 +112,9 @@
             qemu-img create
             -f qcow2
             {% if vm_use_snapshot | bool %}
-            -b {{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}-base.img
+            -b {{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}-base.img
             {% endif %}
-            {{ _virt_pools.pools.default.path | default('/data') }}/{{ hostvars[item]['server_hostname'] }}.img
+            {{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}.img
             {{ default_vm_storage }}m
           when:
             - hostvars[item]['server_vm'] | default(false) | bool
@@ -133,7 +133,7 @@
         command: define
         xml: >-
           {%- if (vm_use_snapshot | default(False)) | bool %}
-          {{ lookup('file', _virt_pools.pools.default.path | default('/data') ~ '/' ~ hostvars[item]['server_hostname'] ~ '.xml') }}
+          {{ lookup('file', _virt_pools.pools.default.path | default('/data/images') ~ '/' ~ hostvars[item]['server_hostname'] ~ '.xml') }}
           {%- else %}
           {{ lookup('template', 'kvm/kvm-vm.xml.j2') }}
           {%- endif %}

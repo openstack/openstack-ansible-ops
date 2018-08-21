@@ -58,7 +58,7 @@
         fi
       args:
         executable: /bin/bash
-        chdir: "{{ _virt_pools.pools.default.path | default('/data') }}"
+        chdir: "{{ _virt_pools.pools.default.path | default('/data/images') }}"
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
@@ -69,7 +69,7 @@
     - name: Save VM definition
       copy:
         src: "/etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
-        dest: "{{ _virt_pools.pools.default.path | default('/data') }}/"
+        dest: "{{ _virt_pools.pools.default.path | default('/data/images') }}/"
         remote_src: yes
       when:
         - hostvars[item]['server_vm'] | default(false) | bool
@@ -86,12 +86,12 @@
       shell: "pip --disable-pip-version-check freeze > pip-requirements.txt"
       args:
         executable: /bin/bash
-        chdir: "{{ _virt_pools.pools.default.path | default('/data') }}"
+        chdir: "{{ _virt_pools.pools.default.path | default('/data/images') }}"
       changed_when: false
 
     - name: Find all the files for the manifest
       find:
-        paths: "{{ _virt_pools.pools.default.path | default('/data') }}"
+        paths: "{{ _virt_pools.pools.default.path | default('/data/images') }}"
         patterns:
           - "*-base.img"
           - "*.xml"
@@ -107,4 +107,4 @@
     - name: Write out the manifest file
       copy:
         content: "{{ _manifest_content | to_nice_json }}"
-        dest: "{{ _virt_pools.pools.default.path | default('/data') }}/manifest.json"
+        dest: "{{ _virt_pools.pools.default.path | default('/data/images') }}/manifest.json"
