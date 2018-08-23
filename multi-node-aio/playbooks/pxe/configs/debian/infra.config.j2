@@ -30,7 +30,7 @@ d-i netcfg/wireless_wep string
 
 # Pre Install
 
-# Command Line 1: This is necessary otherwise you will be prompted to umount /dev/vda. See Ubuntu bug #1347726.
+# Command Line 1: This is necessary otherwise you will be prompted to umount /dev/sda. See Ubuntu bug #1347726.
 d-i preseed/early_command string \
       umount /media || true
 
