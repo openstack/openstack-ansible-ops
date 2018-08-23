@@ -25,26 +25,30 @@ function make-base-image {
   scp -o StrictHostKeyChecking=no baremetal-$DISTRO_NAME-$DIB_RELEASE* "${UTILITY01_HOSTNAME}":~/images
   rm baremetal-$DISTRO_NAME-$DIB_RELEASE*  # no reason to keep these around
 
-  VMLINUZ_UUID=$(ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; glance image-create --name baremetal-$DISTRO_NAME-$DIB_RELEASE.vmlinuz \
-                                    --visibility public \
+  VMLINUZ_UUID=$(ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; openstack image create \
+                                    --public \
                                     --disk-format aki \
                                     --property hypervisor_type=baremetal \
-                                    --protected=True \
-                                    --container-format aki < ~/images/baremetal-$DISTRO_NAME-$DIB_RELEASE.vmlinuz" | awk '/\| id/ {print $4}')
-  INITRD_UUID=$(ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; glance image-create --name baremetal-$DISTRO_NAME-$DIB_RELEASE.initrd \
-                                   --visibility public \
+                                    --protected \
+                                    --container-format aki \
+                                    baremetal-$DISTRO_NAME-$DIB_RELEASE.vmlinuz < ~/images/baremetal-$DISTRO_NAME-$DIB_RELEASE.vmlinuz" | awk '/\| id/ {print $4}')
+  INITRD_UUID=$(ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; openstack image create \
+                                   --public \
                                    --disk-format ari \
                                    --property hypervisor_type=baremetal \
-                                   --protected=True \
-                                   --container-format ari < ~/images/baremetal-$DISTRO_NAME-$DIB_RELEASE.initrd" | awk '/\| id/ {print $4}')
-  ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; glance image-create --name baremetal-$DISTRO_NAME-$DIB_RELEASE \
-    --visibility public \
+                                   --protected \
+                                   --container-format ari \
+                                   baremetal-$DISTRO_NAME-$DIB_RELEASE.initrd < ~/images/baremetal-$DISTRO_NAME-$DIB_RELEASE.initrd" | awk '/\| id/ {print $4}')
+  ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; openstack image create \
+    --public \
     --disk-format qcow2 \
     --container-format bare \
     --property hypervisor_type=baremetal \
     --property kernel_id=${VMLINUZ_UUID} \
-    --protected=True \
-    --property ramdisk_id=${INITRD_UUID} < ~/images/baremetal-$DISTRO_NAME-$DIB_RELEASE.qcow2"
+    --protected \
+    --property ramdisk_id=${INITRD_UUID} \
+      baremetal-$DISTRO_NAME-$DIB_RELEASE < ~/images/baremetal-$DISTRO_NAME-$DIB_RELEASE.qcow2"
+
 }
 
 # install needed binaries
@@ -101,7 +105,7 @@ pushd ~/dib
 
   # set up envars for the deploy image ironic agent
   # export DIB_HPSSACLI_URL="http://downloads.hpe.com/pub/softlib2/software1/pubsw-linux/p1857046646/v109216/hpssacli-2.30-6.0.x86_64.rpm"
-  export IRONIC_AGENT_VERSION="stable/ocata"
+  export IRONIC_AGENT_VERSION="stable/rocky"
   # create the deploy image
   disk-image-create --install-type source -o ironic-deploy ironic-agent ubuntu proliant-tools ${DEBUG_USER_ELEMENT:-""}
 
@@ -110,18 +114,21 @@ pushd ~/dib
   scp -o StrictHostKeyChecking=no ironic-deploy* "${UTILITY01_HOSTNAME}":~/images
   rm ironic-deploy*  # no reason to keep these around
 
-  ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; glance image-create --name ironic-deploy.kernel \
-    --visibility public \
+  ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; openstack image create \
+    --public \
     --disk-format aki \
     --property hypervisor_type=baremetal \
-    --protected=True \
-    --container-format aki < ~/images/ironic-deploy.kernel"
-  ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; glance image-create --name ironic-deploy.initramfs \
-    --visibility public \
+    --protected \
+    --container-format aki < ~/images/ironic-deploy.kernel \
+    ironic-deploy.kernel"
+
+  ssh -o StrictHostKeyChecking=no "${UTILITY01_HOSTNAME}" "source ~/openrc; openstack image create \
+    --public \
     --disk-format ari \
     --property hypervisor_type=baremetal \
-    --protected=True \
-    --container-format ari < ~/images/ironic-deploy.initramfs"
+    --protected \
+    --container-format ari < ~/images/ironic-deploy.initramfs \
+     ironic-deploy.initramfs"
 
   # Ubuntu Xenial final image
   make-base-image
