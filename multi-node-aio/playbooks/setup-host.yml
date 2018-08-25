@@ -261,6 +261,35 @@
         - (default_vm_disk_mode == "file" and _virt_pools.pools.default.format is defined) or
           (default_vm_disk_mode == "lvm" and _virt_pools.pools.default.format is not defined)
       block:
+        - name: Stop running VMs
+          virt:
+            name: "{{ item }}"
+            command: destroy
+          failed_when: false
+          with_items: "{{ _virt_pools.pools.default.volumes }}"
+
+        - name: Delete VM LVs
+          lvol:
+            vg: "{{ default_vm_disk_vg }}"
+            lv: "{{ item }}"
+            state: absent
+            force: yes
+          failed_when: false
+          with_items: "{{ _virt_pools.pools.default.volumes }}"
+
+        - name: Delete VM Disk Images
+          file:
+            path: "{{ _virt_pools.pools.default.path | default('/data/images') }}/{{ item }}.img"
+            state: absent
+          with_items: "{{ _virt_pools.pools.default.volumes }}"
+
+        - name: Undefine the VMs
+          virt:
+            name: "{{ item }}"
+            command: undefine
+          failed_when: false
+          with_items: "{{ _virt_pools.pools.default.volumes }}"
+
         - name: Dismount the mount point if default_vm_disk_mode is 'lvm'
           mount:
             path: /data
