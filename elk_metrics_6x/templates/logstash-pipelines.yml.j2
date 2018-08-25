@@ -547,12 +547,6 @@
             add_tag => ["apimetrics"]
           }
         }
-      } else if "swift-container" in [tags] {
-        grok {
-          match => {
-            "message" => "%{CISCOTIMESTAMP}%{SPACE}%{S3_REQUEST_LINE}%{SPACE}%{CISCOTIMESTAMP}%{SPACE}%{HOSTNAME}%{SPACE}%{PROG}%{SPACE}%{USER}%{SPACE}%{USERNAME}%{SPACE}%{NOTSPACE}%{SPACE}%{S3_REQUEST_LINE}%{SPACE}%{HTTPDUSER}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}%{SPACE}%{INT}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}%{SPACE}%{SECOND}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}%{SPACE}%{NOTSPACE}"
-          }
-        }
       } else if "swift-account" in [tags] {
         grok {
           match => {

@@ -38,7 +38,10 @@ path.data: /var/lib/logstash
 #
 # This defaults to the number of the host's CPU cores.
 #
-{% set processors = ((elastic_thread_pool_size | int) > 0) | ternary(elastic_thread_pool_size, 1) %}
+
+{% set _h_processors = ((ansible_processor_count | int) // 2) %}
+{% set _processors = ((_h_processors | int) > 0) | ternary(_h_processors, 1) %}
+{% set processors = ((_processors | int) > 8) | ternary(8, _processors) %}
 pipeline.workers: {{ processors | int }}
 #
 # How many events to retrieve from inputs before sending to filters+workers

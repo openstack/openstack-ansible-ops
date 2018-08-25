@@ -43,7 +43,7 @@ output.logstash:
   # less than or equal to 0 disables the splitting of batches. When splitting
   # is disabled, the queue decides on the number of events to be contained in a
   # batch.
-  bulk_max_size: {{ (elastic_thread_pool_size | int) * 256 }}
+  bulk_max_size: {{ (ansible_processor_count | int) * 256 }}
 
 {% if named_index is defined %}
   # Optional index name. The default index name is set to {{ named_index }}
