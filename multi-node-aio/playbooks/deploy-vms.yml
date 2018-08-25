@@ -315,6 +315,7 @@
         src: /dev/mapper/vmvg00-machines00
         state: mounted
         fstype: btrfs
+        opts: defaults,discard
 
 
 - name: Setup cinder host volume
@@ -381,6 +382,7 @@
         src: "/dev/mapper/vmvg00-{{ item }}"
         fstype: xfs
         state: mounted
+        opts: defaults,discard
       with_items:
         - disk1
         - disk2

@@ -107,6 +107,8 @@ d-i partman-auto/expert_recipe string \
                       use_filesystem{ } filesystem{ ext2 }    \
                       label{ boot }                           \
                       mountpoint{ /boot }                     \
+                      options/defaults{ defaults }            \
+                      options/discard{ discard }              \
               .                                               \
               1024 1 100% ext4                                \
                       $primary{ }                             \
@@ -126,6 +128,8 @@ d-i partman-auto/expert_recipe string \
                       use_filesystem{ } filesystem{ ext4 }    \
                       label{ root }                           \
                       mountpoint{ / }                         \
+                      options/defaults{ defaults }            \
+                      options/discard{ discard }              \
               .                                               \
               16384 1 16384 ext4                              \
                       $lvmok{ } in_vg{ vmvg00 }               \
@@ -134,6 +138,8 @@ d-i partman-auto/expert_recipe string \
                       use_filesystem{ } filesystem{ ext4 }    \
                       label{ openstack }                      \
                       mountpoint{ /openstack }                \
+                      options/defaults{ defaults }            \
+                      options/discard{ discard }              \
               .                                               \
 {% if default_container_tech == 'nspawn' %}
               8192 1 24576 btrfs                              \
@@ -143,6 +149,8 @@ d-i partman-auto/expert_recipe string \
                       use_filesystem{ } filesystem{ btrfs }   \
                       label{ machines }                       \
                       mountpoint{ /var/lib/machines }         \
+                      options/defaults{ defaults }            \
+                      options/discard{ discard }              \
               .                                               \
 {% elif default_container_tech == 'lxc' %}
               4096 1 8192 btrfs                               \
@@ -152,6 +160,8 @@ d-i partman-auto/expert_recipe string \
                       use_filesystem{ } filesystem{ btrfs }   \
                       label{ machines }                       \
                       mountpoint{ /var/lib/machines }         \
+                      options/defaults{ defaults }            \
+                      options/discard{ discard }              \
               .                                               \
               8192 1 10240000 ext4                            \
                       $lvmok{ } in_vg{ vmvg00 }               \
@@ -160,6 +170,8 @@ d-i partman-auto/expert_recipe string \
                       use_filesystem{ } filesystem{ ext4 }    \
                       label{ lxc }                            \
                       mountpoint{ /var/lib/lxc }              \
+                      options/defaults{ defaults }            \
+                      options/discard{ discard }              \
               .                                               \
 {% endif %}
 

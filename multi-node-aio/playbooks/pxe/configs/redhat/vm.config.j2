@@ -18,14 +18,14 @@ clearpart --all --initlabel
 part /boot --fstype ext3 --size=512
 part pv.01 --size=1 --grow
 volgroup vmvg00 pv.01
-logvol / --fstype ext4 --name=root00 --vgname=vmvg00 --size=8192
+logvol / --fstype ext4 --name=root00 --vgname=vmvg00 --size=8192 --fsoptions=defaults,discard
 logvol swap --fstype swap --name=swap00 --vgname=vmvg00 --size=2048
-logvol /openstack --fstype ext4 --name=openstack00 --vgname=vmvg00 --size=16384
+logvol /openstack --fstype ext4 --name=openstack00 --vgname=vmvg00 --size=16384 --fsoptions=defaults,discard
 {% if default_container_tech == 'nspawn' %}
-logvol /var/lib/machines --fstype ext4 --name=machines00 --vgname=vmvg00 --size=8192 --grow
+logvol /var/lib/machines --fstype ext4 --name=machines00 --vgname=vmvg00 --size=8192 --grow --fsoptions=defaults,discard
 {% elif default_container_tech == 'lxc' %}
-logvol /var/lib/machines --fstype ext4 --name=machines00 --vgname=vmvg00 --size=4096
-logvol /var/lib/lxc --fstype ext4 --name=lxc00 --vgname=vmvg00 --size=8192 --grow
+logvol /var/lib/machines --fstype ext4 --name=machines00 --vgname=vmvg00 --size=4096 --fsoptions=defaults,discard
+logvol /var/lib/lxc --fstype ext4 --name=lxc00 --vgname=vmvg00 --size=8192 --grow --fsoptions=defaults,discard
 {% endif %}
 rootpw secrete
 repo --name=base --baseurl={{ images[default_vm_image]['image_repo_base_url'] }}/os/x86_64/
@@ -67,7 +67,7 @@ modprobe btrfs
 umount /dev/vmvg00/machines00
 btrfs-convert /dev/vmvg00/machines00
 sed -i '/vmvg00-machines00/d' /etc/fstab
-echo "/dev/mapper/vmvg00-machines00 /var/lib/machines       btrfs    defaults        1 2" >> /etc/fstab
+echo "/dev/mapper/vmvg00-machines00 /var/lib/machines       btrfs    defaults,discard        1 2" >> /etc/fstab
 
 wget --no-proxy http://{{ tftp_server }}/scripts/vm-post-install-redhat-script.sh -O /opt/vm-post-install-script.sh
 chmod +x /opt/vm-post-install-script.sh
