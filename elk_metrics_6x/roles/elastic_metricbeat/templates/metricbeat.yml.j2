@@ -335,7 +335,7 @@ metricbeat.modules:
   metricsets: ["dommemstat"]
   enabled: true
   period: 10s
-  hosts: ["localhost"]
+  hosts: ["unix:///var/run/libvirt/libvirt-sock"]
 
   # Timeout to connect to Libvirt server
   #timeout: 1s
