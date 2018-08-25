@@ -45,7 +45,7 @@ xpack.monitoring.elasticsearch:
 
   # The maximum number of events to bulk in a single Elasticsearch bulk API index request.
   # The default is 50.
-  bulk_max_size: {{ (elastic_thread_pool_size | int) * 64 }}
+  bulk_max_size: {{ (ansible_processor_count | int) * 64 }}
 
   # Configure http request timeout before failing an request to Elasticsearch.
   timeout: 120

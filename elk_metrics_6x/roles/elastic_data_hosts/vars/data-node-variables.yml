@@ -96,7 +96,10 @@ logstash_data_node_details: >-
 # based on the assignment of roles to hosts, set per host booleans
 master_node: "{{ (inventory_hostname in master_nodes) | ternary(true, false) }}"
 data_node: "{{ (inventory_hostname in data_nodes) | ternary(true, false) }}"
-elastic_thread_pool_size: "{{ ((ansible_processor_cores | int) >= 24) | ternary(24, ansible_processor_cores) }}"
+
+elastic_processors_floor: "{{ ((ansible_processor_count | int) - 1) }}"
+elastic_processors_floor_set: "{{ ((elastic_processors_floor | int) > 0) | ternary(elastic_processors_floor, 1) }}"
+elastic_thread_pool_size: "{{ ((ansible_processor_count | int) >= 24) | ternary(23, elastic_processors_floor_set) }}"
 
 # Set a data node facts. The data nodes, in the case of elasticsearch are also
 # ingest nodes.

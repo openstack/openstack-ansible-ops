@@ -19,4 +19,9 @@ elasticsearch_node_data: false
 elasticsearch_node_ingest: false
 elastic_coordination_node: true
 elastic_heap_size: "{{ (elastic_heap_size_default | int) // 3 }}"
-elastic_thread_pool_size: "{{ ((ansible_processor_cores | int) > 4) | ternary(4, (ansible_processor_cores // 2)) }}"
+
+# This variable is redefined because kibana runs elasticsearch but only in a
+# load balancer capacity.
+elastic_processors_half: "{{ ((ansible_processor_count | int) // 2) }}"
+elastic_processors_half_set: "{{ ((elastic_processors_half | int) > 0) | ternary(elastic_processors_half, 1) }}"
+elastic_thread_pool_size: "{{ ((elastic_processors_half_set | int) > 4) | ternary(4, elastic_processors_half_set) }}"
