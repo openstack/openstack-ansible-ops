@@ -30,7 +30,7 @@ d-i netcfg/wireless_wep string
 
 # Pre Install
 
-# Command Line 1: This is necessary otherwise you will be prompted to umount /dev/vda. See Ubuntu bug #1347726.
+# Command Line 1: This is necessary otherwise you will be prompted to umount /dev/sda. See Ubuntu bug #1347726.
 d-i preseed/early_command string \
       umount /media || true
 
@@ -90,7 +90,7 @@ d-i partman-lvm/confirm boolean true
 d-i partman-lvm/confirm_nooverwrite boolean true
 
 d-i partman-auto/method string lvm
-d-i partman-auto/disk string /dev/vda
+d-i partman-auto/disk string /dev/sda
 
 # For LVM partitioning, you can select how much of the volume group to use
 # for logical volumes.
@@ -111,7 +111,7 @@ d-i partman-auto/expert_recipe string \
               1024 1 100% ext4                                \
                       $primary{ }                             \
                       method{ lvm }                           \
-                      device{ /dev/vda2 }                     \
+                      device{ /dev/sda2 }                     \
                       vg_name{ vmvg00 }                       \
               .                                               \
               2048 1 4096 linux-swap                          \
