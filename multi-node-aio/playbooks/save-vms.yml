@@ -46,13 +46,14 @@
         - hostvars[item]['server_vm'] | default(false) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
-    - name: Save VM Disk Image
+    - name: Commit, compress and save VM Disk Image and prepare new copy-on-write image
       shell: |
         if [[ -e {{ hostvars[item]['server_hostname'] }}.img ]]; then
           if [[ -e {{ hostvars[item]['server_hostname'] }}-base.img ]]; then
             qemu-img commit {{ hostvars[item]['server_hostname'] }}.img
           else
-            mv {{ hostvars[item]['server_hostname'] }}.img {{ hostvars[item]['server_hostname'] }}-base.img
+            qemu-img convert -O qcow2 -c {{ hostvars[item]['server_hostname'] }}.img {{ hostvars[item]['server_hostname'] }}-base.img
+            qemu-img create -f qcow2 -b {{ hostvars[item]['server_hostname'] }}-base.img {{ hostvars[item]['server_hostname'] }}.img
           fi
           exit 2
         fi
