@@ -30,7 +30,7 @@ default_proxy_url: 'http://10.0.2.1:3142/'
 
 default_container_tech: "{{ container_tech | default('lxc') }}"
 
-ipxe_kernel_url: "http://boot.ipxe.org/ipxe.lkrn"
+ipxe_kernel_base_url: "http://boot.ipxe.org"
 
 # The timeout for the SSH check to the vm_servers
 vm_ssh_timeout: 1500

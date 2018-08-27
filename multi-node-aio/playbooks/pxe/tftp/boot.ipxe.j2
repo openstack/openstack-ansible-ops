@@ -6,8 +6,8 @@ set space:hex 20:20
 set space ${space:string}
 set timeout 10
 
-{% if ipxe_kernel_url is defined and ipxe_kernel_url|length > 0%}
-iseq ${version} {{ ipxe_ubuntu_version }} && chain --autofree {{ ipxe_kernel_url }} ||
+{% if ipxe_kernel_base_url is defined and ipxe_kernel_base_url|length > 0%}
+iseq ${version} {{ ipxe_ubuntu_version }} && chain --autofree {{ ipxe_kernel_base_url }}/ipxe.lkrn ||
 {% else %}
 iseq ${version} {{ ipxe_ubuntu_version }} && chain --autofree ipxe.lkrn ||
 {% endif %}

@@ -175,8 +175,8 @@ Instruct the system to use a set amount of ram for the logging VM type:
 Instruct the system to use a set amount of ram for the swift VM type:
   ``SWIFT_VM_SERVER_RAM=${SWIFT_VM_SERVER_RAM:-1024}``
 
-Instruct the system to use a customized iPXE kernel:
-  ``IPXE_KERNEL_URL=${IPXE_KERNEL_URL:-'http://boot.ipxe.org/ipxe.lkrn'}``
+Instruct the system where to obtain iPXE kernels (looks for ipxe.lkrn, ipxe.efi, etc):
+  ``IPXE_KERNEL_BASE_URL=${IPXE_KERNEL_BASE_URL:-'http://boot.ipxe.org'}``
 
 Instruct the system to use a customized iPXE script during boot of VMs:
   ``IPXE_PATH_URL=${IPXE_PATH_URL:-''}``
