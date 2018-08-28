@@ -20,6 +20,8 @@
   vars_files:
     - vars/variables.yml
 
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
   roles:
     - role: elastic_apm_server
     - role: elastic_rollup
