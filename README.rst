@@ -19,20 +19,6 @@ only tested by hand by the contributors and consumers. Anyone using the
 tooling is advised to very clearly understand what it is doing before using
 it on a production environment.
 
-Galaxy roles
-~~~~~~~~~~~~
-
-`OpenStack Ansible backup <https://galaxy.ansible.com/winggundamth/openstack-ansible-backup/>`_
------------------------------------------------------------------------------------------------
-
- This role will perform backups for OpenStack-Ansible deployments and it needs
- to run on the deploy node. It will backup data on container and then
- synchronize backup files to the deploy node.
-
-==============================
-Ops role for OpenStack-Ansible
-==============================
-
 Documentation for the project can be found at:
   https://docs.openstack.org/openstack-ansible-ops/latest/
 
@@ -44,3 +30,13 @@ The project source code repository is located at:
 
 The project home is at:
   https://launchpad.net/openstack-ansible
+
+Galaxy roles
+~~~~~~~~~~~~
+
+`OpenStack Ansible backup <https://galaxy.ansible.com/winggundamth/openstack-ansible-backup/>`_
+-----------------------------------------------------------------------------------------------
+
+ This role will perform backups for OpenStack-Ansible deployments and it needs
+ to run on the deploy node. It will backup data on container and then
+ synchronize backup files to the deploy node.
