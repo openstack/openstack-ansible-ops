@@ -48,10 +48,9 @@ metricbeat.max_start_delay: 10s
 
 {% set metric_sets = ['network', 'process', 'process_summary', 'uptime'] %}
 {% if physical_host is defined and physical_host != inventory_hostname %}
-{%   set host_mount_uuids = (hostvars[physical_host]['ansible_mounts'] | map(attribute='uuid') | list) %}
-{%   set container_mount_uuids = (ansible_mounts | map(attribute='uuid') | list | difference(['N/A']) ) %}
-{%   set container_mount_fs_types = (ansible_mounts | map(attribute='fstype') | list) %}
-{%   if (((container_mount_uuids | difference(host_mount_uuids)) | length) > 0) or 'nfs4' in container_mount_fs_types %}
+{%   set host_mount_devices = (hostvars[physical_host]['ansible_mounts'] | map(attribute='device') | list) %}
+{%   set container_mount_devices = (ansible_mounts | map(attribute='device') | list) %}
+{%   if (((container_mount_devices | difference(host_mount_devices)) | length) > 0) | bool %}
 {%     set _ = metric_sets.extend(['filesystem', 'fsstat']) %}
 {%   endif %}
 {% else %}
