@@ -35,6 +35,9 @@ ipxe_kernel_base_url: "http://boot.ipxe.org"
 # The timeout for the SSH check to the vm_servers
 vm_ssh_timeout: 1500
 
+# Whether to use snapshots (if they are available) for file-backed VM's
+vm_use_snapshot: "{{ default_vm_disk_mode == 'file' }}"
+
 # IP address, or domain name of the TFTP server
 tftp_server: "{{ hostvars[groups['pxe_hosts'][0]]['ansible_host'] | default(ansible_host) }}"
 # tftp_ssh_key: ''  # user defined ssh key, used to access the host
