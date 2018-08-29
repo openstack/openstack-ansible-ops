@@ -118,6 +118,22 @@
             - hostvars[item]['server_vm'] | default(false) | bool
           with_items: "{{ groups['pxe_servers'] }}"
 
+        # Note (odyssey4me):
+        # This will only work on a host which has
+        # libguestfs >= 1.35.2 and >= 1.34.1
+        # Ubuntu bionic works, but xenial does not (even with UCA).
+        # ref: https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1615337.
+        - name: Inject the host ssh key into the VM disk image
+          command: >-
+            virt-sysprep
+            --enable customize
+            --ssh-inject root:file:/root/.ssh/id_rsa.pub
+            --add {{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}.img
+          when:
+            - vm_use_snapshot | bool
+            - hostvars[item]['server_vm'] | default(false) | bool
+          with_items: "{{ groups['pxe_servers'] }}"
+
     - name: Wait for guest capabilities to appear
       command: "virsh capabilities"
       register: virsh_caps
