@@ -249,7 +249,7 @@ filebeat.modules:
 #------------------------------- Osquery Module ------------------------------
 - module: osquery
   result:
-  enabled: {{ osquery_enabled | bool }}
+    enabled: {{ osquery_enabled | bool }}
 
     # Set custom paths for the log files. If left empty,
     # Filebeat will choose the paths depending on your OS.
@@ -258,8 +258,7 @@ filebeat.modules:
     # If true, all fields created by this module are prefixed with
     # `osquery.result`. Set to false to copy the fields in the root
     # of the document. The default is true.
-    # NOTE(cloudull): This option is commented out because it is broken
-    #var.use_namespace: true
+    var.use_namespace: true
 
 #----------------------------- PostgreSQL Module -----------------------------
 #- module: postgresql

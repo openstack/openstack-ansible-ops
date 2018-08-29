@@ -157,33 +157,45 @@
     uwsgi_sockets: "{{ uwsgi_find_sockets }}"
 
 # Apache 2 stats enablement
-- name: Drop apache2 stats site config
-  template:
-    src: apache-status.conf.j2
-    dest: /etc/apache2/sites-available/apache-status.conf
-  when: apache_enabled
+- name: Enable apache2
+  block:
+    - name: Drop apache2 stats site config
+      template:
+        src: apache-status.conf.j2
+        dest: /etc/apache2/sites-available/apache-status.conf
 
-- name: Enable apache2 stats site
-  file:
-    src: /etc/apache2/sites-available/apache-status.conf
-    dest: /etc/apache2/sites-enabled/apache-status.conf
-    state: link
-  when: apache_enabled
+    - name: Enable apache2 stats site
+      file:
+        src: /etc/apache2/sites-available/apache-status.conf
+        dest: /etc/apache2/sites-enabled/apache-status.conf
+        state: link
 
-- name: Ensure apache2 stats mode is enabled
-  apache2_module:
-    name: status
-    state: present
-  register: apache_status_mod
-  when: apache_enabled
+    - name: Ensure apache2 stats mode is enabled
+      apache2_module:
+        name: status
+        state: present
+      register: apache_status_mod
 
-- name: Reload apache2
-  service:
-    name: apache2
-    state: reloaded
+    - name: Reload apache2
+      service:
+        name: apache2
+        state: reloaded
+      when:
+        - apache_status_mod is changed
+  rescue:
+    - name: Apache2 monitoring not enabled
+      debug:
+        msg: >-
+          The apache2 module was not enabled because of an error within the
+          enablement process. Check the host to ensure apache2 is really
+          available and resolve the noted errors before continuing.
+
+    - name: Disable apache2 check
+      set_fact:
+        apache_enabled: false
   when:
-    - apache_enabled
-    - apache_status_mod is changed
+    - apache_enabled | bool
+
 
 # NGINX stats enablement
 - name: Drop nginx stats site config

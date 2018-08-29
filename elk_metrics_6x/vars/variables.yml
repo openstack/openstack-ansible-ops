@@ -5,6 +5,9 @@ q_mem: "{{ (ansible_memtotal_mb | int) // 3 }}"
 # Option to define half memory
 h_mem: "{{ (ansible_memtotal_mb | int) // 2 }}"
 
+# Option to set persistent queue storage in gigabytes
+q_storage: "{{ (ansible_processor_count | int) * (ansible_processor_threads_per_core | int) * 2 }}"
+
 apm_port: 8200
 elastic_port: 9200
 elastic_hap_port: 9201

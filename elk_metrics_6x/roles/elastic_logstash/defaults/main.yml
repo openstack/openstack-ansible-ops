@@ -17,7 +17,7 @@ temp_dir: /var/lib/logstash/tmp
 logstash_pipelines: "{{lookup('template', 'logstash-pipelines.yml.j2') }}"
 
 # Set processor cores fact
-q_storage: "{{ (ansible_processor_count | int) * (ansible_processor_threads_per_core | int) * 2 }}"
+q_storage: 1
 
 # Set logstash facts
 logstash_queue_size: "{{ ((((q_storage | int) >= 2) | ternary(q_storage, 2) | int) * 1024) // ((logstash_pipelines | from_yaml) | length) }}"
