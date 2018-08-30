@@ -24,6 +24,14 @@ iface br-{{ key }} inet {{ value.inet_type }}
     # Delete veth pair on DOWN
     post-down ip link del br-vlan-veth || true
     bridge_ports {{ value.iface }} br-veth-{{ key }}
+{%   elif value.iface is defined and key == "lbaas" %}
+    pre-up ip link add lb-veth-inbr type veth peer name lb-veth-ovrd || true
+    # Set both ends UP
+    pre-up ip link set lb-veth-inbr up
+    pre-up ip link set lb-veth-ovrd up
+    # Delete veth pair on DOWN
+    post-down ip link del br-vlan-veth || true
+    bridge_ports {{ value.iface }} lb-veth-inbr
 {%   elif value.iface is defined %}
     bridge_ports {{ value.iface | default('none') }}
 {%   else %}
