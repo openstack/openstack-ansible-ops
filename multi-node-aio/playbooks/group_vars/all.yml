@@ -14,6 +14,7 @@
 default_interface: "{{ default_network | default('eth0') }}"
 default_vm_image: "{{ default_image | default('ubuntu-16.04-amd64') }}"
 default_vm_storage: "{{ vm_disk_size | default(92160) }}"
+default_vm_root_disk_size: 8192
 default_vm_disk_mode: lvm
 default_vm_disk_vg: vg01
 default_acng_bind_address: 0.0.0.0
