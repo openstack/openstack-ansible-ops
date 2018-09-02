@@ -47,6 +47,9 @@ bootstrap.memory_lock: false
 #
 # Set the bind address to a specific IP (IPv4 or IPv6):
 network.host: ["127.0.0.1", "{{ ansible_host }}", "{{ ansible_hostname }}"]
+{% if elasticsearch_publish_host is defined %}
+network.publish_host: "{{ elasticsearch_publish_host }}"
+{% endif %}
 # Set a custom port for HTTP:
 
 http.port: {{ elastic_port }}
