@@ -34,6 +34,7 @@ mnaio_host_distro_packages:
   - bridge-utils
   - ifenslave
   - iptables-persistent
+  - libguestfs-tools
   - libvirt-bin
   - lvm2
   - ntp
