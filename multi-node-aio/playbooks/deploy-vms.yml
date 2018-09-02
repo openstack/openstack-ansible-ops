@@ -93,11 +93,9 @@
             patterns: '*-base.img'
           register: _base_images
 
-        - name: Set vm_use_snapshot if it's not defined
+        - name: Enable/disable vm_use_snapshot based on whether there are base image files
           set_fact:
             vm_use_snapshot: "{{ _base_images['matched'] > 0 }}"
-          when:
-            - vm_use_snapshot is not defined
 
         - name: Clean up base image files if they are not being used
           file:
@@ -132,7 +130,7 @@
         name: "{{ hostvars[item]['server_hostname'] }}"
         command: define
         xml: >-
-          {%- if (vm_use_snapshot | default(False)) | bool %}
+          {%- if vm_use_snapshot | bool %}
           {{ lookup('file', _virt_pools.pools.default.path | default('/data/images') ~ '/' ~ hostvars[item]['server_hostname'] ~ '.xml') }}
           {%- else %}
           {{ lookup('template', 'kvm/kvm-vm.xml.j2') }}
