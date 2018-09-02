@@ -81,6 +81,24 @@
       retries: 3
       delay: 15
 
+    - name: Get version of libguestfs
+      shell: >-
+        guestfish --version | awk '{print $2}'
+      changed_when: false
+      register: _libguestfs_version
+
+    # See:
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1591617
+    # https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1615337
+    - name: Apply workaround for older versions to make guestfish work
+      shell: >-
+        echo dash > /usr/lib/x86_64-linux-gnu/guestfs/supermin.d/zz-dash-packages
+        rm -rf /var/tmp/.guestfs
+      when:
+        - "{{ (_libguestfs_version.stdout is version('1.38.1', '<')) or
+              ((_libguestfs_version.stdout is version('1.39.0', '>=')) and
+               (_libguestfs_version.stdout is version('1.39.1', '<'))) }}"
+
     - name: Ensure root has a .ssh directory
       file:
         path: /root/.ssh
