@@ -1,3 +1,4 @@
+{% import 'templates/_macros.j2' as elk_macros %}
 ######################## APM Server Configuration #############################
 
 ############################# APM Server ######################################
@@ -101,7 +102,7 @@ apm-server:
 # Configure what output to use when sending the data collected by the beat.
 
 #----------------------------- Logstash output ---------------------------------
-{% include 'templates/_include_elasticsearch_output.yml.j2' %}
+{{ elk_macros.output_elasticsearch(inventory_hostname, elasticsearch_data_hosts) }}
 
 #================================= Paths ======================================
 
@@ -130,19 +131,13 @@ apm-server:
 #path.logs: ${path.home}/logs
 
 #============================== Dashboards =====================================
-{% with beat_name="apm" %}
-{%   include 'templates/_include_setup_dashboards.yml.j2' %}
-{% endwith %}
+{{ elk_macros.setup_dashboards('apm') }}
 
 #=============================== Template ======================================
-{% with beat_name="apm" %}
-{%   include 'templates/_include_setup_template.yml.j2' %}
-{% endwith %}
+{{ elk_macros.setup_template('apm', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
 
 #============================== Kibana =====================================
-{% include 'templates/_include_kibana_setup.yml.j2' %}
+{{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] + ':' + kibana_port|string) }}
 
 #================================ Logging ======================================
-{% with beat_name="apm-server" %}
-{%   include 'templates/_include_beat_logging.yml.j2' %}
-{% endwith %}
+{{ elk_macros.beat_logging('apm-server') }}

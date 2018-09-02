@@ -1,3 +1,4 @@
+{% import 'templates/_macros.j2' as elk_macros %}
 ###################### Packetbeat Configuration Example #######################
 
 # This file is a full configuration example documenting all non-deprecated
@@ -746,7 +747,7 @@ packetbeat.protocols:
 
 
 #----------------------------- Logstash output ---------------------------------
-{% include 'templates/_include_log_stash_output.yml.j2' %}
+{{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_processor_count) }}
 
 #------------------------------- Kafka output ----------------------------------
 #output.kafka:
@@ -1047,25 +1048,19 @@ packetbeat.protocols:
 #path.logs: ${path.home}/logs
 
 #============================== Dashboards =====================================
-{% with beat_name="packetbeat" %}
-{%   include 'templates/_include_setup_dashboards.yml.j2' %}
-{% endwith %}
+{{ elk_macros.setup_dashboards('packetbeat') }}
 
 #=============================== Template ======================================
-{% with beat_name="packetbeat" %}
-{%   include 'templates/_include_setup_template.yml.j2' %}
-{% endwith %}
+{{ elk_macros.setup_template('packetbeat', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
 
 #================================ Kibana =======================================
-{% include 'templates/_include_kibana_setup.yml.j2' %}
+{{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] + ':' + kibana_port|string) }}
 
 #================================ Logging ======================================
-{% with beat_name="packetbeat" %}
-{%   include 'templates/_include_beat_logging.yml.j2' %}
-{% endwith %}
+{{ elk_macros.beat_logging('packetbeat') }}
 
 #============================== Xpack Monitoring ===============================
-{% include 'templates/_include_xpack_elasticsearch_output.yml.j2' %}
+{{ elk_macros.xpack_monitoring_elasticsearch(inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
 
 #================================ HTTP Endpoint ================================
 # Each beat can expose internal metrics through a HTTP endpoint. For security
