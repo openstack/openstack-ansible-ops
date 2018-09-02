@@ -288,53 +288,41 @@
 
 - name: Make space for swift and cinder volumes
   hosts: cinder_hosts:swift_hosts
-  gather_facts: false
+  gather_facts: "{{ gather_facts | default(true) }}"
   environment: "{{ deployment_environment_variables | default({}) }}"
   tags:
     - deploy-vms
   tasks:
-    - name: Unmount lxc and machines mounts
+    - name: Unmount unnecessary mounts
       mount:
         name: "{{ item }}"
-        state: unmounted
+        state: absent
       with_items:
         - "/var/lib/lxc"
         - "/var/lib/machines"
+      register: _remove_mounts
 
-    - name: Remove lxc mount directory
-      mount:
-        name: "/var/lib/lxc"
-        state: absent
-
-    - name: Shrink machines00 logical volume
+    - name: Remove unnecessary logical volumes
       lvol:
         vg: vmvg00
-        lv: machines00
-        size: 8192
-        shrink: yes
-        force: yes
-      when:
-        - default_container_tech | default('lxc') == 'nspawn'
-
-    - name: Remove lxc00 logical volume
-      lvol:
-        vg: vmvg00
-        lv: lxc00
+        lv: "{{ item }}"
         force: true
         state: absent
+      with_items:
+        - "lxc00"
+        - "machines00"
+      register: _remove_lvs
 
-    - name: Re-mount machines00 logical volume
-      mount:
-        path: /var/lib/machines
-        src: /dev/mapper/vmvg00-machines00
-        state: mounted
-        fstype: btrfs
-        opts: defaults,discard
+    - name: Reload systemd to remove generated unit files for mount
+      systemd:
+        daemon_reload: yes
+      when:
+        - (_remove_mounts is changed) or (_remove_lvs is changed)
 
 
 - name: Setup cinder host volume
   hosts: cinder_hosts
-  gather_facts: false
+  gather_facts: "{{ gather_facts | default(true) }}"
   environment: "{{ deployment_environment_variables | default({}) }}"
   tags:
     - deploy-vms
@@ -354,12 +342,12 @@
 
 - name: Setup swift host volume
   hosts: swift_hosts
-  gather_facts: false
+  gather_facts: "{{ gather_facts | default(true) }}"
   environment: "{{ deployment_environment_variables | default({}) }}"
   tags:
     - deploy-vms
   tasks:
-    - name: Remove deleteme lv
+    - name: Create swift disk LV's
       lvol:
         vg: vmvg00
         lv: "{{ item }}"
@@ -373,18 +361,6 @@
       filesystem:
         fstype: xfs
         dev: "/dev/vmvg00/{{ item }}"
-      with_items:
-        - disk1
-        - disk2
-        - disk3
-
-    - name: Create drive directories
-      file:
-        path: "/srv/{{ item }}"
-        state: directory
-        owner: "root"
-        group: "root"
-        mode: "0755"
       with_items:
         - disk1
         - disk2
