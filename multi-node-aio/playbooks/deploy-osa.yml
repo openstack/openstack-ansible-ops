@@ -41,24 +41,29 @@
       when:
         - pre_config_osa | default(true) | bool
 
-    - name: Create base directories
+    - name: Create OSA configuration directory
       file:
-        path: "{{ item }}"
+        path: "/etc/openstack_deploy"
         state: directory
         owner: "root"
         group: "root"
         mode: "0755"
-      with_items:
-        - /etc/openstack_deploy
-        - /etc/openstack_deploy/conf.d
-        - /etc/openstack_deploy/env.d
       when:
         - pre_config_osa | default(true) | bool
 
-    - name: Create Basic configs
-      shell: cp -R etc/openstack_deploy/* /etc/openstack_deploy
+    - name: Copy default config files and directories
+      shell: >-
+        rsync
+        -av
+        --include='*.yml'
+        --include='*/'
+        --exclude='*'
+        /opt/openstack-ansible/etc/openstack_deploy/
+        /etc/openstack_deploy/
       args:
+        executable: /bin/bash
         chdir: /opt/openstack-ansible
+        warn: no
       when:
         - pre_config_osa | default(true) | bool
 
