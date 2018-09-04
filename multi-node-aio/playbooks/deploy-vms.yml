@@ -339,7 +339,8 @@
       systemd:
         daemon_reload: yes
       when:
-        - (_remove_mounts is changed) or (_remove_lvs is changed)
+        - "ansible_service_mgr == 'systemd'"
+        - "(_remove_mounts is changed) or (_remove_lvs is changed)"
 
 
 - name: Setup cinder host volume
