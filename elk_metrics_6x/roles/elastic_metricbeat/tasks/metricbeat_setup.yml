@@ -24,6 +24,8 @@
     - "--template"
     - "--dashboards"
   register: templates
+  environment:
+    no_proxy: "{{ hostvars[groups['kibana'][0]]['ansible_host'] }}"
   until: templates is success
   retries: 5
   delay: 5
