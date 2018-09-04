@@ -1,5 +1,8 @@
 #!/bin/bash -ex
 
+# clean up from any previous attempts
+rm -rf /tmp/*galera* /tmp/gvw*
+
 # provide default images to inspect
 infra_images="/data/images/infra1.img /data/images/infra2.img /data/images/infra3.img"
 
@@ -12,7 +15,7 @@ declare -A uuid_map
 # at this stage, no galera container is the master
 master_cnt=""
 
-# get the list of galera container names
+echo "Getting the list of galera container names."
 for img in ${infra_images}; do
   image_map[${img}]="$(virt-ls --add ${img} --mount /dev/vmvg00/openstack00 / | grep galera_container)"
 done
@@ -22,6 +25,7 @@ done
 # as the container
 for img in ${infra_images}; do
   mkdir -p /tmp/${image_map[$img]}
+  echo "Copying *.dat from ${img} into /tmp/${image_map[$img]}/"
   guestfish --ro --add ${img} --mount /dev/vmvg00/openstack00 glob copy-out /${image_map[$img]}/*.dat /tmp/${image_map[$img]}/
 done
 
@@ -31,9 +35,11 @@ done
 for cnt in $(ls -1 /tmp | grep galera_container); do
   gvwstate_path="/tmp/${cnt}/gvwstate.dat"
   if [[ -e ${gvwstate_path} ]]; then
+    echo "Found ${gvwstate_path}, extracting my_uuid/view_id."
     my_uuid=$(awk '/^my_uuid:/ { print $2 }' ${gvwstate_path})
     view_id=$(awk '/^view_id:/ { print $3 }' ${gvwstate_path})
     if [[ "${my_uuid}" == "${view_id}" ]]; then
+      echo "Found galera master in ${gvwstate_path}."
       master_gvwstate_path=${gvwstate_path}
       master_cnt=${cnt}
     fi
@@ -45,26 +51,29 @@ for cnt in $(ls -1 /tmp | grep galera_container); do
   fi
 done
 
-# prepare a new master in a temporary location
+echo "Prepare a new master gvwstate.dat in a temporary location."
 tmp_gvwstate="/tmp/gvwstate.dat"
 cp ${master_gvwstate_path} ${tmp_gvwstate}
 member_num=$(awk '/^member: '${my_uuid}'/ {print $3}' ${tmp_gvwstate})
 
-# clear the existing members
+echo "Clearing the existing members."
 sed -i.bak '/^member:/d' ${tmp_gvwstate}
 
-# insert the new set of members
+echo "Inserting the new set of members."
 for cnt_uuid in "${uuid_map[@]}"; do
 sed -i.bak "/^#vwend$/i \\
 member: ${cnt_uuid} ${member_num}" ${tmp_gvwstate}
 done
 
-# copy the new version to each location
+echo "Copying the new gvwstate.dat version to each working location."
 for cnt in "${!uuid_map[@]}"; do
   sed "s/my_uuid: .*/my_uuid: ${uuid_map[$cnt]}/" ${tmp_gvwstate} > /tmp/${cnt}/gvwstate.dat
 done
 
-# put the gvwstate.dat files back into the image
+echo "Putting the gvwstate.dat files back into the images."
 for img in ${infra_images}; do
+  echo "Copying /tmp/${image_map[$img]}/gvwstate.dat into ${img}."
   guestfish --rw --add ${img} --mount /dev/vmvg00/openstack00 copy-in /tmp/${image_map[$img]}/gvwstate.dat  /${image_map[$img]}/
 done
+
+echo "Image preparation completed."

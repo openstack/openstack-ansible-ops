@@ -138,8 +138,23 @@
             - hostvars[item]['server_vm'] | default(false) | bool
           with_items: "{{ groups['pxe_servers'] }}"
 
+        - name: Copy over prepare-image-galera.sh
+          copy:
+            src: kvm/prepare-image-galera.sh
+            dest: /opt/prepare-image-galera.sh
+            mode: "0755"
+
         - name: Prepare the galera containers for startup
-          script: kvm/prepare-image-galera.sh
+          command: /opt/prepare-image-galera.sh
+          register: _galera_prepare
+
+        # guestfissh does not always give a return code which indicates
+        # failure, so we look for our final stdout output as an indicator
+        - name: Fail if the preparation script did not complete
+          fail:
+            msg: "The galera container preparation failed."
+          when:
+            - "'Image preparation completed.' not in _galera_prepare.stdout_lines"
 
     - name: Wait for guest capabilities to appear
       command: "virsh capabilities"
