@@ -91,9 +91,9 @@
     # https://bugzilla.redhat.com/show_bug.cgi?id=1591617
     # https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1615337
     - name: Apply workaround for older versions to make guestfish work
-      shell: >-
+      shell: |
         echo dash > /usr/lib/x86_64-linux-gnu/guestfs/supermin.d/zz-dash-packages
-        rm -rf /var/tmp/.guestfs
+        rm -rf /var/tmp/.guestfs*
       when:
         - "{{ (_libguestfs_version.stdout is version('1.38.1', '<')) or
               ((_libguestfs_version.stdout is version('1.39.0', '>=')) and
