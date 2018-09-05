@@ -342,6 +342,9 @@
         - "ansible_service_mgr == 'systemd'"
         - "(_remove_mounts is changed) or (_remove_lvs is changed)"
 
+    - name: Set fact to indicate that the volumes changed (later used to force formatting)
+      set_fact:
+        _force_format_disks: "{{ (_remove_mounts is changed) or (_remove_lvs is changed) }}"
 
 - name: Setup cinder host volume
   hosts: cinder_hosts
@@ -384,6 +387,7 @@
       filesystem:
         fstype: xfs
         dev: "/dev/vmvg00/{{ item }}"
+        force: "{{ _force_format_disks | default(False) }}"
       with_items:
         - disk1
         - disk2
