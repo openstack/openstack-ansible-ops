@@ -28,7 +28,6 @@
         --check-integrity true
         --retry-wait=30
         --continue
-        --quiet
   tasks:
     - name: Get the manifest file
       uri:
@@ -56,3 +55,7 @@
 
     - name: Download artifacts
       command: aria2c --input-file=/tmp/aria2c.input {{ aria2c_parameters }}
+      register: _download_artifacts
+      until: _download_artifacts is success
+      retries: 3
+      delay: 30
