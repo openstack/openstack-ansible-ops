@@ -83,5 +83,8 @@
 # ensure the directory exists
 #-Xloggc:${LS_GC_LOG_FILE}
 
+#listen on IPv4 addresses
+-Djava.net.preferIPv4Stack=true
+
 # Disable log4j because its not supported by elastic
 -Dlog4j2.disable.jmx=true
