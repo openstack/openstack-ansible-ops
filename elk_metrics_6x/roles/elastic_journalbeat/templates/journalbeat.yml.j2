@@ -1,3 +1,4 @@
+{% import 'templates/_macros.j2' as elk_macros %}
 #======================== Journalbeat Configuration ============================
 
 journalbeat:
@@ -278,9 +279,7 @@ tags:
 
 
 #----------------------------- Logstash output ---------------------------------
-{% with named_index="journalbeat" %}
-{%   include 'templates/_include_log_stash_output.yml.j2' %}
-{% endwith %}
+{{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_processor_count, 'journalbeat') }}
 
 #------------------------------- Kafka output ----------------------------------
 #output.kafka:
@@ -574,19 +573,13 @@ tags:
 #path.logs: ${path.home}/logs
 
 #============================== Dashboards =====================================
-{% with beat_name="journalbeat" %}
-{%   include 'templates/_include_setup_dashboards.yml.j2' %}
-{% endwith %}
+{{ elk_macros.setup_dashboards('journalbeat') }}
 
 #=============================== Template ======================================
-{% with beat_name="journalbeat" %}
-{%   include 'templates/_include_setup_template.yml.j2' %}
-{% endwith %}
+{{ elk_macros.setup_template('journalbeat', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
 
 #============================== Kibana =====================================
-{% include 'templates/_include_kibana_setup.yml.j2' %}
+{{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] + ':' + kibana_port|string) }}
 
 #================================ Logging ======================================
-{% with beat_name="journalbeat" %}
-{%   include 'templates/_include_beat_logging.yml.j2' %}
-{% endwith %}
+{{ elk_macros.beat_logging('journalbeat') }}
