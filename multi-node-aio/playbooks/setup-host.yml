@@ -99,6 +99,42 @@
               ((_libguestfs_version.stdout is version('1.39.0', '>=')) and
                (_libguestfs_version.stdout is version('1.39.1', '<'))) }}"
 
+    # If the host had already installed kvm_intel.ko without nested=1, then
+    # re-load it now, honoring whatever is in qemu-system-x86.modprobe
+    # Exit codes:
+    # 0 - Nested virt already enabled
+    # 1 - Error
+    # 2 - Nested virt enabled by task (should show task as changed)
+    # 3 - Nested virt not available
+    - name: Ensure that nested virtualization is enabled (if it is available)
+      shell: |
+        INTEL_NESTED=/sys/module/kvm_intel/parameters/nested
+        if grep -q kvm_intel /proc/modules; then
+          echo "Intel CPU found. Checking for nested virtualization capabilities."
+          if [ -f ${INTEL_NESTED} ]; then
+            echo "Nested virtualization capability found. Checking if it is enabled."
+            v=$(cat ${INTEL_NESTED})
+            if [ "x${v}" != "xY" ]; then
+              echo "Nested virtualization not enabled. Enabling it now."
+              rmmod kvm_intel && modprobe kvm_intel
+              exit 2
+            else
+              echo "Nested virtualization already enabled."
+            fi
+          else
+            echo "Nested virtualization capability not found."
+            exit 3
+          fi
+        else
+          echo "Intel CPU not found."
+          exit 3
+        fi
+      args:
+        executable: /bin/bash
+      register: _enable_nested_virt
+      changed_when: _enable_nested_virt.rc == 2
+      failed_when: _enable_nested_virt.rc not in [0, 2, 3]
+
     - name: Ensure root has a .ssh directory
       file:
         path: /root/.ssh
