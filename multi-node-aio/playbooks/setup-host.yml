@@ -237,28 +237,30 @@
       virt_net:
         name: "default"
         state: inactive
-        autostart: no
 
-    - name: List virt network(s)
+    - name: Prevent default virt network autostart
       virt_net:
-        command: list_nets
-      register: vm_networks
+        name: "default"
+        autostart: no
 
     - name: Define virt network(s)
       virt_net:
-        command: define
         name: "{{ item.value.iface }}"
+        state: present
         xml: "{{ lookup('template', 'kvm/libvirt-network-template.xml.j2') }}"
       with_dict: "{{ mnaio_host_networks }}"
-      when: "item.value.iface not in vm_networks.list_nets"
 
-    - name: Create virt network(s)
+    - name: Set virt network(s) to active
       virt_net:
-        command: create
         name: "{{ item.value.iface }}"
-        autostart: true
+        state: active
       with_dict: "{{ mnaio_host_networks }}"
-      when: "item.value.iface not in vm_networks.list_nets"
+
+    - name: Set virt network(s) to autostart
+      virt_net:
+        name: "{{ item.value.iface }}"
+        autostart: yes
+      with_dict: "{{ mnaio_host_networks }}"
 
     - name: Locate the largest writable data disk if mnaio_data_disk is not set
       shell: >
