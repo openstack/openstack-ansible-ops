@@ -33,27 +33,46 @@ done
 # there may be more than one, so we need to
 # find the one holding the view_id
 for cnt in $(ls -1 /tmp | grep galera_container); do
+  # generate a new uuid for this container
+  uuid_map[${cnt}]=$(uuidgen)
+
+  # work through the existing files to see
+  # if there is a master present
   gvwstate_path="/tmp/${cnt}/gvwstate.dat"
   if [[ -e ${gvwstate_path} ]]; then
     echo "Found ${gvwstate_path}, extracting my_uuid/view_id."
     my_uuid=$(awk '/^my_uuid:/ { print $2 }' ${gvwstate_path})
     view_id=$(awk '/^view_id:/ { print $3 }' ${gvwstate_path})
+
+    # just in case there is no master found, we store the
+    # last one we saw so that we can use it as a fallback
+    echo "Setting last_gvwstate_path to ${gvwstate_path}."
+    last_gvwstate_path=${gvwstate_path}
+
     if [[ "${my_uuid}" == "${view_id}" ]]; then
       echo "Found galera master in ${gvwstate_path}."
       master_gvwstate_path=${gvwstate_path}
       master_cnt=${cnt}
     fi
   fi
-  if [[ "${cnt}" == "${master_cnt}" ]]; then
+
+  # if a master container was found, overwrite the uuid
+  # to the uuid from it
+  if [[ "${cnt}" == "${master_cnt:-none}" ]]; then
     uuid_map[${cnt}]=${my_uuid}
-  else
-    uuid_map[${cnt}]=$(uuidgen)
   fi
 done
 
 echo "Prepare a new master gvwstate.dat in a temporary location."
 tmp_gvwstate="/tmp/gvwstate.dat"
-cp ${master_gvwstate_path} ${tmp_gvwstate}
+if [[ "${master_gvwstate_path:-none}" != "none" ]]; then
+  cp ${master_gvwstate_path} ${tmp_gvwstate}
+elif [[ "${last_gvwstate_path:-none}" != "none" ]]; then
+  cp ${last_gvwstate_path} ${tmp_gvwstate}
+else
+  echo "ERROR: No gvwstate.dat file was found. Cannot prepare galera cluster for cluster initialization."
+  exit 1
+fi
 member_num=$(awk '/^member: '${my_uuid}'/ {print $3}' ${tmp_gvwstate})
 
 echo "Clearing the existing members."
