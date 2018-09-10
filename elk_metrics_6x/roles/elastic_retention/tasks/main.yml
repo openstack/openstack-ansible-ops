@@ -18,6 +18,8 @@
     url: "http://{{ coordination_nodes[0] }}/_nodes/{{ (data_nodes | map('extract', hostvars, 'ansible_host') | list) | join(',') }}/stats/fs"
     method: GET
   register: elk_data
+  environment:
+    no_proxy: "{{ coordination_nodes[0].split(':')[0] }}"
   until:
     - elk_data is success and elk_data['json'] is defined
   retries: 5

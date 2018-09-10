@@ -18,6 +18,8 @@
     url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}"
     method: GET
   register: check_rollup
+  environment:
+    no_proxy: "{{ coordination_nodes[0].split(':')[0] }}"
   until: check_rollup is success
   retries: 3
   delay: 5
@@ -60,6 +62,8 @@
         status_code: "{{ item.status_code }}"
         body_format: json
       register: elk_indexes
+      environment:
+        no_proxy: "{{ coordination_nodes[0].split(':')[0] }}"
       until: elk_indexes is success
       retries: 5
       delay: 5
