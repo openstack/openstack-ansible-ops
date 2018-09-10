@@ -113,14 +113,14 @@
       args:
         chdir: /opt/openstack-ansible
       when:
-        - pre_config_osa | default(true) | bool
+        - run_osa | default(true) | bool
 
     - name: Create passwords
       command: ./scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
       args:
         chdir: /opt/openstack-ansible
       when:
-        - pre_config_osa | default(true) | bool
+        - run_osa | default(true) | bool
 
     - name: Config Tmux
       lineinfile:
