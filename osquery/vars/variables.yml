@@ -12,7 +12,7 @@ kolide_fleet_version: "2.0.0-rc3"
 kolide_fleet_url: "https://github.com/kolide/fleet/releases/download"
 
 kolide_fleet_admin_email: admin@openstack.org
-kolide_fleet_admin_password: AdminSecrete
+#kolide_fleet_admin_password: AdminSecrete
 
 kolide_fleet_ssl_cert: /etc/ssl/certs/fleet.cert
 kolide_fleet_ssl_key: /etc/ssl/private/fleet.key
@@ -27,6 +27,13 @@ kolide_fleet_ssl_cipher_suite: "{{ ssl_cipher_suite | default('ECDH+AESGCM:DH+AE
 
 # Osquery vars
 osquery_enroll_secret_dir: /etc/osquery/osquery_enroll_secret
+
+osquery_debug_packages_install: false
+
+osquery_config_plugin: 'filesystem'
+osquery_logger_plugin: 'filesystem'
+
+osquery_rsyslog: false
 
 osquery_flags:
     - "--tls_server_certs={{ kolide_fleet_ssl_cert }}"
@@ -48,7 +55,7 @@ osquery_flags:
     - "--enroll_secret_path={{ osquery_enroll_secret_dir }}"
 
 # MariaDB/Gallera Variables
-mariadb_root_password: fleetSecrete
+#mariadb_root_password: fleetSecrete
 mariadb_bind_address: "0.0.0.0"
 mariadb_root_remote: 1
 mariadb_databases:
