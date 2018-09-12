@@ -720,7 +720,7 @@
         elasticsearch {
           id => "elasticsearchOutputPipeline"
           document_id => "%{[@metadata][fingerprint]}"
-          hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
+          hosts => [{{ '127.0.0.1:' ~ logstash_beat_input_port | to_json }}]
           sniffing => {{ (not data_node | bool) | lower }}
           manage_template => {{ (data_node | bool) | lower }}
           index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
@@ -729,7 +729,7 @@
         elasticsearch {
           id => "elasticsearchLegacyOutputPipeline"
           document_id => "%{[@metadata][fingerprint]}"
-          hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
+          hosts => [{{ '127.0.0.1:' ~ logstash_beat_input_port | to_json }}]
           sniffing => {{ (not data_node | bool) | lower }}
           manage_template => {{ (data_node | bool) | lower }}
           index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
@@ -738,7 +738,7 @@
         elasticsearch {
           id => "elasticsearchSyslogOutputPipeline"
           document_id => "%{[@metadata][fingerprint]}"
-          hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
+          hosts => [{{ '127.0.0.1:' ~ logstash_beat_input_port | to_json }}]
           sniffing => {{ (not data_node | bool) | lower }}
           manage_template => {{ (data_node | bool) | lower }}
           index => "syslog-%{+YYYY.MM.dd}"
@@ -747,7 +747,7 @@
         elasticsearch {
           id => "elasticsearchUndefinedOutputPipeline"
           document_id => "%{[@metadata][fingerprint]}"
-          hosts => {{ elasticsearch_data_hosts | shuffle(seed=inventory_hostname) | to_json }}
+          hosts => [{{ '127.0.0.1:' ~ logstash_beat_input_port | to_json }}]
           sniffing => {{ (not data_node | bool) | lower }}
           manage_template => {{ (data_node | bool) | lower }}
           index => "undefined-%{+YYYY.MM.dd}"
