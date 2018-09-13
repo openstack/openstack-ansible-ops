@@ -62,6 +62,69 @@
   notify:
     - Enable and restart logstash
 
+- name: Check queue type
+  block:
+    - name: Get block device for logstash
+      command: findmnt -no SOURCE --target=/var/lib/logstash
+      changed_when: false
+      register: _logstash_block_device
+
+    - name: Set persisted queue fact
+      set_fact:
+        logstash_queue_type: "{{ ((ansible_devices[_logstash_block_device.stdout.split('/')[-1] | regex_replace('[0-9]$','')]['rotational'] | int) != 1) | ternary('persisted', 'memory') }}"
+  rescue:
+    - name: Set persisted queue fact (fallback)
+      set_fact:
+        logstash_queue_type: memory
+  when:
+    - logstash_queue_type is undefined
+
+- name: Systemd memory backed queue block
+  block:
+    - name: Get logstash UID
+      command: id -u logstash
+      register: logstash_uid
+      changed_when: false
+      when:
+        - ansible_service_mgr == 'systemd'
+
+    - name: Get logstash GID
+      command: id -g logstash
+      register: logstash_gid
+      changed_when: false
+      when:
+        - ansible_service_mgr == 'systemd'
+
+    - name: Run the systemd mount role
+      include_role:
+        name: systemd_mount
+        private: true
+      vars:
+        systemd_mounts:
+          - what: "tmpfs"
+            where: "/var/lib/logstash/queue"
+            type: "tmpfs"
+            options: "size={{ (q_mem | int) // 2 }}m,uid={{ logstash_uid.stdout }},gid={{ logstash_gid.stdout }},nodev,nodiratime,noatime"
+            unit:
+              Before:
+                - logstash.service
+            state: 'started'
+            enabled: true
+      when:
+        - ansible_service_mgr == 'systemd'
+
+    - name: Apply fstab options for memory queues
+      mount:
+        path: /var/lib/logstash/queue
+        src: tmpfs
+        fstype: tmpfs
+        opts: size={{ (q_mem | int) // 2 }}m
+        state: mounted
+      when:
+        - ansible_service_mgr != 'systemd'
+  when:
+    - logstash_queue_type == 'memory'
+
 - name: Create patterns directory
   file:
     name: "/opt/logstash/patterns"

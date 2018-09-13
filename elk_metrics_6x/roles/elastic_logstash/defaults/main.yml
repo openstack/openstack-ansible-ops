@@ -26,11 +26,15 @@ elastic_log_rotate_path: "/var/log/logstash"
 # Enable direct syslog input into logstash. When this is enabled syslog messages
 # can be sent directly to logstash via TCP or UDP.
 logstash_syslog_input_enabled: false
+
 # The typical syslog port is 514 however that is not available to logstash
-# because it's a "privledged" port. For this reason 1514 is used as the default.
+# because it's a "privledged" port. For this reason 5140 is used as the default.
 # Changing this port to 514 will require overrides to the service files making
 # logstash run as root (not recommended).
-logstash_syslog_input_port: 1514
+logstash_syslog_input_port: 5140
+
+# Protocol used when the syslog input is enabled. Modes are "tcp" or "udp".
+logstash_syslog_input_mode: udp
 
 logstash_beat_input_port: 5044
 logstash_deploy_filters: true
@@ -75,3 +79,10 @@ logstash_arcsight_smart_connectors: []
 #   - host: 127.0.0.1
 #     port: 5000
 logstash_arcsight_event_brokers: []
+
+## The logstash queue type can be set to "memory" or "persisted". If the queue
+## type is set to memory a ramdisk will be created limiting the in memory queue
+## to 50% of the JVM heap size. When this option is undefined the playbook will
+## detect the media type where the queue will exist. If the media type is
+## "rotational" in memory queues will be used.
+# logstash_queue_type:

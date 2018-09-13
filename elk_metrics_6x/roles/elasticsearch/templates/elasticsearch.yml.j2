@@ -3,6 +3,8 @@ cluster.name: {{ cluster_name }}
 # ------------------------------------ Node ------------------------------------
 node.name: {{ ansible_nodename }}
 # node.rack: r1
+# Set to true to enable machine learning on the node.
+node.ml: false
 # ----------------------------------- Paths ------------------------------------
 # Path to directory where to store the data (separate multiple locations by comma):
 #
@@ -36,7 +38,7 @@ index.store.type: niofs
 #
 # Lock the memory on startup:
 #
-bootstrap.memory_lock: false
+bootstrap.memory_lock: {{ elastic_memory_lock }}
 #
 # Make sure that the `ES_HEAP_SIZE` environment variable is set to about half the memory
 # available on the system and that the owner of the process is allowed to use this limit.
@@ -102,7 +104,7 @@ gateway.recover_after_nodes: {{ ((master_node_count | int) // 2) + 1 }}
 #
 # Require explicit names when deleting indices:
 #
-# action.destructive_requires_name: true
+action.destructive_requires_name: true
 
 {% set processors = ((elastic_thread_pool_size | int) > 0) | ternary(elastic_thread_pool_size, 1) %}
 {% if not (elastic_coordination_node | default(false)) | bool %}
@@ -140,3 +142,5 @@ indices.recovery.max_bytes_per_sec: {{ elasticserch_interface_speed }}mb
 # https://www.elastic.co/guide/en/elasticsearch/reference/6.3/monitoring-settings.html
 xpack.monitoring.collection.enabled: true
 xpack.monitoring.collection.interval: 30s
+# Set to true to enable machine learning on the node.
+xpack.ml.enabled: false

@@ -128,7 +128,7 @@ output.logstash:
 
   # The maximum number of events to bulk in a single Logstash request. The
   # default is the number of cores multiplied by the number of threads,
-  # the resultant is then multiplied again by 256 which results in a the defined
+  # the resultant is then multiplied again by 128 which results in a the defined
   # bulk max size. If the Beat sends single events, the events are collected
   # into batches. If the Beat publishes a large batch of events (larger than
   # the value specified by bulk_max_size), the batch is split. Specifying a
@@ -139,7 +139,7 @@ output.logstash:
   # less than or equal to 0 disables the splitting of batches. When splitting
   # is disabled, the queue decides on the number of events to be contained in a
   # batch.
-  bulk_max_size: {{ (processors | int) * 256 }}
+  bulk_max_size: {{ (processors | int) * 128 }}
 
 {% if named_index is defined %}
   # Optional index name. The default index name is set to {{ named_index }}

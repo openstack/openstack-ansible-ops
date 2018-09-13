@@ -68,6 +68,14 @@ if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_service" ]]; then
   popd
 fi
 
+if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_mount" ]]; then
+  mkdir -p "${ANSIBLE_EMBED_HOME}/repositories"
+  git clone https://git.openstack.org/openstack/ansible-role-systemd_mount "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_mount"
+  pushd "${ANSIBLE_EMBED_HOME}/repositories/roles/systemd_mount"
+    git checkout 0cca0b06e20a4e3d2b6b4ca19172717b6b37b68a  # HEAD of master from 20-06-18
+  popd
+fi
+
 if [[ -f "/etc/openstack_deploy/openstack_inventory.json" ]]; then
   if [[ ! -f "${ANSIBLE_EMBED_HOME}/inventory/openstack_inventory.sh" ]]; then
     mkdir -p "${ANSIBLE_EMBED_HOME}/inventory"

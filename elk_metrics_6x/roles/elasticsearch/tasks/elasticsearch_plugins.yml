@@ -13,24 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Load templates
-  shell: >-
-    heartbeat setup
-    {{ item }}
-    -E 'output.logstash.enabled=false'
-    -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
-    -E 'setup.template.enabled=true'
-    -E 'setup.template.overwrite=true'
-    -e -v
-  with_items:
-    - "--template"
-    - "--pipelines"
-    - "--machine-learning"
-    - "--dashboards"
-  register: templates
-  until: templates is success
-  retries: 5
-  delay: 5
-  run_once: true
-  tags:
-    - setup
+- name: Remove plugins
+  command: "/usr/share/elasticsearch/bin/elasticsearch-plugin remove --verbose {{ item }}"
+  failed_when: false
+  changed_when:
+    - remove_plugin.rc == 0
+  register: remove_plugin
+  with_items: "{{ elastic_plugins }}"
+
+- name: Install plugins
+  command: "/usr/share/elasticsearch/bin/elasticsearch-plugin install --batch --verbose {{ item }}"
+  with_items: "{{ elastic_plugins }}"

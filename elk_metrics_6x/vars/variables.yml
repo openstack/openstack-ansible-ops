@@ -1,6 +1,6 @@
 ---
-# Option to define third memory
-q_mem: "{{ (ansible_memtotal_mb | int) // 3 }}"
+# Option to define quarter memory
+q_mem: "{{ (ansible_memtotal_mb | int) // 4 }}"
 
 # Option to define half memory
 h_mem: "{{ (ansible_memtotal_mb | int) // 2 }}"
@@ -12,7 +12,8 @@ apm_port: 8200
 elastic_port: 9200
 elastic_hap_port: 9201
 logstash_beat_input_port: 5044
-logstash_syslog_input_port: 1514
+logstash_syslog_input_port: 5140
+logstash_syslog_input_mode: udp
 kibana_port: 5601
 kibana_nginx_port: 81
 

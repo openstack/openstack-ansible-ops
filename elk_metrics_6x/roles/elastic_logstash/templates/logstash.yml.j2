@@ -39,9 +39,10 @@ path.data: /var/lib/logstash
 # This defaults to the number of the host's CPU cores.
 #
 
-{% set _h_processors = ((ansible_processor_count | int) // 2) %}
-{% set _processors = ((_h_processors | int) > 0) | ternary(_h_processors, 1) %}
-{% set processors = ((_processors | int) > 8) | ternary(8, _processors) %}
+{% set _d_processors = ((ansible_processor_count | int) * 3) %}
+{% set _processors = ((_d_processors | int) > 0) | ternary(_d_processors, 2) %}
+{% set _t_processors = (_processors | int) + (ansible_processor_count | int) %}
+{% set processors = ((_t_processors | int) > 64) | ternary(64, _t_processors) %}
 pipeline.workers: {{ processors | int }}
 #
 # How many events to retrieve from inputs before sending to filters+workers
@@ -51,7 +52,7 @@ pipeline.batch.size: 256
 # How long to wait in milliseconds while polling for the next event
 # before dispatching an undersized batch to filters+outputs
 #
-pipeline.batch.delay: 20
+pipeline.batch.delay: 64
 #
 # Force Logstash to exit during shutdown even if there are still inflight
 # events in memory. By default, logstash will refuse to quit until all
@@ -155,7 +156,15 @@ queue.type: persisted
 # whichever criteria is reached first
 # Default is 1024mb or 1gb
 #
+{% if logstash_queue_type == 'memory' %}
+# An in memory queue is being used. The actual size of the queue is 90% of the
+# total memory limit, which is set using 50% of the heap size.
+{%   set _memory_queue_size = ((q_mem | int) // 2) %}
+{%   set _memory_queue_size_buffer = (((_memory_queue_size | int) * 0.1) | int) %}
+queue.max_bytes: {{ (_memory_queue_size | int) - (_memory_queue_size_buffer | int) }}mb
+{% else %}
 queue.max_bytes: {{ logstash_queue_size }}mb
+{% endif %}
 #
 # If using queue.type: persisted, the maximum number of acked events before forcing a checkpoint
 # Default is 1024, 0 for unlimited
@@ -231,7 +240,7 @@ xpack.monitoring.enabled: true
 #xpack.monitoring.elasticsearch.ssl.verification_mode: certificate
 #xpack.monitoring.elasticsearch.sniffing: false
 xpack.monitoring.collection.interval: 30s
-#xpack.monitoring.collection.pipeline.details.enabled: true
+xpack.monitoring.collection.pipeline.details.enabled: true
 #
 # ------------ X-Pack Settings (not applicable for OSS build)--------------
 # X-Pack Management

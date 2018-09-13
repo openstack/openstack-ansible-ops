@@ -107,3 +107,5 @@
   when:
     - elastic_shared_fs_repos is defined
     - (elastic_shared_fs_repos | json_query(nfs_query)) | length > 0
+
+- include_tasks: "elasticsearch_plugins.yml"

@@ -54,10 +54,10 @@
     elastic_heap_size_default: "{{ _elastic_heap_size_default }}"
     elastic_log_rotate_path: "/var/log/{{ service_name }}"
 
-- name: Configure systcl vm.max_map_count=262144 on elastic hosts
+- name: Configure systcl vm.max_map_count=524288 on elastic hosts
   sysctl:
     name: "vm.max_map_count"
-    value: "262144"
+    value: "524288"
     state: "present"
     reload: "yes"
   delegate_to: "{{ physical_host }}"

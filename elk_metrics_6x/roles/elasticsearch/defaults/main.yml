@@ -18,3 +18,13 @@ elastic_log_rotate_path: "/var/log/elasticsearch"
 
 temp_dir: /var/lib/elasticsearch/tmp
 nfs_query: "[?fstype=='nfs' || fstype=='nfs4']"
+
+# Enable or Disable memory locking.
+elastic_memory_lock: true
+
+# Elasticsearch plugin list. These plugins will be re-installed whenever the
+# playbooks are executed, which ensures the plugins are always upgraded.
+elastic_plugins:
+  - ingest-attachment
+  - ingest-geoip
+  - ingest-user-agent

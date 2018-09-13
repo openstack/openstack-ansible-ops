@@ -19,9 +19,13 @@
     {{ item }}
     -E 'apm-server.host=localhost:8200'
     -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
+    -E 'setup.template.enabled=true'
+    -E 'setup.template.overwrite=true'
     -e -v
   with_items:
     - "--template"
+    - "--pipelines"
+    - "--machine-learning"
     - "--dashboards"
   register: templates
   environment:
