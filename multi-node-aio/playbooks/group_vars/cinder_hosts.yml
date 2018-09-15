@@ -24,3 +24,5 @@ server_image: "{{ default_vm_image }}"
 server_default_interface: 'eth0'
 server_preseed_ks: 'vm'
 server_extra_options: ''
+
+default_vm_storage: "{{ cinder_vm_disk_size | default(92160) }}"

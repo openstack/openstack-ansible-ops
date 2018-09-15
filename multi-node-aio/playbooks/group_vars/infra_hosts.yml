@@ -24,3 +24,5 @@ server_image: "{{ default_vm_image }}"                      # str  - required, i
 server_default_interface: 'eth0'                            # str  - required, default interface
 server_preseed_ks: 'vm'                                     # str  - required, name of preseed/kickstart file
 server_extra_options: ''                                    # str  - not required, added kernel options
+
+default_vm_storage: "{{ infra_vm_disk_size | default(92160) }}"
