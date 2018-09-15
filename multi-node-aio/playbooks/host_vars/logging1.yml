@@ -13,20 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ansible_os_family: "{{ images[default_vm_image]['image_type'] }}"
-
 server_hostname: 'logging1'
-server_domain_name: 'openstack.local'
-server_vm: true
-server_vm_ram: '{{ logging_vm_server_ram | default(1024) }}'
-server_vm_vcpus: '{{ logging_vm_server_vcpus | default(2) }}'
 server_vm_fixed_addr: '10.0.2.110'
-server_vm_primary_network: 'dhcp'
-server_image: "{{ default_vm_image }}"
-server_default_interface: 'eth0'
 server_mac_address: '52:54:00:bd:80:03'
-server_preseed_ks: 'vm'
-server_extra_options: ''
 
 server_networks:
   dhcp:
