@@ -54,10 +54,20 @@
     elastic_heap_size_default: "{{ _elastic_heap_size_default }}"
     elastic_log_rotate_path: "/var/log/{{ service_name }}"
 
-- name: Configure systcl vm.max_map_count=262144 on container hosts
+- name: Configure systcl vm.max_map_count=262144 on elastic hosts
   sysctl:
     name: "vm.max_map_count"
     value: "262144"
+    state: "present"
+    reload: "yes"
+  delegate_to: "{{ physical_host }}"
+  tags:
+    - sysctl
+
+- name: Configure systcl fs.inotify.max_user_watches=1048576 on elastic hosts
+  sysctl:
+    name: "fs.inotify.max_user_watches"
+    value: "1048576"
     state: "present"
     reload: "yes"
   delegate_to: "{{ physical_host }}"
