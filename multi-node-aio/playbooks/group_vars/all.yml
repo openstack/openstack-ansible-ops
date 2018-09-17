@@ -148,3 +148,6 @@ osa_enable_network: true
 osa_enable_meter: true
 osa_enable_object_storage: true
 osa_disable_serial: false
+osa_enable_elk_metrics: false
+osa_enable_os_profiler: false
+osa_enable_uwsgi_stats: false
