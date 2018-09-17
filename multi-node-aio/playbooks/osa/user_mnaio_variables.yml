@@ -46,36 +46,40 @@ galera_innodb_buffer_pool_size: 1024M
 galera_gcache_size: 128M
 
 {% if osa_enable_elk_metrics | bool %}
+{% raw %}
 haproxy_extra_services:
   - service:
       haproxy_service_name: elastic-logstash
-      haproxy_ssl: False
-      haproxy_backend_nodes: "{{ '{{' }} groups['Kibana'] | default([]) {{ '}}' }}"  # Kibana nodes are also Elasticsearch coordination nodes
+      haproxy_ssl: True
+      haproxy_backend_nodes: "{{ groups['Kibana'] | default([]) }}"  # Kibana nodes are also Elasticsearch coordination nodes
       haproxy_port: 9201  # This is set using the "elastic_hap_port" variable
       haproxy_check_port: 9200  # This is set using the "elastic_port" variable
       haproxy_backend_port: 9200  # This is set using the "elastic_port" variable
       haproxy_balance_type: tcp
   - service:
       haproxy_service_name: Kibana
-      haproxy_ssl: False
-      haproxy_backend_nodes: "{{ '{{' }} groups['Kibana'] | default([]) {{ '}}' }}"
-      haproxy_port: 81  # This is set using the "Kibana_nginx_port" variable
+      haproxy_ssl: True
+      haproxy_backend_nodes: "{{ groups['Kibana'] | default([]) }}"
+      haproxy_port: 8443
+      haproxy_backend_port: 81
       haproxy_balance_type: tcp
   - service:
       haproxy_service_name: apm-server
-      haproxy_ssl: False
-      haproxy_backend_nodes: "{{ '{{' }} groups['apm-server'] | default([]) {{ '}}' }}"
-      haproxy_port: 8200 # this is set using the "apm_port" variable
+      haproxy_ssl: True
+      haproxy_backend_nodes: "{{ groups['apm-server'] | default([]) }}"
+      haproxy_port: 8200
       haproxy_balance_type: tcp
+{% endraw %}
 {% endif %}
 
 {% if osa_enable_os_profiler | bool %}
+{% raw %}
 profiler_overrides: &os_profiler
   profiler:
     enabled: true
     trace_sqlalchemy: true
-    hmac_keys: '{{ '{{' }} os_profiler_hmac_token {{ '}}' }}'
-    connection_string: "Elasticsearch://'{{ '{{' }} internal_lb_vip_address {{ '}}' }}':9201"
+    hmac_keys: '{{ os_profiler_hmac_token }}'
+    connection_string: "Elasticsearch://'{{ internal_lb_vip_address }}':9201"
     es_doc_type: "notification"
     es_scroll_time: "2m"
     es_scroll_size: "10000"
@@ -101,6 +105,7 @@ sahara_conf_overrides: *os_profiler
 swift_swift_conf_overrides: *os_profiler
 tacker_tacker_conf_overrides: *os_profiler
 trove_config_overrides: *os_profiler
+{% endraw %}
 {% endif %}
 
 {% if osa_enable_uwsgi_stats | bool %}

@@ -130,6 +130,7 @@
           [[ ! -d "/var/lib/{{ service_name }}" ]] && mkdir -p "/var/lib/{{ service_name }}"
         container_config:
           - "lxc.mount.entry=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
+          - "lxc.aa_profile=unconfined"
       delegate_to: "{{ physical_host }}"
       when:
         - container_tech | default('lxc') == 'lxc'

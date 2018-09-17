@@ -69,9 +69,17 @@
       changed_when: false
       register: _logstash_block_device
 
+    - name: Set device fact
+      set_fact:
+        _logstash_device: "{{ _logstash_block_device.stdout.split('/')[-1] | regex_replace('[0-9]$','') }}"
+
+    - name: Set device info fact
+      set_fact:
+        _logstash_device_info: "{{ ansible_devices[_logstash_device] }}"
+
     - name: Set persisted queue fact
       set_fact:
-        logstash_queue_type: "{{ ((ansible_devices[_logstash_block_device.stdout.split('/')[-1] | regex_replace('[0-9]$','')]['rotational'] | int) != 1) | ternary('persisted', 'memory') }}"
+        logstash_queue_type: "{{ ((_logstash_device_info['rotational'] | int) != 1) | ternary('persisted', 'memory') }}"
   rescue:
     - name: Set persisted queue fact (fallback)
       set_fact:

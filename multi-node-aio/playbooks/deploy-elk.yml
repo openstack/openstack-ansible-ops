@@ -48,7 +48,6 @@
       with_items:
         - tmux attach -t build-osa
         - tmux select-pane -t 0
-        - tmux send-keys "openstack-ansible playbooks/lxc-containers-create --limit elk_all" C-m
         - tmux send-keys "cd /opt/openstack-ansible-ops/elk_metrics_6x" C-m
         - tmux send-keys "openstack-ansible site.yml" C-m
       when:
