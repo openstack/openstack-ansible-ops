@@ -21,7 +21,7 @@ storage_node_count: "{{ groups['elastic-logstash'] | length }}"
 # 2 node clusters have 1 master-eligable nodes to avoid split-brain
 # 3 node clusters have 3 master-eligable nodes
 # >3 node clusters have (nodes // 2) eligable masters rounded up to the next odd number
-master_node_count: |-
+elastic_master_node_count: |-
   {% set masters = 0 %}
   {% if (storage_node_count | int) < 3 %}
   {%   set masters = 1 %}
@@ -36,10 +36,76 @@ master_node_count: |-
   {{ masters }}
 
 # Assign node roles
-# the first 'master_node_count' hosts in groups['elastic-logstash'] become master-eligible nodes
-# the first 'master_node_count' and subsequent alternate hosts in groups['elastic-logstash'] becomes data nodes
-data_nodes: "{{ (groups['elastic-logstash'][:master_node_count | int] + groups['elastic-logstash'][master_node_count | int::2]) }}"
-master_nodes: "{{ groups['elastic-logstash'][:master_node_count | int] }}"
+# the first 'elastic_master_node_count' hosts in groups['elastic-logstash'] become master-eligible nodes
+# the first 'elastic_master_node_count' and subsequent alternate hosts in groups['elastic-logstash'] becomes data nodes
+## While the data node group is dynamically chosen the override
+## `elasticsearch_node_data` can be used to override the node type.
+## Dynamic node inclusion will still work for all other nodes in the group.
+_data_nodes: "{{ (groups['elastic-logstash'][:elastic_master_node_count | int] | union(groups['elastic-logstash'][elastic_master_node_count | int::2])) }}"
+data_nodes: |-
+  {% set nodes = [] %}
+  {% for node in groups['elastic-logstash'] %}
+  {%   if (hostvars[node]['elasticsearch_node_data'] is defined) and (hostvars[node]['elasticsearch_node_data'] | bool) %}
+  {%     set _ = nodes.append(node) %}
+  {%   elif (node in _data_nodes) %}
+  {%     set _ = nodes.append(node) %}
+  {%   endif %}
+  {% endfor %}
+  {{ nodes }}
+
+## While the logstash node group is dynamically chosen the override
+## `elasticsearch_node_ingest` can be used to override the node type.
+## Dynamic node inclusion will still work for all other nodes in the group.
+_logstash_nodes: "{{ data_nodes }}"
+logstash_nodes: |-
+  {% set nodes = [] %}
+  {% for node in groups['elastic-logstash'] %}
+  {%   if (hostvars[node]['elasticsearch_node_ingest'] is defined) and (hostvars[node]['elasticsearch_node_ingest'] | bool) %}
+  {%     set _ = nodes.append(node) %}
+  {%   elif (node in _logstash_nodes) %}
+  {%     set _ = nodes.append(node) %}
+  {%   endif %}
+  {% endfor %}
+  {{ nodes }}
+
+## While the logstash node group is dynamically chosen the override
+## `elasticsearch_node_ingest` can be used to override the node type.
+## Dynamic node inclusion will still work for all other nodes in the group.
+_ingest_nodes: "{{ data_nodes }}"
+ingest_nodes: |-
+  {% set nodes = [] %}
+  {% for node in groups['elastic-logstash'] %}
+  {%   if (hostvars[node]['elasticsearch_node_ingest'] is defined) and (hostvars[node]['elasticsearch_node_ingest'] | bool) %}
+  {%     set _ = nodes.append(node) %}
+  {%   elif (node in _ingest_nodes) %}
+  {%     set _ = nodes.append(node) %}
+  {%   endif %}
+  {% endfor %}
+  {{ nodes }}
+
+## While the master node group is dynamically chosen the override
+## `elasticsearch_node_master` can be used to override the node type.
+## Dynamic node inclusion will still work for all other nodes in the group.
+_master_nodes: "{{ groups['elastic-logstash'][:elastic_master_node_count | int] }}"
+master_nodes: |-
+  {% set nodes = [] %}
+  {% for node in groups['elastic-logstash'] %}
+  {%   if (nodes | length) <= (elastic_master_node_count | int) %}
+  {%     if (hostvars[node]['elasticsearch_node_master'] is defined) and (hostvars[node]['elasticsearch_node_master'] | bool) %}
+  {%       set _ = nodes.append(node) %}
+  {%     endif %}
+  {%   endif %}
+  {% endfor %}
+  {% for node in groups['elastic-logstash'] %}
+  {%   if (nodes | length) <= (elastic_master_node_count | int) %}
+  {%     if (node in _master_nodes) %}
+  {%       set _ = nodes.append(node) %}
+  {%     endif %}
+  {%   endif %}
+  {% endfor %}
+  {{ nodes }}
+master_node_count: "{{ master_nodes | length }}"
+
 coordination_nodes: >-
   {{
     (groups['kibana'] | map('extract', hostvars, 'ansible_host') | list)
@@ -90,7 +156,7 @@ elasticsearch_data_node_details: >-
   }}
 logstash_data_node_details: >-
   {{
-    (data_nodes | map('extract', hostvars, 'ansible_host') | list) | map('regex_replace', '(.*)' ,'\1:' ~ logstash_beat_input_port) | list
+    (logstash_nodes | map('extract', hostvars, 'ansible_host') | list) | map('regex_replace', '(.*)' ,'\1:' ~ logstash_beat_input_port) | list
   }}
 
 # based on the assignment of roles to hosts, set per host booleans
@@ -105,16 +171,14 @@ elastic_thread_pool_size: "{{ ((ansible_processor_count | int) >= 24) | ternary(
 # ingest nodes.
 elasticsearch_number_of_replicas: "{{ ((data_nodes | length) > 2) | ternary('2', ((data_nodes | length) > 1) | ternary('1', '0')) }}"
 elasticsearch_data_hosts: |-
-  {% set nodes = elasticsearch_data_node_details %}
-  {% set data_hosts = nodes | shuffle(seed=inventory_hostname) %}
+  {% set data_hosts = elasticsearch_data_node_details | shuffle(seed=inventory_hostname) %}
   {% if inventory_hostname in data_nodes %}
-  {%   set _ = nodes.insert(0, '127.0.0.1:' ~ elastic_port) %}
+  {%   set _ = data_hosts.insert(0, '127.0.0.1:' ~ elastic_port) %}
   {% endif %}
   {{ data_hosts }}
 logstash_data_hosts: |-
-  {% set nodes = logstash_data_node_details %}
-  {% set data_hosts = nodes | shuffle(seed=inventory_hostname) %}
+  {% set data_hosts = logstash_data_node_details | shuffle(seed=inventory_hostname) %}
   {% if inventory_hostname in data_nodes %}
-  {%   set _ = nodes.insert(0, '127.0.0.1:' ~ logstash_beat_input_port) %}
+  {%   set _ = data_hosts.insert(0, '127.0.0.1:' ~ logstash_beat_input_port) %}
   {% endif %}
   {{ data_hosts }}

@@ -17,7 +17,7 @@
   systemd:
     name: "logstash"
     enabled: true
-    state: restarted
+    state: "{{ (inventory_hostname in logstash_nodes) | ternary('restarted', 'stopped') }}"
     daemon_reload: true
   when:
     - ansible_service_mgr == 'systemd'
@@ -26,7 +26,7 @@
 - name: Enable and restart logstash (upstart)
   service:
     name: "logstash"
-    state: restarted
+    state: "{{ (inventory_hostname in logstash_nodes) | ternary('restarted', 'stopped') }}"
     enabled: yes
   when:
     - ansible_service_mgr == 'upstart'

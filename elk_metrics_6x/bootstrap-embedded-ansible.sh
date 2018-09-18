@@ -52,7 +52,7 @@ if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/ansible-config_template" ]]; then
   popd
 fi
 
-if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/openstack_ansible_plugins" ]]; then
+if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins" ]]; then
   mkdir -p "${ANSIBLE_EMBED_HOME}/repositories"
   git clone https://git.openstack.org/openstack/openstack-ansible-plugins "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins"
   pushd "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins"
