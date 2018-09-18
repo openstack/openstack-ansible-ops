@@ -12,7 +12,26 @@
 # limitations under the License.
 
 - import_playbook: installMetricbeat.yml
+- import_playbook: fieldRefresh.yml
+  vars:
+    index_pattern: metricbeat-*
+
 - import_playbook: installPacketbeat.yml
+- import_playbook: fieldRefresh.yml
+  vars:
+    index_pattern: packetbeat-*
+
 - import_playbook: installAuditbeat.yml
+- import_playbook: fieldRefresh.yml
+  vars:
+    index_pattern: auditbeat-*
+
 - import_playbook: installHeartbeat.yml
+- import_playbook: fieldRefresh.yml
+  vars:
+    index_pattern: heartbeat-*
+
 - import_playbook: installFilebeat.yml
+- import_playbook: fieldRefresh.yml
+  vars:
+    index_pattern: filebeat-*
