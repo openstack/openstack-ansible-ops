@@ -1,12 +1,12 @@
 {{ elastic_log_rotate_path }}/*.log
 {
         copytruncate
-        weekly
-        missingok
+        daily
         rotate 2
+        delaycompress
         compress
         dateext
-        maxage 5
         notifempty
-        nocreate
+        missingok
+        maxage 5
 }
