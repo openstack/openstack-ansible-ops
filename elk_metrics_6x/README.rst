@@ -508,6 +508,56 @@ Overview of kibana custom dashboard
     :align: center
 
 
+Optional | Customize Elasticsearch cluster configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Cluster configuration can be augmented using several variables which will force
+a node to use a given role.
+
+Available roles are *data*, *ingest*, and *master*.
+
+* ``elasticsearch_node_data``:  This variable will override the automatic node
+  determination and set a given node to be an "data" node.
+* ``elasticsearch_node_ingest``: This variable will override the automatic node
+   determination and set a given node to be an "ingest" node.
+* ``elasticsearch_node_master``: This variable will override the automatic node
+   determination and set a given node to be an "master" node.
+
+Example setting override options within inventory.
+
+.. code-block:: yaml
+
+    hosts:
+      children:
+        elastic-logstash:
+          hosts:
+            elk1:
+              ansible_host: 10.0.0.1
+              ansible_user: root
+              elasticsearch_node_master: true
+              elasticsearch_node_data: false
+              elasticsearch_node_ingest: false
+            elk2:
+              ansible_host: 10.0.0.2
+              ansible_user: root
+              elasticsearch_node_master: false
+              elasticsearch_node_data: true
+              elasticsearch_node_ingest: false
+            elk3:
+              ansible_host: 10.0.0.3
+              ansible_user: root
+              elasticsearch_node_master: false
+              elasticsearch_node_data: false
+              elasticsearch_node_ingest: true
+            elk4:
+              ansible_host: 10.0.0.4
+              ansible_user: root
+
+With the following inventory settings **elk1** would be a master node, **elk2**
+would be a data, **elk3** would be an ingest node, and **elk4** would auto
+select a role.
+
+
 Upgrading the cluster
 ---------------------
 

@@ -231,14 +231,14 @@ path.logs: /var/log/logstash
 xpack.monitoring.enabled: true
 #xpack.monitoring.elasticsearch.username: logstash_system
 #xpack.monitoring.elasticsearch.password: password
-#xpack.monitoring.elasticsearch.url: ["https://es1:9200", "https://es2:9200"]
+xpack.monitoring.elasticsearch.url: ["127.0.0.1:9200"]
 #xpack.monitoring.elasticsearch.ssl.ca: [ "/path/to/ca.crt" ]
 #xpack.monitoring.elasticsearch.ssl.truststore.path: path/to/file
 #xpack.monitoring.elasticsearch.ssl.truststore.password: password
 #xpack.monitoring.elasticsearch.ssl.keystore.path: /path/to/file
 #xpack.monitoring.elasticsearch.ssl.keystore.password: password
 #xpack.monitoring.elasticsearch.ssl.verification_mode: certificate
-#xpack.monitoring.elasticsearch.sniffing: false
+xpack.monitoring.elasticsearch.sniffing: false
 xpack.monitoring.collection.interval: 30s
 xpack.monitoring.collection.pipeline.details.enabled: true
 #
