@@ -47,8 +47,13 @@ data_nodes: |-
   {% for node in groups['elastic-logstash'] %}
   {%   if (hostvars[node]['elasticsearch_node_data'] is defined) and (hostvars[node]['elasticsearch_node_data'] | bool) %}
   {%     set _ = nodes.append(node) %}
-  {%   elif (node in _data_nodes) %}
-  {%     set _ = nodes.append(node) %}
+  {%   endif %}
+  {% endfor %}
+  {% for node in groups['elastic-logstash'] %}
+  {%   if (nodes | length) <= (_data_nodes | length) %}
+  {%     if (node in _data_nodes) %}
+  {%       set _ = nodes.append(node) %}
+  {%     endif %}
   {%   endif %}
   {% endfor %}
   {{ nodes }}
@@ -62,8 +67,13 @@ logstash_nodes: |-
   {% for node in groups['elastic-logstash'] %}
   {%   if (hostvars[node]['elasticsearch_node_ingest'] is defined) and (hostvars[node]['elasticsearch_node_ingest'] | bool) %}
   {%     set _ = nodes.append(node) %}
-  {%   elif (node in _logstash_nodes) %}
-  {%     set _ = nodes.append(node) %}
+  {%   endif %}
+  {% endfor %}
+  {% for node in groups['elastic-logstash'] %}
+  {%   if (nodes | length) <= (_logstash_nodes | length) %}
+  {%     if (node in _logstash_nodes) %}
+  {%       set _ = nodes.append(node) %}
+  {%     endif %}
   {%   endif %}
   {% endfor %}
   {{ nodes }}
@@ -77,8 +87,13 @@ ingest_nodes: |-
   {% for node in groups['elastic-logstash'] %}
   {%   if (hostvars[node]['elasticsearch_node_ingest'] is defined) and (hostvars[node]['elasticsearch_node_ingest'] | bool) %}
   {%     set _ = nodes.append(node) %}
-  {%   elif (node in _ingest_nodes) %}
-  {%     set _ = nodes.append(node) %}
+  {%   endif %}
+  {% endfor %}
+  {% for node in groups['elastic-logstash'] %}
+  {%   if (nodes | length) <= (_ingest_nodes | length) %}
+  {%     if (node in _ingest_nodes) %}
+  {%       set _ = nodes.append(node) %}
+  {%     endif %}
   {%   endif %}
   {% endfor %}
   {{ nodes }}
