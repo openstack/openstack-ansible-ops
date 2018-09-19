@@ -20,13 +20,10 @@
 {# Total retention size in days #}
 {%   set _index_retention = hostvars[inventory_hostname]['elastic_' + key + '_retention'] -%}
 {%   set index_retention = ((_index_retention | int) > 0) | ternary(_index_retention, 1) | int %}
-{# Total retention size in gigabytes #}
-{%   set _index_size = ((hostvars[inventory_hostname]['elastic_' + key + '_size'] | int) // 1024) -%}
-{%   set index_size = ((_index_size | int) > 0) | ternary(_index_size, 1) | int %}
 {%   set _ = delete_indices.update(
    {
     'action': 'delete_indices',
-    'description': 'Prune indices for ' + key + ' after ' ~ index_retention ~ ' days or index is > ' ~ index_size ~ 'gb',
+    'description': 'Prune indices for ' + key + ' after ' ~ index_retention ~ ' days',
     'options': {
       'ignore_empty_list': true,
       'disable_action': false
@@ -40,15 +37,6 @@
     'filtertype': 'pattern',
     'kind': 'prefix',
     'value': key + '-'
-   }
-  )
--%}
-{%   set _ = filters.append(
-   {
-    'filtertype': 'space',
-    'disk_space': index_size,
-    'use_age': true,
-    'source': 'creation_date'
    }
   )
 -%}

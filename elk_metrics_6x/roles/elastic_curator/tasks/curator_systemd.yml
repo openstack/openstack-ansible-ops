@@ -27,10 +27,21 @@
         execstarts:
           - /opt/elasticsearch-curator/bin/curator
             --config /var/lib/curator/curator.yml
-            /var/lib/curator/actions.yml
+            /var/lib/curator/actions-age.yml
         timer:
           state: "started"
           options:
             OnBootSec: 30min
-            OnUnitActiveSec: 6h
+            OnUnitActiveSec: 24h
+            Persistent: true
+      - service_name: "curator"
+        execstarts:
+          - /opt/elasticsearch-curator/bin/curator
+            --config /var/lib/curator/curator.yml
+            /var/lib/curator/actions-size.yml
+        timer:
+          state: "started"
+          options:
+            OnBootSec: 30min
+            OnUnitActiveSec: 5h
             Persistent: true

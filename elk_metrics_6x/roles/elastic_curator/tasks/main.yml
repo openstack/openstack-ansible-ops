@@ -91,8 +91,10 @@
   with_items:
     - src: "curator.yml.j2"
       dest: /var/lib/curator/curator.yml
-    - src: "curator-actions.yml.j2"
-      dest: /var/lib/curator/actions.yml
+    - src: "curator-actions-age.yml.j2"
+      dest: /var/lib/curator/actions-age.yml
+    - src: "curator-actions-size.yml.j2"
+      dest: /var/lib/curator/actions-size.yml
   notify:
     - Enable and restart curator.timer
 
