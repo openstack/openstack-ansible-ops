@@ -104,3 +104,22 @@
               mapping:
                 total_fields:
                   limit: "3072"
+
+    - name: Create custom monitoring index template
+      uri:
+        url: http://127.0.0.1:9200/_template/custom_monitoring
+        method: PUT
+        body: "{{ index_option | to_json }}"
+        status_code: 200
+        body_format: json
+      register: create_basicIndexTemplate
+      until: create_basicIndexTemplate is success
+      retries: 3
+      delay: 10
+      vars:
+        index_option:
+          template: ".monitoring-*"
+          order: 1
+          settings:
+            number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            number_of_shards: "{{ ((elasticsearch_number_of_replicas | int) * 2) + 1 }}"

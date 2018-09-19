@@ -34,7 +34,7 @@
             OnBootSec: 30min
             OnUnitActiveSec: 24h
             Persistent: true
-      - service_name: "curator"
+      - service_name: "curator-size"
         execstarts:
           - /opt/elasticsearch-curator/bin/curator
             --config /var/lib/curator/curator.yml
