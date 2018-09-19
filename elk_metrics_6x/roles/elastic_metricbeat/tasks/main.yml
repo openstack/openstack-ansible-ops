@@ -253,3 +253,21 @@
 
 - name: Force beat handlers
   meta: flush_handlers
+
+- name: set metricbeat service state (upstart)
+  service:
+    name: "metricbeat"
+    state: "{{ metricbeat_service_state }}"
+    enabled: "{{ metricbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - metricbeat_service_state in ['started', 'stopped']
+
+- name: set metricbeat service state (systemd)
+  systemd:
+    name: "metricbeat"
+    state: "{{ metricbeat_service_state }}"
+    enabled: "{{ metricbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - metricbeat_service_state in ['started', 'stopped']

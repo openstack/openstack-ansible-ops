@@ -17,7 +17,7 @@
   systemd:
     name: "packetbeat"
     enabled: true
-    state: restarted
+    state: "{{ packetbeat_service_state }}"
     daemon_reload: true
   when:
     - ansible_service_mgr == 'systemd'
@@ -26,7 +26,7 @@
 - name: Enable and restart packetbeat (upstart)
   service:
     name: "elasticsearch"
-    state: restarted
+    state: "{{ packetbeat_service_state }}"
     enabled: yes
   when:
     - ansible_service_mgr == 'upstart'

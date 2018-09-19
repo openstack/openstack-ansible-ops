@@ -1,5 +1,5 @@
 ---
-# Copyright 2018, Rackspace US, Inc.
+# Copyright 2018, Vexxhost, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Enable and restart journalbeat
-  systemd:
-    name: "journalbeat"
-    enabled: true
-    state: "{{ journalbeat_service_state }}"
-    daemon_reload: yes
-  when:
-    - (elk_package_state | default('present')) != 'absent'
-  tags:
-    - config
+filebeat_service_state: restarted

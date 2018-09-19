@@ -145,3 +145,21 @@
 
 - name: Force beat handlers
   meta: flush_handlers
+
+- name: set journalbeat service state (upstart)
+  service:
+    name: "journalbeat"
+    state: "{{ journalbeat_service_state }}"
+    enabled: "{{ journalbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - journalbeat_service_state in ['started', 'stopped']
+
+- name: set journalbeat service state (systemd)
+  systemd:
+    name: "journalbeat"
+    state: "{{ journalbeat_service_state }}"
+    enabled: "{{ journalbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - journalbeat_service_state in ['started', 'stopped']

@@ -17,7 +17,7 @@
   systemd:
     name: "metricbeat"
     enabled: true
-    state: restarted
+    state: "{{ metricbeat_service_state }}"
     daemon_reload: true
   when:
     - ansible_service_mgr == 'systemd'
@@ -26,7 +26,7 @@
 - name: Enable and restart metricbeat (upstart)
   service:
     name: "elasticsearch"
-    state: restarted
+    state: "{{ metricbeat_service_state }}"
     enabled: yes
   when:
     - ansible_service_mgr == 'upstart'

@@ -183,3 +183,21 @@
 
 - name: Force beat handlers
   meta: flush_handlers
+
+- name: set filebeat service state (upstart)
+  service:
+    name: "filebeat"
+    state: "{{ filebeat_service_state }}"
+    enabled: "{{ filebeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - filebeat_service_state in ['started', 'stopped']
+
+- name: set filebeat service state (systemd)
+  systemd:
+    name: "filebeat"
+    state: "{{ filebeat_service_state }}"
+    enabled: "{{ filebeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - filebeat_service_state in ['started', 'stopped']
