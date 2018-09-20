@@ -24,12 +24,19 @@ an Ubuntu 14.04/16.04/18.04 LTS Operating system. System assumes that you have a
 unpartitioned device with at least 1TB of storage, however you can customize the
 size of each VM volume by setting the option ``${VM_DISK_SIZE}``. If you're
 using the Rackspace OnMetal servers the drive partitioning will be done for you
-by detecting the largest unpartitioned device. If you're doing the deployment on
-something other than a Rackspace OnMetal server you may need to set the
-``${DATA_DISK_DEVICE}`` variable accordingly. the playbooks will look for a
-volume group named "vg01", if this volume group exists no partitioning or setup
-on the data disk will take place. To effectively use this process for testing
-it's recommended that the host machine have at least 32GiB of RAM.
+by detecting the largest unpartitioned device. If you wish to use a different
+device, then set the ``mnaio_data_disk`` extra var when running the playbooks or
+by exporting the extra var before running build.sh, eg:
+
+.. code-block:: bash
+
+    export MNAIO_ANSIBLE_PARAMETERS="-e mnaio_data_disk=sdb"
+    ./build.sh
+
+The playbooks will look for a volume group named "vg01", if this volume group
+exists no partitioning or setup on the data disk will take place. To effectively
+use this process for testing it's recommended that the host machine have at least
+32GiB of RAM.
 
 ===========    ========   ============
 Physical Host Specs known to work well
