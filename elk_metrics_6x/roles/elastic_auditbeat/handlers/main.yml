@@ -17,7 +17,7 @@
   systemd:
     name: "auditbeat"
     enabled: true
-    state: restarted
+    state: "{{ auditbeat_service_state }}"
     daemon_reload: true
   when:
     - ansible_service_mgr == 'systemd'
@@ -26,7 +26,7 @@
 - name: Enable and restart auditbeat (upstart)
   service:
     name: "auditbeat"
-    state: restarted
+    state: "{{ auditbeat_service_state }}"
     enabled: yes
   when:
     - ansible_service_mgr == 'upstart'

@@ -79,3 +79,21 @@
 
 - name: Force beat handlers
   meta: flush_handlers
+
+- name: set heartbeat service state (upstart)
+  service:
+    name: "heartbeat-elastic"
+    state: "{{ heartbeat_service_state }}"
+    enabled: "{{ heartbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - heartbeat_service_state in ['started', 'stopped']
+
+- name: set heartbeat service state (systemd)
+  systemd:
+    name: "heartbeat-elastic"
+    state: "{{ heartbeat_service_state }}"
+    enabled: "{{ heartbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - heartbeat_service_state in ['started', 'stopped']

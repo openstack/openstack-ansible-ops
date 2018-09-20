@@ -77,3 +77,21 @@
 
 - name: Force beat handlers
   meta: flush_handlers
+
+- name: set packetbeat service state (upstart)
+  service:
+    name: "packetbeat"
+    state: "{{ packetbeat_service_state }}"
+    enabled: "{{ packetbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - packetbeat_service_state in ['started', 'stopped']
+
+- name: set packetbeat service state (systemd)
+  systemd:
+    name: "packetbeat"
+    state: "{{ packetbeat_service_state }}"
+    enabled: "{{ packetbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - packetbeat_service_state in ['started', 'stopped']
