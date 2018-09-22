@@ -238,7 +238,7 @@ xpack.monitoring.elasticsearch.url: ["127.0.0.1:9200"]
 #xpack.monitoring.elasticsearch.ssl.keystore.path: /path/to/file
 #xpack.monitoring.elasticsearch.ssl.keystore.password: password
 #xpack.monitoring.elasticsearch.ssl.verification_mode: certificate
-xpack.monitoring.elasticsearch.sniffing: false
+xpack.monitoring.elasticsearch.sniffing: {{ elastic_sniffing_enabled | default(false) }}
 xpack.monitoring.collection.interval: 30s
 xpack.monitoring.collection.pipeline.details.enabled: true
 #
@@ -255,5 +255,5 @@ xpack.monitoring.collection.pipeline.details.enabled: true
 #xpack.management.elasticsearch.ssl.truststore.password: password
 #xpack.management.elasticsearch.ssl.keystore.path: /path/to/file
 #xpack.management.elasticsearch.ssl.keystore.password: password
-#xpack.management.elasticsearch.sniffing: false
+#xpack.management.elasticsearch.sniffing: {{ elastic_sniffing_enabled | default(false) }}
 #xpack.management.logstash.poll_interval: 5s

@@ -15,6 +15,9 @@
   hosts: "elastic-logstash[0]"
   become: true
 
+  vars:
+    elastic_refresh_interval: "{{ (elasticsearch_number_of_replicas | int) * 5 }}"
+
   vars_files:
     - vars/variables.yml
 
@@ -47,14 +50,13 @@
                 refresh_interval: "5s"
         - name: "_all/_settings?preserve_existing=true"
           index_options:
-            index.refresh_interval: "10s"
-        - name: "_all/_settings?preserve_existing=true"
-          index_options:
             index.queries.cache.enabled: "true"
             indices.queries.cache.size: "5%"
         - name: "_all/_settings"
           index_options:
             index.number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            index.translog.durability: "async"
+            index.refresh_interval: "{{ ((elastic_refresh_interval | int) > 30) | ternary(30, elastic_refresh_interval) }}s"
 
     - name: Check for basic index template
       uri:

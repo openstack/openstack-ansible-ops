@@ -192,13 +192,11 @@
     owner: "{{ service_owner }}"
     group: "{{ service_group }}"
 
-- name: Drop jvm conf file(s)
+- name: Drop logrotate conf file(s)
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   with_items:
-    - src: "jvm.options.j2"
-      dest: "/etc/{{ service_name }}/jvm.options"
     - src: "templates/logrotate.j2"
       dest: "/etc/logrotate.d/{{ service_name }}"
 

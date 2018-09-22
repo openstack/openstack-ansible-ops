@@ -62,6 +62,16 @@
   notify:
     - Enable and restart logstash
 
+- name: Drop jvm conf file(s)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "jvm.options.j2"
+      dest: "/etc/logstash/jvm.options"
+  notify:
+    - Enable and restart logstash
+
 - name: Check queue type
   block:
     - name: Get block device for logstash

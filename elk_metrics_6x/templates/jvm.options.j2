@@ -22,7 +22,7 @@
 ################################################################
 
 ## GC Configuration
-{% if ((heap_size | int) > 4096) and (elastic_g1gc_enabled | bool) %}
+{% if ((heap_size | int) > 6144) and (elastic_g1gc_enabled | bool) %}
 -XX:+UseG1GC
 -XX:MaxGCPauseMillis=400
 -XX:InitiatingHeapOccupancyPercent=75

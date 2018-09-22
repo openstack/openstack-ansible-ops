@@ -439,51 +439,83 @@
           method => "SHA1"
           key => "{{ inventory_hostname | to_uuid }}"
         }
-      } else {
-        fingerprint {
-          target => "[@metadata][fingerprint]"
-          method => "UUID"
-        }
       }
     }
     output {
-      if [@metadata][version] {
-        elasticsearch {
-          id => "elasticsearchOutputPipeline"
-          document_id => "%{[@metadata][fingerprint]}"
-          hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
-          sniffing => {{ (not data_node | bool) | lower }}
-          manage_template => {{ (data_node | bool) | lower }}
-          index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
-        }
-      } else if [@metadata][beat] {
-        elasticsearch {
-          id => "elasticsearchLegacyOutputPipeline"
-          document_id => "%{[@metadata][fingerprint]}"
-          hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
-          sniffing => {{ (not data_node | bool) | lower }}
-          manage_template => {{ (data_node | bool) | lower }}
-          index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
-        }
-      } else if "syslog" in [tags] {
-        elasticsearch {
-          id => "elasticsearchSyslogOutputPipeline"
-          document_id => "%{[@metadata][fingerprint]}"
-          hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
-          sniffing => {{ (not data_node | bool) | lower }}
-          manage_template => {{ (data_node | bool) | lower }}
-          index => "syslog-%{+YYYY.MM.dd}"
+      if [@metadata][fingerprint] {
+        if [@metadata][version] {
+          elasticsearch {
+            id => "elasticsearchDocIDOutputPipeline"
+            document_id => "%{[@metadata][fingerprint]}"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+          }
+        } else if [@metadata][beat] {
+          elasticsearch {
+            id => "elasticsearchLegacyDocIDOutputPipeline"
+            document_id => "%{[@metadata][fingerprint]}"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+          }
+        } else if "syslog" in [tags] {
+          elasticsearch {
+            id => "elasticsearchSyslogDocIDOutputPipeline"
+            document_id => "%{[@metadata][fingerprint]}"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "syslog-%{+YYYY.MM.dd}"
+          }
+        } else {
+          elasticsearch {
+            id => "elasticsearchUndefinedDocIDOutputPipeline"
+            document_id => "%{[@metadata][fingerprint]}"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "undefined-%{+YYYY.MM.dd}"
+          }
         }
       } else {
-        elasticsearch {
-          id => "elasticsearchUndefinedOutputPipeline"
-          document_id => "%{[@metadata][fingerprint]}"
-          hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
-          sniffing => {{ (not data_node | bool) | lower }}
-          manage_template => {{ (data_node | bool) | lower }}
-          index => "undefined-%{+YYYY.MM.dd}"
+        if [@metadata][version] {
+          elasticsearch {
+            id => "elasticsearchOutputPipeline"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+          }
+        } else if [@metadata][beat] {
+          elasticsearch {
+            id => "elasticsearchLegacyOutputPipeline"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+          }
+        } else if "syslog" in [tags] {
+          elasticsearch {
+            id => "elasticsearchSyslogOutputPipeline"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "syslog-%{+YYYY.MM.dd}"
+          }
+        } else {
+          elasticsearch {
+            id => "elasticsearchUndefinedOutputPipeline"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "undefined-%{+YYYY.MM.dd}"
+          }
         }
       }
+
 {% if logstash_kafka_options is defined %}
       kafka {
     {% for key, value in logstash_kafka_options.items() %}
