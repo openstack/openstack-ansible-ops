@@ -15,9 +15,8 @@
 
 - name: GET go
   get_url:
-    url: "https://dl.google.com/go/go1.10.1.linux-amd64.tar.gz"
-    dest: "/opt/go1.10.1.linux-amd64.tar.gz"
-    checksum: "sha256:72d820dec546752e5a8303b33b009079c15c2390ce76d67cf514991646c6127b"
+    url: "{{ go_download_url }}"
+    dest: "/opt/{{ go_download_filename }}"
   register: _get_task
   until: _get_task is success
   retries: 3
@@ -27,19 +26,19 @@
 
 - name: Create go directory
   file:
-    path: "/opt/go1.10.1"
+    path: "/opt/go{{ go_download_version }}"
     state: directory
 
 - name: Unarchive go
   unarchive:
-    src: "/opt/go1.10.1.linux-amd64.tar.gz"
-    dest: "/opt/go1.10.1"
+    src: "/opt/{{ go_download_filename }}"
+    dest: "/opt/go{{ go_download_version }}"
     remote_src: yes
 
 - name: Create go defaults file
   copy:
     content: |
-      GOROOT=/opt/go1.10.1/go
+      GOROOT=/opt/go{{ go_download_version }}/go
       GOPATH=/usr/local
       PATH=${PATH}:${GOROOT}/bin
-    dest: /etc/default/go1.10.1
+    dest: "/etc/default/go{{ go_download_version }}"

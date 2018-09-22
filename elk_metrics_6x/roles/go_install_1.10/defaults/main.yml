@@ -1,5 +1,5 @@
 ---
-# Copyright 2018, Rackspace US, Inc.
+# Copyright 2018, Logan Vig <logan2211@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Check for go
-  stat:
-    path: "/opt/go{{ go_download_version }}/go/bin/go"
-  register: go_path
-
-- include_tasks: go_install.yml
-  when:
-    - not go_path.stat.exists | bool
+# Versions and SHAs published at https://golang.org/dl/
+go_download_version: 1.10.1
+go_download_url: "https://dl.google.com/go/{{ go_download_filename }}"
+go_download_arch: "{{ go_arch_translation[ansible_architecture] | default(ansible_architecture) }}"
+go_download_filename: "go{{ go_download_version }}.linux-{{ go_download_arch }}.tar.gz"
+go_arch_translation:
+  x86_64: amd64
+  aarch64: arm64
