@@ -195,35 +195,25 @@
               remove_field => [ "logdate" ]
             }
             if "nova" in [tags] {
-              mutate {
-                gsub => ["logmessage","\"",""]
-              }
-              if [module] == "nova.osapi_compute.wsgi.server" {
+              if [module] == "nova.api.openstack.requestlog" {
                 grok {
-                  match => { "logmessage" => "%{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} status\: %{NUMBER:response} len\: %{NUMBER:bytes:int} time\: %{BASE10NUM:httptime:float}" }
-                  add_tag => ["apimetrics"]
+                  match => { "logmessage" => "%{IPORHOST:client_ip} \"%{WORD:verb} %{NOTSPACE:request}\" status\: %{NUMBER:response} len\: %{NUMBER:bytes} microversion\: %{NUMBER:microversion} time\: %{NUMBER:duration:float}" }
+                  add_tag => ["api"]
+                  remove_field => [ "logmessage", "message" ]
                 }
-              } else if [module] == "nova.api.ec2" {
+              } else if [module] == "nova.api.openstack.placement.requestlog" {
                 grok {
-                  match => { "logmessage" => "%{NUMBER:seconds}s %{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} None\:None %{NUMBER:response} %{GREEDYDATA:user_agent}" }
-                  add_tag => ["apimetrics"]
-                }
-              } else if [module] == "nova.metadata.wsgi.server" {
-                grok {
-                  match => { "logmessage" => "%{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} status\: %{NUMBER:response} len\: %{NUMBER:bytes} time\: %{NUMBER:seconds}" }
-                  add_tag => ["apimetrics"]
+                  match => { "logmessage" => "%{IPORHOST:client_ip} \"%{WORD:verb} %{NOTSPACE:request}\" status\: %{NUMBER:response} len\: %{NUMBER:bytes} microversion\: %{NUMBER:microversion}" }
+                  add_tag => ["api"]
+                  remove_field => [ "logmessage", "message" ]
                 }
               }
             } else if "neutron" in [tags] {
               if [module] == "neutron.wsgi" {
-                if "accepted" not in [logmessage] {
-                  mutate {
-                    gsub => ["logmessage","\"",""]
-                  }
-                  grok {
-                    match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
-                    add_tag => ["apimetrics"]
-                  }
+                grok {
+                  match => { "logmessage" => "%{IPORHOST:client_ip} \"%{WORD:verb} %{NOTSPACE:request} HTTP/%{NUMBER:http_version}\" status\: %{NUMBER:response}  len\: %{NUMBER:bytes} time\: %{NUMBER:duration:float}" }
+                  add_tag => ["api"]
+                  remove_field => [ "logmessage", "message" ]
                 }
               } else if "neutron-ha-tool" in [source] {
                 mutate {
@@ -246,7 +236,7 @@
                 }
                 grok {
                   match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
-                  add_tag => ["apimetrics"]
+                  add_tag => ["api"]
                 }
                 mutate {
                   replace => { "module" => "glance.%{module}" }
@@ -260,7 +250,7 @@
                   }
                   grok {
                     match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
-                    add_tag => ["apimetrics"]
+                    add_tag => ["api"]
                   }
                 }
                 mutate {
@@ -303,7 +293,7 @@
                   }
                   grok {
                     match => { "logmessage" => "%{NOTSPACE:requesterip} %{NOTSPACE} %{NOTSPACE} \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes} %{BASE10NUM:httptime}" }
-                    add_tag => ["apimetrics"]
+                    add_tag => ["api"]
                   }
                 }
                 mutate {
@@ -312,7 +302,7 @@
               } else if [module] == "heat.engine.service" {
                 grok {
                   match => { "logmessage" => "%{GREEDYDATA:servicemessage}" }
-                  add_tag => ["apimetrics"]
+                  add_tag => ["api"]
                 }
               }
             } else if "swift-account" in [tags] {
@@ -359,28 +349,11 @@
                   add_field => { "loglevel" => "INFO" }
                 }
               }
-            } else if "keystone-access" in [tags] {
-              grok {
-                match => { "message" => "%{CISCOTIMESTAMP:keystone_access_timestamp}%{SPACE}%{SYSLOGHOST:log_host}%{SPACE}%{SYSLOGPROG:prog}%{SPACE}%{TIMESTAMP_ISO8601:keystone_timestmp}%{SPACE}%{NUMBER:pid}%{SPACE}%{NOTSPACE:loglevel}%{SPACE}%{NOTSPACE:module}%{SPACE}%{SYSLOG5424SD:requestid}%{SPACE}%{WORD:verb}%{SPACE}%{NOTSPACE:request}" }
-              }
             } else if "keystone" in [tags] {
-              if "apache-access" in [tags] {
+              if [loglevel] == "INFO" and [module] == "keystone.common.wsgi" {
                 grok {
-                  match => { "message" => "%{COMMONAPACHELOG}" }
-                }
-                mutate {
-                  add_field => { "logmessage" => "%{request}" }
-                  add_field => { "module" => "keystone.access" }
-                  add_field => { "loglevel" => "INFO" }
-                }
-              } else if "apache-error" in [tags] {
-                grok {
-                 patterns_dir => ["/opt/logstash/patterns"]
-                  match => { "message" => "%{KEYSTONE_SUBSECOND_TIMESTAMP:keystone_subsecond_timestamp} %{STANDARD_TIMESTAMP:standard_timestamp} %{NUMBER:pid} %{DATA:loglevel} %{DATA:module} \[%{DATA:requestid}\] %{WORD:verb} %{NOTSPACE:request}" }
-                }
-                mutate {
-                  replace => { "module" => "keystone.error.%{module}" }
-                  uppercase => [ "loglevel" ]
+                  match => { "logmessage" => "%{WORD:verb} %{NOTSPACE:request}" }
+                  remove_field => [ "logmessage", "message" ]
                 }
               }
             } else if "magnum" in [tags] {
@@ -390,7 +363,7 @@
                 }
                 grok {
                   match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
-                  add_tag => ["apimetrics"]
+                  add_tag => ["api"]
                 }
                 mutate {
                   replace => { "module" => "magnum.%{module}" }
@@ -403,7 +376,7 @@
                 }
                 grok {
                   match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
-                  add_tag => ["apimetrics"]
+                  add_tag => ["api"]
                 }
                 mutate {
                   replace => { "module" => "octavia.%{module}" }
