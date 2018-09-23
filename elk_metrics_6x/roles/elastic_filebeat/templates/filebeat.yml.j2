@@ -991,6 +991,11 @@ filebeat.prospectors:
     - /var/log/ceph/ceph-osd.*.log
     - /openstack/log/*ceph*/ceph-osd*.log
 
+  # NOTE(mnaser): Workaround for following Ceph bug
+  #               http://tracker.ceph.com/issues/35716
+  exclude_lines:
+    - '.*challenging authorizer.*'
+
   # Optional additional fields. These fields can be freely picked
   # to add additional information to the crawled log files for filtering
   tags:
