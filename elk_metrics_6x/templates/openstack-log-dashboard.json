@@ -12,7 +12,7 @@
          "description":"",
          "version":1,
          "kibanaSavedObjectMeta":{
-            "searchSourceJSON":"{\"index\":\"filebeat-*\",\"filter\":[],\"query\":{\"query\":\"\",\"language\":\"lucene\"}}"
+            "searchSourceJSON":"{\"index\":\"*\",\"filter\":[],\"query\":{\"query\":\"\",\"language\":\"lucene\"}}"
          }
       }
    }
@@ -32,7 +32,7 @@
          "description":"",
          "version":1,
          "kibanaSavedObjectMeta":{
-            "searchSourceJSON":"{\"index\":\"filebeat-*\",\"filter\":[],\"query\":{\"language\":\"lucene\",\"query\":\"\"}}"
+            "searchSourceJSON":"{\"index\":\"*\",\"filter\":[],\"query\":{\"language\":\"lucene\",\"query\":\"\"}}"
          }
       }
    }
@@ -52,7 +52,7 @@
          "description":"",
          "version":1,
          "kibanaSavedObjectMeta":{
-            "searchSourceJSON":"{\"index\":\"filebeat-*\",\"filter\":[],\"query\":{\"language\":\"lucene\",\"query\":\"\"}}"
+            "searchSourceJSON":"{\"index\":\"*\",\"filter\":[],\"query\":{\"language\":\"lucene\",\"query\":\"\"}}"
          }
       }
    }
@@ -78,7 +78,7 @@
          ],
          "version":1,
          "kibanaSavedObjectMeta":{
-            "searchSourceJSON":"{\"index\":\"filebeat-*\",\"highlightAll\":true,\"version\":true,\"query\":{\"language\":\"lucene\",\"query\":\"*\"},\"filter\":[]}"
+            "searchSourceJSON":"{\"index\":\"*\",\"highlightAll\":true,\"version\":true,\"query\":{\"language\":\"lucene\",\"query\":\"*\"},\"filter\":[]}"
          }
       }
    }
