@@ -183,7 +183,10 @@
                   "^%{CISCOTIMESTAMP:journalddate}%{SPACE}%{SYSLOGHOST:host}%{SPACE}%{SYSLOGPROG:prog}%{SPACE}%{TIMESTAMP_ISO8601:logdate}%{SPACE}%{NUMBER:pid}%{SPACE}%{NOTSPACE:loglevel}%{SPACE}%{NOTSPACE:module}%{SPACE}%{GREEDYDATA:logmessage}"
                 ]
               }
-              add_field => { "received_at" => "%{@timestamp}" }
+            }
+            date {
+              match => [ "logdate", ISO8601 ]
+              remove_field => [ "logdate" ]
             }
             if "nova" in [tags] {
               mutate {
