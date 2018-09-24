@@ -8,6 +8,7 @@
     input {
       beats {
         id => "inputBeats"
+        client_inactivity_timeout => 300
         port => {{ logstash_beat_input_port }}
         add_field => {
           "[@metadata][source_type]" => "beats"
