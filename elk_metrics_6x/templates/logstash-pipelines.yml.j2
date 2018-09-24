@@ -184,6 +184,12 @@
                 ]
               }
             }
+            grok {
+              match => {
+                "logmessage" => ["\[(%{NOTSPACE:request_id} %{NOTSPACE:user} %{NOTSPACE:tenant} %{NOTSPACE:domain} %{NOTSPACE:user_domain} %{NOTSPACE:project_domain}|\-)\] %{GREEDYDATA:logmessage}?"]
+              }
+              overwrite => [ "logmessage" ]
+            }
             date {
               match => [ "logdate", ISO8601 ]
               remove_field => [ "logdate" ]
@@ -194,17 +200,17 @@
               }
               if [module] == "nova.osapi_compute.wsgi.server" {
                 grok {
-                  match => { "logmessage" => "\[(%{NOTSPACE:requestid} %{NOTSPACE:user_id} %{NOTSPACE:tenant} \- \- \-|\-)\] %{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} status\: %{NUMBER:response} len\: %{NUMBER:bytes:int} time\: %{BASE10NUM:httptime:float}" }
+                  match => { "logmessage" => "%{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} status\: %{NUMBER:response} len\: %{NUMBER:bytes:int} time\: %{BASE10NUM:httptime:float}" }
                   add_tag => ["apimetrics"]
                 }
               } else if [module] == "nova.api.ec2" {
                 grok {
-                  match => { "logmessage" => "\[%{GREEDYDATA:requestid}\] %{NUMBER:seconds}s %{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} None\:None %{NUMBER:response} %{GREEDYDATA:user_agent}" }
+                  match => { "logmessage" => "%{NUMBER:seconds}s %{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} None\:None %{NUMBER:response} %{GREEDYDATA:user_agent}" }
                   add_tag => ["apimetrics"]
                 }
               } else if [module] == "nova.metadata.wsgi.server" {
                 grok {
-                  match => { "logmessage" => "\[%{GREEDYDATA:requestid}\] %{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} status\: %{NUMBER:response} len\: %{NUMBER:bytes} time\: %{NUMBER:seconds}" }
+                  match => { "logmessage" => "%{NOTSPACE:requesterip} %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} status\: %{NUMBER:response} len\: %{NUMBER:bytes} time\: %{NUMBER:seconds}" }
                   add_tag => ["apimetrics"]
                 }
               }
@@ -215,7 +221,7 @@
                     gsub => ["logmessage","\"",""]
                   }
                   grok {
-                    match => { "logmessage" => "\[(%{NOTSPACE:requestid} %{NOTSPACE:user_id} %{NOTSPACE:tenant} \- \- \-|\-)\] %{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
+                    match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
                     add_tag => ["apimetrics"]
                   }
                 }
@@ -227,7 +233,7 @@
               }
               if "starting" in [message] and "_grokparsefailure" in [tags] {
                 grok {
-                  match => { "logmessage" => "\[(%{NOTSPACE:requestid}|\-)\](%{SPACE}\(%{NUMBER:pid}\)) %{GREEDYDATA:servicemessage}" }
+                  match => { "logmessage" => "(%{SPACE}\(%{NUMBER:pid}\)) %{GREEDYDATA:servicemessage}" }
                 }
                 mutate {
                   remove_tag => ["_grokparsefailure"]
@@ -239,7 +245,7 @@
                   gsub => ["logmessage","\"",""]
                 }
                 grok {
-                  match => { "logmessage" => "\[(%{NOTSPACE:requestid} %{NOTSPACE:user_id} %{NOTSPACE:tenant} \- \- \-|\-)\] %{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
+                  match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
                   add_tag => ["apimetrics"]
                 }
                 mutate {
@@ -253,7 +259,7 @@
                     gsub => ["logmessage","\"",""]
                   }
                   grok {
-                    match => { "logmessage" => "\[(%{NOTSPACE:requestid} %{NOTSPACE:user_id} %{NOTSPACE:tenant} \- \- \-|\-)\] %{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
+                    match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
                     add_tag => ["apimetrics"]
                   }
                 }
@@ -296,7 +302,7 @@
                     gsub => ["logmessage","\"",""]
                   }
                   grok {
-                    match => { "logmessage" => "\[%{NOTSPACE:requestid} %{NOTSPACE:user_id} %{NOTSPACE:tenant} %{NOTSPACE} %{NOTSPACE} %{NOTSPACE}\] %{NOTSPACE:requesterip} %{NOTSPACE} %{NOTSPACE} \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes} %{BASE10NUM:httptime}" }
+                    match => { "logmessage" => "%{NOTSPACE:requesterip} %{NOTSPACE} %{NOTSPACE} \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes} %{BASE10NUM:httptime}" }
                     add_tag => ["apimetrics"]
                   }
                 }
@@ -305,7 +311,7 @@
                 }
               } else if [module] == "heat.engine.service" {
                 grok {
-                  match => { "logmessage" => "\[%{NOTSPACE:requestid} %{NOTSPACE:user_id} %{NOTSPACE:tenant} %{NOTSPACE} %{NOTSPACE} %{NOTSPACE} %{GREEDYDATA:servicemessage}" }
+                  match => { "logmessage" => "%{GREEDYDATA:servicemessage}" }
                   add_tag => ["apimetrics"]
                 }
               }
@@ -383,7 +389,7 @@
                   gsub => ["logmessage","\"",""]
                 }
                 grok {
-                  match => { "logmessage" => "\[(%{NOTSPACE:requestid} %{NOTSPACE:user_id} %{NOTSPACE:tenant} \- \- \-|\-)\] %{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
+                  match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
                   add_tag => ["apimetrics"]
                 }
                 mutate {
@@ -396,7 +402,7 @@
                   gsub => ["logmessage","\"",""]
                 }
                 grok {
-                  match => { "logmessage" => "\[(%{NOTSPACE:requestid} %{NOTSPACE:user_id} %{NOTSPACE:tenant} \- \- \-|\-)\] %{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
+                  match => { "logmessage" => "%{NOTSPACE:requesterip} \- \- \[%{NOTSPACE:req_date} %{NOTSPACE:req_time}\] %{NOTSPACE:verb} %{NOTSPACE:url_path} %{NOTSPACE:http_ver} %{NUMBER:response} %{NUMBER:bytes:int} %{BASE10NUM:httptime:float}" }
                   add_tag => ["apimetrics"]
                 }
                 mutate {
