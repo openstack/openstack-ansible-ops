@@ -142,6 +142,8 @@
             After: network-online.target
 
 - include_tasks: journalbeat_setup.yml
+  tags:
+    - setup
 
 - name: Force beat handlers
   meta: flush_handlers
