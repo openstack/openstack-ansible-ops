@@ -70,6 +70,8 @@
     - Enable and restart apm server
 
 - include_tasks: apm_setup.yml
+  tags:
+    - setup
 
 - name: Force beat handlers
   meta: flush_handlers

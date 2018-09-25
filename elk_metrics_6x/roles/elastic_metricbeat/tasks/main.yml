@@ -263,6 +263,8 @@
     - Enable and restart metricbeat
 
 - include_tasks: metricbeat_setup.yml
+  tags:
+    - setup
 
 - name: Force beat handlers
   meta: flush_handlers

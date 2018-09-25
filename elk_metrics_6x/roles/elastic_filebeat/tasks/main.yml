@@ -193,6 +193,8 @@
     - Enable and restart filebeat
 
 - include_tasks: filebeat_setup.yml
+  tags:
+    - setup
 
 - name: Force beat handlers
   meta: flush_handlers
