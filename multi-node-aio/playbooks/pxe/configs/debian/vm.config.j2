@@ -121,7 +121,7 @@ d-i partman-auto/expert_recipe string \
                       lv_name{ swap00 }                       \
                       method{ swap } format{ }                \
               .                                               \
-              8192 1 16384 ext4                               \
+              {{ default_vm_root_disk_size }} 1 16384 ext4    \
                       $lvmok{ } in_vg{ vmvg00 }               \
                       lv_name{ root00 }                       \
                       method{ format } format{ }              \
