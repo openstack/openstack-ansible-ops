@@ -15,3 +15,4 @@
 
 - import_playbook: functional.yml
 - import_playbook: testLayout.yml
+- import_playbook: testAPI.yml
