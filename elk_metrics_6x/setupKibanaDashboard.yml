@@ -20,7 +20,7 @@
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   vars:
-    disto_packages:
+    distro_packages:
       zypper:
         - nodejs6
       apt:
@@ -31,11 +31,36 @@
       shell: "curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -"
       when:
         - ansible_pkg_mgr == 'apt'
+        - ossec_nodejs_repo is not defined
+
+    - name: Manual nodejs installation
+      block:
+        - name: Add nodejs apt key
+          apt_key:
+            url: "{{ ossec_nodejs_repo.key_url }}"
+            state: "present"
+          register: _apt_task
+          until: _apt_task is success
+          retries: 3
+          delay: 2
+
+        - name: add nodejs repo to apt sources list
+          apt_repository:
+            repo: "{{ ossec_nodejs_repo.repo }}"
+            state: "{{ ossec_nodejs_repo.state }}"
+            filename: "{{ ossec_nodejs_repo.filename | default(omit) }}"
+          register: _apt_task
+          until: _apt_task is success
+          retries: 3
+          delay: 2
+      when:
+        - ansible_pkg_mgr == 'apt'
+        - ossec_nodejs_repo is defined
 
     - name: Install nodejs
       package:
-        name: "{{ disto_packages[ansible_pkg_mgr] }}"
-        state: "present"
+        name: "{{ distro_packages[ansible_pkg_mgr] }}"
+        state: "{{ elk_package_state | default('present') }}"
         update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
       register: _pkg_task
       until: _pkg_task is success
@@ -48,11 +73,14 @@
         path: /opt/elasticdump
         state: "present"
 
-    - block:
-      - name: Copy openstack dashboard json template to /tmp dir
-        template:
-          src: templates/openstack-log-dashboard.json
-          dest: /tmp/openstack-log-dashboard.json
+    - name: Copy openstack dashboard json template to /tmp dir
+      template:
+        src: templates/openstack-log-dashboard.json
+        dest: /tmp/openstack-log-dashboard.json
+      run_once: yes
 
-      - name: Upload Custom Openstack Log Dashboard
-        shell: "/opt/elasticdump/node_modules/elasticdump/bin/elasticdump --input=/tmp/openstack-log-dashboard.json --output={{ kibana_index_on_elasticsearch }} --type=data"
+    - name: Upload Custom Openstack Log Dashboard
+      shell: "/opt/elasticdump/node_modules/elasticdump/bin/elasticdump --input=/tmp/openstack-log-dashboard.json --output={{ kibana_index_on_elasticsearch }} --type=data"
+      environment:
+        no_proxy: "{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }}"
+      run_once: yes
