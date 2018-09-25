@@ -25,17 +25,6 @@
   tags:
     - always
 
-- name: Check for journal directory
-  stat:
-    path: /var/log/journal
-  register: journal_dir
-
-- name: exit playbook after uninstall
-  meta: end_play
-  when:
-    - not (journal_dir.stat.exists | bool) or
-      ansible_service_mgr != 'systemd'
-
 - name: Ensure beat is installed
   package:
     name: "{{ journalbeat_distro_packages }}"

@@ -53,16 +53,19 @@
       stat:
         path: /var/log/journal
       register: journal_dir
-
-    - name: exit playbook
-      meta: end_play
-      when:
-        - not (journal_dir.stat.exists | bool) or
-          ansible_service_mgr != 'systemd'
+      tags:
+        - always
 
   roles:
     - role: elastic_journalbeat
+      when:
+        - journal_dir.stat.exists | bool
+        - ansible_service_mgr == 'systemd'
+
     - role: elastic_rollup
+      when:
+        - journal_dir.stat.exists | bool
+        - ansible_service_mgr == 'systemd'
       index_name: journalbeat
 
   tags:
