@@ -13,75 +13,79 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Gather facts
+- name: Gather Facts for vm_hosts
   hosts: vm_hosts
-  gather_facts: "{{ gather_facts | default(true) }}"
-  environment: "{{ deployment_environment_variables | default({}) }}"
-  tags:
-    - deploy-vms
-  tasks:
-    - name: Gather variables for each operating system
-      include_vars: "{{ item }}"
-      with_first_found:
-        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
-        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
-        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
-      tags:
-        - always
+  gather_facts: yes
 
+  tasks:
     - name: Get info about the virt storage pools
       virt_pool:
         command: info
       register: _virt_pools
 
+    - name: Set virt_pools host fact
+      set_fact:
+        virt_pools: "{{ _virt_pools }}"
+
+- name: Prepare & Create VMs
+  hosts: pxe_servers
+  gather_facts: no
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
+  tasks:
+
     - name: Stop running VMs
       virt:
-        name: "{{ hostvars[item]['server_hostname'] }}"
+        name: "{{ server_hostname }}"
         command: destroy
       failed_when: false
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+        - server_vm | default(false) | bool
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['vm_hosts'] }}"
 
     - name: Delete VM LV
       lvol:
         vg: "{{ default_vm_disk_vg }}"
-        lv: "{{ hostvars[item]['server_hostname'] }}"
+        lv: "{{ server_hostname }}"
         state: absent
         force: yes
       failed_when: false
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+        - server_vm | default(false) | bool
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['vm_hosts'] }}"
 
     - name: Delete VM Disk Image
       file:
-        path: "{{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}.img"
+        path: "{{ hostvars[item]['virt_pools'].pools.default.path | default('/data/images') }}/{{ server_hostname }}.img"
         state: absent
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+        - server_vm | default(false) | bool
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['vm_hosts'] }}"
 
     - name: Undefine the VM
       virt:
-        name: "{{ hostvars[item]['server_hostname'] }}"
+        name: "{{ server_hostname }}"
         command: undefine
       failed_when: false
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+        - server_vm | default(false) | bool
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['vm_hosts'] }}"
 
     - name: Create VM LV
       lvol:
         vg: "{{ default_vm_disk_vg }}"
-        lv: "{{ hostvars[item]['server_hostname'] }}"
+        lv: "{{ server_hostname }}"
         size: "{{ default_vm_storage }}"
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
+        - server_vm | default(false) | bool
         - default_vm_disk_mode == "lvm"
-      with_items: "{{ groups['pxe_servers'] }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['vm_hosts'] }}"
 
     - name: Setup/clean-up file-based disk images
       when:
@@ -89,9 +93,11 @@
       block:
         - name: Find existing base image files
           find:
-            paths: "{{ _virt_pools.pools.default.path | default('/data/images') }}"
+            paths: "{{ hostvars[item]['virt_pools'].pools.default.path | default('/data/images') }}"
             patterns: '*-base.img'
           register: _base_images
+          delegate_to: "{{ item }}"
+          with_items: "{{ groups['vm_hosts'] }}"
 
         - name: Enable/disable vm_use_snapshot based on whether there are base image files
           set_fact:
@@ -104,19 +110,22 @@
           with_items: "{{ _base_images.files }}"
           when:
             - not (vm_use_snapshot | bool)
+          delegate_to: "{{ item }}"
+          with_items: "{{ groups['vm_hosts'] }}"
 
         - name: Create VM Disk Image
           command: >-
             qemu-img create
             -f qcow2
             {% if vm_use_snapshot | bool %}
-            -b {{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}-base.img
+            -b {{ hostvars[item]['virt_pools'].pools.default.path | default('/data/images') }}/{{ server_hostname }}-base.img
             {% endif %}
-            {{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}.img
+            {{ hostvars[item]['virt_pools'].pools.default.path | default('/data/images') }}/{{ server_hostname }}.img
             {{ default_vm_storage }}m
           when:
-            - hostvars[item]['server_vm'] | default(false) | bool
-          with_items: "{{ groups['pxe_servers'] }}"
+            - server_vm | default(false) | bool
+          delegate_to: "{{ item }}"
+          with_items: "{{ groups['vm_hosts'] }}"
 
     # Note (odyssey4me):
     # This will only work on a host which has
@@ -133,7 +142,7 @@
             virt-sysprep
             --enable customize
             --ssh-inject root:file:/root/.ssh/id_rsa.pub
-            --add {{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}.img
+            --add {{ hostvars[item]['virt_pools'].pools.default.path | default('/data/images') }}/{{ hostvars[item]['server_hostname'] }}.img
           when:
             - hostvars[item]['server_vm'] | default(false) | bool
           with_items: "{{ groups['pxe_servers'] }}"
@@ -162,37 +171,61 @@
       until: "'<guest>' in virsh_caps.stdout"
       retries: 6
       delay: 10
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['vm_hosts'] }}"
 
     - name: Define the VM
       virt:
-        name: "{{ hostvars[item]['server_hostname'] }}"
+        name: "{{ server_hostname }}"
         command: define
         xml: >-
           {%- if vm_use_snapshot | bool %}
-          {{ lookup('file', _virt_pools.pools.default.path | default('/data/images') ~ '/' ~ hostvars[item]['server_hostname'] ~ '.xml') }}
+          {{ lookup('file', hostvars[item]['virt_pools'].pools.default.path | default('/data/images') ~ '/' ~ hostvars[item]['server_hostname'] ~ '.xml') }}
           {%- else %}
           {{ lookup('template', 'kvm/kvm-vm.xml.j2') }}
           {%- endif %}
       failed_when: false
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+        - server_vm | default(false) | bool
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['vm_hosts'] }}"
 
     - name: Get the VM xml
       virt:
         command: get_xml
-        name: "{{ hostvars[item]['server_hostname'] }}"
+        name: "{{ server_hostname }}"
       register: vm_xml
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+        - server_vm | default(false) | bool
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['vm_hosts'] }}"
 
     - name: Write the VM xml
       copy:
-        content: "{{ item.get_xml }}"
-        dest: "/etc/libvirt/qemu/{{ item.item }}.xml"
-      with_items: "{{ vm_xml.results }}"
+        content: "{{ item.1.get_xml }}"
+        dest: "/etc/libvirt/qemu/{{ item.1.item }}.xml"
+      delegate_to: "{{ item.0 }}"
+      with_nested:
+        - "{{ groups['vm_hosts'] }}"
+        - "{{ vm_xml.results }}"
 
+- name: Start VMs
+  hosts: vm_hosts
+  gather_facts: "{{ gather_facts | default(true) }}"
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
+  tasks:
+    - name: Gather variables for each operating system
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
+      tags:
+        - always
     - name: Start the VM
       virt:
         name: "{{ hostvars[item]['server_hostname'] }}"

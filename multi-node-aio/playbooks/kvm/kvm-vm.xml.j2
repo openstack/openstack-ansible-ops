@@ -1,16 +1,16 @@
 <domain type='kvm'>
-  <name>{{ hostvars[item]['server_hostname'] }}</name>
-  <memory unit='MiB'>{{ hostvars[item]['server_vm_ram'] }}</memory>
-  <currentMemory unit='MiB'>{{ hostvars[item]['server_vm_ram'] }}</currentMemory>
-{% set _vcpus_threads = ((hostvars[item]['server_vm_vcpus'] | int) // 2) %}
+  <name>{{ server_hostname }}</name>
+  <memory unit='MiB'>{{ server_vm_ram }}</memory>
+  <currentMemory unit='MiB'>{{ server_vm_ram }}</currentMemory>
+{% set _vcpus_threads = ((server_vm_vcpus | int) // 2) %}
 {% set vcpus_threads = (_vcpus_threads | int) == 0 | ternary('1', _vcpus_threads) %}
-{% set vcpus = (hostvars[item]['server_vm_vcpus'] | int) * (vcpus_threads | int) %}
+{% set vcpus = (server_vm_vcpus | int) * (vcpus_threads | int) %}
   <vcpu placement='static' current='{{ vcpus | int }}'>{{ vcpus | int }}</vcpu>
   <resource>
     <partition>/machine</partition>
   </resource>
   <os>
-    <type arch='x86_64' machine='pc-i440fx-{{ ansible_distribution_release | lower }}'>hvm</type>
+    <type arch='x86_64' machine='pc-i440fx-{{ hostvars[item]["ansible_distribution_release"] | lower }}'>hvm</type>
     <bootmenu enable='yes'/>
   </os>
   <features>
@@ -18,7 +18,7 @@
     <apic/>
   </features>
   <cpu mode='host-model'>
-    <topology sockets='1' cores='{{ hostvars[item]["server_vm_vcpus"] | int }}' threads='{{ vcpus_threads | int }}'/>
+    <topology sockets='1' cores='{{ server_vm_vcpus | int }}' threads='{{ vcpus_threads | int }}'/>
   </cpu>
   <clock offset='utc'>
     <timer name='rtc' tickpolicy='catchup'/>
@@ -37,11 +37,11 @@
 {% if default_vm_disk_mode == "lvm" %}
     <disk type='block' device='disk'>
       <driver name='qemu' type='raw' cache='none' io='native'/>
-      <source dev='/dev/{{ default_vm_disk_vg }}/{{ hostvars[item]["server_hostname"] }}'/>
+      <source dev='/dev/{{ default_vm_disk_vg }}/{{ server_hostname }}'/>
 {% elif default_vm_disk_mode == "file" %}
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2' discard='unmap' cache='none' io='native'/>
-      <source file='{{ _virt_pools.pools.default.path | default('/data/images') }}/{{ hostvars[item]["server_hostname"] }}.img'/>
+      <source file='{{ _virt_pools.pools.default.path | default('/data/images') }}/{{ server_hostname }}.img'/>
 {% endif %}
       <target dev='sda' bus='scsi'/>
       <alias name='scsi0-0-0-0'/>
@@ -59,10 +59,10 @@
       <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x0'/>
     </controller>
 
-{% for _key, _value in hostvars[item]['server_networks'].items()|sort(attribute='1.iface') %}
+{% for _key, _value in server_networks.items()|sort(attribute='1.iface') %}
     <interface type='network'>
-{%     if _key == hostvars[item]['server_vm_primary_network'] %}
-      <mac address='{{ hostvars[item]["server_mac_address"] | lower }}'/>
+{%     if _key == server_vm_primary_network %}
+      <mac address='{{ server_mac_address | lower }}'/>
       <boot order='2'/>
 {%     endif %}
       <source network='{{ _value.vm_int_iface }}'/>
