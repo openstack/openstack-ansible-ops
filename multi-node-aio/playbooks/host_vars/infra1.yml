@@ -13,20 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ansible_os_family: "{{ images[default_vm_image]['image_type'] }}"
-
 server_hostname: 'infra1'                                   # str  - required, hostname of server
-server_domain_name: 'openstack.local'                # str  - required, domain name of server
-server_vm: true                                             # bool - not required, used to specify a host is to become a VM
-server_vm_ram: '{{ infra_vm_server_ram | default(8192) }}'  # int  - not required, used to specify ram when provisioning a VM
-server_vm_vcpus: '{{ infra_vm_server_vcpus | default(4) }}' # int  - not required, used to specify vcpus when provisioning a VM
 server_vm_fixed_addr: '10.0.2.100'                          # str  - not required, used to specify fixed address when using internal DHCPD
-server_vm_primary_network: 'dhcp'                           # str  - not required, primary network used to kick the VM
-server_image: "{{ default_vm_image }}"                      # str  - required, image name
-server_default_interface: 'eth0'                            # str  - required, default interface
 server_mac_address: '52:54:00:bd:80:00'                     # str  - required, mac address of default interface
-server_preseed_ks: 'vm'                                     # str  - required, name of preseed/kickstart file
-server_extra_options: ''                                    # str  - not required, added kernel options
 
 server_networks:                        # dict - required, hash of networks, can be empty, key is used to name the networks.
   dhcp:
