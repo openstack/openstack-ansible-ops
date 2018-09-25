@@ -665,6 +665,9 @@ metricbeat.modules:
 ##processors:
 ##- add_docker_metadata: ~
 #
+processors:
+- add_host_metadata: ~
+
 ##============================= Elastic Cloud ==================================
 #
 ## These settings simplify using metricbeat with the Elastic Cloud (https://cloud.elastic.co/).
