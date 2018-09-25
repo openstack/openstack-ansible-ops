@@ -67,10 +67,10 @@
           set_fact:
             index_refresh_fact:
               attributes:
-                fieldFormatMap: "{{ attributes['fieldFormatMap'] | to_json }}"
+                fieldFormatMap: "{{ attributes['fieldFormatMap'] | string }}"
                 timeFieldName: "{{ attributes['timeFieldName'] }}"
                 title: "{{ attributes['title'] }}"
-                fields: "{{ index_fields_format_return['content'] | to_json }}"
+                fields: "{{ index_fields_format_return['content'] | string }}"
 
         - name: Put index fields
           uri:
