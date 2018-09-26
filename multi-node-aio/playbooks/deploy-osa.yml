@@ -129,6 +129,8 @@
       with_items:
         - '---'
         - 'osa_ops_mnaio: true'
+      when:
+        - pre_config_osa | default(true) | bool
 
     - name: Bootstrap ansible
       command: bash ./scripts/bootstrap-ansible.sh
