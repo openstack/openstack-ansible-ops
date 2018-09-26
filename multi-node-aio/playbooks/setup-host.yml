@@ -492,3 +492,10 @@
             echo ${module} | tee -a /etc/modules
           fi
         done
+
+    - name: Wait for guest capabilities to appear
+      command: "virsh capabilities"
+      register: virsh_caps
+      until: "'<guest>' in virsh_caps.stdout"
+      retries: 6
+      delay: 10

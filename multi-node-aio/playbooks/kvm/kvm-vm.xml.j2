@@ -41,7 +41,7 @@
 {% elif default_vm_disk_mode == "file" %}
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2' discard='unmap' cache='none' io='native'/>
-      <source file='{{ _virt_pools.pools.default.path | default('/data/images') }}/{{ server_hostname }}.img'/>
+      <source file='{{ hostvars[item]['virt_pools'].pools.default.path | default('/data/images') }}/{{ server_hostname }}.img'/>
 {% endif %}
       <target dev='sda' bus='scsi'/>
       <alias name='scsi0-0-0-0'/>
