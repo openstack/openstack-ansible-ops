@@ -19,7 +19,7 @@ source bootstrap.sh
 
 source ansible-env.rc
 
-ansible mnaio_hosts \
+ansible vm_hosts \
         -i ${MNAIO_INVENTORY:-"playbooks/inventory"} \
         -m pip \
         -a "name=netaddr"

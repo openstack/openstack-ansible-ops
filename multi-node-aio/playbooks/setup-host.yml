@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Gather facts
-  hosts: mnaio_hosts
+  hosts: vm_hosts
   gather_facts: "{{ gather_facts | default(true) }}"
   environment: "{{ deployment_environment_variables | default({}) }}"
   tags:

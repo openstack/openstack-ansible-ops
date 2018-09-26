@@ -27,13 +27,6 @@ swift3         ansible_host=10.0.236.142
 [vm_hosts]
 mnaio1
 
-################################## PXE HOSTS ##################################
-
-# The group "mnaio_hosts" is used to define all host machines that will serve
-#  the purpose of running an MNAIO test environment.
-[mnaio_hosts]
-mnaio1
-
 # The group "pxe_hosts" is used to setup all systems that will be responsible
 #  for PXE boot. This will install all of the needed capabilities to TFTP serve
 #  system images.

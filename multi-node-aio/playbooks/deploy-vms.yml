@@ -226,6 +226,7 @@
         - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
       tags:
         - always
+
     - name: Start the VM
       virt:
         name: "{{ hostvars[item]['server_hostname'] }}"
