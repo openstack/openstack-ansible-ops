@@ -20,61 +20,57 @@
   tags:
     - save-vms
   tasks:
-    - name: Gather variables for each operating system
-      include_vars: "{{ item }}"
-      with_first_found:
-        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
-        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
-        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
-      tags:
-        - always
-
-    - name: Get info about the virt storage pools
+    - name: Get info about existing virt storage pools
       virt_pool:
         command: info
       register: _virt_pools
-      tags:
-        - always
 
-    - name: Stop running VMs
+    - name: Get info about existing VM's
       virt:
-        name: "{{ hostvars[item]['server_hostname'] }}"
-        state: shutdown
-      when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+        command: list_vms
+      register: _virt_list
+
+    - name: Shut down all running VM's
+      virt:
+        name: "{{ item }}"
+        command: shutdown
+      failed_when: false
+      with_items: "{{ _virt_list.list_vms }}"
+
+    - name: Wait for shut down to complete
+      command: |
+        virsh domstate {{ item }}
+      register: _vm_shutdown
+      until: _vm_shutdown.stdout.find('shut off') != -1
+      retries: 5
+      delay: 60
+      with_items: "{{ _virt_list.list_vms }}"
 
     - name: Commit, compress and save VM Disk Image and prepare new copy-on-write image
       shell: |
-        if [[ -e {{ hostvars[item]['server_hostname'] }}.img ]]; then
-          if [[ -e {{ hostvars[item]['server_hostname'] }}-base.img ]]; then
-            qemu-img commit {{ hostvars[item]['server_hostname'] }}.img
+        if [[ -e {{ item }}.img ]]; then
+          if [[ -e {{ item }}-base.img ]]; then
+            qemu-img commit {{ item }}.img
           else
-            qemu-img convert -O qcow2 -c {{ hostvars[item]['server_hostname'] }}.img {{ hostvars[item]['server_hostname'] }}-base.img
-            qemu-img create -f qcow2 -b {{ hostvars[item]['server_hostname'] }}-base.img {{ hostvars[item]['server_hostname'] }}.img
+            qemu-img convert -O qcow2 -c {{ item }}.img {{ item }}-base.img
+            qemu-img create -f qcow2 -b {{ item }}-base.img {{ item }}.img
           fi
           exit 2
         fi
       args:
         executable: /bin/bash
         chdir: "{{ _virt_pools.pools.default.path | default('/data/images') }}"
-      when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+      with_items: "{{ _virt_list.list_vms }}"
       register: _save_disk_image
       changed_when: _save_disk_image.rc == 2
       failed_when: _save_disk_image.rc not in [0, 2]
 
     - name: Save VM definition
       copy:
-        src: "/etc/libvirt/qemu/{{ hostvars[item]['server_hostname'] }}.xml"
+        src: "/etc/libvirt/qemu/{{ item }}.xml"
         dest: "{{ _virt_pools.pools.default.path | default('/data/images') }}/"
         remote_src: yes
-      when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
+      with_items: "{{ _virt_list.list_vms }}"
 
     - name: Get the current SHA1 for the manifest
       command: "git rev-parse HEAD"
