@@ -205,13 +205,13 @@
 
               if [module] == "nova.api.openstack.requestlog" {
                 grok {
-                  match => { "logmessage" => "%{IPORHOST:client_ip} \"%{WORD:verb} %{NOTSPACE:request}\" status\: %{NUMBER:response} len\: %{NUMBER:bytes} microversion\: %{NUMBER:microversion} time\: %{NUMBER:duration:float}" }
+                  match => { "logmessage" => "%{IPORHOST:client_ip} \"%{WORD:verb} %{NOTSPACE:request}\" status\: %{NUMBER:response} len\: %{NUMBER:bytes} microversion\: (%{NUMBER:microversion}|\-) time\: %{NUMBER:duration:float}" }
                   add_tag => ["api"]
                   remove_field => [ "logmessage", "message" ]
                 }
               } else if [module] == "nova.api.openstack.placement.requestlog" {
                 grok {
-                  match => { "logmessage" => "%{IPORHOST:client_ip} \"%{WORD:verb} %{NOTSPACE:request}\" status\: %{NUMBER:response} len\: %{NUMBER:bytes} microversion\: %{NUMBER:microversion}" }
+                  match => { "logmessage" => "%{IPORHOST:client_ip} \"%{WORD:verb} %{NOTSPACE:request}\" status\: %{NUMBER:response} len\: %{NUMBER:bytes} microversion\: (%{NUMBER:microversion}|\-)" }
                   add_tag => ["api"]
                   remove_field => [ "logmessage", "message" ]
                 }
