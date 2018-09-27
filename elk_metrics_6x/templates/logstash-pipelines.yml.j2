@@ -195,6 +195,14 @@
               remove_field => [ "logdate" ]
             }
             if "nova" in [tags] {
+              # Instance ID from logs (i.e. "[instance: 5ee83c6e-3604-467a-be54-e48429086e3f]")
+              grok {
+                match => {
+                  "logmessage" => ["(\[instance\: %{NOTSPACE:instance_id}\] )?%{GREEDYDATA:logmessage}?"]
+                }
+                overwrite => [ "logmessage" ]
+              }
+
               if [module] == "nova.api.openstack.requestlog" {
                 grok {
                   match => { "logmessage" => "%{IPORHOST:client_ip} \"%{WORD:verb} %{NOTSPACE:request}\" status\: %{NUMBER:response} len\: %{NUMBER:bytes} microversion\: %{NUMBER:microversion} time\: %{NUMBER:duration:float}" }
