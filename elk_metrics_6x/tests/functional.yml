@@ -57,6 +57,8 @@
         name: vm.swappiness
         value: 10
         state: present
+        reload: "yes"
+        sysctl_file: /etc/sysctl.d/99-elasticsearch.conf
 
     - name: Flush iptables rules
       command: "{{ item }}"
