@@ -60,6 +60,7 @@
     value: "524288"
     state: "present"
     reload: "yes"
+    sysctl_file: /etc/sysctl.d/99-elasticsearch.conf
   delegate_to: "{{ physical_host }}"
   tags:
     - sysctl
@@ -70,6 +71,7 @@
     value: "1048576"
     state: "present"
     reload: "yes"
+    sysctl_file: /etc/sysctl.d/99-elasticsearch.conf
   delegate_to: "{{ physical_host }}"
   tags:
     - sysctl

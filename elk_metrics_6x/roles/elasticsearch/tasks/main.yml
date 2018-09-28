@@ -68,6 +68,19 @@
   tags:
     - config
 
+- name: Set sysconfig service defaults
+  lineinfile:
+    path: "{{ elasticsearch_sysconfig_path }}"
+    regexp: '^{{ item.key }}='
+    line: '{{ item.key }}={{ item.value }}'
+  with_items:
+    - key: MAX_OPEN_FILES
+      value: 65536
+    - key: MAX_LOCKED_MEMORY
+      value: unlimited
+    - key: MAX_MAP_COUNT
+      value: 524288
+
 - name: Drop jvm conf file(s)
   template:
     src: "{{ item.src }}"

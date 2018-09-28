@@ -62,6 +62,15 @@
   notify:
     - Enable and restart logstash
 
+- name: Set sysconfig service defaults
+  lineinfile:
+    path: "{{ logstash_sysconfig_path }}"
+    regexp: '^{{ item.key }}='
+    line: '{{ item.key }}={{ item.value }}'
+  with_items:
+    - key: LS_OPEN_FILES
+      value: 32768
+
 - name: Drop jvm conf file(s)
   template:
     src: "{{ item.src }}"

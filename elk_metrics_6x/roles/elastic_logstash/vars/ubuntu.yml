@@ -16,3 +16,5 @@
 logstash_distro_packages:
   - logrotate
   - logstash
+
+logstash_sysconfig_path: /etc/default/logstash

@@ -16,3 +16,5 @@
 elasticsearch_distro_packages:
   - logrotate
   - elasticsearch
+
+elasticsearch_sysconfig_path: /etc/default/elasticsearch
