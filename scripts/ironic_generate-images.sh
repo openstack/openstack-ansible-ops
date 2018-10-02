@@ -52,7 +52,7 @@ function make-base-image {
 }
 
 # install needed binaries
-apt-get install -y kpartx parted qemu-utils
+apt-get install -y kpartx parted qemu-utils virtualenv
 
 mkdir -p ~/dib
 pushd ~/dib
