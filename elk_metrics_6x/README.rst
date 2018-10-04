@@ -268,7 +268,7 @@ Create the containers
 .. code-block:: bash
 
    cd /opt/openstack-ansible/playbooks
-   openstack-ansible lxc-containers-create.yml --limit elk_all
+   openstack-ansible lxc-containers-create.yml --limit elk_all,log_hosts
 
 
 Deploying | Installing with embedded Ansible
