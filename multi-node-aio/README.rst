@@ -114,7 +114,6 @@ Set to instruct the preseed what the default network is expected to be:
 Set the VM disk size in gigabytes:
   ``VM_DISK_SIZE="${VM_DISK_SIZE:-252}"``
 
-
 Instruct the system do all of the required host setup:
   ``SETUP_HOST=${SETUP_HOST:-true}``
 
@@ -203,20 +202,9 @@ Instruct the system to use a customized iPXE script during boot of VMs:
 Re-kicking VM(s)
 ----------------
 
-Re-kicking a VM is as simple as stopping a VM, delete the logical volume, create
-a new logical volume, start the VM. The VM will come back online, pxe boot, and
-install the base OS.
-
-.. code-block:: bash
-
-    virsh destroy "${VM_NAME}"
-    lvremove "/dev/mapper/vg01--${VM_NAME}"
-    lvcreate -L 60G vg01 -n "${VM_NAME}"
-    virsh start "${VM_NAME}"
-
-
-To rekick all VMs, simply re-execute the ``deploy-vms.yml`` playbook and it will
-do it automatically.
+To re-kick all VMs, simply re-execute the ``deploy-vms.yml`` playbook and it
+will do it automatically. The ansible ``--limit`` parameter may be used to
+selectively re-kick a specific VM.
 
 .. code-block:: bash
 
@@ -267,47 +255,37 @@ command or the following bash loop to restore everything to a known point.
       virsh snapshot-revert --snapshotname $instance-kilo-snap --running $instance
     done
 
-Using a file-based backing store with thin-provisioned VM's
------------------------------------------------------------
+Saving VM images for re-use on another host
+-------------------------------------------
 
-If you wish to use a file-based backing store (instead of the default LVM-based
-backing store) for the VM's, then set the following option before executing
-``build.sh``.
-
-.. code-block:: bash
-
-    export MNAIO_ANSIBLE_PARAMETERS="-e default_vm_disk_mode=file"
-    ./build.sh
-
-If you wish to save the current file-based images in order to implement a
-thin-provisioned set of VM's which can be saved and re-used, then use the
-``save-vms.yml`` playbook. This will stop the VM's and rename the files to
-``*-base.img``. Re-executing the ``deploy-vms.yml`` playbook afterwards will
-rebuild the VMs from those images.
+If you wish to save the current images in order to implement a thin-provisioned
+set of VM's which can be saved and re-used, then use the ``save-vms.yml``
+playbook. This will stop the VM's and rename the files to ``*-base.img``.
+Re-executing the ``deploy-vms.yml`` playbook afterwards will rebuild the VMs
+from those images.
 
 .. code-block:: bash
 
     ansible-playbook -i playbooks/inventory playbooks/save-vms.yml
-    ansible-playbook -i playbooks/inventory -e default_vm_disk_mode=file playbooks/deploy-vms.yml
+    ansible-playbook -i playbooks/inventory playbooks/deploy-vms.yml
 
 To disable this default functionality when re-running ``build.sh`` set the
-build not to use the snapshots as follows.
+build not to use the images as follows.
 
 .. code-block:: bash
 
-    export MNAIO_ANSIBLE_PARAMETERS="-e default_vm_disk_mode=file -e vm_use_snapshot=no"
+    export MNAIO_ANSIBLE_PARAMETERS="-e vm_use_snapshot=no"
     ./build.sh
 
-If you have previously saved some file-backed images to remote storage then,
-if they are available via a URL, they can be downloaded and used on a fresh
-host as follows.
+If you have previously saved some images to remote storage then, if they are
+available via a URL, they can be downloaded and used on a fresh host as follows.
 
 .. code-block:: bash
 
     # First prepare the host and get the base services started
     ./bootstrap.sh
     source ansible-env.rc
-    export ANSIBLE_PARAMETERS="-i playbooks/inventory -e default_vm_disk_mode=file"
+    export ANSIBLE_PARAMETERS="-i playbooks/inventory"
     ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/setup-host.yml
     ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-acng.yml playbooks/deploy-pxe.yml playbooks/deploy-dhcp.yml
 

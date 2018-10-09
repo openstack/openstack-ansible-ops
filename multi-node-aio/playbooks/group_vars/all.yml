@@ -15,8 +15,6 @@ default_interface: "{{ default_network | default('eth0') }}"
 default_vm_image: "{{ default_image | default('ubuntu-16.04-amd64') }}"
 default_vm_storage: "{{ vm_disk_size | default(92160) }}"
 default_vm_root_disk_size: 8192
-default_vm_disk_mode: lvm
-default_vm_disk_vg: vg01
 default_acng_bind_address: 0.0.0.0
 default_os_families:
   ubuntu-16.04-amd64: debian
@@ -37,7 +35,7 @@ ipxe_kernel_base_url: "http://boot.ipxe.org"
 vm_ssh_timeout: 1500
 
 # Whether to use snapshots (if they are available) for file-backed VM's
-vm_use_snapshot: "{{ default_vm_disk_mode == 'file' }}"
+vm_use_snapshot: yes
 
 # IP address, or domain name of the TFTP server
 tftp_server: "{{ hostvars[groups['pxe_hosts'][0]]['ansible_host'] | default(ansible_host) }}"

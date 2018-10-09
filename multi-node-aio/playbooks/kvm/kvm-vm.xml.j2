@@ -34,15 +34,9 @@
   </pm>
   <devices>
     <emulator>/usr/bin/kvm-spice</emulator>
-{% if default_vm_disk_mode == "lvm" %}
-    <disk type='block' device='disk'>
-      <driver name='qemu' type='raw' cache='none' io='native'/>
-      <source dev='/dev/{{ default_vm_disk_vg }}/{{ server_hostname }}'/>
-{% elif default_vm_disk_mode == "file" %}
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2' discard='unmap' cache='none' io='native'/>
       <source file='{{ hostvars[item]['virt_pools'].pools.default.path | default('/data/images') }}/{{ server_hostname }}.img'/>
-{% endif %}
       <target dev='sda' bus='scsi'/>
       <alias name='scsi0-0-0-0'/>
       <address type='drive' controller='0' bus='0' target='0' unit='0'/>

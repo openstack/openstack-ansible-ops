@@ -326,95 +326,6 @@
       when:
         - mnaio_data_disk is undefined
 
-    - name: Get info about existing virt storage pools
-      virt_pool:
-        command: info
-      register: _virt_pools
-
-    - name: If an existing virt pool does not match default_vm_disk_mode, remove it
-      when:
-        - _virt_pools.pools.default is defined
-        - (default_vm_disk_mode == "file" and _virt_pools.pools.default.format is defined) or
-          (default_vm_disk_mode == "lvm" and _virt_pools.pools.default.format is not defined)
-      block:
-        - name: Stop running VMs
-          virt:
-            name: "{{ item }}"
-            command: destroy
-          failed_when: false
-          with_items: "{{ _virt_pools.pools.default.volumes }}"
-
-        - name: Delete VM LVs
-          lvol:
-            vg: "{{ default_vm_disk_vg }}"
-            lv: "{{ item }}"
-            state: absent
-            force: yes
-          failed_when: false
-          with_items: "{{ _virt_pools.pools.default.volumes }}"
-
-        - name: Delete VM Disk Images
-          file:
-            path: "{{ _virt_pools.pools.default.path | default('/data/images') }}/{{ item }}.img"
-            state: absent
-          with_items: "{{ _virt_pools.pools.default.volumes }}"
-
-        - name: Undefine the VMs
-          virt:
-            name: "{{ item }}"
-            command: undefine
-          failed_when: false
-          with_items: "{{ _virt_pools.pools.default.volumes }}"
-
-        - name: Dismount the mount point if default_vm_disk_mode is 'lvm'
-          mount:
-            path: /data
-            state: unmounted
-          when:
-            - default_vm_disk_mode == "lvm"
-
-        - name: Stop the pool
-          virt_pool:
-            command: destroy
-            name: default
-
-        - name: Delete the pool, destroying its contents
-          virt_pool:
-            command: delete
-            name: default
-
-        - name: Undefine the pool
-          virt_pool:
-            command: undefine
-            name: default
-
-        - name: Remove the mount point if default_vm_disk_mode is 'lvm'
-          mount:
-            path: /data
-            state: absent
-          when:
-            - default_vm_disk_mode == "lvm"
-
-        - name: Reload systemd to remove generated unit files for mount
-          systemd:
-            daemon_reload: yes
-          when:
-            - default_vm_disk_mode == "lvm"
-
-        - name: Remove the volume group if default_vm_disk_mode is 'file'
-          lvg:
-            vg: vg01
-            state: absent
-          register: _remove_vg
-          when:
-            - default_vm_disk_mode == "file"
-
-        - name: Remove the existing disk partition
-          parted:
-            device: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}"
-            number: 1
-            state: absent
-
     - name: Setup the data disk partition
       parted:
         device: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}"
@@ -424,74 +335,45 @@
         state: present
       register: _add_partition
 
-    - name: Prepare the data disk for 'lvm' default_vm_disk_mode
+    - name: Prepare the data disk file system
+      filesystem:
+        fstype: ext4
+        dev: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
+        force: yes
       when:
-        - default_vm_disk_mode == "lvm"
-      block:
-        - name: Create the volume group
-          lvg:
-            vg: vg01
-            pvs: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
+        - _add_partition is changed
 
-        - name: Define the default virt storage pool
-          virt_pool:
-            name: default
-            state: present
-            xml: |
-              <pool type='logical'>
-                <name>default</name>
-                <source>
-                  <name>vg01</name>
-                  <format type='lvm2'/>
-                </source>
-                <target>
-                  <path>/dev/vg01</path>
-                </target>
-              </pool>
+    - name: Mount the data disk
+      mount:
+        src: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
+        path: /data
+        state: mounted
+        fstype: ext4
 
-    - name: Prepare the data disk for 'file' default_vm_disk_mode
-      when:
-        - default_vm_disk_mode == "file"
-      block:
-        - name: Prepare the data disk file system
-          filesystem:
-            fstype: ext4
-            dev: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
-            force: yes
-          when:
-            - _add_partition is changed
+    - name: Create the images directory
+      file:
+        path: /data/images
+        owner: root
+        group: root
+        mode: "0755"
+        state: directory
 
-        - name: Mount the data disk
-          mount:
-            src: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
-            path: /data
-            state: mounted
-            fstype: ext4
-
-        - name: Create the images directory
-          file:
-            path: /data/images
-            owner: root
-            group: root
-            mode: "0755"
-            state: directory
-
-        - name: Define the default virt storage pool
-          virt_pool:
-            name: default
-            state: present
-            xml: |
-              <pool type='dir'>
-                <name>default</name>
-                <target>
-                  <path>/data/images</path>
-                  <permissions>
-                    <mode>0755</mode>
-                    <owner>0</owner>
-                    <group>0</group>
-                  </permissions>
-                </target>
-              </pool>
+    - name: Define the default virt storage pool
+      virt_pool:
+        name: default
+        state: present
+        xml: |
+          <pool type='dir'>
+            <name>default</name>
+            <target>
+              <path>/data/images</path>
+              <permissions>
+                <mode>0755</mode>
+                <owner>0</owner>
+                <group>0</group>
+              </permissions>
+            </target>
+          </pool>
 
     - name: Set default virt storage pool to active
       virt_pool:

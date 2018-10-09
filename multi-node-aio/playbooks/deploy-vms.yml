@@ -41,15 +41,6 @@
       failed_when: false
       with_items: "{{ _virt_list.list_vms }}"
 
-    - name: Delete any LV's related to running VM's
-      lvol:
-        vg: "{{ default_vm_disk_vg }}"
-        lv: "{{ item }}"
-        state: absent
-        force: yes
-      failed_when: false
-      with_items: "{{ _virt_list.list_vms }}"
-
     - name: Delete any disk images related to running VM's
       file:
         path: "{{ _virt_pools.pools.default.path | default('/data/images') }}/{{ item }}.img"
@@ -63,27 +54,23 @@
       failed_when: false
       with_items: "{{ _virt_list.list_vms }}"
 
-    - name: Setup/clean-up file-based disk images
+    - name: Find existing base image files
+      find:
+        paths: "{{ _virt_pools.pools.default.path | default('/data/images') }}"
+        patterns: '*-base.img'
+      register: _base_images
+
+    - name: Enable/disable vm_use_snapshot based on whether there are base image files
+      set_fact:
+        vm_use_snapshot: "{{ _base_images['matched'] > 0 }}"
+
+    - name: Clean up base image files if they are not being used
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ _base_images.files }}"
       when:
-        - default_vm_disk_mode == "file"
-      block:
-        - name: Find existing base image files
-          find:
-            paths: "{{ _virt_pools.pools.default.path | default('/data/images') }}"
-            patterns: '*-base.img'
-          register: _base_images
-
-        - name: Enable/disable vm_use_snapshot based on whether there are base image files
-          set_fact:
-            vm_use_snapshot: "{{ _base_images['matched'] > 0 }}"
-
-        - name: Clean up base image files if they are not being used
-          file:
-            path: "{{ item.path }}"
-            state: absent
-          with_items: "{{ _base_images.files }}"
-          when:
-            - not (vm_use_snapshot | bool)
+        - not (vm_use_snapshot | bool)
 
 
 - name: Prepare VM storage
@@ -93,17 +80,6 @@
   tags:
     - deploy-vms
   tasks:
-    - name: Create VM LV
-      lvol:
-        vg: "{{ default_vm_disk_vg }}"
-        lv: "{{ server_hostname }}"
-        size: "{{ default_vm_storage }}"
-      when:
-        - server_vm | default(false) | bool
-        - default_vm_disk_mode == "lvm"
-      delegate_to: "{{ item }}"
-      with_items: "{{ groups['vm_hosts'] }}"
-
     - name: Create VM Disk Image
       command: >-
         qemu-img create
@@ -115,7 +91,6 @@
         {{ default_vm_storage }}m
       when:
         - server_vm | default(false) | bool
-        - default_vm_disk_mode == "file"
       delegate_to: "{{ item }}"
       with_items: "{{ groups['vm_hosts'] }}"
 
@@ -134,7 +109,6 @@
     # ref: https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1615337.
     - name: Prepare file-based disk images
       when:
-        - default_vm_disk_mode == "file"
         - vm_use_snapshot | bool
       block:
         - name: Inject the host ssh key into the VM disk image
