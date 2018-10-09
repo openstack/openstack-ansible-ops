@@ -297,3 +297,26 @@ build not to use the snapshots as follows.
 
     export MNAIO_ANSIBLE_PARAMETERS="-e default_vm_disk_mode=file -e vm_use_snapshot=no"
     ./build.sh
+
+If you have previously saved some file-backed images to remote storage then,
+if they are available via a URL, they can be downloaded and used on a fresh
+host as follows.
+
+.. code-block:: bash
+
+    # First prepare the host and get the base services started
+    source bootstrap.sh
+    source ansible-env.rc
+    export ANSIBLE_PARAMETERS="-i playbooks/inventory -e default_vm_disk_mode=file"
+    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/setup-host.yml
+    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-acng.yml
+    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-pxe.yml
+    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-dhcp.yml
+
+    # Then download the images
+    export IMAGE_MANIFEST_URL="http://example.com/images/manifest.json"
+    ansible-playbook ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/download-vms.yml -e manifest_url=${IMAGE_MANIFEST_URL}
+
+    # Then kick off the VM's from those images
+    ansible-playbook ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-vms.yml
+
