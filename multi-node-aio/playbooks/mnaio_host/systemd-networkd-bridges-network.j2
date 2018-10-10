@@ -1,0 +1,16 @@
+[Match]
+Name={{ item.value.iface }}
+
+[Network]
+IPForward=yes
+ConfigureWithoutCarrier=true
+{% if item.value.address is defined %}
+Address={{ item.value.address }}
+{% endif %}
+
+{% if item.value.address_aliases is defined %}
+[Address]
+{%  for addr in item.value.address_aliases %}
+Address={{ addr }}
+{%  endfor %}
+{% endif %}

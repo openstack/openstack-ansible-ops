@@ -1,0 +1,66 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in witing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather facts
+  hosts: vm_hosts
+  gather_facts: "{{ gather_facts | default(true) }}"
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - setup-host
+  tasks:
+    - name: Gather variables for each operating system
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_distribution | lower }}.yml"
+        - "{{ playbook_dir }}/vars/{{ ansible_os_family | lower }}.yml"
+      tags:
+        - always
+
+    - name: Check for networkd
+      set_fact:
+        networking_system: "systemd-networkd"
+      when:
+        - "ansible_distribution_major_version is version('18', '>=')"
+
+    - name: Fall back on /e/n/i
+      set_fact:
+        networking_system: "eni"
+      when:
+        - "ansible_distribution_major_version is version('18', '<')"
+
+    - name: Deploy systemd-networkd bridge devices
+      template:
+        src: "pxe/configs/{{ ansible_os_family | lower }}/systemd-networkd-bridges-netdev.j2"
+        dest: /tmp/{{ item.value.iface }}.netdev
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict:
+        - "{{ mnaio_host_networks }}"
+      register: mnaio_bridges
+
+    - name: Deploy systemd-networkd bridge networks
+      template:
+        src: "pxe/configs/{{ ansible_os_family | lower }}/systemd-networkd-bridges-network.j2"
+        dest: /tmp/{{ item.value.iface }}.network
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict:
+        - "{{ mnaio_host_networks }}"
+      register: mnaio_bridges

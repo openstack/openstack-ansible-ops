@@ -48,6 +48,7 @@ tftp_port: 69
 images:
   ubuntu-18.04-amd64:
     image_type: "debian"
+    network_setup: "systemd-networkd"
     image_os: "ubuntu"
     image-version: "bionic"
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
@@ -62,6 +63,7 @@ images:
         template_name: "vm-compute.config"
   ubuntu-16.04-amd64:
     image_type: "debian"
+    network_setup: "eni"
     image_os: "ubuntu"
     image-version: "xenial"
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
@@ -76,6 +78,7 @@ images:
         template_name: "vm-compute.config"
   ubuntu-14.04-amd64:
     image_type: "debian"
+    network_setup: "eni"
     image_os: "ubuntu"
     image_version: "trusty"
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical quiet splash"
@@ -90,6 +93,7 @@ images:
         template_name: "vm-compute.config"
   centos-7-amd64:
     image_type: "redhat"
+    network_setup: "systemd-networkd"
     image_version: 7
     image_netboot_kernel_url: "http://mirrors.edge.kernel.org/centos/7/os/x86_64/images/pxeboot/vmlinuz"
     image_netboot_initrd_url: "http://mirrors.edge.kernel.org/centos/7/os/x86_64/images/pxeboot/initrd.img"
