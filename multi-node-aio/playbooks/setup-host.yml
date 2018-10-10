@@ -20,6 +20,16 @@
   tags:
     - setup-host
   tasks:
+    - name: Check for a supported Operating System
+      assert:
+        that:
+          - (ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'xenial') or
+            (ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'bionic')
+        msg: >-
+          The only supported host platforms for this tooling are Ubuntu 16.04 LTS (Xenial)
+          and Ubuntu 18.04 LTS (Bionic). Patches to add support for other distributions are
+          most welcome.
+
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
       with_first_found:

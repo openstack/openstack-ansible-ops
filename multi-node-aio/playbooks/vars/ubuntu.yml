@@ -17,10 +17,6 @@ mnaio_host_required_distro_packages:
   - ubuntu-cloud-keyring
 
 mnaio_host_package_repos:
-  - repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu {{ ansible_lsb.codename }}-updates/mitaka main"
-    state: present
-    filename: "uca"
-    condition: "{{ ansible_lsb.codename == 'trusty' }}"
   - repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu {{ ansible_lsb.codename }}-updates/queens main"
     state: present
     filename: "uca"
