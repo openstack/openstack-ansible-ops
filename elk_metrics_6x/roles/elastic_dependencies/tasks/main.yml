@@ -124,15 +124,28 @@
         path: "/openstack/{{ inventory_hostname }}/{{ service_name }}"
         state: "directory"
       delegate_to: "{{ physical_host }}"
-
+    - name: Pull lxc version
+      command: "lxc-ls --version"
+      delegate_to: "{{ physical_host }}"
+      changed_when: false
+      register: lxc_version
+      when:
+        - container_tech | default('lxc') == 'lxc'
+      tags:
+        - skip_ansible_lint
+    - name: Enable or Disable lxc three syntax
+      set_fact:
+        lxc_major_version: "{{ lxc_version.stdout.split('.')[0] }}"
+      when:
+        - container_tech | default('lxc') == 'lxc'
     - name: elasticsearch datapath bind mount
       lxc_container:
         name: "{{ inventory_hostname }}"
         container_command: |
           [[ ! -d "/var/lib/{{ service_name }}" ]] && mkdir -p "/var/lib/{{ service_name }}"
         container_config:
-          - "lxc.mount.entry=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
-          - "lxc.aa_profile=unconfined"
+          - "{{ elastic_lxc_template_config[(lxc_major_version | int)]['mount'] }}=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
+          - "{{ elastic_lxc_template_config[(lxc_major_version | int)]['aa_profile'] }}=unconfined"
       delegate_to: "{{ physical_host }}"
       when:
         - container_tech | default('lxc') == 'lxc'
