@@ -305,18 +305,16 @@ host as follows.
 .. code-block:: bash
 
     # First prepare the host and get the base services started
-    source bootstrap.sh
+    ./bootstrap.sh
     source ansible-env.rc
     export ANSIBLE_PARAMETERS="-i playbooks/inventory -e default_vm_disk_mode=file"
     ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/setup-host.yml
-    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-acng.yml
-    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-pxe.yml
-    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-dhcp.yml
+    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-acng.yml playbooks/deploy-pxe.yml playbooks/deploy-dhcp.yml
 
     # Then download the images
     export IMAGE_MANIFEST_URL="http://example.com/images/manifest.json"
-    ansible-playbook ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/download-vms.yml -e manifest_url=${IMAGE_MANIFEST_URL}
+    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/download-vms.yml -e manifest_url=${IMAGE_MANIFEST_URL}
 
     # Then kick off the VM's from those images
-    ansible-playbook ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-vms.yml
+    ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-vms.yml
 
