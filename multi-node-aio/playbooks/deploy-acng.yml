@@ -89,15 +89,6 @@
       notify:
         - reload acng
 
-    - name: Drop apt package manager proxy
-      copy:
-        content: 'Acquire::http { Proxy "{{ default_ubuntu_mirror_proxy }}"; };'
-        dest: "/etc/apt/apt.conf.d/00apt-cacher-proxy"
-
-    - name: Update apt when proxy is added
-      apt:
-        update_cache: yes
-
   handlers:
     - name: reload acng
       service:
