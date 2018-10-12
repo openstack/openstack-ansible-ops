@@ -56,8 +56,8 @@ chmod 0600 /root/.ssh/authorized_keys
 # set apt-cacher-ng proxy
 sed -i '/\[main\]/a proxy={{ default_proxy_url }}' /etc/yum.conf
 
-wget --no-proxy http://{{ tftp_server }}/scripts/general-post-install-redhat-script.sh -O /opt/general-post-install-script.sh
-chmod +x /opt/general-post-install-script.sh
-/opt/general-post-install-script.sh
+wget --no-proxy http://{{ tftp_server }}/scripts/vm-post-install-redhat-script.sh -O /opt/vm-post-install-script.sh
+chmod +x /opt/vm-post-install-script.sh
+/opt/vm-post-install-script.sh
 ) > /root/post_install.log 2>&1
 %end

@@ -259,25 +259,35 @@
       when:
         - ansible_distribution | lower == 'ubuntu'
 
-    - name: Drop host network interfaces
+    - name: Deploy systemd-networkd bridge devices
       template:
-        src: "pxe/configs/{{ ansible_os_family | lower }}/mnaio-bridges.cfg.j2"
-        dest: /etc/network/interfaces.d/mnaio-bridges.cfg
+        src: "mnaio_host/systemd-networkd-bridges-netdev.j2"
+        dest: /etc/systemd/network/{{ item.value.iface }}.netdev
         mode: "0644"
         owner: root
         group: root
+      with_dict:
+        - "{{ mnaio_host_networks }}"
       register: mnaio_bridges
 
-    - name: Ensure extra interfaces are sourced
-      lineinfile:
-        line: "source /etc/network/interfaces.d/*.cfg"
-        dest: "/etc/network/interfaces"
-        regexp: "^source /etc/network/interfaces.d/.*"
+    - name: Deploy systemd-networkd bridge networks
+      template:
+        src: "mnaio_host/systemd-networkd-bridges-network.j2"
+        dest: /etc/systemd/network/{{ item.value.iface }}.network
+        mode: "0644"
+        owner: root
+        group: root
+      with_dict:
+        - "{{ mnaio_host_networks }}"
+      register: mnaio_bridges
 
-    - name: Set the host interfaces up
-      command: "/sbin/ifup {{ item.value.iface }}"
-      with_dict: "{{ mnaio_host_networks }}"
-      when: mnaio_bridges is changed
+    - name: Restart the systemd-networkd daemon to load new networks
+      systemd:
+        name: systemd-networkd
+        daemon_reload: yes
+        state: restarted
+      when:
+        - mnaio_bridges is changed
 
     - name: Disable default virt network
       virt_net:
