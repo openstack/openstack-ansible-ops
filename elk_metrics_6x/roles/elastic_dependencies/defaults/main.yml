@@ -34,3 +34,11 @@ h_mem: "{{ (ansible_memtotal_mb | int) // 2 }}"
 # NOTE(cloudnull) - When the heap size for a given elastic node is graeter than
 #                   6GiB the G1 garbage collector can be enabled.
 elastic_g1gc_enabled: true
+
+elastic_lxc_template_config:
+  3:
+    aa_profile: lxc.apparmor.profile
+    mount: lxc.mount.entry
+  2:
+    aa_profile: lxc.aa_profile
+    mount: lxc.mount.entry
