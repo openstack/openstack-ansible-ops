@@ -37,7 +37,8 @@
         return_content: yes
       register: _manifest_file
 
-    - set_fact:
+    - name: Register manifest content as a fact
+      set_fact:
         _manifest_content: "{{ _manifest_file.content | from_json }}"
 
     - name: Install aria download manager
@@ -54,6 +55,11 @@
             checksum=sha-1={{ item.checksum }}
           {% endfor %}
         dest: "/tmp/aria2c.input"
+
+    - name: Ensure that the aria log file path exists
+      file:
+        path: "{{ aria2c_log_path }}"
+        state: directory
 
     - name: Download artifacts
       command: >-
