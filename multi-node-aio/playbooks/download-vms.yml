@@ -24,7 +24,6 @@
     aria2c_parameters: >-
         --log-level=notice
         --allow-overwrite=true
-        --conditional-get=true
         --max-connection-per-server=4
         --check-integrity true
         --retry-wait=30
