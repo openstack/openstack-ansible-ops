@@ -84,7 +84,7 @@
 - name: Check queue type
   block:
     - name: Get block device for logstash
-      command: findmnt -no SOURCE --target=/var/lib/logstash
+      command: findmnt -vno SOURCE --target=/var/lib/logstash
       changed_when: false
       register: _logstash_block_device
 
