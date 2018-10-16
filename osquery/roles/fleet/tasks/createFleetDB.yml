@@ -16,7 +16,7 @@
 - name: Create DB for service
   mysql_db:
     login_user: "{{ mariadb_root_user }}"
-    login_password: "{{ mariadb_root_password }}"
+    login_password: "{{ galera_root_password }}"
     login_host: "{{ mariadb_login_host | default('localhost') }}"
     name: "{{ kolide_fleet_db_name }}"
     state: "present"
@@ -28,7 +28,7 @@
 - name: Grant access to the DB for the service
   mysql_user:
     login_user: "{{ mariadb_root_user }}"
-    login_password: "{{ mariadb_root_password }}"
+    login_password: "{{ galera_root_password }}"
     login_host: "{{ mariadb_login_host | default('localhost') }}"
     name: "{{ kolide_fleet_db_user }}"
     password: "{{ kolide_fleet_db_password }}"

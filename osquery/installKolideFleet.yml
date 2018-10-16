@@ -1,6 +1,6 @@
 ---
 - name: Install Kolide Fleet
-  hosts: "fleet_all"
+  hosts: "kolide-fleet_all"
   become: true
 
   vars_files:

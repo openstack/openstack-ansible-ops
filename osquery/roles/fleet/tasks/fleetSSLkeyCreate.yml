@@ -65,23 +65,23 @@
         - src: "{{ kolide_fleet_ssl_key }}"
           dest: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
       when:
-        - (groups['fleet_all'] | length) > 1
+        - (groups['kolide-fleet_all'] | length) > 1
       notify:
         - Cleanup certifactes
   when:
-    - inventory_hostname == groups['fleet_all'][0]
+    - inventory_hostname == groups['kolide-fleet_all'][0]
 
 - name: Copy certifactes over
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-    with_items:
-      - dest: "{{ kolide_fleet_ssl_csr }}"
-        src: "/tmp/{{ kolide_fleet_ssl_csr | basename }}"
-      - dest: "{{ kolide_fleet_ssl_cert }}"
-        src: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
-      - dest: "{{ kolide_fleet_ssl_key }}"
-        src: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+  with_items:
+    - dest: "{{ kolide_fleet_ssl_csr }}"
+      src: "/tmp/{{ kolide_fleet_ssl_csr | basename }}"
+    - dest: "{{ kolide_fleet_ssl_cert }}"
+      src: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
+    - dest: "{{ kolide_fleet_ssl_key }}"
+      src: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
   when:
-    - inventory_hostname != groups['fleet_all'][0]
-    - (groups['fleet_all'] | length) > 1
+    - inventory_hostname != groups['kolide-fleet_all'][0]
+    - (groups['kolide-fleet_all'] | length) > 1

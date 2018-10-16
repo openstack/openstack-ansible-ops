@@ -20,7 +20,7 @@ kolide_fleet_db_user: fleet
 #kolide_fleet_db_password: fleetSecrete
 
 kolide_fleet_port: "8443"
-kolide_fleet_address: "0.0.0.0:{{ kolide_fleet_port }}"
+kolide_fleet_address: "127.0.0.1:{{ kolide_fleet_port }}"
 kolide_fleet_version: "2.0.0-rc5"
 kolide_fleet_url: "https://github.com/kolide/fleet/releases/download"
 
@@ -43,7 +43,6 @@ kolide_fleet_ssl_key_purge: false
 mariadb_bind_address: "0.0.0.0"
 mariadb_root_remote: 1
 mariadb_root_user: root
-#mariadb_root_password: fleetSecrete
 mariadb_databases:
   - name: "{{ kolide_fleet_db_name }}"
 
@@ -52,5 +51,3 @@ mariadb_users:
     password: "{{ kolide_fleet_db_password }}"
     priv: " {{ kolide_fleet_db_name }}.*:ALL"
     host: "%"
-
-galera_root_password: "{{ mariadb_root_password }}"

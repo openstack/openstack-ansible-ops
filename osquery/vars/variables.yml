@@ -1,7 +1,5 @@
 ---
 
-mariadb_root_user: root
-
 kolide_fleet_enable: true
 
 kolide_fleet_ssl_cert: /etc/ssl/certs/fleet.cert
@@ -20,7 +18,7 @@ osquery_rsyslog: false
 
 osquery_flags:
   - "--tls_server_certs={{ kolide_fleet_ssl_cert }}"
-  - "--tls_hostname={{ hostvars[groups['fleet_all'][0]]['ansible_host'] }}:443"
+  - "--tls_hostname={{ hostvars[groups['kolide-fleet_all'][0]]['ansible_host'] }}:443"
   - "--host_identifier=hostname"
   - "--enroll_tls_endpoint=/api/v1/osquery/enroll"
   - "--config_plugin=tls"

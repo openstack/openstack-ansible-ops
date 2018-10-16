@@ -13,8 +13,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Get osquery facts
+  hosts: "{{ kolide_fleet_host | default(groups['kolide-fleet_all'][0]) }}"
+  become: true
+  vars_files:
+    - vars/variables.yml
+  tags:
+    - always
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  gather_facts: "{{ osa_gather_facts | default(True) }}"
+
+  tasks:
+    - name: Fetch Certificates
+      fetch:
+        flat: yes
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - src: "{{ kolide_fleet_ssl_cert }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
+        - src: "{{ kolide_fleet_ssl_key }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+
+
 - name: Install osquery
-  hosts: "fleet_all:osquery:hosts"
+  hosts: "hosts:all_containers"
   become: true
   vars_files:
     - vars/variables.yml
@@ -32,19 +57,6 @@
         - /etc/osquery
         - /etc/osquery/ssl
 
-    - name: Synchronize certifactes back
-      synchronize:
-        mode: pull
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-      with_items:
-        - src: "{{ kolide_fleet_ssl_cert }}"
-          dest: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
-        - src: "{{ kolide_fleet_ssl_key }}"
-          dest: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
-      when:
-        - inventory_hostname == groups['fleet_all'][0]
-
     - name: Copy certifactes over
       copy:
         src: "{{ item.src }}"
@@ -54,14 +66,12 @@
           src: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
         - dest: "{{ kolide_fleet_ssl_key }}"
           src: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
-      when:
-        - inventory_hostname != groups['fleet_all'][0]
 
     - name: retrieve Enrollment Token
       command: /usr/local/bin/fleetctl get enroll-secret
       changed_when: false
       register: _enrollment_token
-      delegate_to: "{{ groups['fleet_all'][0] }}"
+      delegate_to: "{{ groups['kolide-fleet_all'][0] }}"
       run_once: true
 
     - name: Set kolide fleet enrollment token fact

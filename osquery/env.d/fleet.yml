@@ -1,32 +1,28 @@
 ---
 component_skel:
-  fleet:
+  kolide-fleet:
     belongs_to:
       - fleet_all
+      - kolide-fleet_all
 
   mariadb:
     belongs_to:
       - fleet_all
       - mariadb_all
 
-  osquery:
-    belongs_to:
-      - fleet_all
-
 container_skel:
-  fleet_container:
+  kolide-fleet_container:
     belongs_to:
-      - fleet_containers
+      - kolide_containers
     contains:
-      - fleet
+      - kolide-fleet
       - mariadb
-      - osquery
 
 physical_skel:
-  fleet_containers:
+  kolide_containers:
     belongs_to:
       - all_containers
 
-  fleet_hosts:
+  kolide_hosts:
     belongs_to:
       - hosts

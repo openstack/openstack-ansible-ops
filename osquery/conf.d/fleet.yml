@@ -1,4 +1,4 @@
-fleet_hosts:
+kolide_hosts:
   logging1:
     ip: 10.0.236.110
   logging2:

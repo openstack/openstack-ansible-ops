@@ -83,13 +83,29 @@ Update the `/etc/hosts` file *(optional)*
 
 Create an haproxy entry for kolide-fleet service 8443
 
+Add the following configuration item to the `haproxy_extra_services` variable
+within a **user** defined variable file.
+
+.. code-block:: yaml
+
+    haproxy_extra_services:
+      - service:
+          haproxy_service_name: kolide-fleet
+          haproxy_ssl: False
+          haproxy_backend_nodes: "{{ groups['kolide-fleet_all'] | default([]) }}"
+          haproxy_port: 6443  # This is set using the "kolide_fleet_port" variable
+          haproxy_check_port: 443  # This is set using the "kolide_fleet_port" variable
+          haproxy_backend_port: 443  # This is set using the "kolide_fleet_port" variable
+          haproxy_balance_type: tcp
+
+
+With the appropriate haproxy configuration in place, setup haproxy to begin
+load balancing the traffic.
+
 .. code-block:: bash
 
-    cd /opt/openstack-ansible-ops/osquery
-    cat haproxy.example  >> /etc/openstack_deploy/user_variables.yml
-
     cd /opt/openstack-ansible/playbooks/
-    openstack-ansible haproxy-install.yml --tags=haproxy-service-config
+    openstack-ansible haproxy-install.yml
 
 
 Deploying | Installing with embedded Ansible
@@ -136,21 +152,36 @@ Deploying | The environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create some basic passwords keys that are needed by fleet
-.. code-block:: bashG
 
-    echo "kolide_fleet_db_password: $(openssl rand -base64 16)" > /etc/openstack_deploy/fleet_user_vars.yml
-    echo "kolide_fleet_jwt_key: $(openssl rand -base64 32)" >> /etc/openstack_deploy/fleet_user_vars.yml
-    echo "kolide_fleet_admin_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/fleet_user_vars.yml
-    echo "mariadb_root_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/fleet_user_vars.yml
+.. code-block:: bash
+
+    echo "kolide_fleet_db_password: $(openssl rand -base64 16)" > /etc/openstack_deploy/user_secrets.yml
+    echo "kolide_fleet_jwt_key: $(openssl rand -base64 32)" >> /etc/openstack_deploy/user_secrets.yml
+    echo "kolide_fleet_admin_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/user_secrets.yml
+    # NOTICE: This may already be defined
+    echo "galera_root_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/user_secrets.yml
 
 
 Install master/data Fleet nodes on the elastic-logstash containers,
 deploy logstash, deploy Kibana, and then deploy all of the service beats.
 
-.. code-block:: bashG
+
+.. code-block:: bash
 
     cd /opt/openstack-ansible-ops/osquery
-    ansible-playbook site.yml -e@/etc/openstack_deploy/fleet_user_vars.yml
+    ansible-playbook site.yml -e@/etc/openstack_deploy/user_secrets.yml
+
+
+If the `installOSquery.yml` playbook is executed with a limit, a single
+kolide-fleet host must be part of the limit. This requirement exists because
+the nodes running osquery require certificates to authenticate to the
+kolide-fleet cluster. Should a node within the kolide-fleet cluster not be
+part of the limit the playbooks will not be able to fetch the required
+certificates.
+
+.. code-block:: bash
+
+    ansible-playbook installOSquery.yml $USER_VARS --limit 'host1,host2,kolide-fleet_all[0]'
 
 
 * The `openstack-ansible` command can be used if the version of ansible on the
@@ -167,6 +198,7 @@ deploy logstash, deploy Kibana, and then deploy all of the service beats.
   of the OSA group_vars. These are not available by default with the embedded
   ansible and can be symlinked into the ops repo.
 
+
 .. code-block:: bash
 
     ln -s /opt/openstack-ansible/inventory/group_vars /opt/openstack-ansible-ops/osquery/group_vars
@@ -174,6 +206,7 @@ deploy logstash, deploy Kibana, and then deploy all of the service beats.
 
 The individual playbooks found within this repository can be independently run
 at anytime.
+
 
 Architecture | Data flow
 ^^^^^^^^^^^^^^^^^^^^^^^^
