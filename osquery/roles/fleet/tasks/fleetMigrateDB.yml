@@ -16,3 +16,5 @@
 
 - name: Migrate the fleet database
   command: /usr/local/bin/fleet prepare db --config=/etc/fleet/fleet_config.yml  --no-prompt
+  changed_when: false
+  run_once: true

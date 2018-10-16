@@ -1,0 +1,11 @@
+FROM debian:8
+RUN apt-get update
+
+# Install Ansible
+RUN env DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common git python sudo python-pip python-dev libffi-dev libssl-dev
+RUN pip install --upgrade cffi
+RUN pip install ansible
+RUN install -d -m 0755 /etc/ansible
+
+# Install Ansible inventory file
+RUN echo "[local]\nlocalhost ansible_connection=local" > /etc/ansible/hosts

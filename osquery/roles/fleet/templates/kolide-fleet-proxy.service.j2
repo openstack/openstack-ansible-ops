@@ -1,0 +1,8 @@
+[Unit]
+Description=Remote Switch redirect
+
+[Service]
+After = kolide-fleet-proxy.socket
+Requires = kolide-fleet-proxy.socket
+partof = kolide-fleet.service
+ExecStart=/lib/systemd/systemd-socket-proxyd 127.0.0.1:{{ kolide_fleet_port }}

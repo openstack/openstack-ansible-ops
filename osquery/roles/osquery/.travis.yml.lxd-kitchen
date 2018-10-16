@@ -1,0 +1,76 @@
+---
+dist: trusty
+sudo: required
+rvm:
+  - 2.4
+
+env:
+## those images need pre-configuration before being usable (openssh...)
+#  - distribution: centos
+#    version: 6
+  - distribution: centos
+    version: 7
+  - distribution: ubuntu
+    version: 18.04
+  - distribution: ubuntu
+    version: 16.04
+#  - distribution: ubuntu
+#    version: 14.04
+#  - distribution: ubuntu
+#    version: 12.04
+#  - distribution: alpine
+#    version: 3.4
+
+before_install:
+  - env
+  - pwd
+  - find -ls
+## use appropriate role path and not github name
+  - "[ -f get-dependencies.sh ] && sh -x get-dependencies.sh"
+## No Xenial, https://github.com/travis-ci/travis-ci/issues/5821
+#  - sudo apt install lxd
+  - echo "deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse" | sudo tee /etc/apt/sources.list.d/trusty-backports.list
+  - sudo apt-get update -qq
+  - sudo apt -t trusty-backports -y install lxd acl -q
+## change of group implies logout+login to apply... can't do with travis = run as root (sic)
+## https://github.com/travis-ci/travis-ci/issues/1839   or chain: sudo -E su $USER -c "..."
+  - sudo usermod -G lxd travis
+  # Pull container
+#  - lxc remote add images images.linuxcontainers.org
+  - sudo -E su $USER -c "lxc remote list"
+  - sudo -E su $USER -c "lxc image list"
+## pre-download base images
+  - 'sudo -E su $USER -c "[ ${distribution} == ubuntu ] || lxc image copy images:${distribution}/${version}/amd64 local: --alias=${distribution}-${version}-nossh"'
+  - 'sudo -E su $USER -c "[ ${distribution} == ubuntu ] && lxc image copy ubuntu:${version} local: --alias=${distribution}-${version}" || true'
+## configure lxd-bridge
+  - sudo perl -pi -e 's@^LXD_IPV4_ADDR=""@LXD_IPV4_ADDR="10.252.116.1"@;s@^LXD_IPV4_NETMASK=""@LXD_IPV4_NETMASK="255.255.255.0"@;s@^LXD_IPV4_NETWORK=""@LXD_IPV4_NETWORK="10.252.116.1/24"@;s@^LXD_IPV4_DHCP_RANGE=""@LXD_IPV4_DHCP_RANGE="10.252.116.2,10.252.116.254"@;s@^LXD_IPV4_DHCP_MAX=""@LXD_IPV4_DHCP_MAX="252"@;s@LXD_IPV6_PROXY="true"@LXD_IPV6_PROXY="false"@' /etc/default/lxd-bridge
+#  - cat /etc/default/lxd-bridge
+#  - service --status-all
+  - sudo service lxd restart
+
+  - sudo pip install ansible
+  - gem install kitchen
+  - gem install kitchen-ansible
+  - gem install kitchen-sync
+  - gem install kitchen-lxd_cli
+  - gem list
+  - which kitchen
+## ssh key for lxd_cli ?
+  - ls ~/.ssh
+  - ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -P ""
+## sudo/su get us a non-usual PATH ...
+  - '[ "X${distribution}" == "Xcentos" ] && sudo -E su $USER -c "sh -x ./test/lxd/centos-ssh-image.sh" || true'
+  - sudo -E su $USER -c "env"
+## The command "sudo -E su $USER -c "which kitchen"" failed and exited with 1 during .
+#  - sudo -E su $USER -c "which kitchen"
+  - sudo -E su $USER -c "env PATH=$PATH kitchen diagnose --all"
+#  - sudo -E su $USER -c "kitchen diagnose --all"
+#  - sudo -E -u $USER kitchen diagnose --all
+
+script:
+#  - KITCHEN_LOCAL_YAML=.kitchen.local.yml bundle exec kitchen verify ${INSTANCE}
+  - sudo -E su $USER -c "env PATH=$PATH kitchen verify default-${distribution}-${version//./} -l debug || (cat $HOME/.kitchen/logs/default-${distribution}-${version//./}.log; find /tmp/kitchen)"
+
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/
+

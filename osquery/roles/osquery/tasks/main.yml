@@ -1,0 +1,69 @@
+---
+# tasks file for osquery
+
+- name: Include distribution specific variables
+  include_vars: "{{ ansible_distribution }}.yml"
+  tags:
+    - osquery
+- name: Include version-specific variables for RedHat
+  include_vars: "CentOS-{{ ansible_distribution_version.split('.')[0] }}.yml"
+  when: ansible_os_family == "RedHat"
+
+- include: CentOS.yml
+  when: ansible_os_family == "RedHat"
+  tags:
+    - osquery
+
+- include: Debian.yml
+  when: ansible_os_family == "Debian"
+  tags:
+    - osquery
+
+- block:
+    - name: Install osquery
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ osquery_packages }}"
+      tags:
+        - osquery
+
+    - name: Install osquery debug packages
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ osquery_debug_packages }}"
+      when: osquery_debug_packages_install
+      tags:
+        - osquery
+
+    - include: configure.yml
+      tags:
+        - osquery
+        - config
+
+    - name: Enable service
+      service: name=osqueryd enabled={{ osquery_service_enable }}
+      tags:
+        - osquery
+        - service
+    - name: Start service
+      service: name=osqueryd state=started
+      when: osquery_service_enable
+      tags:
+        - osquery
+        - service
+
+    - meta: flush_handlers
+
+    - name: pause a bit to have few queries results
+      command: sleep 5
+      changed_when: false
+      when: osquery_testing_pause or osquery_testing
+
+    - include: testing.yml
+      when: osquery_testing
+
+    - include: profiling.yml
+      when: osquery_profiling
+  when: ansible_os_family == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"

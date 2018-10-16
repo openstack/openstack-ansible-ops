@@ -1,10 +1,12 @@
+---
+
 mysql:
-  address: {{ hostvars[groups['mariadb'][0]]['ansible_host'] }}:3306
+  address: 127.0.0.1:3306
   database: {{ kolide_fleet_db_name }}
   username: {{ kolide_fleet_db_user }}
   password: {{ kolide_fleet_db_password }}
 redis:
-  address: localhost:6379
+  address: 127.0.0.1:6379
 auth:
   jwt_key: {{ kolide_fleet_jwt_key }}
 server:

@@ -3,35 +3,30 @@ component_skel:
   fleet:
     belongs_to:
       - fleet_all
+
   mariadb:
     belongs_to:
       - fleet_all
+      - mariadb_all
+
   osquery:
     belongs_to:
       - fleet_all
 
 container_skel:
-  mariadb_container:
-    belongs_to:
-      - mariadb_containers
-    contains:
-      - mariadb
   fleet_container:
     belongs_to:
       - fleet_containers
     contains:
       - fleet
+      - mariadb
+      - osquery
 
 physical_skel:
-  mariadb_container:
-    belongs_to:
-      - all_containers
-  mariadb_hosts:
-    belongs_to:
-      - hosts
   fleet_containers:
     belongs_to:
       - all_containers
+
   fleet_hosts:
     belongs_to:
       - hosts

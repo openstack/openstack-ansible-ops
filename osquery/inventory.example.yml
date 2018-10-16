@@ -21,15 +21,19 @@ all:
 # host machines here.
 hosts:
   hosts:
-    logging01:
+    logging01: {}
 
 # This is the location where fleet(s) will live
-mariadb:
+fleet_all:
   hosts:
-    logging01:
-fleet:
+    logging01: {}
+
+mariadb_all:
+  children:
+    fleet_all: {}
+
+osquery_all:
   hosts:
-    logging01:
-osquery:
-  hosts:
-    logging01:
+    logging02:
+      ansible_host: 172.16.27.101
+      ansible_user: root

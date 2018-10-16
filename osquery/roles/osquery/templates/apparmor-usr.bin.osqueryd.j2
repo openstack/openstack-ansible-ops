@@ -1,0 +1,34 @@
+#include <tunables/global>
+
+/usr/bin/osqueryd {
+  #include <abstractions/base>
+  #include <abstractions/lxc/container-base>
+  #include <abstractions/lxc/start-container>
+
+  /etc/host.conf r,
+  /etc/hosts r,
+  /etc/nsswitch.conf r,
+  /etc/osquery/osquery.conf r,
+  /etc/osquery/osquery.flags r,
+  /proc/** rw,
+  /proc/cpuinfo r,
+  /root/osqueryd.*.root.log.ERROR.* w,
+  /root/osqueryd.*.root.log.INFO.* w,
+  /root/osqueryd.*.root.log.WARNING.* w,
+  /run/osqueryd.pidfile w,
+  /run/resolvconf/resolv.conf r,
+  /run/utmp r,
+  /sys/devices/** r,
+  /sys/firmware/dmi/tables/DMI r,
+  /tmp/* w,
+  /tmp/user/0/osqueryd.*.root.log.ERROR.* w,
+  /tmp/user/0/osqueryd.*.root.log.INFO.* w,
+  /tmp/user/0/osqueryd.*.root.log.WARNING.* w,
+  /usr/bin/osqueryd Px,
+  /usr/share/osquery/packs/* r,
+  /var/log/osquery/* w,
+  /var/osquery/osquery.db/ rw,
+  /var/osquery/osquery.db/* rw,
+  /var/tmp/* rw,
+
+}

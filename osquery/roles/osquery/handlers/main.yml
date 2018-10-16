@@ -1,0 +1,13 @@
+---
+# handlers file for osquery
+
+- name: restart osquery
+#  service: name=osqueryd state=restarted
+## for rocksdb backend
+  shell: "systemctl stop osqueryd; sleep 5; systemctl start osqueryd"
+
+- name: restart rsyslog
+  service: name=rsyslog state=restarted
+
+- name: reload osqueryd apparmor profile
+  shell: cat /etc/apparmor.d/usr.bin.osqueryd | sudo apparmor_parser -r

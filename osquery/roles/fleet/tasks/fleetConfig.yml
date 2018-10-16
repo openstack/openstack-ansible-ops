@@ -22,5 +22,7 @@
   template:
     src: templates/fleet_config.yml.j2
     dest: /etc/fleet/fleet_config.yml
+  notify:
+    - Restart kolide (systemd)
   tags:
     - fleet_config

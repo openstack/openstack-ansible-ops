@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Install MariaDB Galera Cluster
-  hosts: "mariadb"
+  hosts: "mariadb_all"
   become: true
   user: root
   gather_facts: "{{ osa_gather_facts | default(True) }}"
@@ -22,12 +22,23 @@
   vars_files:
     - vars/variables.yml
 
+  pre_tasks:
+    - name: Test for root db password
+      fail:
+        msg: >-
+          The root password for the galera cluster is not defined. To proceed with this
+          installation define the variable `mariadb_root_password` in line or within a
+          variable file.
+      when:
+        - mariadb_root_password is undefined
+
   roles:
     - role: galera_server
       galera_root_user: "{{ mariadb_root_user }}"
       galera_root_password: "{{ mariadb_root_password }}"
-      galera_cluster_members: "{{ groups['mariadb'] }}"
+      galera_cluster_members: "{{ groups['mariadb_all'] }}"
       galera_wsrep_node_name: "{{ inventory_hostname }}"
       galera_cluster_name: telemetry_galera_cluster
+      galera_monitoring_allowed_source: "0.0.0.0/0"
 
   environment: "{{ deployment_environment_variables | default({}) }}"

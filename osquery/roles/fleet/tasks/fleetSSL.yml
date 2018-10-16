@@ -20,7 +20,7 @@
   tags:
     - fleet-ssl
 
-- include_tasks: fleetSSLselfSigned.yml
+- include_tasks: fleetSSLkeyCreate.yml
   when:
     - kolide_fleet_user_ssl_cert is not defined or kolide_fleet_user_ssl_key is not defined
 

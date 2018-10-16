@@ -17,21 +17,71 @@
   file:
     dest: "{{ item }}"
     state: "absent"
+  when:
+    - kolide_fleet_ssl_key_purge | bool
   with_items:
-    - "{{ kolide_fleet_ssl_pem }}"
-    - "{{ kolide_fleet_ssl_key }}"
     - "{{ kolide_fleet_ssl_cert }}"
-  tags:
-    - fleet-ssl
+    - "{{ kolide_fleet_ssl_key }}"
+    - "{{ kolide_fleet_ssl_pem }}"
+    - "{{ kolide_fleet_ssl_ca_cert }}"
 
-- name: Create self-signed ssl cert
-  command: >
-    openssl req -new -nodes -sha256 -x509 -subj
-    "{{ kolide_fleet_ssl_self_signed_subject }}"
-    -days 3650
-    -keyout {{ kolide_fleet_ssl_key }}
-    -out {{ kolide_fleet_ssl_cert }}
-    -extensions v3_ca
-    creates={{ kolide_fleet_ssl_cert }}
-  tags:
-    - kolide_fleet-ssl
+- name: SSL Block
+  block:
+    - name: Generate service private key
+      openssl_privatekey:
+        path: "{{ kolide_fleet_ssl_key }}"
+        size: 4096
+
+    - name: Generate self signed CSR
+      openssl_csr:
+        path: "{{ kolide_fleet_ssl_csr }}"
+        privatekey_path: "{{ kolide_fleet_ssl_key }}"
+        common_name: "{{ ansible_domain }}"
+        country_name: XX
+        locality_name: Kolide-Server
+        organization_name: OpenStack
+        organizational_unit_name: OpenStack-Ansible-OPS
+
+    - name: Generate a Self Signed OpenSSL certificate
+      openssl_certificate:
+        path: "{{ kolide_fleet_ssl_cert }}"
+        privatekey_path: "{{ kolide_fleet_ssl_key }}"
+        csr_path: "{{ kolide_fleet_ssl_csr }}"
+        provider: selfsigned
+        force: "{{ kolide_fleet_ssl_key_purge | bool }}"
+        issuer:
+          O: OpenStack-Ansible-OPS
+
+    - name: Synchronize certifactes back
+      synchronize:
+        mode: pull
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - src: "{{ kolide_fleet_ssl_csr }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_csr | basename }}"
+        - src: "{{ kolide_fleet_ssl_cert }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
+        - src: "{{ kolide_fleet_ssl_key }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+      when:
+        - (groups['fleet_all'] | length) > 1
+      notify:
+        - Cleanup certifactes
+  when:
+    - inventory_hostname == groups['fleet_all'][0]
+
+- name: Copy certifactes over
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    with_items:
+      - dest: "{{ kolide_fleet_ssl_csr }}"
+        src: "/tmp/{{ kolide_fleet_ssl_csr | basename }}"
+      - dest: "{{ kolide_fleet_ssl_cert }}"
+        src: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
+      - dest: "{{ kolide_fleet_ssl_key }}"
+        src: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+  when:
+    - inventory_hostname != groups['fleet_all'][0]
+    - (groups['fleet_all'] | length) > 1

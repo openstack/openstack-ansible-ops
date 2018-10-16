@@ -1,0 +1,57 @@
+---
+# $ KITCHEN_YAML=".kitchen.vagrant.yml" kitchen verify
+
+driver:
+  name: vagrant
+  provider: <%= ENV['KITCHEN_PROVIDER'] || 'virtualbox' %>
+
+## make file transfer faster. need https://github.com/coderanger/kitchen-sync
+transport:
+  name: sftp
+
+provisioner:
+  name: ansible_playbook
+  roles_path: ../
+  hosts: test-kitchen
+#  ansible_verbose: true
+  ansible_verbose: false
+  ansible_verbosity: 3
+  ansible_extra_flags: <%= ENV['ANSIBLE_EXTRA_FLAGS'] %>
+
+platforms:
+  - name: ubuntu-18.04
+  - name: ubuntu-16.04
+  - name: ubuntu-14.04
+  - name: centos-7.1
+## ansible < 2.x
+#  - name: debian-8
+#    driver_config:
+#      box: debian-8
+#      box_url: https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_debian-8.1_chef-provisionerless.box
+  - name: debian-9
+    driver:
+      box: remram/debian-9-amd64
+
+suites:
+  - name: default
+    run_list:
+    attributes:
+  - name: default-osquery-syslog
+    run_list:
+    attributes:
+  - name: default-osquery-syslog-fs
+    run_list:
+    attributes:
+  - name: default-profiling
+    run_list:
+    attributes:
+    includes:
+      - ubuntu-18.04
+  - name: default-fleetmanager
+    run_list:
+    attributes:
+    includes:
+      - ubuntu-18.04
+    driver_config:
+      network:
+        - ["forwarded_port", {guest: 8080, host: 9080}]

@@ -27,5 +27,21 @@
           Unit:
             Wants: network-online.target
             Requires: redis-server.service
+          Service:
+            Slice: kolide-fleet.slice
   tags:
     - server-install
+
+- name: Place the kolide-fleet socket
+  template:
+    src: 'kolide-fleet-proxy.socket.j2'
+    dest: '/etc/systemd/system/kolide-fleet-proxy.socket'
+  notify:
+    - Restart kolide (systemd)
+
+- name: Place the kolide-fleet proxy
+  template:
+    src: 'kolide-fleet-proxy.service.j2'
+    dest: '/etc/systemd/system/kolide-fleet-proxy.service'
+  notify:
+    - Restart kolide (systemd)

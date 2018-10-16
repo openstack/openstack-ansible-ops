@@ -13,29 +13,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name:    Install prerequisites
-  apt:     name={{ item }} update_cache=yes
-  with_items:
-   - unzip
-   - ca-certificates
-   - apt-transport-https
-   - software-properties-common
-   - curl
-- name: Run the systemd service role
-  include_role:
-    name: redis
-    private: true
+- name: Ensure required disto packages are installed
+  package:
+    name: "{{ kolide_fleet_distro_packages }}"
+    state: "present"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
 
-- name: create fleet dir
+- name: Create fleet dir
   file:
     path: '/tmp/fleet_{{ kolide_fleet_version }}'
     state: directory
 
+- name: GET fleet
+  get_url:
+    url: "{{ kolide_fleet_url }}/{{ kolide_fleet_version }}/fleet_{{ kolide_fleet_version }}.zip"
+    dest: "/var/cache/fleet_{{ kolide_fleet_version }}.zip"
+  register: _get_task
+  until: _get_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
 - name: Unarchive Fleet binaries
   unarchive:
-    src: '{{ kolide_fleet_url  }}/{{ kolide_fleet_version }}/fleet_{{ kolide_fleet_version }}.zip'
-    dest: '/tmp/fleet_{{ kolide_fleet_version}}/'
+    src: '/var/cache/fleet_{{ kolide_fleet_version }}.zip'
+    dest: '/tmp/fleet_{{ kolide_fleet_version }}/'
     remote_src: yes
+  notify:
+    - Restart kolide (systemd)
 
 - name: Copy unarchived binaries
   copy:

@@ -1,0 +1,674 @@
+module osquery 1.0;
+
+require {
+        type osquery_t;
+        type osquery_conf_t;
+        type osquery_unit_file_t;
+
+        type insmod_exec_t;
+        type home_root_t;
+        type gssd_exec_t;
+        type udev_exec_t;
+        type sound_device_t;
+        type setsebool_exec_t;
+        type proc_t;
+        type unconfined_service_t;
+        type netutils_exec_t;
+        type load_policy_exec_t;
+        type memory_device_t;
+        type tmp_t;
+        type gpg_exec_t;
+        type autofs_device_t;
+        type systemd_hwdb_exec_t;
+        type tcpd_exec_t;
+        type gssproxy_exec_t;
+        type showmount_exec_t;
+        type rsync_exec_t;
+        type crond_unit_file_t;
+        type udev_rules_t;
+        type systemd_logind_t;
+        type setfiles_exec_t;
+        type sshd_keygen_exec_t;
+        type chronyd_exec_t;
+        type xserver_etc_t;
+        type crond_t;
+        type tun_tap_device_t;
+        type default_context_t;
+        type anacron_exec_t;
+        type virt_qemu_ga_exec_t;
+        type auditd_t;
+        type syslogd_t;
+        type NetworkManager_t;
+        type sysctl_t;
+        type pppd_etc_t;
+        type consolehelper_exec_t;
+        type userhelper_conf_t;
+        type systemd_systemctl_exec_t;
+        type postfix_pickup_exec_t;
+        type syslog_conf_t;
+        type systemd_unit_file_t;
+        type tuned_exec_t;
+        type plymouthd_exec_t;
+        type vlock_exec_t;
+        type systemd_passwd_agent_exec_t;
+        type pinentry_exec_t;
+        type passwd_exec_t;
+        type dmidecode_exec_t;
+        type systemd_notify_exec_t;
+        type hwclock_exec_t;
+        type firewalld_etc_rw_t;
+        type crack_exec_t;
+        type postfix_qmgr_t;
+        type sulogin_exec_t;
+        type netcontrol_device_t;
+        type rpcd_unit_file_t;
+        type auditd_exec_t;
+        type crontab_exec_t;
+        type crash_device_t;
+        type exports_t;
+        type event_device_t;
+        type cgroup_t;
+        type loadkeys_exec_t;
+        type postfix_qmgr_exec_t;
+        type pam_timestamp_exec_t;
+        type random_device_t;
+        type initrc_exec_t;
+        type hugetlbfs_t;
+        type lvm_unit_file_t;
+        type dmesg_exec_t;
+        type proc_mdstat_t;
+        type mouse_device_t;
+        type nfsd_exec_t;
+        type slapd_cert_t;
+        type login_exec_t;
+        type usbmon_device_t;
+        type ldconfig_exec_t;
+        type initctl_t;
+        type debuginfo_exec_t;
+        type postfix_pickup_t;
+        type updpwd_exec_t;
+        type oddjob_mkhomedir_exec_t;
+        type irqbalance_exec_t;
+        type proc_kmsg_t;
+        type gssproxy_t;
+        type postfix_etc_t;
+        type init_exec_t;
+        type postfix_spool_t;
+        type var_run_t;
+        type mtrr_device_t;
+        type hypervvssd_exec_t;
+        type hostname_exec_t;
+        type system_cron_spool_t;
+        type sshd_key_t;
+        type proc_kcore_t;
+        type dbusd_exec_t;
+        type plymouth_exec_t;
+        type tuned_rw_etc_t;
+        type pppd_exec_t;
+        type pam_console_exec_t;
+        type adjtime_t;
+        type chronyc_exec_t;
+        type auditd_unit_file_t;
+        type fuse_device_t;
+        type userhelper_exec_t;
+        type tuned_etc_t;
+        type systemd_logind_exec_t;
+        type var_log_t;
+        type init_t;
+        type pppd_initrc_exec_t;
+        type fs_t;
+        type systemd_tmpfiles_exec_t;
+        type user_home_dir_t;
+        type lvm_etc_t;
+        type chronyd_t;
+        type dbusd_etc_t;
+        type etc_aliases_t;
+        type auditctl_exec_t;
+        type usernetctl_exec_t;
+        type clock_device_t;
+        type traceroute_exec_t;
+        type sshd_t;
+        type mdadm_exec_t;
+        type initrc_var_run_t;
+        type mount_exec_t;
+        type scsi_generic_device_t;
+        type vhost_device_t;
+        type uhid_device_t;
+        type ifconfig_exec_t;
+        type device_t;
+        type namespace_init_exec_t;
+        type lvm_exec_t;
+        type checkpolicy_exec_t;
+        type rpm_script_tmp_t;
+        type user_tmp_t;
+        type unlabeled_t;
+        type sshd_unit_file_t;
+        type policykit_exec_t;
+        type modules_conf_t;
+        type chfn_exec_t;
+        type dhcp_etc_t;
+        type logrotate_exec_t;
+        type getty_unit_file_t;
+        type selinux_config_t;
+        type ppp_device_t;
+        type ssh_keygen_exec_t;
+        type cupsd_rw_etc_t;
+        type authconfig_exec_t;
+        type ssh_exec_t;
+        type rpcbind_t;
+        type audisp_exec_t;
+        type chronyd_keys_t;
+        type dri_device_t;
+        type rpm_exec_t;
+        type getty_t;
+        type virt_qemu_ga_unconfined_exec_t;
+        type NetworkManager_exec_t;
+        type user_fonts_t;
+        type rpc_pipefs_t;
+        type ping_exec_t;
+        type gpg_agent_exec_t;
+        type su_exec_t;
+        type firewalld_exec_t;
+        type getty_exec_t;
+        type quota_exec_t;
+        type devpts_t;
+        type nvram_device_t;
+        type cpu_device_t;
+        type rpcbind_exec_t;
+        type NetworkManager_etc_rw_t;
+        type unconfined_t;
+        type NetworkManager_initrc_exec_t;
+        type sshd_exec_t;
+        type udev_t;
+        type rpcd_exec_t;
+        type fixed_disk_device_t;
+        type selinux_login_config_t;
+        type sysctl_irq_t;
+        type ptmx_t;
+        type ssh_agent_exec_t;
+        type NetworkManager_unit_file_t;
+        type binfmt_misc_fs_t;
+        type semanage_store_t;
+        type framebuf_device_t;
+        type udev_var_run_t;
+        type rdisc_exec_t;
+        type NetworkManager_etc_t;
+        type rsync_etc_t;
+        type postfix_postdrop_exec_t;
+        type tuned_t;
+        type wtmp_t;
+        type dhcpc_exec_t;
+        type useradd_exec_t;
+        type dhcpc_t;
+        type sudo_exec_t;
+        type vfio_device_t;
+        type thumb_exec_t;
+        type crond_exec_t;
+        type bootloader_etc_t;
+        type sysfs_t;
+        type postfix_postqueue_exec_t;
+        type postfix_map_exec_t;
+        type admin_passwd_exec_t;
+        type apm_bios_t;
+        type policykit_t;
+        type iptables_exec_t;
+        type semanage_exec_t;
+        type journalctl_exec_t;
+        type lvm_control_t;
+        type lvm_t;
+        type screen_exec_t;
+        type auditd_etc_t;
+        type xserver_misc_device_t;
+        type fsadm_exec_t;
+        type bootloader_exec_t;
+        type system_cronjob_t;
+        type syslogd_exec_t;
+        type system_dbusd_t;
+        type lvm_lock_t;
+        type user_cron_spool_t;
+        type kmsg_device_t;
+        type mysqld_etc_t;
+        type pppd_etc_rw_t;
+        type configfs_t;
+        type proc_net_t;
+        type postfix_master_exec_t;
+        type shadow_t;
+        type sendmail_exec_t;
+        type loop_control_device_t;
+        type kernel_t;
+        type var_t;
+        type pstore_t;
+        type chkpwd_exec_t;
+        type groupadd_exec_t;
+        type debugfs_t;
+        type hypervkvp_exec_t;
+        type postfix_master_t;
+        type sysctl_fs_t;
+        type blkmapd_exec_t;
+        type nfsd_unit_file_t;
+        type ssh_home_t;
+        type systemd_hwdb_etc_t;
+        type mandb_exec_t;
+        type tmpfs_t;
+        type lvm_metadata_t;
+        type policykit_auth_exec_t;
+        type chronyd_unit_file_t;
+        type print_spool_t;
+        type rpcbind_var_lib_t;
+        class fifo_file getattr;
+        class process setsched;
+        class unix_stream_socket connectto;
+        class netlink_kobject_uevent_socket { bind create getattr setopt };
+        class chr_file { getattr ioctl open read write };
+        class capability { dac_override sys_rawio sys_ptrace };
+        class file { append create getattr lock open read relabelto rename setattr unlink write };
+        class filesystem getattr;
+        class sock_file { create getattr unlink write };
+        class lnk_file { create getattr read unlink };
+        class blk_file { getattr ioctl open read };
+        class dir { add_name getattr open read remove_name search setattr write };
+}
+
+#============= osquery_t ==============
+allow osquery_t NetworkManager_etc_rw_t:dir { getattr open read };
+allow osquery_t NetworkManager_etc_rw_t:file getattr;
+allow osquery_t NetworkManager_etc_t:dir { getattr open read };
+allow osquery_t NetworkManager_exec_t:file getattr;
+allow osquery_t NetworkManager_initrc_exec_t:dir { getattr open read };
+allow osquery_t NetworkManager_initrc_exec_t:file getattr;
+allow osquery_t NetworkManager_t:dir { getattr open read search };
+allow osquery_t NetworkManager_t:file { getattr open read };
+
+allow osquery_t NetworkManager_t:lnk_file { getattr read };
+allow osquery_t NetworkManager_unit_file_t:file getattr;
+allow osquery_t adjtime_t:file getattr;
+allow osquery_t admin_passwd_exec_t:file getattr;
+allow osquery_t anacron_exec_t:file getattr;
+allow osquery_t apm_bios_t:chr_file getattr;
+allow osquery_t audisp_exec_t:file getattr;
+allow osquery_t auditctl_exec_t:file getattr;
+allow osquery_t auditd_etc_t:dir { getattr open read };
+allow osquery_t auditd_etc_t:file getattr;
+allow osquery_t auditd_exec_t:file getattr;
+allow osquery_t auditd_t:dir { getattr open read search };
+allow osquery_t auditd_t:file { getattr open read };
+
+allow osquery_t auditd_t:lnk_file { getattr read };
+allow osquery_t auditd_unit_file_t:file getattr;
+allow osquery_t authconfig_exec_t:file getattr;
+allow osquery_t autofs_device_t:chr_file getattr;
+allow osquery_t binfmt_misc_fs_t:filesystem getattr;
+allow osquery_t blkmapd_exec_t:file getattr;
+allow osquery_t bootloader_etc_t:file getattr;
+allow osquery_t bootloader_exec_t:file getattr;
+allow osquery_t cgroup_t:filesystem getattr;
+allow osquery_t checkpolicy_exec_t:file getattr;
+allow osquery_t chfn_exec_t:file getattr;
+allow osquery_t chkpwd_exec_t:file getattr;
+allow osquery_t chronyc_exec_t:file getattr;
+allow osquery_t chronyd_exec_t:file getattr;
+allow osquery_t chronyd_keys_t:file getattr;
+allow osquery_t chronyd_t:dir { getattr open read search };
+allow osquery_t chronyd_t:file { getattr open read };
+
+allow osquery_t chronyd_t:lnk_file { getattr read };
+allow osquery_t chronyd_unit_file_t:file getattr;
+allow osquery_t clock_device_t:chr_file getattr;
+allow osquery_t configfs_t:filesystem getattr;
+allow osquery_t consolehelper_exec_t:file getattr;
+allow osquery_t cpu_device_t:chr_file getattr;
+allow osquery_t crack_exec_t:file getattr;
+allow osquery_t crash_device_t:chr_file getattr;
+allow osquery_t crond_exec_t:file getattr;
+allow osquery_t crond_t:dir { getattr open read search };
+allow osquery_t crond_t:file { getattr open read };
+
+allow osquery_t crond_t:lnk_file { getattr read };
+allow osquery_t crond_unit_file_t:file getattr;
+allow osquery_t crontab_exec_t:file getattr;
+allow osquery_t cupsd_rw_etc_t:file getattr;
+allow osquery_t dbusd_etc_t:dir { getattr open read };
+allow osquery_t dbusd_etc_t:file getattr;
+allow osquery_t dbusd_exec_t:file getattr;
+allow osquery_t debugfs_t:filesystem getattr;
+allow osquery_t debuginfo_exec_t:file getattr;
+allow osquery_t default_context_t:dir read;
+allow osquery_t default_context_t:file getattr;
+
+#!!!! WARNING: 'device_t' is a base type.
+allow osquery_t device_t:filesystem getattr;
+allow osquery_t devpts_t:filesystem getattr;
+allow osquery_t dhcp_etc_t:dir { getattr open read };
+allow osquery_t dhcp_etc_t:file getattr;
+allow osquery_t dhcpc_exec_t:file getattr;
+allow osquery_t dhcpc_t:dir { getattr open read search };
+allow osquery_t dhcpc_t:file { getattr open read };
+
+allow osquery_t dhcpc_t:lnk_file { getattr read };
+allow osquery_t dmesg_exec_t:file getattr;
+allow osquery_t dmidecode_exec_t:file getattr;
+allow osquery_t dri_device_t:chr_file getattr;
+allow osquery_t etc_aliases_t:file getattr;
+allow osquery_t event_device_t:chr_file getattr;
+allow osquery_t exports_t:file getattr;
+allow osquery_t firewalld_etc_rw_t:dir { getattr open read };
+allow osquery_t firewalld_etc_rw_t:file getattr;
+allow osquery_t firewalld_exec_t:file getattr;
+allow osquery_t fixed_disk_device_t:blk_file { getattr ioctl open read };
+allow osquery_t fixed_disk_device_t:chr_file getattr;
+allow osquery_t framebuf_device_t:chr_file getattr;
+allow osquery_t fs_t:filesystem getattr;
+allow osquery_t fsadm_exec_t:file getattr;
+allow osquery_t fuse_device_t:chr_file getattr;
+allow osquery_t getty_exec_t:file getattr;
+allow osquery_t getty_t:dir { getattr open read search };
+allow osquery_t getty_t:file { getattr open read };
+
+allow osquery_t getty_t:lnk_file { getattr read };
+allow osquery_t getty_unit_file_t:file getattr;
+allow osquery_t gpg_agent_exec_t:file getattr;
+allow osquery_t gpg_exec_t:file getattr;
+allow osquery_t groupadd_exec_t:file getattr;
+allow osquery_t gssd_exec_t:file getattr;
+allow osquery_t gssproxy_exec_t:file getattr;
+allow osquery_t gssproxy_t:dir { getattr open read search };
+allow osquery_t gssproxy_t:file { getattr open read };
+
+allow osquery_t gssproxy_t:lnk_file { getattr read };
+
+#!!!! WARNING: 'home_root_t' is a base type.
+allow osquery_t home_root_t:dir read;
+allow osquery_t hostname_exec_t:file getattr;
+allow osquery_t hugetlbfs_t:dir { getattr open read };
+allow osquery_t hugetlbfs_t:filesystem getattr;
+allow osquery_t hwclock_exec_t:file getattr;
+allow osquery_t hypervkvp_exec_t:file getattr;
+allow osquery_t hypervvssd_exec_t:file getattr;
+allow osquery_t ifconfig_exec_t:file getattr;
+allow osquery_t init_exec_t:file getattr;
+allow osquery_t init_t:dir read;
+allow osquery_t init_t:file { getattr open read };
+
+allow osquery_t init_t:lnk_file { getattr read };
+allow osquery_t initctl_t:fifo_file getattr;
+allow osquery_t initrc_exec_t:file getattr;
+allow osquery_t initrc_var_run_t:file { lock open read };
+allow osquery_t insmod_exec_t:file getattr;
+allow osquery_t iptables_exec_t:file getattr;
+allow osquery_t irqbalance_exec_t:file getattr;
+allow osquery_t journalctl_exec_t:file getattr;
+allow osquery_t kernel_t:dir { getattr open read search };
+allow osquery_t kernel_t:file { getattr open read };
+allow osquery_t kernel_t:lnk_file { getattr read };
+
+#!!!! This avc can be allowed using the boolean 'domain_can_write_kmsg'
+allow osquery_t kmsg_device_t:chr_file getattr;
+allow osquery_t ldconfig_exec_t:file getattr;
+allow osquery_t load_policy_exec_t:file getattr;
+allow osquery_t loadkeys_exec_t:file getattr;
+allow osquery_t login_exec_t:file getattr;
+allow osquery_t logrotate_exec_t:file getattr;
+allow osquery_t loop_control_device_t:chr_file getattr;
+allow osquery_t lvm_control_t:chr_file { getattr ioctl open read write };
+allow osquery_t lvm_etc_t:dir { getattr open read };
+allow osquery_t lvm_etc_t:file { getattr open read };
+allow osquery_t lvm_exec_t:file getattr;
+allow osquery_t lvm_lock_t:dir { add_name getattr read remove_name search write };
+allow osquery_t lvm_lock_t:file { append create getattr lock open read unlink };
+allow osquery_t lvm_metadata_t:dir { add_name getattr open read remove_name write };
+allow osquery_t lvm_metadata_t:file { create getattr lock open read rename unlink write };
+allow osquery_t lvm_t:dir { getattr open read search };
+allow osquery_t lvm_t:file { getattr open read };
+
+allow osquery_t lvm_t:lnk_file { getattr read };
+allow osquery_t lvm_unit_file_t:file getattr;
+allow osquery_t mandb_exec_t:file getattr;
+allow osquery_t mdadm_exec_t:file getattr;
+allow osquery_t memory_device_t:chr_file getattr;
+allow osquery_t modules_conf_t:dir { getattr open read };
+allow osquery_t modules_conf_t:file getattr;
+allow osquery_t mount_exec_t:file getattr;
+allow osquery_t mouse_device_t:chr_file getattr;
+allow osquery_t mtrr_device_t:file getattr;
+allow osquery_t mysqld_etc_t:dir { getattr open read };
+allow osquery_t mysqld_etc_t:file getattr;
+allow osquery_t namespace_init_exec_t:file getattr;
+allow osquery_t netcontrol_device_t:chr_file getattr;
+allow osquery_t netutils_exec_t:file getattr;
+allow osquery_t nfsd_exec_t:file getattr;
+allow osquery_t nfsd_unit_file_t:file getattr;
+allow osquery_t nvram_device_t:chr_file getattr;
+allow osquery_t oddjob_mkhomedir_exec_t:file getattr;
+allow osquery_t osquery_conf_t:file getattr;
+allow osquery_t osquery_unit_file_t:file getattr;
+allow osquery_t pam_console_exec_t:file getattr;
+allow osquery_t pam_timestamp_exec_t:file getattr;
+allow osquery_t passwd_exec_t:file getattr;
+allow osquery_t pinentry_exec_t:file getattr;
+allow osquery_t ping_exec_t:file getattr;
+allow osquery_t plymouth_exec_t:file getattr;
+allow osquery_t plymouthd_exec_t:file getattr;
+allow osquery_t policykit_auth_exec_t:file getattr;
+allow osquery_t policykit_exec_t:file getattr;
+allow osquery_t policykit_t:dir { getattr open read search };
+allow osquery_t policykit_t:file { getattr open read };
+
+allow osquery_t policykit_t:lnk_file { getattr read };
+allow osquery_t postfix_etc_t:dir { getattr open read };
+allow osquery_t postfix_etc_t:file getattr;
+allow osquery_t postfix_map_exec_t:file getattr;
+allow osquery_t postfix_master_exec_t:file getattr;
+allow osquery_t postfix_master_t:dir { getattr open read search };
+allow osquery_t postfix_master_t:file { getattr open read };
+
+allow osquery_t postfix_master_t:lnk_file { getattr read };
+allow osquery_t postfix_pickup_exec_t:file getattr;
+allow osquery_t postfix_pickup_t:dir { getattr open read search };
+allow osquery_t postfix_pickup_t:file { getattr open read };
+
+allow osquery_t postfix_pickup_t:lnk_file { getattr read };
+allow osquery_t postfix_postdrop_exec_t:file getattr;
+allow osquery_t postfix_postqueue_exec_t:file getattr;
+allow osquery_t postfix_qmgr_exec_t:file getattr;
+allow osquery_t postfix_qmgr_t:dir { getattr open read search };
+allow osquery_t postfix_qmgr_t:file { getattr open read };
+
+allow osquery_t postfix_qmgr_t:lnk_file { getattr read };
+allow osquery_t postfix_spool_t:dir getattr;
+allow osquery_t ppp_device_t:chr_file getattr;
+allow osquery_t pppd_etc_rw_t:dir { getattr open read };
+allow osquery_t pppd_etc_t:dir { getattr open read };
+allow osquery_t pppd_exec_t:file getattr;
+allow osquery_t pppd_initrc_exec_t:file getattr;
+allow osquery_t proc_kcore_t:file getattr;
+allow osquery_t proc_kmsg_t:file getattr;
+allow osquery_t proc_mdstat_t:file getattr;
+allow osquery_t proc_net_t:file { getattr open read };
+allow osquery_t proc_t:dir read;
+allow osquery_t proc_t:file { getattr open read };
+allow osquery_t proc_t:filesystem getattr;
+allow osquery_t pstore_t:filesystem getattr;
+allow osquery_t ptmx_t:chr_file getattr;
+allow osquery_t quota_exec_t:file getattr;
+
+#!!!! This avc can be allowed using the boolean 'authlogin_nsswitch_use_ldap'
+allow osquery_t random_device_t:chr_file getattr;
+allow osquery_t rdisc_exec_t:file getattr;
+allow osquery_t rpc_pipefs_t:filesystem getattr;
+allow osquery_t rpcbind_exec_t:file getattr;
+allow osquery_t rpcbind_t:dir { getattr open read search };
+allow osquery_t rpcbind_t:file { getattr open read };
+
+allow osquery_t rpcbind_t:lnk_file { getattr read };
+allow osquery_t rpcd_exec_t:file getattr;
+allow osquery_t rpcd_unit_file_t:file getattr;
+allow osquery_t rpm_exec_t:file getattr;
+allow osquery_t rpm_script_tmp_t:dir read;
+allow osquery_t rsync_etc_t:file getattr;
+allow osquery_t rsync_exec_t:file getattr;
+allow osquery_t screen_exec_t:file getattr;
+allow osquery_t scsi_generic_device_t:chr_file getattr;
+allow osquery_t self:capability { dac_override sys_rawio };
+allow osquery_t self:netlink_kobject_uevent_socket { bind create getattr setopt };
+allow osquery_t self:process setsched;
+
+#!!!! The file '/var/osquery/osquery.em' is mislabeled on your system.  
+#!!!! Fix with $ restorecon -R -v /var/osquery/osquery.em
+#!!!! This avc can be allowed using the boolean 'daemons_enable_cluster_mode'
+allow osquery_t self:unix_stream_socket connectto;
+allow osquery_t selinux_config_t:dir read;
+allow osquery_t selinux_login_config_t:dir { getattr open read };
+allow osquery_t semanage_exec_t:file getattr;
+allow osquery_t semanage_store_t:dir { getattr open read };
+allow osquery_t semanage_store_t:file { getattr open read };
+allow osquery_t sendmail_exec_t:file getattr;
+allow osquery_t setfiles_exec_t:file getattr;
+allow osquery_t setsebool_exec_t:file getattr;
+allow osquery_t shadow_t:file getattr;
+allow osquery_t showmount_exec_t:file getattr;
+
+#!!!! This avc can be allowed using the boolean 'authlogin_nsswitch_use_ldap'
+allow osquery_t slapd_cert_t:dir { getattr open read };
+
+#!!!! This avc can be allowed using the boolean 'authlogin_nsswitch_use_ldap'
+allow osquery_t slapd_cert_t:file getattr;
+allow osquery_t sound_device_t:chr_file getattr;
+allow osquery_t ssh_agent_exec_t:file getattr;
+allow osquery_t ssh_exec_t:file getattr;
+allow osquery_t ssh_home_t:dir { getattr open read };
+allow osquery_t ssh_home_t:file getattr;
+allow osquery_t ssh_keygen_exec_t:file getattr;
+allow osquery_t sshd_exec_t:file getattr;
+allow osquery_t sshd_key_t:file getattr;
+allow osquery_t sshd_keygen_exec_t:file getattr;
+allow osquery_t sshd_t:dir { getattr open read search };
+allow osquery_t sshd_t:file { getattr open read };
+
+allow osquery_t sshd_t:lnk_file { getattr read };
+allow osquery_t sshd_unit_file_t:file getattr;
+allow osquery_t su_exec_t:file getattr;
+allow osquery_t sudo_exec_t:file getattr;
+allow osquery_t sulogin_exec_t:file getattr;
+allow osquery_t sysctl_fs_t:dir search;
+allow osquery_t sysctl_irq_t:dir getattr;
+allow osquery_t sysctl_t:file getattr;
+allow osquery_t sysfs_t:dir read;
+allow osquery_t sysfs_t:file { getattr open read };
+allow osquery_t sysfs_t:filesystem getattr;
+allow osquery_t sysfs_t:lnk_file { getattr read };
+allow osquery_t syslog_conf_t:dir { getattr open read };
+allow osquery_t syslog_conf_t:file getattr;
+allow osquery_t syslogd_exec_t:file getattr;
+allow osquery_t syslogd_t:dir { getattr open read search };
+allow osquery_t syslogd_t:file { getattr open read };
+
+allow osquery_t syslogd_t:lnk_file { getattr read };
+allow osquery_t system_cron_spool_t:dir { getattr open read };
+allow osquery_t system_cron_spool_t:file { getattr open read };
+allow osquery_t system_cronjob_t:dir { getattr open read search };
+allow osquery_t system_cronjob_t:file { getattr open read };
+
+allow osquery_t system_cronjob_t:lnk_file { getattr read };
+allow osquery_t system_dbusd_t:dir { getattr open read search };
+allow osquery_t system_dbusd_t:file { getattr open read };
+
+allow osquery_t system_dbusd_t:lnk_file { getattr read };
+allow osquery_t systemd_hwdb_etc_t:file getattr;
+allow osquery_t systemd_hwdb_exec_t:file getattr;
+allow osquery_t systemd_logind_exec_t:file getattr;
+allow osquery_t systemd_logind_t:dir { getattr open read search };
+allow osquery_t systemd_logind_t:file { getattr open read };
+
+allow osquery_t systemd_logind_t:lnk_file { getattr read };
+allow osquery_t systemd_notify_exec_t:file getattr;
+allow osquery_t systemd_passwd_agent_exec_t:file getattr;
+allow osquery_t systemd_systemctl_exec_t:file getattr;
+allow osquery_t systemd_tmpfiles_exec_t:file getattr;
+allow osquery_t systemd_unit_file_t:dir { open read };
+allow osquery_t systemd_unit_file_t:file getattr;
+allow osquery_t systemd_unit_file_t:lnk_file read;
+allow osquery_t tcpd_exec_t:file getattr;
+allow osquery_t thumb_exec_t:file getattr;
+
+#!!!! WARNING: 'tmp_t' is a base type.
+allow osquery_t tmp_t:dir { add_name read remove_name write };
+allow osquery_t tmp_t:file { create unlink write };
+
+#!!!! WARNING: 'tmp_t' is a base type.
+allow osquery_t tmp_t:lnk_file { create unlink };
+allow osquery_t tmpfs_t:dir read;
+allow osquery_t tmpfs_t:filesystem getattr;
+allow osquery_t traceroute_exec_t:file getattr;
+allow osquery_t tun_tap_device_t:chr_file getattr;
+allow osquery_t tuned_etc_t:dir { getattr open read };
+allow osquery_t tuned_etc_t:file getattr;
+allow osquery_t tuned_exec_t:file getattr;
+allow osquery_t tuned_rw_etc_t:file getattr;
+allow osquery_t tuned_t:dir { getattr open read search };
+allow osquery_t tuned_t:file { getattr open read };
+
+allow osquery_t tuned_t:lnk_file { getattr read };
+allow osquery_t udev_exec_t:file getattr;
+allow osquery_t udev_rules_t:dir { getattr open read };
+allow osquery_t udev_rules_t:file getattr;
+allow osquery_t udev_t:dir { getattr open read search };
+allow osquery_t udev_t:file { getattr open read };
+allow osquery_t udev_t:lnk_file { getattr read };
+allow osquery_t udev_var_run_t:file { getattr open read };
+allow osquery_t uhid_device_t:chr_file getattr;
+allow osquery_t unconfined_service_t:dir { getattr open read search };
+allow osquery_t unconfined_service_t:file { getattr open read };
+allow osquery_t unconfined_service_t:lnk_file { getattr read };
+allow osquery_t unconfined_t:dir { getattr open read search };
+allow osquery_t unconfined_t:file { getattr open read };
+allow osquery_t unconfined_t:lnk_file { getattr read };
+
+#!!!! WARNING: 'unlabeled_t' is a base type.
+#!!!! The file '/etc/sysconfig/cloud-info' is mislabeled on your system.
+#!!!! Fix with $ restorecon -R -v /etc/sysconfig/cloud-info
+allow osquery_t unlabeled_t:file getattr;
+allow osquery_t updpwd_exec_t:file getattr;
+allow osquery_t usbmon_device_t:chr_file getattr;
+allow osquery_t user_cron_spool_t:dir { getattr open read };
+allow osquery_t user_fonts_t:dir { getattr open read search };
+allow osquery_t user_home_dir_t:dir getattr;
+allow osquery_t user_tmp_t:dir read;
+allow osquery_t useradd_exec_t:file getattr;
+allow osquery_t userhelper_conf_t:dir { getattr open read };
+allow osquery_t userhelper_conf_t:file getattr;
+allow osquery_t userhelper_exec_t:file getattr;
+allow osquery_t usernetctl_exec_t:file getattr;
+allow osquery_t var_log_t:lnk_file unlink;
+
+#!!!! WARNING 'osquery_t' is not allowed to write or create to var_run_t.  Change the label to osquery_var_run_t.
+allow osquery_t var_run_t:dir { add_name remove_name write };
+
+#!!!! WARNING 'osquery_t' is not allowed to write or create to var_run_t.  Change the label to osquery_var_run_t.
+#!!!! $ semanage fcontext -a -t osquery_var_run_t /run/osqueryd.pid
+#!!!! $ restorecon -R -v /run/osqueryd.pid
+#!!!! The file '/run/osqueryd.pid' is mislabeled on your system.
+#!!!! Fix with $ restorecon -R -v /run/osqueryd.pid
+allow osquery_t var_run_t:file { append create getattr open read setattr unlink };
+
+#!!!! WARNING: 'var_t' is a base type.
+allow osquery_t var_t:dir { add_name read remove_name setattr write };
+allow osquery_t var_t:file { create getattr lock open read rename unlink write };
+allow osquery_t var_t:sock_file { create getattr unlink write };
+allow osquery_t vfio_device_t:chr_file getattr;
+allow osquery_t vhost_device_t:chr_file getattr;
+allow osquery_t virt_qemu_ga_exec_t:file getattr;
+allow osquery_t virt_qemu_ga_unconfined_exec_t:dir { getattr open read };
+allow osquery_t vlock_exec_t:file getattr;
+allow osquery_t wtmp_t:file { open read };
+allow osquery_t xserver_etc_t:dir { getattr open read };
+allow osquery_t xserver_misc_device_t:chr_file getattr;
+
+allow osquery_t print_spool_t:dir search;
+allow osquery_t rpcbind_var_lib_t:dir search;
+allow osquery_t self:capability sys_ptrace;
+
+#============= unconfined_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow unconfined_t osquery_conf_t:file relabelto;
+

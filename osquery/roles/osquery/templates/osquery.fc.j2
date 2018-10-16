@@ -1,0 +1,6 @@
+/usr/bin/osqueryd               --      gen_context(system_u:object_r:osquery_exec_t,s0)
+/etc/osquery(/.*)?              --      gen_context(system_u:object_r:osquery_conf_t,s0)
+/usr/share/osquery/packs(/.*)?  --      gen_context(system_u:object_r:osquery_conf_t,s0)
+/var/log/osquery(/.*)?          --      gen_context(system_u:object_r:osquery_log_t,s0)
+/var/osquery/osquery.em         --      gen_context(system_u:object_r:osquery_sock_t,s0)
+/usr/lib/systemd/system/osqueryd.service                --      gen_context(system_u:object_r:osquery_unit_file_t,s0)

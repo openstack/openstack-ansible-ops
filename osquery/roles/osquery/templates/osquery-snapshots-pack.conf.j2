@@ -1,0 +1,183 @@
+{
+  "queries": {
+    "authorized_keys": {
+      "query" : "select authorized_keys.* from users join authorized_keys using (uid);",
+      "description" : "Info on authorized keys",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "user_ssh_keys": {
+      "query" : "select user_ssh_keys.* from users join user_ssh_keys using (uid);",
+      "description" : "info on user ssh keys",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "cpuid": {
+      "query" : "select * from cpuid;",
+      "description" : "Useful CPU features from the cpuid ASM call.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "dns_resolvers": {
+      "query" : "select * from dns_resolvers;",
+      "description" : "check DNS resolvers",
+      "interval" : "{{ osquery_snapshot_interval2 }}",
+      "snapshot": true
+    },
+    "known_hosts": {
+      "query" : "select known_hosts.* from users join known_hosts using (uid);",
+      "description" : "line-delimited known_hosts table",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "sudoers": {
+      "query" : "select * from sudoers;",
+      "description" : "Retrieves all the information for sudoers.",
+      "interval" : "{{ osquery_snapshot_interval2 }}",
+      "snapshot": true
+    },
+    "groups": {
+      "query" : "select * from groups;",
+      "description" : "Retrieves groups info.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "interface_addresses": {
+      "query" : "select * from interface_addresses;",
+      "description" : "Retrieves interface addresses.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "interface_details": {
+      "query" : "select * from interface_details;",
+      "description" : "Retrieves interface details.",
+      "interval" : "{{ osquery_snapshot_interval2 }}",
+      "snapshot": true
+    },
+    "iptables": {
+      "query" : "select * from iptables;",
+      "description" : "Linux IP packet filtering and NAT tool.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "fileless_process": {
+      "query" : "SELECT name, path, pid FROM processes WHERE on_disk = 0;",
+      "description" : "Retrieves interface details.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "processes": {
+      "query": "SELECT pid, name, path, cmdline from processes;",
+      "description": "Retrieve list of processes",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "process_binding_to_ports": {
+      "query" : "select DISTINCT process.name, listening.port, process.pid FROM processes as process JOIN listening_ports AS listening ON process.pid=listening.pid;",
+      "description" : "Retrieves the list of processes bound to listening ports.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "python_packages": {
+      "query" : "select * FROM python_packages;",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true,
+      "description" : "Python packages installed in a system"
+    },
+    "arp_anomalies": {
+      "query" : "SELECT address, mac, COUNT(mac) AS mac_count FROM arp_cache GROUP BY mac HAVING count(mac) > 1;",
+      "description" : "Retrieves interface details.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "crontab": {
+      "query" : "select * from crontab;",
+      "version" : "1.4.5",
+      "description" : "Retrieves all the jobs scheduled in crontab in the target system.",
+      "value" : "Identify malware that uses this persistence mechanism to launch at a given interval",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "kernel_info": {
+      "query" : "select * from kernel_info;",
+      "platform" : "linux",
+      "description" : "Basic active kernel information.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "kernel_integrity": {
+      "query" : "select * from kernel_integrity;",
+      "platform" : "linux",
+      "description" : "Various Linux kernel integrity checked attributes.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "kernel_modules": {
+      "query" : "select * from kernel_modules;",
+      "platform" : "linux",
+      "version" : "1.4.5",
+      "description" : "Retrieves all the information for the current kernel modules in the target Linux system.",
+      "value" : "Identify malware that has a kernel module component.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "kernel_panics": {
+      "query" : "select * from kernel_panics;",
+      "platform" : "linux",
+      "description" : "System kernel panic logs.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "etc_hosts": {
+      "query" : "select * from etc_hosts;",
+      "version" : "1.4.5",
+      "description" : "Retrieves all the entries in the target system /etc/hosts file.",
+      "value" : "Identify network communications that are being redirected. Example: identify if security logging has been disabled",
+      "interval" : "{{ osquery_snapshot_interval2 }}",
+      "snapshot": true
+    },
+    "os_version": {
+      "query" : "select os_version.* from users join os_version using (uid);",
+      "description" : "A single row containing the operating system name and version.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "platform_info": {
+      "query" : "select * from platform_info;",
+      "description" : "Information about EFI/UEFI/ROM and platform/boot.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "suid_bin": {
+      "query" : "select * from suid_bin;",
+      "version" : "1.4.5",
+      "description" : "Retrieves all the files in the target system that are setuid enabled.",
+      "value" : "Detect backdoor binaries (attacker may drop a copy of /bin/sh). Find potential elevation points / vulnerabilities in the standard build.",
+      "interval" : "{{ osquery_snapshot_interval2 }}",
+      "snapshot": true
+    },
+    "system_controls": {
+      "query": "select * from system_controls;",
+      "interval" : "{{ osquery_snapshot_interval2 }}",
+      "snapshot": true,
+      "platform": "all",
+      "description": "sysctl names, values, and settings information"
+    },
+    "system_info": {
+      "query" : "select * from system_info;",
+      "description" : "System information for identification.",
+      "interval" : "{{ osquery_snapshot_interval }}",
+      "snapshot": true
+    },
+    "rpm_packages": {
+      "query" : "select * from rpm_packages;",
+      "platform" : "redhat,centos",
+      "version" : "1.4.5",
+      "description" : "Retrieves all the installed RPM packages in the target Linux system.",
+      "value" : "General security posture.",
+      "interval" : "{{ osquery_snapshot_interval2 }}",
+      "snapshot": true
+    }
+  }
+}
+

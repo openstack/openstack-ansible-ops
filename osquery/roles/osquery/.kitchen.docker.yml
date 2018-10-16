@@ -1,0 +1,70 @@
+---
+driver:
+  name: docker
+## https://github.com/test-kitchen/kitchen-docker/issues/54
+  use_sudo: false
+
+transport:
+  name: sftp
+
+provisioner:
+  name: ansible_playbook
+  roles_path: ../
+  hosts: test-kitchen
+#  ansible_verbose: true
+  ansible_verbose: false
+  ansible_verbosity: 3
+  ansible_extra_flags: <%= ENV['ANSIBLE_EXTRA_FLAGS'] %>
+#  require_chef_omnibus: false
+  require_ansible_omnibus: true
+#  require_chef_for_busser: false
+  enable_yum_epel: true
+  ansible_connection: ssh
+
+platforms:
+  - name: ubuntu-18.04
+    driver_config:
+# https://github.com/test-kitchen/kitchen-docker/issues/285
+      provision_command: mkdir -p /run/sshd
+  - name: ubuntu-16.04
+## systemd?
+    driver:
+      config:
+        security.privileged: true
+  - name: ubuntu-14.04
+  - name: ubuntu-12.04
+  - name: centos-7
+## systemd
+    driver:
+      config:
+        security.privileged: true
+### epel mirror issue. see readme
+#  - name: centos-6
+### Ansible 2.2+/cryptography: https://github.com/ansible/ansible/issues/276
+#    provisioner:
+#      ansible_version: 2.1.2.0
+## tool chain kitchen and image need customization... nok currently
+#  - name: alpine-3.4
+#  - name: debian-8
+  - name: debian-9
+
+suites:
+  - name: default
+    run_list:
+    attributes:
+  - name: default-osquery-syslog
+    run_list:
+    attributes:
+  - name: default-osquery-syslog-fs
+    run_list:
+    attributes:
+  - name: default-profiling
+    run_list:
+    attributes:
+    includes:
+      - ubuntu-16.04
+  - name: default-fleetmanager
+    run_list:
+    attributes:
+    includes:
+      - ubuntu-16.04

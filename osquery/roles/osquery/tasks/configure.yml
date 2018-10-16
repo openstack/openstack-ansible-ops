@@ -1,0 +1,123 @@
+---
+
+- name: check if osquery is present
+  stat: path=/etc/osquery
+  register: hasOsquery
+- block:
+    - name: ensure directories exist
+      file:
+        dest: "{{ item.d }}"
+        state: directory
+        mode: "{{ item.m }}"
+      with_items:
+        - { d: '/var/log/osquery', m: '0755' }
+    - name: push extra osquery packs file
+      template:
+        src: "{{ item }}.conf.j2"
+        dest: "/usr/share/osquery/packs/{{ item | basename }}.conf"
+        backup: yes
+      with_items: "{{ osquery_upload_packs }}"
+      notify:
+        - restart osquery
+    - debug: var=osquery_packs
+    - name: configure osquery
+      template:
+        src: "{{ osquery_template }}"
+        dest: /etc/osquery/osquery.conf
+        mode: '0644'
+        backup: yes
+        validate: 'osqueryi --config_path %s --config_check --verbose'
+#        validate: 'egrep -v '^\s*//' %s | tee /tmp/a | python -mjson.tool'
+      notify:
+        - restart osquery
+    - name: "ensure osquery var dir exists"
+      file:
+        state: "directory"
+        path: "/var/osquery"
+    - name: "express the osquery secret to disk"
+      lineinfile:
+        path: "/etc/osquery/osquery_enroll_secret"
+        line: "{{ osquery_enroll_secret }}"
+        state: present
+        owner: "root"
+        group: "root"
+        mode: "0600"
+        create: true
+      when:
+        - osquery_enroll_secret is defined
+    - name: configure osquery flags
+      template:
+        src: "osquery.flags.j2"
+        dest: /etc/osquery/osquery.flags
+        mode: '0644'
+        backup: yes
+      notify:
+        - restart osquery
+    - name: re-validate whole osquery config
+      command: 'osqueryi --config_path /etc/osquery/osquery.conf --config_check --verbose'
+      changed_when: false
+      register: confcheck
+      failed_when: "'error' in confcheck.stdout or 'fail' in confcheck.stdout"
+    - block:
+        - name: ensure logrotate package is present
+          package:
+            name: logrotate
+            state: present
+        - name: add logrotate configuration for osquery log
+          template:
+            src: logrotate-osquery.j2
+            dest: /etc/logrotate.d/osquery
+            mode: '0644'
+            backup: yes
+            validate: 'logrotate -dv %s'
+      when: osquery_logrotate
+    - name: ensure service is enabled and started
+      service: name=osqueryd state=started enabled=yes
+    - set_fact:
+        monit_osqueryd: true
+  when: hasOsquery.stat.exists
+
+## FIXME! warnings like (from packs/incident-response.conf)
+#virtual_table.cpp:484] The shell_history table returns data based on the current user by default, consider JOINing against the users table
+# but still apply with
+# SELECT s.uid,s.time,s.command,s.history_file FROM shell_history s JOIN users USING (uid) limit 10;
+
+- block:
+    - name: review inotify sysctl settings for osquery
+      sysctl: name="{{ item.n }}" value="{{ item.v }}" sysctl_set=yes state=present reload=yes
+      with_items:
+        - { n: 'fs.inotify.max_user_watches', v: '524288' }
+        - { n: 'fs.inotify.max_user_instances', v: '256' }
+        - { n: 'fs.inotify.max_queued_events', v: '32768' }
+  when: osquery_fim and not (ansible_virtualization_type is defined and (ansible_virtualization_type == "lxc" or ansible_virtualization_type == "docker"))
+
+## ensure no auditd at the same time
+## https://osquery.readthedocs.io/en/stable/deployment/process-auditing/
+- block:
+    - name: ensure auditd is not present
+      package: name="{{ _osquery_auditd_pkg }}" state=absent
+  when: osquery_process_auditing
+
+- name: get rsyslog version
+  command: "rsyslogd -v | awk -F'[ ,]' '/rsyslogd/ { print $2 }'"
+  environment:
+    PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  changed_when: false
+  register: rsyslog_v
+
+- block:
+    - name: setup rsyslog pipe for osquery communication
+      template:
+        src: osquery-rsyslog.conf.j2
+        dest: /etc/rsyslog.d/90-osquery.conf
+        mode: '0644'
+        backup: yes
+      notify:
+        - restart rsyslog
+  when: osquery_rsyslog
+
+- include: syslog-target.yml
+  when: osquery_syslog_target != ''
+
+- include: selinux-end.yml
+  when: not (ansible_virtualization_type is defined and (ansible_virtualization_type == "lxc" or ansible_virtualization_type == "docker")) and ansible_os_family == "RedHat"

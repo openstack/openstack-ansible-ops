@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Install osquery
-  hosts: "osquery"
+  hosts: "fleet_all:osquery:hosts"
   become: true
   vars_files:
     - vars/variables.yml
@@ -26,40 +26,63 @@
   pre_tasks:
     - name: create osquery dir
       file:
-        path: /etc/osquery/ssl
+        path: "{{ item }}"
         state: directory
+      with_items:
+        - /etc/osquery
+        - /etc/osquery/ssl
 
-    - name: Debug fleet_config
-      debug:
-        var: hostvars[groups['fleet'][0]]['ansible_host']
-        verbosity: 2
+    - name: Synchronize certifactes back
+      synchronize:
+        mode: pull
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - src: "{{ kolide_fleet_ssl_cert }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
+        - src: "{{ kolide_fleet_ssl_key }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+      when:
+        - inventory_hostname == groups['fleet_all'][0]
 
-    - name: Store ssl cert
-      slurp:
-        src: "{{ kolide_fleet_ssl_cert }}"
-      register: _kolide_fleet_ssl_cert
-
-    - name: Store ssl key
-      slurp:
-        src: "{{ kolide_fleet_ssl_key }}"
-      register: _kolide_fleet_ssl_key
-
-    - name: Register a fact for the cert and key
-      set_fact:
-        kolide_fleet_ssl_cert_fact: "{{ _kolide_fleet_ssl_cert.content }}"
-        kolide_fleet_ssl_key_fact: "{{ _kolide_fleet_ssl_key.content }}"
-
-    - name: Distribute self signed ssl cert
+    - name: Copy certifactes over
       copy:
-        dest: "{{ kolide_fleet_ssl_cert }}"
-        content: "{{ hostvars[groups['fleet'][0]]['kolide_fleet_ssl_cert_fact'] | b64decode }}"
-        mode: "0640"
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - dest: "{{ kolide_fleet_ssl_cert }}"
+          src: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
+        - dest: "{{ kolide_fleet_ssl_key }}"
+          src: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+      when:
+        - inventory_hostname != groups['fleet_all'][0]
+
+    - name: retrieve Enrollment Token
+      command: /usr/local/bin/fleetctl get enroll-secret
+      changed_when: false
+      register: _enrollment_token
+      delegate_to: "{{ groups['fleet_all'][0] }}"
+      run_once: true
+
+    - name: Set kolide fleet enrollment token fact
+      set_fact:
+        kolide_fleet_enroll_secret: "{{ _enrollment_token.stdout }}"
 
     - name: write enroll secret
       copy:
-        dest: "{{ osquery_enroll_secret_dir }}"
-        content: "{{ hostvars[groups['fleet'][0]]['kolide_fleet_enroll_secret'] }}"
+        dest: "{{ osquery_enroll_secret_file }}"
+        content: "{{ kolide_fleet_enroll_secret }}"
         mode: "0640"
+
+  post_tasks:
+    - name: Cleanup certifactes
+      file:
+        dest: "{{ item }}"
+        state: "absent"
+      delegate_to: localhost
+      with_items:
+        - "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
+        - "/tmp/{{ kolide_fleet_ssl_key | basename }}"
 
   roles:
     - role: "osquery"

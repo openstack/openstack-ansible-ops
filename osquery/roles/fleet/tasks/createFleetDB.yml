@@ -20,7 +20,7 @@
     login_host: "{{ mariadb_login_host | default('localhost') }}"
     name: "{{ kolide_fleet_db_name }}"
     state: "present"
-  delegate_to: "{{ groups['mariadb'][0] }}"
+  delegate_to: "{{ groups['mariadb_all'][0] }}"
   no_log: False
   tags:
     - fleet_db_install
@@ -36,7 +36,7 @@
     state: "present"
     priv: "{{ kolide_fleet_db_name }}.*:ALL"
     append_privs: "{{ kolide_fleet_db_append_privs | default(omit) }}"
-  delegate_to: "{{ groups['mariadb'][0] }}"
+  delegate_to: "{{ groups['mariadb_all'][0] }}"
   with_items: "{{ grant_list | default(['localhost', '%']) }}"
   no_log: False
   tags:

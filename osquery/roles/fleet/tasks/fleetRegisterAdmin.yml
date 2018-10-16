@@ -19,14 +19,19 @@
   register: fleet_config_set
 
 - name: set fleetctl default context
-  command: fleetctl config set --address https://localhost:{{ kolide_fleet_port }} --tls-skip-verify
-  when: fleet_config_set.stat.exists == false
+  command: /usr/local/bin/fleetctl config set --address https://localhost:{{ kolide_fleet_port }} --tls-skip-verify
+  changed_when: false
+  when:
+    - fleet_config_set.stat.exists == false
 
 - name: register admin account
   command: /usr/local/bin/fleetctl setup --email {{ kolide_fleet_admin_email }} --password {{ kolide_fleet_admin_password }}
+  changed_when: false
   register: fleet_register_admin
   ignore_errors: true # ignore errors as we might have already set this it will be caought later
 
 - name: login admin account
   command: /usr/local/bin/fleetctl login --email {{ kolide_fleet_admin_email }} --password {{ kolide_fleet_admin_password }}
-  when: fleet_register_admin['stderr'] == "Kolide Fleet has already been setup"
+  changed_when: false
+  when:
+    - fleet_register_admin['stderr'] == "Kolide Fleet has already been setup"

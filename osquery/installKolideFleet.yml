@@ -1,6 +1,6 @@
 ---
 - name: Install Kolide Fleet
-  hosts: "fleet"
+  hosts: "fleet_all"
   become: true
 
   vars_files:
@@ -9,6 +9,34 @@
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   gather_facts: "{{ osa_gather_facts | default(True) }}"
+
+  pre_tasks:
+    - name: Test for kolide db password
+      fail:
+        msg: >-
+          The DB password for the Kolide / Fleet cluster is not defined. To proceed with this
+          installation define the variable `kolide_fleet_db_password` in line or within a
+          variable file.
+      when:
+        - kolide_fleet_db_password is undefined
+
+    - name: Test for kolide shared key
+      fail:
+        msg: >-
+          The shared token for the Kolide / Fleet cluster is not defined. To proceed with this
+          installation define the variable `kolide_fleet_jwt_key` in line or within a
+          variable file.
+      when:
+        - kolide_fleet_jwt_key is undefined
+
+    - name: Test for kolide admin password
+      fail:
+        msg: >-
+          The admin password for the Kolide / Fleet cluster is not defined. To proceed with this
+          installation define the variable `kolide_fleet_admin_password` in line or within a
+          variable file.
+      when:
+        - kolide_fleet_admin_password is undefined
 
   roles:
     - role: fleet

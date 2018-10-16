@@ -1,0 +1,44 @@
+---
+
+- name: Ensure selinux package are present
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - selinux-policy
+    - selinux-policy-devel
+    - setools-console
+    - libselinux-python
+    - policycoreutils-python
+
+- name: Ensure osquery directory exists
+  file:
+    dest: /etc/osquery
+    state: directory
+    mode: '0755'
+
+- name: Ensure osquery selinux policy is set
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/osquery/{{ item }}"
+    mode: '0600'
+    owner: root
+  with_items:
+    - osquery.fc
+    - osquery.sh
+    - osquery.te
+  register: te
+
+# FIXME!
+- name: Generate osquery policy file
+  command: sh -x ./osquery.sh
+  args:
+    chdir: /etc/osquery
+  when: te is changed
+  ignore_errors: true
+
+# `sepolicy generate -n osquery --init /usr/bin/osqueryd`     = OK/base
+# Refine policy with `audit2allow -i /var/log/audit/audit.log -M osquery`
+# `semodule -i osquery.pp`
+# FIXME! 'Failed to resolve typeattributeset statement at /etc/selinux/targeted/tmp/modules/400/osquery/cil:2'
+# `/usr/libexec/selinux/hll/pp osquery.pp`

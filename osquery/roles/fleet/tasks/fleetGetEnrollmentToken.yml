@@ -15,6 +15,7 @@
 
 - name: retrieve Enrollment Token
   command: /usr/local/bin/fleetctl get enroll-secret
+  changed_when: false
   register: _enrollment_token
 
 - name: Set kolide fleet enrollment token fact

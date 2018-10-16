@@ -1,40 +1,38 @@
+---
+
 mariadb_root_user: root
 
-#
 kolide_fleet_enable: true
 
 kolide_fleet_ssl_cert: /etc/ssl/certs/fleet.cert
 kolide_fleet_ssl_key: /etc/ssl/private/fleet.key
-kolide_fleet_ssl_pem: /etc/ssl/private/fleet.pem
 kolide_fleet_ssl_ca_cert: /etc/ssl/certs/fleet-ca.pem
-kolide_fleet_ssl_self_signed_subject: "/C=US/ST=Texas/L=San Antonio/O=IT/CN={{ ansible_host }}/subjectAltName=IP.1={{ ansible_host }}/subjectAltName=IP.2=localhost"
+kolide_fleet_ssl_ca_key: /etc/ssl/private/fleet-ca.key
+kolide_fleet_ssl_pem: /etc/ssl/private/fleet.pem
 
 # Osquery vars
-osquery_enroll_secret_dir: /etc/osquery/osquery_enroll_secret
+osquery_enroll_secret_file: /etc/osquery/osquery_enroll_secret
 osquery_debug_packages_install: false
-
-osquery_debug_packages_install: false
-
 osquery_config_plugin: 'filesystem'
 osquery_logger_plugin: 'filesystem'
 
 osquery_rsyslog: false
 
 osquery_flags:
-    - "--tls_server_certs={{ kolide_fleet_ssl_cert }}"
-    - "--tls_hostname={{  hostvars[groups['fleet'][0]]['ansible_host'] }}:{{ kolide_fleet_port }}"
-    - "--host_identifier=hostname"
-    - "--enroll_tls_endpoint=/api/v1/osquery/enroll"
-    - "--config_plugin=tls"
-    - "--config_tls_endpoint=/api/v1/osquery/config"
-    - "--config_tls_refresh=10"
-    - "--disable_distributed=false"
-    - "--distributed_plugin=tls"
-    - "--distributed_interval=10"
-    - "--distributed_tls_max_attempts=3"
-    - "--distributed_tls_read_endpoint=/api/v1/osquery/distributed/read"
-    - "--distributed_tls_write_endpoint=/api/v1/osquery/distributed/write"
-    - "--logger_plugin=tls"
-    - "--logger_tls_endpoint=/api/v1/osquery/log"
-    - "--logger_tls_period=10"
-    - "--enroll_secret_path={{ osquery_enroll_secret_dir }}"
+  - "--tls_server_certs={{ kolide_fleet_ssl_cert }}"
+  - "--tls_hostname={{ hostvars[groups['fleet_all'][0]]['ansible_host'] }}:443"
+  - "--host_identifier=hostname"
+  - "--enroll_tls_endpoint=/api/v1/osquery/enroll"
+  - "--config_plugin=tls"
+  - "--config_tls_endpoint=/api/v1/osquery/config"
+  - "--config_tls_refresh=10"
+  - "--disable_distributed=false"
+  - "--distributed_plugin=tls"
+  - "--distributed_interval=10"
+  - "--distributed_tls_max_attempts=3"
+  - "--distributed_tls_read_endpoint=/api/v1/osquery/distributed/read"
+  - "--distributed_tls_write_endpoint=/api/v1/osquery/distributed/write"
+  - "--logger_plugin=tls"
+  - "--logger_tls_endpoint=/api/v1/osquery/log"
+  - "--logger_tls_period=10"
+  - "--enroll_secret_path={{ osquery_enroll_secret_file }}"

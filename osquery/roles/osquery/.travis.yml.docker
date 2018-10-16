@@ -1,0 +1,160 @@
+---
+## from https://github.com/geerlingguy/ansible-role-apache/blob/master/.travis.yml
+sudo: required
+
+env:
+#  - distribution: centos
+#    version: 6
+#    init: /sbin/init
+#    run_opts: ""
+#    suite: default
+  - distribution: centos
+    version: 7
+    init: /usr/lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default
+    ansible_version: 2.5.5
+    ansible_extra_vars: ""
+#  - distribution: ubuntu
+#    version: 18.04
+#    init: /lib/systemd/systemd
+#    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+#    suite: default
+#    ansible_version: 2.5.5
+#    ansible_extra_vars: ""
+  - distribution: ubuntu
+    version: 16.04
+    init: /lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default
+    ansible_version: 2.5.5
+    ansible_extra_vars: ""
+#  - distribution: ubuntu
+#    version: 14.04
+#    init: /sbin/init
+#    run_opts: ""
+#    suite: default
+#  - distribution: ubuntu
+#    version: 12.04
+#    init: /sbin/init
+#    run_opts: ""
+#    suite: default
+#  - distribution: alpine
+#    version: 3.4
+#    init: /sbin/init
+#    run_opts: ""
+#    suite: default
+## https://travis-ci.org/juju4/ansible-osquery/jobs/246615342, https://github.com/facebook/osquery/issues/2321
+  - distribution: debian
+    version: 9
+    init: /lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default
+    ansible_version: 2.5.5
+    ansible_extra_vars: ""
+  - distribution: centos
+    version: 7
+    init: /usr/lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default-osquery-syslog
+    ansible_version: 2.5.5
+    ansible_extra_vars: ""
+  - distribution: ubuntu
+    version: 16.04
+    init: /lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default-osquery-syslog
+    ansible_version: 2.5.5
+    ansible_extra_vars: ""
+  - distribution: centos
+    version: 7
+    init: /usr/lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default-osquery-syslog-fs
+    ansible_version: 2.5.5
+    ansible_extra_vars: ""
+  - distribution: ubuntu
+    version: 16.04
+    init: /lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default-osquery-syslog-fs
+    ansible_version: 2.5.5
+    ansible_extra_vars: ""
+  - distribution: ubuntu
+    version: 16.04
+    init: /lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default-profiling
+    ansible_version: 2.5.5
+    ansible_extra_vars: ""
+# past ansible version
+  - distribution: ubuntu
+    version: 16.04
+    init: /lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default
+    ansible_version: 2.4.5
+    ansible_extra_vars: ""
+# upcoming ansible version
+  - distribution: ubuntu
+    version: 16.04
+    init: /lib/systemd/systemd
+    run_opts: "'--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro'"
+    suite: default
+    ansible_version: 2.6.0rc3
+    ansible_extra_vars: ""
+
+services:
+  - docker
+
+before_install:
+  # - sudo apt-get update
+  # Pull container
+  - 'sudo docker pull ${distribution}:${version}'
+  - env
+  - pwd
+  - find -ls
+  - "[ -f get-dependencies.sh ] && sh -x get-dependencies.sh"
+  - cp test/travis/initctl_faker test/
+  # Customize container
+  - 'sudo docker build --rm=true --file=test/travis/Dockerfile.${distribution}-${version} --tag=${distribution}-${version}:ansible test'
+
+before_script:
+  - container_id=$(mktemp)
+    # Run container in detached state
+  - 'sudo docker run --detach --volume="${PWD%/*}":/etc/ansible/roles:ro ${run_opts} ${distribution}-${version}:ansible "${init}" > "${container_id}"'
+
+  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm pip install --upgrade pip'
+  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm pip install ansible==${ansible_version}'
+  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm ansible --version'
+
+script:
+  # Ansible syntax check.
+  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm ansible-playbook /etc/ansible/roles/kbrebanov.osquery/test/integration/${suite}/default.yml --syntax-check'
+
+  # Test role.
+  - 'travis_wait 30 sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm ansible-playbook /etc/ansible/roles/kbrebanov.osquery/test/integration/${suite}/default.yml -vv ${ansible_extra_vars}'
+
+  # Test role idempotence.
+  - >
+    travis_wait 30 sudo docker exec "$(cat ${container_id})" env TERM=xterm ansible-playbook /etc/ansible/roles/kbrebanov.osquery/test/integration/${suite}/default.yml ${ansible_extra_vars}
+    | tee /tmp/idempotency.log
+    | grep -q 'changed=0.*failed=0'
+    && (echo 'Idempotence test: pass' && exit 0)
+    || (echo 'Idempotence test: fail' && cat /tmp/idempotency.log && exit 0)
+
+  # serverspec tests
+## travis/docker: Errno::EROFS: Read-only file system @ dir_s_mkdir - /etc/ansible/roles/kbrebanov.osquery/test/integration/${suite}/serverspec/.bundle
+#  - 'sudo docker exec --tty "$(cat ${container_id})" /etc/ansible/roles/kbrebanov.osquery/test/integration/${suite}/serverspec/run-local-tests.sh'
+
+after_failure:
+  # Check what happened on systemd systems.
+  - 'docker exec --tty "$(cat ${container_id})" env TERM=xterm systemctl -l --no-pager status osqueryd.service'
+  - 'docker exec --tty "$(cat ${container_id})" env TERM=xterm journalctl -xe --no-pager'
+
+after_script:
+  # Clean up
+  - 'sudo docker stop "$(cat ${container_id})"'
+
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/

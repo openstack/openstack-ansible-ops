@@ -1,23 +1,15 @@
 ---
-#- name: systemd_service
-#  scm: git
-#  src: https://git.openstack.org/openstack/ansible-role-systemd_service
-#  version: master
+- name: systemd_service
+  scm: git
+  src: https://git.openstack.org/openstack/ansible-role-systemd_service
+  version: master
 - name: config_template
   scm: git
   src: https://git.openstack.org/openstack/ansible-config_template
   version: master
-- name: osquery
-  scm: git
-  src: https://github.com/kloud-pro/ansible-osquery
-  version: master
 - name: redis
   scm: git
   src: https://github.com/geerlingguy/ansible-role-redis
-  version: master
-- name: mariadb
-  scm: git
-  src: https://github.com/lechuckroh/ansible-role-mariadb
   version: master
 - name: galera_client
   scm: git

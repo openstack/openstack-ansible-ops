@@ -17,15 +17,11 @@
   include_role:
     name: redis
     private: true
+
 - name: create fleet dir
   file:
     path: /etc/fleet/ssl
     state: directory
-
-- name: Debug fleet_config
-  debug:
-    var:  hostvars[groups['mariadb'][0]]['ansible_host']
-    verbosity: 2
 
 - name: Drop fleet conf file
   template:

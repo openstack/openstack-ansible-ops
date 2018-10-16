@@ -1,0 +1,36 @@
+---
+
+# tasks file for osquery (Debian, Ubuntu specific)
+
+- name: Ensure dirmngr is present for apt-key
+  package:
+    name: dirmngr
+    state: present
+
+- name: Download osquery APT key
+  become: yes
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ _osquery_repositorykey }}"
+    state: present
+  tags:
+    - osquery
+
+- name: Ensure apt-transport-https is installed
+  become: yes
+  apt:
+    name: apt-transport-https
+    state: present
+  tags:
+    - osquery
+
+- name: Configure osquery APT repository
+  become: yes
+  apt_repository:
+    repo: "{{ _osquery_repository }}"
+    state: present
+  tags:
+    - osquery
+
+- include: apparmor.yml
+  when: not (ansible_virtualization_type is defined and (ansible_virtualization_type == "lxc" or ansible_virtualization_type == "docker"))

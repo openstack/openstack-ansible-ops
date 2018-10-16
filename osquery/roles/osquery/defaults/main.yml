@@ -1,0 +1,131 @@
+---
+# defaults file for osquery
+
+osquery_service_enable: true
+osquery_debug_packages_install: true
+## define this if don't want to use upstream ones
+#osquery_repository: ''
+#osquery_repositorykey: ''
+
+osquery_template: 'osquery.conf.j2'
+#osquery_upload_packs: []
+osquery_upload_packs:
+  - osquery-snapshots-pack
+  - osquery-monitoring2-pack
+osquery_packs:
+  - "osquery-monitoring"
+  - "incident-response"
+  - "it-compliance"
+#  - "osx-attacks"
+  - "ossec-rootkit"
+  - "vuln-management"
+  - "hardware-monitoring"
+  - "osquery-snapshots-pack"
+  - osquery-monitoring2-pack
+osquery_config_plugin: 'filesystem'
+osquery_logger_plugin: 'filesystem'
+#osquery_logger_plugin: 'syslog'
+#osquery_logger_plugin: 'filesystem,syslog'
+#osquery_logger_plugin: 'tls'
+osquery_flags: []
+## if using zentral, kolide or else
+## https://github.com/zentralopensource/zentral/blob/f460b10a95d4ea1e515aea3363f55733465d1d9c/zentral/contrib/osquery/deb_script/template.sh
+## https://docs.kolide.co/kolide/current/infrastructure/adding-hosts-to-kolide.html
+
+#osquery_enroll_secret: ""
+
+#osquery_flags:
+#    - '--enroll_secret_path=/etc/osquery/osquery_enroll_secret'
+#    - '--tls_server_certs=/etc/osquery/kolide.crt'
+#    - '--tls_hostname=acme.kolide.co'
+#    - '--host_identifier=hostname'
+#    - '--enroll_tls_endpoint=/api/v1/osquery/enroll'
+#    - '--config_plugin=tls'
+#    - '--config_tls_endpoint=/api/v1/osquery/config'
+#    - '--config_tls_refresh=10'
+#    - '--disable_distributed=false'
+#    - '--distributed_plugin=tls'
+#    - '--distributed_interval=10'
+#    - '--distributed_tls_max_attempts=3'
+#    - '--distributed_tls_read_endpoint=/api/v1/osquery/distributed/read'
+#    - '--distributed_tls_write_endpoint=/api/v1/osquery/distributed/write'
+#    - '--logger_plugin=tls'
+#    - '--logger_tls_endpoint=/api/v1/osquery/log'
+#    - '--logger_tls_period=10'
+
+osquery_fim: true
+osquery_fim_interval: 900
+osquery_fim_filepaths:
+  - name: homes_sshdir
+    list:
+      - "/root/.ssh/%%"
+      - "/home/%/.ssh/%%"
+  - name: etc
+    list:
+      - "/etc/%%"
+## Take care if using a lot /tmp. can trigger
+## 'Expiring events for subscriber: file_events (overflowed limit 1000)'
+## => losing many queries results (fim or not)
+#  - name: tmp
+#    list:
+#      - "/tmp/%%"
+  - name: bin
+    list:
+      - "/bin/%%"
+      - "/sbin/%%"
+      - "/usr/bin/%%"
+      - "/usr/sbin/%%"
+      - "/usr/local/bin/%%"
+      - "/usr/local/sbin/%%"
+      - "/opt/bin/%%"
+      - "/opt/sbin/%%"
+  - name: webroot
+    list:
+      - "/var/www/%%"
+osquery_fim_excludepaths:
+  - name: tmp
+    list:
+      - /tmp/too_many_events/
+osquery_rsyslog: true
+## conflict with auditd. choose one.
+## https://osquery.readthedocs.io/en/stable/deployment/process-auditing/
+osquery_process_auditing: false
+osquery_process_interval: 900
+osquery_socket_interval: 900
+
+## queries snapshots: 1/week (or 1/month? nok)
+## Max interval 1/w: https://github.com/theopolis/osquery/commit/b76dee8a1fddccb500bc4a058daa1b39083b9dbb
+osquery_snapshot_interval: 604800
+osquery_snapshot_interval2: 604800
+#osquery_snapshot_interval2: 2592000
+
+osquery_logrotate: true
+osquery_logrotate_days: 90
+
+## https://osquery.readthedocs.io/en/stable/installation/cli-flags/#loggingresults-flags
+## per facility
+## osquery wants a facility code, while keyword for rsyslog...
+osquery_syslog_target_facility_osqueryconf: 19
+osquery_syslog_target_facility_syslogconf: local3
+osquery_syslog_target: ''
+#osquery_syslog_target: '@@10.1.1.100'
+## mostly for testing purpose
+#osquery_syslog_target: '/var/log/osquery/osquery_syslog.log'
+## per programname: mostly query execution log and daemon state. avoid mixing with default syslog messages
+#osquery_syslog_target2: ''
+osquery_syslog_target2: '/var/log/osquery/osqueryd.log'
+osquery_syslog_dirs:
+    - /var/log/osquery
+
+## making schedule query faster to have logs faster...
+osquery_testing: false
+osquery_testing_pause: false
+osquery_testing_fim_load: false
+osquery_testing_fim_load_bigger: 100M
+osquery_testing_fim_load_smaller: 1000
+## profiling?
+osquery_profiling: false
+## full config might be too long for travis (max 50min)
+#osquery_profiling_conf: /etc/osquery/osquery.conf
+osquery_profiling_conf: /usr/share/osquery/packs/incident-response.conf
+
