@@ -12,3 +12,4 @@
 # limitations under the License.
 
 - import_playbook: installOSquery.yml
+- import_playbook: setupOSqueryPacks.yml
