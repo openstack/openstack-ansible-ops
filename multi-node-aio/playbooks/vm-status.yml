@@ -18,7 +18,7 @@
   connection: local
   gather_facts: false
   tasks:
-    - name: VM Servers group
+    - name: Create vm_servers group
       add_host:
         name: "{{ item }}"
         groups: vm_servers
@@ -35,7 +35,6 @@
         - name: Wait for VM
           wait_for_connection:
             connect_timeout: 10
-            port: 22
             sleep: 20
             timeout: "{{ vm_ssh_timeout }}"
       rescue:
@@ -45,34 +44,65 @@
             name: "{{ inventory_hostname }}"
           connection: local
           register: vm_info
+
         - name: Stop VM (rescue)
           virt:
             command: destroy
             name: "{{ inventory_hostname }}"
           connection: local
           when: vm_info.status == 'running'
+
         - name: Start VM (rescue)
           virt:
             command: start
             name: "{{ inventory_hostname }}"
           connection: local
+
         - name: Wait for VM (rescue)
           wait_for_connection:
             connect_timeout: 10
-            port: 22
             sleep: 20
             timeout: "{{ vm_ssh_timeout }}"
           register: vm_rescue
           ignore_errors: true
+
         - name: Gather VM info 2nd pass (rescue)
           virt:
             command: status
             name: "{{ inventory_hostname }}"
           connection: local
           register: vm_info_2
+
         - name: Fail if VM still offline (rescue)
           fail:
             msg: "{{ inventory_hostname }} is not responding and cannot be rescued"
           when:
             - vm_info_2.status != 'running'
             - vm_rescue.failed == 'true'
+
+- name: Refresh the inventory
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Refresh the inventory
+      meta: refresh_inventory
+
+    - name: Create vm_servers group
+      add_host:
+        name: "{{ item }}"
+        groups: vm_servers
+      when:
+        - (hostvars[item]['server_vm'] | default(false)) | bool
+      with_items: "{{ groups['pxe_servers'] }}"
+
+- name: Container Status
+  hosts: all_containers
+  gather_facts: false
+  tasks:
+    - name: Wait for container connectivity
+      wait_for_connection:
+        connect_timeout: 10
+        delay: 3
+        sleep: 20
+        timeout: "{{ vm_ssh_timeout }}"

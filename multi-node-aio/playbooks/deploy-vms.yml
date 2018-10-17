@@ -224,12 +224,12 @@
   import_playbook: vm-status.yml
 
 
-- name: VM Host Setup
-  hosts: vm_servers
+- name: Add SSH keys to VM's and containers
+  hosts: vm_servers:all_containers
   gather_facts: false
   any_errors_fatal: true
   tasks:
-    - name: Copy Host Keys
+    - name: Copy Host SSH Keys
       copy:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"
@@ -239,6 +239,12 @@
           dest: /root/.ssh/id_rsa
         - src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
           dest: /root/.ssh/id_rsa.pub
+
+    - name: Add authorized key
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
 
 
 # In vm-post-install-script.sh.j2 we chattr +i the interfaces file to prevent
