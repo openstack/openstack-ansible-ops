@@ -14,7 +14,7 @@
 # limitations under the License.
 
 set -o pipefail
-set -euov
+set -euo
 
 BINDEP_FILE=${BINDEP_FILE:-bindep.txt}
 
