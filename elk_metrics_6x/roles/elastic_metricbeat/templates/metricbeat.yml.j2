@@ -455,13 +455,18 @@ metricbeat.modules:
 #  #password: pass
 #
 ##----------------------------- Prometheus Module -----------------------------
-#- module: prometheus
-#  metricsets: ["stats"]
-#  period: 30s
-#  hosts: ["localhost:9090"]
-#  metrics_path: /metrics
-#  #namespace: example
+{% if (prometheus_enabled | default(false) | bool) and (prometheus_config is defined) %}
+{% for prometheus in prometheus_config %}
+- module: prometheus
+  metricsets: [{% for mset in prometheus.metricsets|default(["collector"]) %}"{{ mset }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  enabled: {{ prometheus.enabled | default('true') }}
+  period: {{ prometheus.period | default("10s") }}
+  hosts: [{% for phost in prometheus.hosts %}"{{ phost }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  metrics_path: {{ prometheus.metrics_path | default("/metrics") }}
+  namespace: {{ prometheus.namespace }}
 #
+{% endfor %}
+{% endif %}
 ##------------------------------ RabbitMQ Module ------------------------------
 {% if (rabbitmq_enabled | default(false) | bool) and (rabbitmq_monitoring_password is defined) %}
 - module: rabbitmq
