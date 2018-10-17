@@ -31,4 +31,7 @@ VfilePatternEx: ^/\?release=[0-9]+&arch=
 # that causes more intermittent 503 errors. This DontCache line
 # tells apt-cacher-ng to allow requests for these to pass through
 # without being cached.
-DontCache: (mirrorlist\.centos\.org)|(mariadb\.org.*\.bz2$)
+# NOTE(d34dh0r53): The elastic.co repositories don't play nice with
+# ACNG so we bypass caching.  The relative download size is small so
+# it's not a huge impact.
+DontCache: (mirrorlist\.centos\.org)|(mariadb\.org.*\.bz2$)|(artifacts\.elastic\.co)
