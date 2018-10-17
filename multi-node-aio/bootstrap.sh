@@ -83,5 +83,14 @@ if [[ ${#BINDEP_PKGS} > 0 ]]; then
     esac
 fi
 
-# install latest OSA supported Ansible version
+# Install latest OSA supported Ansible version
 sudo pip install -r https://git.openstack.org/cgit/openstack/openstack-ansible-tests/plain/test-ansible-deps.txt
+
+# Get the latest OSA plugins
+# This is used to allow access from the MNAIO host to
+# the entire OSA inventory directly, rather than having
+# do execute things from infra1.
+mkdir -p ~/.ansible
+if [[ ! -d ~/.ansible/plugins ]]; then
+    git clone https://git.openstack.org/openstack/openstack-ansible-plugins ~/.ansible/plugins
+fi

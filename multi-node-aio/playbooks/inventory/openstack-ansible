@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh -q -ttt -o ConnectTimeout=1 -o StrictHostKeyChecking=no root@infra1 'OSA_INVENTORY_FILE="/etc/openstack_deploy/openstack_inventory.json"; if [[ -e ${OSA_INVENTORY_FILE} ]]; then cat ${OSA_INVENTORY_FILE}; else echo "{}"; fi' || echo "{}"
