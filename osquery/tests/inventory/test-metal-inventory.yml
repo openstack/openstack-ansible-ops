@@ -1,0 +1,28 @@
+---
+all:
+  hosts:
+    # Local host
+    localhost:
+      ansible_connection: local
+      ansible_host: 127.0.0.1
+      ansible_user: root
+
+hosts:
+  hosts:
+    localhost: {}
+
+
+mariadb_all:
+  children:
+    mariadb:
+      hosts:
+        localhost: {}
+
+
+fleet_all:
+  children:
+    kolide-fleet_all:
+      children:
+        kolide-fleet:
+          hosts:
+            localhost: {}

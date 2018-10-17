@@ -25,7 +25,7 @@
     ZUUL_PROJECT: "{{ zuul.project.short_name }}"
     ANSIBLE_PACKAGE: "{{ ansible_package | default('') }}"
     ANSIBLE_HOST_KEY_CHECKING: "False"
-    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+    ANSIBLE_LOG_PATH: "/tmp/osquery-logs/ansible-osquery-test.log"
 
   vars:
     inventory_file: "inventory/test-{{ (contianer_inventory | bool) | ternary('container', 'metal') }}-inventory.yml"
@@ -62,13 +62,13 @@
 
     - name: Create tmp osquery dir
       file:
-        path: "/tmp/elk-metrics-6x-logs"
+        path: "/tmp/osquery-logs"
         state: directory
 
     - name: Flush iptables rules
       command: "{{ item }}"
       args:
-        creates: "/tmp/elk-metrics-6x-logs/iptables.flushed"
+        creates: "/tmp/osquery-logs/iptables.flushed"
       with_items:
         - "iptables -F"
         - "iptables -X"
@@ -79,7 +79,7 @@
         - "iptables -P INPUT ACCEPT"
         - "iptables -P FORWARD ACCEPT"
         - "iptables -P OUTPUT ACCEPT"
-        - "touch /tmp/elk-metrics-6x-logs/iptables.flushed"
+        - "touch /tmp/osquery-logs/iptables.flushed"
 
     - name: First ensure apt cache is always refreshed
       apt:
@@ -93,7 +93,7 @@
       become_user: root
       command: "./bootstrap-embedded-ansible.sh"
       args:
-        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
+        chdir: "src/{{ current_test_repo }}/osquery"
 
     - name: Run ansible-galaxy (tests)
       become: yes
@@ -102,7 +102,7 @@
       args:
         chdir: "src/{{ current_test_repo }}/osquery/tests"
 
-    - name: Run ansible-galaxy (elk_metrics_6x)
+    - name: Run ansible-galaxy (osquery)
       become: yes
       become_user: root
       command: "/root/ansible25/bin/ansible-galaxy install --force --ignore-errors --roles-path=/root/ansible25/repositories/roles -r ansible-role-requirements.yml"
@@ -116,10 +116,10 @@
       environment:
         ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
         ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
-        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
+        ANSIBLE_LOG_PATH: "/tmp/osquery-logs/ansible-osquery-test-container-setup.log"
         ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
       args:
-        chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
+        chdir: "src/{{ current_test_repo }}/osquery/tests"
       when:
         - ansible_service_mgr != 'systemd' or
           not (contianer_inventory | bool)
@@ -131,10 +131,10 @@
       environment:
         ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
         ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
-        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
+        ANSIBLE_LOG_PATH: "/tmp/osquery-logs/ansible-osquery-test-container-setup.log"
         ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
       args:
-        chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
+        chdir: "src/{{ current_test_repo }}/osquery/tests"
       when:
         - ansible_service_mgr == 'systemd'
         - contianer_inventory | bool
@@ -152,19 +152,7 @@
       environment:
         ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
         ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
-        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-deployment.log"
+        ANSIBLE_LOG_PATH: "/tmp/osquery-logs/ansible-osquery-test-deployment.log"
         ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
       args:
-        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
-
-    - name: Show cluster state
-      become: yes
-      become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml showElasticCluster.yml"
-      environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
-        ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-show-cluster.log"
-        ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
-      args:
-        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
+        chdir: "src/{{ current_test_repo }}/osquery"

@@ -31,6 +31,3 @@
     state: present
   tags:
     - osquery
-
-- include: apparmor.yml
-  when: not (ansible_virtualization_type is defined and (ansible_virtualization_type == "lxc" or ansible_virtualization_type == "docker"))

@@ -1,0 +1,52 @@
+---
+all:
+  hosts:
+    # Local host
+    localhost:
+      ansible_connection: local
+      ansible_host: 127.0.0.1
+      ansible_user: root
+
+    kolide-fleet1:
+      ansible_host: 172.29.236.100
+      ansible_user: root
+
+
+hosts:
+  vars:
+    physical_host: localhost
+    management_cidr: "172.29.236.0/24"
+    container_networks:
+      management_address:
+        address: "172.29.236.1"
+        netmask: "255.255.255.0"
+        bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
+
+  hosts:
+    localhost: {}
+
+
+all_containers:
+  vars:
+    physical_host: localhost
+    container_tech: nspawn
+    container_networks:
+      management_address:
+        address: "{{ ansible_host }}"
+        netmask: "255.255.255.0"
+        bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
+
+  children:
+    mariadb_all:
+      children:
+        mariadb:
+          hosts:
+            kolide-fleet1: {}
+
+    fleet_all:
+      children:
+        kolide-fleet_all:
+          children:
+            kolide-fleet:
+              hosts:
+                kolide-fleet1: {}

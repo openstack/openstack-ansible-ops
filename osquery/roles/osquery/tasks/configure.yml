@@ -118,6 +118,3 @@
 
 - include: syslog-target.yml
   when: osquery_syslog_target != ''
-
-- include: selinux-end.yml
-  when: not (ansible_virtualization_type is defined and (ansible_virtualization_type == "lxc" or ansible_virtualization_type == "docker")) and ansible_os_family == "RedHat"

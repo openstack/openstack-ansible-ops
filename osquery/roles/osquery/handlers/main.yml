@@ -8,6 +8,3 @@
 
 - name: restart rsyslog
   service: name=rsyslog state=restarted
-
-- name: reload osqueryd apparmor profile
-  shell: cat /etc/apparmor.d/usr.bin.osqueryd | sudo apparmor_parser -r

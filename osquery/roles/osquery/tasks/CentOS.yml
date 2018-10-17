@@ -12,6 +12,3 @@
     dest: "/etc/yum.repos.d/{{ _osquery_repository | basename }}"
     mode: '0644'
     backup: yes
-
-- include: selinux.yml
-  when: not (ansible_virtualization_type is defined and (ansible_virtualization_type == "lxc" or ansible_virtualization_type == "docker"))

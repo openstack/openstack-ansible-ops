@@ -595,7 +595,7 @@ deployed to the environment as if this was a production installation.
 
 .. code-block:: bash
 
-    tests/run-tests.sh
+    CLUSTERED=yes tests/run-tests.sh
 
 
 After the test build is completed the cluster will test it's layout and ensure

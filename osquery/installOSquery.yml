@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Get osquery facts
-  hosts: "{{ kolide_fleet_host | default(groups['kolide-fleet_all'][0]) }}"
+  hosts: kolide-fleet_all[0]
   become: true
   vars_files:
     - vars/variables.yml
@@ -36,6 +36,21 @@
           dest: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
         - src: "{{ kolide_fleet_ssl_key }}"
           dest: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+
+    - name: Retrieve Enrollment Token
+      command: /usr/local/bin/fleetctl get enroll-secret
+      changed_when: false
+      register: _enrollment_token
+
+    - name: Set kolide fleet enrollment token fact
+      set_fact:
+        kolide_fleet_enroll_secret: "{{ _enrollment_token.stdout }}"
+
+    - name: Write enroll secret
+      copy:
+        dest: "/tmp/{{ osquery_enroll_secret_file | basename }}"
+        content: "{{ kolide_fleet_enroll_secret }}"
+        mode: "0640"
 
 
 - name: Install osquery
@@ -66,23 +81,8 @@
           src: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
         - dest: "{{ kolide_fleet_ssl_key }}"
           src: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
-
-    - name: retrieve Enrollment Token
-      command: /usr/local/bin/fleetctl get enroll-secret
-      changed_when: false
-      register: _enrollment_token
-      delegate_to: "{{ groups['kolide-fleet_all'][0] }}"
-      run_once: true
-
-    - name: Set kolide fleet enrollment token fact
-      set_fact:
-        kolide_fleet_enroll_secret: "{{ _enrollment_token.stdout }}"
-
-    - name: write enroll secret
-      copy:
-        dest: "{{ osquery_enroll_secret_file }}"
-        content: "{{ kolide_fleet_enroll_secret }}"
-        mode: "0640"
+        - dest: "{{ osquery_enroll_secret_file }}"
+          src: "/tmp/{{ osquery_enroll_secret_file | basename }}"
 
   post_tasks:
     - name: Cleanup certifactes
@@ -93,6 +93,7 @@
       with_items:
         - "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
         - "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+        - "/tmp/{{ osquery_enroll_secret_file | basename }}"
 
   roles:
     - role: "osquery"

@@ -29,6 +29,9 @@
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial-clustered
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic-clustered
+        - openstack-ansible-ops:osquery-ubuntu-xenial
+        - openstack-ansible-ops:osquery-ubuntu-bionic
     gate:
       jobs:
-        - openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial
+        - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
+        - openstack-ansible-ops:osquery-ubuntu-bionic

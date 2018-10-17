@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Setup osquery packs
-  hosts: "{{ kolide_fleet_host | default(groups['kolide-fleet_all'][0]) }}"
+  hosts: kolide-fleet_all[0]
   become: false
   vars_files:
     - vars/variables.yml

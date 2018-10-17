@@ -208,10 +208,42 @@ The individual playbooks found within this repository can be independently run
 at anytime.
 
 
+Local testing
+-------------
+
+To test these playbooks within a local environment you will need a single server
+with at leasts 8GiB of RAM and 40GiB of storage on root. Running an `m1.medium`
+(openstack) flavor size is generally enough to get an environment online.
+
+To run the local functional tests execute the `run-tests.sh` script out of the
+tests directory. This will create a 1 node kolide-fleet cluster and install
+osquery on the local host.
+
+.. code-block:: bash
+
+    CLUSTERED=yes tests/run-tests.sh
+
+
+After the test build is completed the cluster will test it's layout and ensure
+processes are functioning normally. Logs for the cluster can be found at
+`/tmp/osquery-logs`.
+
+To rerun the playbooks after a test build, source the `tests/manual-test.rc`
+file and follow the onscreen instructions.
+
+To clean-up a test environment and start from a bare server slate the
+`run-cleanup.sh` script can be used. This script is disruptive and will purge
+all `osquery` related services within the local test environment.
+
+.. code-block:: bash
+
+   tests/run-cleanup.sh
+
+
 Architecture | Data flow
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This diagram outlines the data flow from within an Elastic-Stack deployment.
+This diagram outlines the data flow from within an osquery deployment.
 
 .. image:: assets/architecture-osquery.png
     :scale: 50 %
@@ -224,7 +256,7 @@ TODO
 The following is a list of open items.
  - [x] Test Redhat familly Operating Systems
  - [x] missing mariadb cluster (should all work needs additional vars)
- - [ ] use haproxy instead of the kolide fleet server ip
+ - [x] use haproxy instead of the kolide fleet server ip
  - [ ] add/update tags
- - [ ] convert to roles
- - [ ] add testing
+ - [x] convert to roles
+ - [x] add testing

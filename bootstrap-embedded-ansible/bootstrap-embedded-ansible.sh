@@ -42,6 +42,7 @@ if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
   eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade ansible==2.5.5.0 --isolated"
   eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade jmespath --isolated"
   eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade hvac --isolated"
+  eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade netaddr --isolated"
   echo "Ansible can be found here: ${ANSIBLE_EMBED_HOME}/bin"
 fi
 

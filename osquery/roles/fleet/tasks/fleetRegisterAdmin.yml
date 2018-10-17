@@ -13,22 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: check to see if we have alredy registered fleetctl admin
-  stat:
-    path: ~/.fleet/config
-  register: fleet_config_set
-
 - name: set fleetctl default context
   command: /usr/local/bin/fleetctl config set --address https://localhost:{{ kolide_fleet_port }} --tls-skip-verify
   changed_when: false
-  when:
-    - fleet_config_set.stat.exists == false
 
 - name: register admin account
   command: /usr/local/bin/fleetctl setup --email {{ kolide_fleet_admin_email }} --password {{ kolide_fleet_admin_password }}
   changed_when: false
+  failed_when: false
   register: fleet_register_admin
-  ignore_errors: true # ignore errors as we might have already set this it will be caought later
 
 - name: login admin account
   command: /usr/local/bin/fleetctl login --email {{ kolide_fleet_admin_email }} --password {{ kolide_fleet_admin_password }}

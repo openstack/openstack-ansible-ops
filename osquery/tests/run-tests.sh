@@ -26,13 +26,13 @@ pushd "${HOME}"
   popd
 popd
 
-source ${TEST_DIR}/elk_metrics_6x/tests/manual-test.rc
+source ${TEST_DIR}/osquery/tests/manual-test.rc
 
-bash -v "${TEST_DIR}/elk_metrics_6x/bootstrap-embedded-ansible.sh"
+bash -v "${TEST_DIR}/osquery/bootstrap-embedded-ansible.sh"
 
 ${HOME}/ansible25/bin/ansible-galaxy install --force \
                                              --roles-path="${HOME}/ansible25/repositories/roles" \
-                                             --role-file="${TEST_DIR}/elk_metrics_6x/tests/ansible-role-requirements.yml"
+                                             --role-file="${TEST_DIR}/osquery/tests/ansible-role-requirements.yml"
 
 if [[ ! -e "${TEST_DIR}/osquery/tests/src" ]]; then
   ln -s ${TEST_DIR}/../ ${TEST_DIR}/osquery/tests/src
@@ -41,5 +41,5 @@ fi
 ${HOME}/ansible25/bin/ansible-playbook -i 'localhost,' \
                                        -vv \
                                        -e ansible_connection=local \
-                                       -e test_clustered_elk=${CLUSTERED:-no} \
-                                       ${TEST_DIR}/elk_metrics_6x/tests/test.yml
+                                       -e test_clustered_kolide=${CLUSTERED:-no} \
+                                       ${TEST_DIR}/osquery/tests/test.yml

@@ -83,3 +83,27 @@
     vars:
       osa_test_repo: "openstack/openstack-ansible-ops"
       test_clustered_elk: true
+
+- job:
+    name: "openstack-ansible-ops:osquery-ubuntu-xenial"
+    parent: base
+    description: "Runs a gate test on the osquery project."
+    run: "osquery/tests/test.yml"
+    post-run: "osquery/tests/post-run.yml"
+    voting: true
+    files:
+      - ^osquery/.*
+
+- job:
+    name: "openstack-ansible-ops:osquery-ubuntu-bionic"
+    parent: "openstack-ansible-ops:osquery-ubuntu-xenial"
+    nodeset: ubuntu-bionic
+
+- job:
+    name: "openstack-ansible-ops:osquery-ubuntu-bionic-clustered"
+    parent: "openstack-ansible-ops:osquery-ubuntu-xenial"
+    nodeset: ubuntu-bionic
+    voting: true
+    vars:
+      osa_test_repo: "openstack/openstack-ansible-ops"
+      test_clustered_kolide: true
