@@ -224,23 +224,6 @@
   import_playbook: vm-status.yml
 
 
-- name: Create vm_servers group
-  hosts: localhost
-  connection: local
-  gather_facts: false
-  environment: "{{ deployment_environment_variables | default({}) }}"
-  tags:
-    - deploy-vms
-  tasks:
-    - name: VM Servers group
-      add_host:
-        name: "{{ item }}"
-        groups: vm_servers
-      when:
-        - hostvars[item]['server_vm'] | default(false) | bool
-      with_items: "{{ groups['pxe_servers'] }}"
-
-
 - name: VM Host Setup
   hosts: vm_servers
   gather_facts: false

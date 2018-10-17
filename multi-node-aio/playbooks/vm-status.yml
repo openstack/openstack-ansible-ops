@@ -15,6 +15,7 @@
 
 - name: Create vm_servers group
   hosts: localhost
+  connection: local
   gather_facts: false
   tasks:
     - name: VM Servers group
@@ -22,7 +23,7 @@
         name: "{{ item }}"
         groups: vm_servers
       when:
-        - hostvars[item]['server_vm'] | default(false) | bool
+        - (hostvars[item]['server_vm'] | default(false)) | bool
       with_items: "{{ groups['pxe_servers'] }}"
 
 - name: VM Status
