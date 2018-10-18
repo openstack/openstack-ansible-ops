@@ -1,5 +1,6 @@
 ---
-# vars file for osquery (CentOS specific)
+osquery_required_packages:
+  - logrotate
 
 osquery_packages:
   - osquery
@@ -10,8 +11,6 @@ osquery_debug_packages:
 
 _osquery_repository: "{{ osquery_repository | default('https://pkg.osquery.io/rpm/osquery-s3-rpm.repo') }}"
 _osquery_repositorykey: "{{ osquery_repositorykey | default('https://pkg.osquery.io/rpm/GPG') }}"
-
-_osquery_auditd_pkg: "audit"
 
 varlog_group: root
 varlog_mode: '0755'

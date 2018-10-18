@@ -1,6 +1,0 @@
----
-# vars file for osquery
-
-osquery_packages:
-  - osquery
-  - rsyslog

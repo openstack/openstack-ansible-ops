@@ -1,7 +1,0 @@
----
-
-- hosts: all
-#- hosts: test-kitchen
-  roles:
-    - kbrebanov.osquery
-

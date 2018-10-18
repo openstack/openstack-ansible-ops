@@ -14,8 +14,6 @@ osquery_debug_packages_install: false
 osquery_config_plugin: 'filesystem'
 osquery_logger_plugin: 'filesystem'
 
-osquery_rsyslog: false
-
 osquery_flags:
   - "--tls_server_certs={{ kolide_fleet_ssl_cert }}"
   - "--tls_hostname={{ hostvars[groups['kolide-fleet_all'][0]]['ansible_host'] }}:443"

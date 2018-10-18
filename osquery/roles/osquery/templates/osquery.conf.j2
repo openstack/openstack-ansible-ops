@@ -67,7 +67,7 @@
 {% else %}
       "interval": 3600
 {% endif %}
-    }{% if osquery_fim or osquery_process_auditing %},{% endif %}
+    }{% if osquery_fim %},{% endif %}
 
 {% if osquery_fim %}
     "fim" : {
@@ -75,19 +75,8 @@
       "query": "select * from file_events;",
       "removed": false,
       "interval": {% if osquery_testing_fim_load %}30{% else %}{{ osquery_fim_interval }}{% endif %}
-    }{% if osquery_process_auditing %},{% endif %}
-
-{% endif %}
-
-{% if osquery_process_auditing %}
-    "process_events":{
-      "query": "SELECT auid, cmdline, ctime, cwd, egid, euid, gid, parent, path, pid, time, uid FROM process_events WHERE path NOT IN ('/bin/date', '/bin/mktemp', '/usr/bin/dirname', '/usr/bin/head', '/bin/uname', '/bin/basename') and cmdline NOT LIKE '%_key%' AND cmdline NOT LIKE '%secret%';",
-      "interval": {{ osquery_process_interval }}
-    },
-    "socket_events":{
-      "query": "SELECT action, auid, family, local_address, local_port, path, pid, remote_address, remote_port, success, time FROM socket_events WHERE success=1 AND path NOT IN ('/usr/bin/hostname') AND remote_address NOT IN ('127.0.0.1', '169.254.169.254', '', '0000:0000:0000:0000:0000:0000:0000:0001', '::1', '0000:0000:0000:0000:0000:ffff:7f00:0001', 'unknown', '0.0.0.0', '0000:0000:0000:0000:0000:0000:0000:0000');",
-      "interval": {{ osquery_socket_interval }}
     }
+
 {% endif %}
   },
 

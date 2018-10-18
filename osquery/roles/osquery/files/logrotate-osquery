@@ -1,0 +1,12 @@
+/var/log/osquery/*.log.log
+{
+        copytruncate
+        daily
+        rotate 2
+        delaycompress
+        compress
+        dateext
+        notifempty
+        missingok
+        maxage 5
+}
