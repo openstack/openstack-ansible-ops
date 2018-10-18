@@ -46,3 +46,8 @@ server_networks:
     inet_type: 'static'
     address: '10.0.244.121/22'
     vm_int_iface: vm-br-eth5
+  lbaas:
+    iface: 'eth6'
+    inet_type: 'static'
+    address: '10.0.232.121/22'
+    vm_int_iface: vm-br-eth6

@@ -46,3 +46,8 @@ server_networks:                        # dict - required, hash of networks, can
     inet_type: 'static'                 # str  - required, iface type [static, dhcp, manual]
     address: '10.0.244.100/22'          # str  - not required, must be in CIDR format
     vm_int_iface: vm-br-eth5            # str  - not Required, used to specify an integration networks interface when provisioning a VM
+  lbaas:
+    iface: 'eth6'                       # str  - required, interface name
+    inet_type: 'static'                 # str  - required, iface type [static, dhcp, manual]
+    address: '10.0.232.100/22'          # str  - not required, must be in CIDR format
+    vm_int_iface: vm-br-eth6            # str  - not Required, used to specify an integration networks interface when provisioning a VM

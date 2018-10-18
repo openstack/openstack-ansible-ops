@@ -139,11 +139,17 @@ mnaio_host_networks:
     inet_type: 'static'
     address: '10.0.244.1/22'
     iface_port: none
+  lbaas:
+    iface: 'vm-br-eth6'
+    inet_type: 'static'
+    address: '10.0.232.1/22'
+    iface_port: none
 
 osa_enable_infra: true
 osa_enable_identity: true
 osa_enable_block_storage: true
 osa_enable_image: true
+osa_enable_lbaas: false
 osa_enable_compute: true
 osa_enable_orchestration: true
 osa_enable_dashboard: true

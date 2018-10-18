@@ -1,11 +1,13 @@
 ---
 cidr_networks:
+  lbaas: 10.0.232.0/22
   container: 10.0.236.0/22
   tunnel: 10.0.240.0/22
   storage: 10.0.244.0/22
   flat: 10.0.248.0/22
 
 used_ips:
+  - "10.0.232.0,10.0.232.200"
   - "10.0.236.0,10.0.236.200"
   - "10.0.240.0,10.0.240.200"
   - "10.0.244.0,10.0.244.200"
@@ -69,6 +71,19 @@ global_overrides:
           - cinder_volume
           - nova_compute
           - swift_proxy
+    - network:
+        container_bridge: "br-lbaas"
+        container_type: "veth"
+        container_interface: "eth13"
+        ip_from_q: "lbaas"
+        type: "flat"
+        net_name: "lbaas"
+        group_binds:
+          - "neutron_linuxbridge_agent"
+          - "octavia-worker"
+          - "octavia-housekeeping"
+          - "octavia-health-monitor"
+
   swift:
     part_power: 8
     storage_network: 'br-storage'
@@ -189,6 +204,11 @@ storage_hosts: *cinder_block
 {% if osa_enable_image | bool %}
 # glance
 image_hosts: *infra_block
+{% endif %}
+
+{% if osa_enable_lbaas | bool %}
+# octavia
+octavia-infra_hosts: *infra_block
 {% endif %}
 
 {% if osa_enable_compute | bool %}
