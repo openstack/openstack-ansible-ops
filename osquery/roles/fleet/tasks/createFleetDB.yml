@@ -22,6 +22,7 @@
     state: "present"
   delegate_to: "{{ groups['mariadb_all'][0] }}"
   no_log: False
+  run_once: true
   tags:
     - fleet_db_install
 
@@ -39,5 +40,6 @@
   delegate_to: "{{ groups['mariadb_all'][0] }}"
   with_items: "{{ grant_list | default(['localhost', '%']) }}"
   no_log: False
+  run_once: true
   tags:
     - fleet_db_install

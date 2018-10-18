@@ -95,6 +95,14 @@
       - ^osquery/.*
 
 - job:
+    name: "openstack-ansible-ops:osquery-ubuntu-xenial-clustered"
+    parent: "openstack-ansible-ops:osquery-ubuntu-xenial"
+    nodeset: ubuntu-bionic
+    vars:
+      osa_test_repo: "openstack/openstack-ansible-ops"
+      test_clustered_kolide: true
+
+- job:
     name: "openstack-ansible-ops:osquery-ubuntu-bionic"
     parent: "openstack-ansible-ops:osquery-ubuntu-xenial"
     nodeset: ubuntu-bionic
@@ -103,7 +111,6 @@
     name: "openstack-ansible-ops:osquery-ubuntu-bionic-clustered"
     parent: "openstack-ansible-ops:osquery-ubuntu-xenial"
     nodeset: ubuntu-bionic
-    voting: true
     vars:
       osa_test_repo: "openstack/openstack-ansible-ops"
       test_clustered_kolide: true

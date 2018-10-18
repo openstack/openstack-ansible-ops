@@ -25,20 +25,19 @@
   tags:
     - always
 
+- name: Run the systemd service role
+  include_role:
+    name: redis
+    private: true
+
 # install kolide fleet server
 - include_tasks: fleetServerInstall.yml
-
-# install software requirements
-- include_tasks: fleetRequirements.yml
 
 # install SSL certs
 - include_tasks: createFleetDB.yml
 
 # install SSL certs
 - include_tasks: fleetSSL.yml
-
-# drop the configuration
-- include_tasks: fleetConfig.yml
 
 # add files for systemd
 - include_tasks:  fleetService.yml
@@ -51,6 +50,3 @@
 
 # configure kolide fleet & set admin account
 - include_tasks:  fleetRegisterAdmin.yml
-
-# retrieve and set enrollment token
-- include_tasks:  fleetGetEnrollmentToken.yml

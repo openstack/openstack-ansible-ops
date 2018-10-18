@@ -7,8 +7,16 @@ all:
       ansible_host: 127.0.0.1
       ansible_user: root
 
-    kolide-fleet1:
+    kolide-fleet0:
       ansible_host: 172.29.236.100
+      ansible_user: root
+
+    kolide-fleet1:
+      ansible_host: 172.29.236.101
+      ansible_user: root
+
+    kolide-fleet2:
+      ansible_host: 172.29.236.102
       ansible_user: root
 
 
@@ -41,7 +49,9 @@ all_containers:
       children:
         mariadb:
           hosts:
+            kolide-fleet0: {}
             kolide-fleet1: {}
+            kolide-fleet2: {}
 
     fleet_all:
       children:
@@ -49,4 +59,6 @@ all_containers:
           children:
             kolide-fleet:
               hosts:
+                kolide-fleet0: {}
                 kolide-fleet1: {}
+                kolide-fleet2: {}

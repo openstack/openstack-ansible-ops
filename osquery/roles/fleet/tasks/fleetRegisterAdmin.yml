@@ -14,17 +14,17 @@
 # limitations under the License.
 
 - name: set fleetctl default context
-  command: /usr/local/bin/fleetctl config set --address https://localhost:{{ kolide_fleet_port }} --tls-skip-verify
+  command: /usr/local/bin/fleetctl config set --address https://127.0.0.1:{{ kolide_fleet_port }} --tls-skip-verify
   changed_when: false
 
 - name: register admin account
   command: /usr/local/bin/fleetctl setup --email {{ kolide_fleet_admin_email }} --password {{ kolide_fleet_admin_password }}
-  changed_when: false
-  failed_when: false
   register: fleet_register_admin
+  changed_when:
+    - fleet_register_admin.rc == 0
+  failed_when:
+    - fleet_register_admin.rc not in [0, 1]
 
 - name: login admin account
   command: /usr/local/bin/fleetctl login --email {{ kolide_fleet_admin_email }} --password {{ kolide_fleet_admin_password }}
   changed_when: false
-  when:
-    - fleet_register_admin['stderr'] == "Kolide Fleet has already been setup"
