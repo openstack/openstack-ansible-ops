@@ -16,7 +16,7 @@
 ansible_os_family: "{{ images[default_vm_image]['image_type'] }}"
 
 server_domain_name: 'openstack.local'
-server_vm: true
+server_vm: "{{ osa_enable_compute | bool }}"
 server_vm_ram: '{{ compute_vm_server_ram | default(8192) }}'
 server_vm_vcpus: '{{ compute_vm_server_vcpus | default(4) }}'
 server_vm_primary_network: 'dhcp'

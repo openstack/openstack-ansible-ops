@@ -16,7 +16,7 @@
 ansible_os_family: "{{ images[default_vm_image]['image_type'] }}"
 
 server_domain_name: 'openstack.local'
-server_vm: true
+server_vm: "{{ osa_enable_block_storage | bool }}"
 server_vm_ram: '{{ cinder_vm_server_ram | default(2048) }}'
 server_vm_vcpus: '{{ cinder_vm_server_vcpus | default(2) }}'
 server_vm_primary_network: 'dhcp'
