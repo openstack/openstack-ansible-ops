@@ -8,9 +8,6 @@ tempest_public_subnet_cidr: 10.0.248.0/26
 # This makes running neutron in a distributed system easier and a lot less noisy
 neutron_l2_population: True
 
-# This makes the glance image store use swift instead of the file backend
-glance_default_store: swift
-
 {% if http_proxy is defined and http_proxy %}
 proxy_env_url: "{{ http_proxy }}"
 
