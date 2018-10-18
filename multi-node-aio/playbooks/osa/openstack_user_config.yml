@@ -83,7 +83,7 @@ global_overrides:
           - "octavia-worker"
           - "octavia-housekeeping"
           - "octavia-health-monitor"
-
+{% if osa_enable_object_storage | bool %}
   swift:
     part_power: 8
     storage_network: 'br-storage'
@@ -98,12 +98,14 @@ global_overrides:
           name: default
           index: 0
           default: True
+{% endif %}
 
 ###
 ### Anchors
 ###
+{% if osa_enable_block_storage | bool %}
 cinder_block: &cinder_block
-{% for host in groups['cinder_hosts'] %}
+{%   for host in groups['cinder_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
     container_vars:
@@ -115,16 +117,19 @@ cinder_block: &cinder_block
           volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
           volume_backend_name: LVM_iSCSI
           iscsi_ip_address: {{ hostvars[host]['server_networks']['storage']['address'].split('/')[0] }}
-{% endfor %}
+{%   endfor %}
+{% endif %}
 
 
+{% if osa_enable_compute | bool %}
 compute_block: &compute_block
-{% for host in groups['compute_hosts'] %}
+{%   for host in groups['compute_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
     container_vars:
       container_tech: "{{ default_container_tech }}"
-{% endfor %}
+{%   endfor %}
+{% endif %}
 
 
 infra_block: &infra_block
@@ -154,13 +159,15 @@ log_block: &log_block
 {% endfor %}
 
 
+{% if osa_enable_object_storage | bool %}
 swift_block: &swift_block
-{% for host in groups['swift_hosts'] %}
+{%   for host in groups['swift_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
     ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
     container_vars:
       container_tech: "{{ default_container_tech }}"
-{% endfor %}
+{%   endfor %}
+{% endif %}
 
 
 ###
