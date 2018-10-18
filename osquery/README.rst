@@ -2,19 +2,11 @@ Install OSQuery and Kolide fleet
 ################################
 :tags: openstack, ansible
 
-Table of Contents
-=================
-
-      * [About this repository](#about-this-repository)
-      * [OpenStack-Ansible Integration](#openstack-ansible-integration)
-      * [TODO](#todo)
-
-
 About this repository
 ---------------------
 
-This set of playbooks will deploy osquery. If this is being deployed as part of
-an OpenStack all of the inventory needs will be provided for.
+This set of playbooks will deploy osquery and kolide-fleet. If this is being
+deployed as part of an OpenStack all of the inventory needs will be provided for.
 
 
 **These playbooks require Ansible 2.4+.**
@@ -27,12 +19,14 @@ build and operate against.
     :alt: Osquery & Kolide Fleet Architecture Diagram
     :align: center
 
+
 OpenStack-Ansible Integration
 -----------------------------
 
 These playbooks can be used as standalone inventory or as an integrated part of
 an OpenStack-Ansible deployment. For a simple example of standalone inventory
 see ``inventory.example.yml``.
+
 
 Setup | system configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -243,14 +237,3 @@ This diagram outlines the data flow from within an osquery deployment.
     :scale: 50 %
     :alt: Kolide & Osquery Data Flow Diagram
     :align: center
-
-
-TODO
-----
-The following is a list of open items.
- - [x] Test Redhat familly Operating Systems
- - [x] missing mariadb cluster (should all work needs additional vars)
- - [x] use haproxy instead of the kolide fleet server ip
- - [ ] add/update tags
- - [x] convert to roles
- - [x] add testing
