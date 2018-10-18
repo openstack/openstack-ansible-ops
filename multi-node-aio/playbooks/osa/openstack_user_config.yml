@@ -179,9 +179,6 @@ log_hosts: *log_block
 
 # load balancer
 haproxy_hosts: *loadbalancer_block
-
-# Legacy infra hosts
-os-infra_hosts: *infra_block
 {% endif %}
 
 ###
