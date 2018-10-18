@@ -26,16 +26,12 @@
   gather_facts: "{{ osa_gather_facts | default(True) }}"
 
   tasks:
-    - name: Fetch Certificates
-      fetch:
-        flat: yes
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
+    - name: create osquery dir
+      file:
+        path: "{{ item }}"
+        state: directory
       with_items:
-        - src: "{{ kolide_fleet_ssl_cert }}"
-          dest: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
-        - src: "{{ kolide_fleet_ssl_key }}"
-          dest: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+        - /etc/osquery
 
     - name: Retrieve Enrollment Token
       command: /usr/local/bin/fleetctl get enroll-secret
@@ -48,9 +44,23 @@
 
     - name: Write enroll secret
       copy:
-        dest: "/tmp/{{ osquery_enroll_secret_file | basename }}"
+        dest: "{{ osquery_enroll_secret_file }}"
         content: "{{ kolide_fleet_enroll_secret }}"
         mode: "0640"
+
+    - name: Fetch Certificates
+      fetch:
+        flat: yes
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0600"
+      with_items:
+        - src: "{{ kolide_fleet_ssl_cert }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
+        - src: "{{ kolide_fleet_ssl_key }}"
+          dest: "/tmp/{{ kolide_fleet_ssl_key | basename }}"
+        - src: "{{ osquery_enroll_secret_file }}"
+          dest: "/tmp/{{ osquery_enroll_secret_file | basename }}"
 
 
 - name: Install osquery
@@ -76,6 +86,7 @@
       copy:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"
+        mode: "0640"
       with_items:
         - dest: "{{ kolide_fleet_ssl_cert }}"
           src: "/tmp/{{ kolide_fleet_ssl_cert | basename }}"

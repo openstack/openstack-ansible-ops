@@ -52,9 +52,9 @@
         issuer:
           O: OpenStack-Ansible-OPS
 
-    - name: Synchronize certifactes back
-      synchronize:
-        mode: pull
+    - name: Fetch Certificates
+      fetch:
+        flat: yes
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"
       with_items:

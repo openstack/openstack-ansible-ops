@@ -13,15 +13,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Ensure the private ssl directory exists
-  file:
-    dest: "/etc/ssl/private"
-    state: "directory"
+- include_tasks: fleetSSLkeyCreate.yml
+  when:
+    - kolide_fleet_user_ssl_cert is not defined or
+      kolide_fleet_user_ssl_key is not defined
+
+- name: Drop user provided ssl cert
+  copy:
+    src: "{{ kolide_fleet_user_ssl_cert }}"
+    dest: "{{ kolide_fleet_ssl_cert }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  when:
+    - kolide_fleet_user_ssl_cert is defined
   tags:
     - fleet-ssl
 
-- include_tasks: fleetSSLkeyCreate.yml
+- name: Drop user provided ssl key
+  copy:
+    src: "{{ kolide_fleet_user_ssl_key }}"
+    dest: "{{ kolide_fleet_ssl_key }}"
+    owner: "root"
+    group: "root"
+    mode: "0640"
   when:
-    - kolide_fleet_user_ssl_cert is not defined or kolide_fleet_user_ssl_key is not defined
+    - kolide_fleet_user_ssl_key is defined
+  tags:
+    - fleet-ssl
 
-- include_tasks: fleetSSLuserProvided.yml
+- name: Drop user provided ssl CA cert
+  copy:
+    src: "{{ kolide_fleet_user_ssl_ca_cert }}"
+    dest: "{{ kolide_fleet_ssl_ca_cert }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  when:
+    - kolide_fleet_user_ssl_ca_cert is defined
+  tags:
+    - fleet-ssl
