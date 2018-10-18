@@ -1,7 +1,5 @@
 ---
 
-lxc_container_backing_store: dir
-
 # Tempest is being configured to use a known network
 tempest_public_subnet_cidr: 10.0.248.0/26
 
