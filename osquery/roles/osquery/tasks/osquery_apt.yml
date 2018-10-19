@@ -1,10 +1,7 @@
 ---
-
-# tasks file for osquery (Debian, Ubuntu specific)
-
 - name: Ensure dirmngr is present for apt-key
   package:
-    name: dirmngr
+    name: "{{ osquery_required_packages }}"
     state: present
 
 - name: Download osquery APT key
@@ -12,14 +9,6 @@
   apt_key:
     keyserver: keyserver.ubuntu.com
     id: "{{ _osquery_repositorykey }}"
-    state: present
-  tags:
-    - osquery
-
-- name: Ensure apt-transport-https is installed
-  become: yes
-  apt:
-    name: apt-transport-https
     state: present
   tags:
     - osquery

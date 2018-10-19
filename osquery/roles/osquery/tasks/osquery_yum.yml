@@ -1,14 +1,12 @@
 ---
-# tasks file for osquery (CentOS specific)
-
-- name: Install osquery repository key
-  rpm_key:
-    state: present
-    key: "{{ _osquery_repositorykey }}"
-
 - name: Install osquery repository
   get_url:
     url: "{{ _osquery_repository }}"
     dest: "/etc/yum.repos.d/{{ _osquery_repository | basename }}"
     mode: '0644'
     backup: yes
+
+- name: Install osquery repository key
+  rpm_key:
+    state: present
+    key: "{{ _osquery_repositorykey }}"

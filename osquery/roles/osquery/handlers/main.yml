@@ -1,10 +1,14 @@
 ---
-# handlers file for osquery
+- name: Enable and start the service
+  systemd:
+    name: osqueryd
+    enabled: true
+    state: restarted
+  listen: restart osquery
 
-- name: restart osquery
-#  service: name=osqueryd state=restarted
-## for rocksdb backend
-  shell: "systemctl stop osqueryd; sleep 5; systemctl start osqueryd"
-
-- name: restart rsyslog
-  service: name=rsyslog state=restarted
+- name: Enable and start the service
+  systemd:
+    name: rsyslog
+    enabled: true
+    state: restarted
+  listen: restart rsyslog

@@ -58,7 +58,7 @@
         value: 10
         state: present
         reload: "yes"
-        sysctl_file: /etc/sysctl.d/99-elasticsearch.conf
+        sysctl_file: /etc/sysctl.d/99-osquery.conf
 
     - name: Create tmp osquery dir
       file:
