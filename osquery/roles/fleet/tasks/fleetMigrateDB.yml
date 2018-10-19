@@ -17,3 +17,7 @@
   command: /usr/local/bin/fleet prepare db --config=/etc/fleet/fleet_config.yml  --no-prompt
   changed_when: false
   run_once: true
+  register: _fleetctl_db_task
+  until: _fleetctl_db_task is success
+  retries: 3
+  delay: 2

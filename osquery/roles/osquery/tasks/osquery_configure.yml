@@ -26,7 +26,7 @@
 
 - name: Configure osquery
   template:
-    src: "{{ osquery_template }}"
+    src: "osquery.conf.j2"
     dest: /etc/osquery/osquery.conf
     mode: '0644'
     backup: yes

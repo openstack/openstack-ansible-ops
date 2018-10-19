@@ -1,9 +1,16 @@
 ---
+- name: Enable and stop the service
+  systemd:
+    name: osqueryd
+    enabled: true
+    state: stopped
+  listen: restart osquery
+
 - name: Enable and start the service
   systemd:
     name: osqueryd
     enabled: true
-    state: restarted
+    state: started
   listen: restart osquery
 
 - name: Enable and start the service

@@ -101,6 +101,7 @@
         dest: "{{ item }}"
         state: "absent"
       delegate_to: localhost
+      run_once: true
       with_items:
         - "/tmp/{{ kolide_fleet_ssl_cert | basename }}"
         - "/tmp/{{ kolide_fleet_ssl_key | basename }}"

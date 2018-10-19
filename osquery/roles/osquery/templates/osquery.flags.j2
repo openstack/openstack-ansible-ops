@@ -1,6 +1,3 @@
---pidfile=/var/run/osqueryd.pid
 {% for flag in osquery_flags %}
 {{ flag }}
 {% endfor %}
---logger_path=/var/log/osquery
---logger_plugin=filesystem

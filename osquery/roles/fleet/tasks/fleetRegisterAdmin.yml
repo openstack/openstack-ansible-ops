@@ -16,6 +16,10 @@
 - name: set fleetctl default context
   command: /usr/local/bin/fleetctl config set --address https://127.0.0.1:{{ kolide_fleet_port }} --tls-skip-verify
   changed_when: false
+  register: _fleetctl_set_task
+  until: _fleetctl_set_task is success
+  retries: 3
+  delay: 2
 
 - name: register admin account
   command: /usr/local/bin/fleetctl setup --email {{ kolide_fleet_admin_email }} --password {{ kolide_fleet_admin_password }}
@@ -24,7 +28,14 @@
     - fleet_register_admin.rc == 0
   failed_when:
     - fleet_register_admin.rc not in [0, 1]
+  until: fleet_register_admin is success
+  retries: 3
+  delay: 2
 
 - name: login admin account
   command: /usr/local/bin/fleetctl login --email {{ kolide_fleet_admin_email }} --password {{ kolide_fleet_admin_password }}
   changed_when: false
+  register: _fleetctl_login_task
+  until: _fleetctl_login_task is success
+  retries: 3
+  delay: 2

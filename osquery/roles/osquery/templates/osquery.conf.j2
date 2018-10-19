@@ -1,132 +1,30 @@
 {{ ansible_managed | comment('c')}}
-{
-  // Configure the daemon below:
-  "options": {
-    // Select the osquery config plugin.
-    "config_plugin": "{{ osquery_config_plugin }}",
+{# Set the FIM include path items #}
+{%- if (osquery_fim_filepaths | length) > 0 %}
+{%-   set file_path_dict = {} %}
+{%-   for item in osquery_fim_filepaths %}
+{%-     set _ = file_path_dict.__setitem__(item.name, item.list) -%}
+{%-   endfor %}
+{%-   set _ = osquery_options.__setitem__("file_paths", file_path_dict) -%}
+{%- endif -%}
 
-    // Select the osquery logging plugin.
-    "logger_plugin": "{{ osquery_logger_plugin }}",
+{# Set the FIM exlude path items #}
+{%- if (osquery_fim_excludepaths | length) > 0 %}
+{%-   set exclude_file_path_dict = {} %}
+{%-   for item in osquery_fim_excludepaths %}
+{%-     set _ = exclude_file_path_dict.__setitem__(item.name, item.list) -%}
+{%-   endfor %}
+{%-   set _ = osquery_options.__setitem__("exclude_paths", exclude_file_path_dict) -%}
+{%- endif -%}
 
-    // The log directory stores info, warning, and errors.
-    // If the daemon uses the 'filesystem' logging retriever then the log_dir
-    // will also contain the query results.
-    //"logger_path": "/var/log/osquery",
+{# Set the loaded packs #}
+{%- if (osquery_packs | length) > 0 %}
+{%-   set pack_dict = {} %}
+{%-   for item in osquery_packs %}
+{%-     set _ = pack_dict.__setitem__(item, "/usr/share/osquery/packs/" + item + ".conf") -%}
+{%-   endfor %}
+{%-   set _ = osquery_options.__setitem__("packs", pack_dict) -%}
+{%- endif -%}
 
-    // Set 'disable_logging' to true to prevent writing any info, warning, error
-    // logs. If a logging plugin is selected it will still write query results.
-    //"disable_logging": "false",
-
-    // Query differential results are logged as change-events to assist log
-    // aggregation operations like searching and transactons.
-    // Set 'log_results_events' to log differentials as transactions.
-    //"log_result_events": "true",
-
-    // Splay the scheduled interval for queries.
-    // This is very helpful to prevent system performance impact when scheduling
-    // large numbers of queries that run a smaller or similar intervals.
-    "schedule_splay_percent": "10",
-
-    // Write the pid of the osqueryd process to a pidfile/mutex.
-    //"pidfile": "/var/osquery/osquery.pidfile",
-
-    // Clear events from the osquery backing store after a number of seconds.
-    "events_expiry": "3600",
-
-    // A filesystem path for disk-based backing storage used for events and
-    // query results differentials. See also 'use_in_memory_database'.
-    //"database_path": "/var/osquery/osquery.db",
-
-    // Comma-delimited list of table names to be disabled.
-    // This allows osquery to be launched without certain tables.
-    //"disable_tables": "foo_bar,time",
-
-    // Enable debug or verbose debug output when logging.
-    "verbose": "false",
-
-    // The number of threads for concurrent query schedule execution.
-    "worker_threads": "2",
-
-    // Enable schedule profiling, this will fill in averages and totals for
-    // system/user CPU time and memory for every query in the schedule.
-    // Add a query: "select * from osquery_schedule" to record the performances.
-    "enable_monitor": "true",
-
-    "logger_snapshot_event_type": "true"
-  },
-
-  // Define a schedule of queries:
-  "schedule": {
-    // This is a simple example query that outputs basic system information.
-    "system_info": {
-      // The exact query to run.
-      "query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
-      // The interval in seconds to run this query, not an exact interval.
-{% if osquery_testing or osquery_testing_pause %}
-      "interval": 10
-{% else %}
-      "interval": 3600
-{% endif %}
-    }{% if osquery_fim %},{% endif %}
-
-{% if osquery_fim %}
-    "fim" : {
-//      "query": "select target_path, category, time, action from file_events;",
-      "query": "select * from file_events;",
-      "removed": false,
-      "interval": {% if osquery_testing_fim_load %}30{% else %}{{ osquery_fim_interval }}{% endif %}
-    }
-
-{% endif %}
-  },
-
-{% if osquery_fim %}
-  "file_paths": {
-{% for item in osquery_fim_filepaths %}
-    "{{ item.name }}": [
-{% for entry in item.list %}
-      "{{ entry }}"{% if not loop.last %},{% endif %}
-
-{% endfor %}
-    ]{% if not loop.last %},{% endif %}
-
-{% endfor %}
-  },
-  "exclude_paths": {
-{% for item in osquery_fim_excludepaths %}
-    "{{ item.name }}": [
-{% for entry in item.list %}
-      "{{ entry }}"{% if not loop.last %},{% endif %}
-
-{% endfor %}
-    ]{% if not loop.last %},{% endif %}
-
-{% endfor %}
-  },
-
-{% endif %}
-  // Decorators are normal queries that append data to every query.
-  "decorators": {
-    "load": [
-      "SELECT uuid AS host_uuid FROM system_info;",
-      "SELECT user AS username FROM logged_in_users ORDER BY time DESC LIMIT 1;"
-    ]
-  },
-
-  // Add default osquery packs or install your own.
-  //
-  // There are several 'default' packs installed with 'make install' or via
-  // packages and/or Homebrew.
-  //
-  // Linux:        /usr/share/osquery/packs
-  // OS X:         /var/osquery/packs
-  // Homebrew:     /usr/local/share/osquery/packs
-  // make install: {PREFIX}/share/osquery/packs
-  //
-  "packs": {
-{% for item in osquery_packs %}
-    "{{ item }}": "/usr/share/osquery/packs/{{ item }}.conf"{% if not loop.last %},{% endif %}
-
-{% endfor %}
-  }
-}
+{# Render the osquery configuration file as json #}
+{{ osquery_options | to_nice_json(indent=4) }}

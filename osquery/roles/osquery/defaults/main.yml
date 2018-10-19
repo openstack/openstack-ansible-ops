@@ -2,8 +2,6 @@
 # Enable or disable the installation of the osquery debug packages.
 osquery_debug_packages_install: false
 
-osquery_template: 'osquery.conf.j2'
-
 osquery_upload_packs:
   - osquery-snapshots-pack
   - osquery-monitoring2-pack
@@ -18,51 +16,38 @@ osquery_packs:
   - "osquery-snapshots-pack"
   - "osquery-monitoring2-pack"
 
-osquery_config_plugin: 'filesystem'
-osquery_logger_plugin: 'filesystem'
+# osquery_flags:
+#   - '--enroll_secret_path=/etc/osquery/osquery_enroll_secret'
+#   - '--tls_server_certs=/etc/osquery/kolide.crt'
+#   - '--tls_hostname=acme.kolide.co'
+#   - '--host_identifier=hostname'
+#   - '--enroll_tls_endpoint=/api/v1/osquery/enroll'
+#   - '--config_plugin=tls'
+#   - '--config_tls_endpoint=/api/v1/osquery/config'
+#   - '--config_tls_refresh=10'
+#   - '--disable_distributed=false'
+#   - '--distributed_plugin=tls'
+#   - '--distributed_interval=10'
+#   - '--distributed_tls_max_attempts=3'
+#   - '--distributed_tls_read_endpoint=/api/v1/osquery/distributed/read'
+#   - '--distributed_tls_write_endpoint=/api/v1/osquery/distributed/write'
+#   - '--logger_plugin=tls'
+#   - '--logger_tls_endpoint=/api/v1/osquery/log'
+#   - '--logger_tls_period=10'
 osquery_flags: []
-## if using zentral, kolide or else
-## https://github.com/zentralopensource/zentral/blob/f460b10a95d4ea1e515aea3363f55733465d1d9c/zentral/contrib/osquery/deb_script/template.sh
-## https://docs.kolide.co/kolide/current/infrastructure/adding-hosts-to-kolide.html
 
-#osquery_enroll_secret: ""
-
-#osquery_flags:
-#    - '--enroll_secret_path=/etc/osquery/osquery_enroll_secret'
-#    - '--tls_server_certs=/etc/osquery/kolide.crt'
-#    - '--tls_hostname=acme.kolide.co'
-#    - '--host_identifier=hostname'
-#    - '--enroll_tls_endpoint=/api/v1/osquery/enroll'
-#    - '--config_plugin=tls'
-#    - '--config_tls_endpoint=/api/v1/osquery/config'
-#    - '--config_tls_refresh=10'
-#    - '--disable_distributed=false'
-#    - '--distributed_plugin=tls'
-#    - '--distributed_interval=10'
-#    - '--distributed_tls_max_attempts=3'
-#    - '--distributed_tls_read_endpoint=/api/v1/osquery/distributed/read'
-#    - '--distributed_tls_write_endpoint=/api/v1/osquery/distributed/write'
-#    - '--logger_plugin=tls'
-#    - '--logger_tls_endpoint=/api/v1/osquery/log'
-#    - '--logger_tls_period=10'
-
-osquery_fim: true
-osquery_fim_interval: 900
+## Take care if using a lot /tmp. can trigger
+## 'Expiring events for subscriber: file_events (overflowed limit 1000)'
+## => losing many queries results (fim or not)
 osquery_fim_filepaths:
   - name: homes_sshdir
     list:
       - "/root/.ssh/%%"
       - "/home/%/.ssh/%%"
+      - "/home/lib/%/.ssh/%%"
   - name: etc
     list:
       - "/etc/%%"
-
-## Take care if using a lot /tmp. can trigger
-## 'Expiring events for subscriber: file_events (overflowed limit 1000)'
-## => losing many queries results (fim or not)
-#  - name: tmp
-#    list:
-#      - "/tmp/%%"
   - name: bin
     list:
       - "/bin/%%"
@@ -82,20 +67,43 @@ osquery_fim_excludepaths:
     list:
       - /tmp/too_many_events/
 
-## queries snapshots: 1/week (or 1/month? nok)
+## queries snapshots: 1/week
 ## Max interval 1/w: https://github.com/theopolis/osquery/commit/b76dee8a1fddccb500bc4a058daa1b39083b9dbb
 osquery_snapshot_interval: 604800
 osquery_snapshot_interval2: 604800
-#osquery_snapshot_interval2: 2592000
 
-## making schedule query faster to have logs faster...
-osquery_testing: false
-osquery_testing_pause: false
-osquery_testing_fim_load: false
-osquery_testing_fim_load_bigger: 100M
-osquery_testing_fim_load_smaller: 1000
-## profiling?
-osquery_profiling: false
-## full config might be too long for travis (max 50min)
-#osquery_profiling_conf: /etc/osquery/osquery.conf
-osquery_profiling_conf: /usr/share/osquery/packs/incident-response.conf
+osquery_options:
+  options:
+    ## Splay the scheduled interval for queries.
+    ## This is very helpful to prevent system performance impact when scheduling
+    ## large numbers of queries that run a smaller or similar intervals.
+    schedule_splay_percent: 10
+    ## Clear events from the osquery backing store after a number of seconds.
+    events_expiry: 3600
+    ## Enable debug or verbose debug output when logging.
+    verbose: false
+    ## The number of threads for concurrent query schedule execution.
+    worker_threads: 2
+    ## Enable schedule profiling, this will fill in averages and totals for
+    ## system/user CPU time and memory for every query in the schedule.
+    ## Add a query: "select * from osquery_schedule" to record the performances.
+    enable_monitor: true
+    logger_snapshot_event_type: true
+  ## Define a schedule of queries:
+  schedule:
+    ## This is a simple example query that outputs basic system information.
+    system_info:
+      ## The exact query to run.
+      query: "SELECT hostname, cpu_brand, physical_memory FROM system_info;"
+      ## The interval in seconds to run this query, not an exact interval.
+      interval: 3600
+    fim:
+      query: "select * from file_events;"
+      removed: false
+      ## fim query interval
+      interval: 900
+  ## Decorators are normal queries that append data to every query.
+  decorators:
+    load:
+      - "SELECT uuid AS host_uuid FROM system_info;"
+      - "SELECT user AS username FROM logged_in_users ORDER BY time DESC LIMIT 1;"
