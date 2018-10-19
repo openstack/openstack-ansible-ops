@@ -31,7 +31,7 @@ OpenStack-Ansible Integration
 -----------------------------
 
 These playbooks can be used as standalone inventory or as an integrated part of
-an OpenStack-Ansible deployment. For a simple example of standalone inventory,
+an OpenStack-Ansible deployment. For a simple example of standalone inventory
 see ``inventory.example.yml``.
 
 Setup | system configuration
@@ -44,12 +44,14 @@ Clone the osquery-osa repo
     cd /opt
     git clone https://github.com/openstack/openstack-ansible-ops
 
+
 Copy the env.d file into place
 
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/osquery
     cp env.d/fleet.yml /etc/openstack_deploy/env.d/
+
 
 Copy the conf.d file into place
 
@@ -64,6 +66,7 @@ the kolide fleet cluster in multiple containers and one logging host under
 .. code-block:: bash
 
     vi /etc/openstack_deploy/conf.d/fleet.yml
+
 
 Create the containers
 
@@ -165,7 +168,6 @@ Create some basic passwords keys that are needed by fleet
 Install master/data Fleet nodes on the elastic-logstash containers,
 deploy logstash, deploy Kibana, and then deploy all of the service beats.
 
-
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/osquery
@@ -190,14 +192,10 @@ certificates.
 
 * If required add ``-e@/opt/openstack-ansible/inventory/group_vars/all/all.yml``
   to import sufficient OSA group variables to define the OpenStack release.
-  Journalbeat will then deploy onto all hosts/containers for releases prior to
-  Rocky, and hosts only for Rocky onwards. If the variable ``openstack_release``
-  is undefined the default behaviour is to deploy Journalbeat to hosts only.
 
 * Alternatively if using the embedded ansible, create a symlink to include all
   of the OSA group_vars. These are not available by default with the embedded
   ansible and can be symlinked into the ops repo.
-
 
 .. code-block:: bash
 
@@ -216,17 +214,13 @@ with at leasts 8GiB of RAM and 40GiB of storage on root. Running an `m1.medium`
 (openstack) flavor size is generally enough to get an environment online.
 
 To run the local functional tests execute the `run-tests.sh` script out of the
-tests directory. This will create a 1 node kolide-fleet cluster and install
+tests directory. This will create a single node kolide-fleet cluster and install
 osquery on the local host.
 
 .. code-block:: bash
 
     CLUSTERED=yes tests/run-tests.sh
 
-
-After the test build is completed the cluster will test it's layout and ensure
-processes are functioning normally. Logs for the cluster can be found at
-`/tmp/osquery-logs`.
 
 To rerun the playbooks after a test build, source the `tests/manual-test.rc`
 file and follow the onscreen instructions.
