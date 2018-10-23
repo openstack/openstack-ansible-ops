@@ -156,6 +156,7 @@ osa_enable_dashboard: true
 osa_enable_network: true
 osa_enable_meter: false
 osa_enable_object_storage: true
+osa_enable_legacy_os_infra: "{{ (osa_enable_image | bool) and (osa_enable_orchestration | bool) and (osa_enable_dashboard | bool) and (osa_enable_compute | bool) }}"
 osa_disable_serial: false
 osa_enable_elk_metrics: false
 osa_enable_os_profiler: false

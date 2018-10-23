@@ -192,6 +192,12 @@ haproxy_hosts: *loadbalancer_block
 ### OpenStack
 ###
 
+{% if osa_enable_legacy_os_infra | bool %}
+# Legacy infra group
+# Contains glance, heat, horizon, nova
+os-infra_hosts: *infra_block
+{% endif %}
+
 {% if osa_enable_identity | bool %}
 # keystone
 identity_hosts: *infra_block
