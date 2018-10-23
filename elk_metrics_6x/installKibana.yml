@@ -47,7 +47,7 @@
       register: kibana_indexes
       until: kibana_indexes is success
       retries: 6
-      delay: 10
+      delay: 30
       run_once: true
 
     - name: Create basic indexes
@@ -67,7 +67,7 @@
       register: kibana_indexes
       until: kibana_indexes is success
       retries: 6
-      delay: 10
+      delay: 30
       run_once: true
 
   tags:

@@ -23,7 +23,7 @@
   until:
     - elk_data is success and elk_data['json'] is defined
   retries: 5
-  delay: 10
+  delay: 30
   run_once: true
 
 - name: Set retention keys fact

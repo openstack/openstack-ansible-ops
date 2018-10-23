@@ -37,7 +37,7 @@
       register: elk_indexes
       until: elk_indexes is success
       retries: 3
-      delay: 10
+      delay: 30
       with_items:
         - name: "osprofiler-notifications"
           index_options:
@@ -67,7 +67,7 @@
       register: check_basicIndexTemplate
       until: check_basicIndexTemplate is success
       retries: 3
-      delay: 10
+      delay: 30
 
     - name: Check for basic index template
       uri:
@@ -77,7 +77,7 @@
       register: delete_basicIndexTemplate
       until: delete_basicIndexTemplate is success
       retries: 3
-      delay: 10
+      delay: 30
       when:
         - check_basicIndexTemplate.status == 200
 
@@ -91,7 +91,7 @@
       register: create_basicIndexTemplate
       until: create_basicIndexTemplate is success
       retries: 3
-      delay: 10
+      delay: 30
       vars:
         index_option:
           index_patterns: >-
@@ -117,7 +117,7 @@
       register: create_basicIndexTemplate
       until: create_basicIndexTemplate is success
       retries: 3
-      delay: 10
+      delay: 30
       vars:
         index_option:
           template: ".monitoring-*"

@@ -25,7 +25,7 @@
 
 - name: Enable and restart metricbeat (upstart)
   service:
-    name: "elasticsearch"
+    name: "metricbeat"
     state: "{{ metricbeat_service_state }}"
     enabled: yes
   when:
