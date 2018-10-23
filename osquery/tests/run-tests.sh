@@ -26,9 +26,10 @@ pushd "${HOME}"
   popd
 popd
 
-source ${TEST_DIR}/osquery/tests/manual-test.rc
+source "${TEST_DIR}/osquery/tests/manual-test.rc"
 
-bash -v "${TEST_DIR}/osquery/bootstrap-embedded-ansible.sh"
+source "${TEST_DIR}/osquery/bootstrap-embedded-ansible.sh"
+deactivate
 
 ${HOME}/ansible25/bin/ansible-galaxy install --force \
                                              --roles-path="${HOME}/ansible25/repositories/roles" \
