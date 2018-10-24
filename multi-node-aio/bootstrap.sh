@@ -18,6 +18,14 @@ set -euo
 
 BINDEP_FILE=${BINDEP_FILE:-bindep.txt}
 
+# We use the OSA branch variable to pin both the plugins
+# and the ansible version used to work together.
+# TODO(odyssey4me):
+# Switch this to use the master branch once the following
+# bug is fixed.
+# https://github.com/ansible/ansible/issues/47301
+export OSA_DEPS_BRANCH=${OSA_DEPS_BRANCH:-stable/rocky}
+
 source /etc/os-release || source /usr/lib/os-release
 
 case "${ID,,}" in
@@ -84,7 +92,7 @@ if [[ ${#BINDEP_PKGS} > 0 ]]; then
 fi
 
 # Install latest OSA supported Ansible version
-sudo pip install -r https://git.openstack.org/cgit/openstack/openstack-ansible-tests/plain/test-ansible-deps.txt
+sudo pip install -r https://git.openstack.org/cgit/openstack/openstack-ansible-tests/plain/test-ansible-deps.txt?h=${OSA_DEPS_BRANCH}
 
 # Get the latest OSA plugins
 # This is used to allow access from the MNAIO host to
@@ -92,5 +100,5 @@ sudo pip install -r https://git.openstack.org/cgit/openstack/openstack-ansible-t
 # do execute things from infra1.
 mkdir -p ~/.ansible
 if [[ ! -d ~/.ansible/plugins ]]; then
-    git clone https://git.openstack.org/openstack/openstack-ansible-plugins ~/.ansible/plugins
+    git clone -b ${OSA_DEPS_BRANCH} https://git.openstack.org/openstack/openstack-ansible-plugins ~/.ansible/plugins
 fi
