@@ -20,6 +20,6 @@ Usage
 
 
 With the script sourced, the ansible enviornment will create a virtual environment at
-`${HOME}/ansible25` if it does not already exist.
+`${HOME}/ansible${ANSIBLE_VERSION}` if it does not already exist.
 
 To leave the embedded ansible enviornment run the function `deactivate`.

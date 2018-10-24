@@ -14,7 +14,8 @@
 # limitations under the License.
 
 export OPTS=()
-export ANSIBLE_EMBED_HOME="${HOME}/ansible25"
+export ANSIBLE_VERSION="${ANSIBLE_VERSION:-2.5.5.0}"
+export ANSIBLE_EMBED_HOME="${HOME}/ansible${ANSIBLE_VERSION}"
 OPTS+=('ANSIBLE_EMBED_HOME')
 
 source /etc/os-release
@@ -39,7 +40,7 @@ if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
     virtualenv "${ANSIBLE_EMBED_HOME}"
   fi
   eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade --force pip"
-  eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade ansible==2.5.5.0 --isolated"
+  eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade ansible==${ANSIBLE_VERSION} --isolated"
   eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade jmespath --isolated"
   eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade hvac --isolated"
   eval "${ANSIBLE_EMBED_HOME}/bin/pip install --upgrade netaddr --isolated"
