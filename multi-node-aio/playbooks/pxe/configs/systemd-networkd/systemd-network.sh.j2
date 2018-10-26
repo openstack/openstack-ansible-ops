@@ -49,4 +49,55 @@ UseNTP=yes
 Address={{ value.address }}
 {%   endif %}
 EOF
+
+# generate files for flat networking
+{%   if value.iface is defined and key == "flat" %}
+cat <<EOF >/etc/systemd/network/br-veth-{{ key }}.netdev
+[NetDev]
+Name=v{{ value.iface }}
+Kind=veth
+
+[Peer]
+Name=br-veth-{{ key }}
+EOF
+
+cat <<EOF >/etc/systemd/network/br-veth-{{ key }}.network
+[Match]
+Name=br-veth-{{ key }}
+
+[Network]
+Bridge=br-{{ key }}
+ConfigureWithoutCarrier=yes
+EOF
+
+cat <<EOF >/etc/systemd/network/v{{ value.iface }}.network
+[Match]
+Name=v{{ value.iface }}
+EOF
+{%   endif %}
+
+# generate files for lbaas
+{%   if value.iface is defined and key == "lbaas" %}
+cat <<EOF >/etc/systemd/network/br-veth-{{ key }}.netdev
+[NetDev]
+Name=v{{ value.iface }}
+Kind=veth
+
+[Peer]
+Name=br-veth-{{ key }}
+EOF
+
+cat <<EOF >/etc/systemd/network/br-veth-{{ key }}.network
+[Match]
+Name=br-veth-{{ key }}
+
+[Network]
+Bridge=br-{{ key }}
+ConfigureWithoutCarrier=yes
+EOF
+cat <<EOF >/etc/systemd/network/v{{ value.iface }}.network
+[Match]
+Name=v{{ value.iface }}
+EOF
+{%   endif %}
 {% endfor %}
