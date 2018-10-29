@@ -86,6 +86,23 @@
       {% endif %}
       {{ ceph_stats }}
 
+- name: Check for Ceph metric port
+  wait_for:
+    port: "{{ item | regex_replace('^.+:', '') | int }}"
+    delay: 2
+    timeout: 5
+    host: "{{ item | regex_replace(':\\d+$', '') }}"
+  with_items: "{{ ceph_stats_hosts }}"
+  when: ceph.stat.exists
+  register: ceph_restapi_port_check
+  ignore_errors: yes
+
+- name: Set ceph_restapi_listening
+  set_fact:
+    ceph_restapi_listening: true
+  when: not (item.failed | default(true))
+  with_items: "{{ ceph_restapi_port_check.results }}"
+
 - name: Check for etcd
   stat:
     path: /etc/etcd
@@ -147,14 +164,17 @@
   set_fact:
     apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
 
+    # Only enable ceph if something is listening on the ceph-rest-api port
     # enable ceph on:  cinder volume hosts when we have a list of ceph mons
     #      otherwise:  all hosts which have /etc/ceph
     ceph_enabled: |-
       {% set ceph_detect = false %}
-      {% if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups['cinder_volume'])  %}
-      {%   set ceph_detect = true %}
-      {% else %}
-      {%   set ceph_detect = ceph.stat.exists | bool %}
+      {% if ceph_restapi_listening is defined %}
+      {%   if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups['cinder_volume'])  %}
+      {%     set ceph_detect = true %}
+      {%   else %}
+      {%     set ceph_detect = ceph.stat.exists | bool %}
+      {%   endif %}
       {% endif %}
       {{ ceph_detect }}
 
