@@ -60,7 +60,7 @@
         reload: "yes"
         sysctl_file: /etc/sysctl.d/99-elasticsearch.conf
 
-    - name: Create tmp osquery dir
+    - name: Create tmp elk_metrics_6x dir
       file:
         path: "/tmp/elk-metrics-6x-logs"
         state: directory
@@ -98,26 +98,26 @@
     - name: Run ansible-galaxy (tests)
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-galaxy install --force --ignore-errors --roles-path=/root/ansible25/repositories/roles -r ansible-role-requirements.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-role-requirements.yml"
       args:
-        chdir: "src/{{ current_test_repo }}/osquery/tests"
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
 
     - name: Run ansible-galaxy (elk_metrics_6x)
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-galaxy install --force --ignore-errors --roles-path=/root/ansible25/repositories/roles -r ansible-role-requirements.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-role-requirements.yml"
       args:
-        chdir: "src/{{ current_test_repo }}/osquery"
+        chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
 
     - name: Run environment setup
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _key-setup.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _key-setup.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
-        ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
+        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
       when:
@@ -127,12 +127,12 @@
     - name: Run environment setup
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _container-setup.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _container-setup.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
-        ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
+        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
       when:
@@ -148,23 +148,23 @@
     - name: Run functional test
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml site.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml site.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-deployment.log"
-        ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
+        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
 
     - name: Show cluster state
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml showElasticCluster.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml showElasticCluster.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-show-cluster.log"
-        ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
+        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x"

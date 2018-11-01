@@ -98,26 +98,26 @@
     - name: Run ansible-galaxy (tests)
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-galaxy install --force --ignore-errors --roles-path=/root/ansible25/repositories/roles -r ansible-role-requirements.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-role-requirements.yml"
       args:
         chdir: "src/{{ current_test_repo }}/osquery/tests"
 
     - name: Run ansible-galaxy (osquery)
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-galaxy install --force --ignore-errors --roles-path=/root/ansible25/repositories/roles -r ansible-role-requirements.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-role-requirements.yml"
       args:
         chdir: "src/{{ current_test_repo }}/osquery"
 
     - name: Run environment setup
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _key-setup.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _key-setup.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/osquery-logs/ansible-osquery-test-container-setup.log"
-        ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
+        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/osquery/tests"
       when:
@@ -127,12 +127,12 @@
     - name: Run environment setup
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _container-setup.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _container-setup.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/osquery-logs/ansible-osquery-test-container-setup.log"
-        ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
+        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/osquery/tests"
       when:
@@ -148,11 +148,11 @@
     - name: Run functional test
       become: yes
       become_user: root
-      command: "/root/ansible25/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml site.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml site.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "/root/ansible25/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "/root/ansible25/repositories/openstack-ansible-plugins/connection"
+        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
+        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/osquery-logs/ansible-osquery-test-deployment.log"
-        ANSIBLE_ROLES_PATH: /root/ansible25/repositories/roles
+        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/osquery"

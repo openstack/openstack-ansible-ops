@@ -129,14 +129,14 @@ the `bootstrap-ansible.sh` script these dependencies can be resolved with the
 
 .. code-block:: bash
 
-    ansible-galaxy install -r ansible-role-requirements.yml --roles-path=~/ansible25/repositories/roles
+    ansible-galaxy install -r ansible-role-requirements.yml --roles-path=~/ansible_venv/repositories/roles
 
 
 In the even that some of the modules are alread installed execute the following
 
 .. code-block:: bash
 
-    ansible-galaxy install -r ansible-role-requirements.yml --ignore-errors --roles-path=~/ansible25/repositories/roles
+    ansible-galaxy install -r ansible-role-requirements.yml --ignore-errors --roles-path=~/ansible_venv/repositories/roles
 
 
 Once the dependencies are set make sure to set the action plugin path to the

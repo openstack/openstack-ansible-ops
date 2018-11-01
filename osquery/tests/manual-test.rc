@@ -1,7 +1,7 @@
 export ANSIBLE_HOST_KEY_CHECKING="False"
-export ANSIBLE_ROLES_PATH="${HOME}/ansible25/repositories/roles"
-export ANSIBLE_ACTION_PLUGINS="${HOME}/ansible25/repositories/roles/config_template/action"
-export ANSIBLE_CONNECTION_PLUGINS="${HOME}/ansible25/repositories/roles/plugins/connection"
+export ANSIBLE_ROLES_PATH="${HOME}/ansible_venv/repositories/roles"
+export ANSIBLE_ACTION_PLUGINS="${HOME}/ansible_venv/repositories/roles/config_template/action"
+export ANSIBLE_CONNECTION_PLUGINS="${HOME}/ansible_venv/repositories/roles/plugins/connection"
 export ANSIBLE_LOG_PATH="/tmp/osquery-logs/ansible-elk-test.log"
 
 if [[ ! -d "/tmp/osquery-logs" ]]; then
@@ -10,7 +10,7 @@ if [[ ! -d "/tmp/osquery-logs" ]]; then
 fi
 
 echo "To build a test environment run the following:"
-echo -e "# /root/ansible25/bin/ansible-playbook -i tests/inventory/test-container-inventory.yml tests/test.yml --limit localhost\n"
+echo -e "# ${HOME}/ansible_venv/bin/ansible-playbook -i tests/inventory/test-container-inventory.yml tests/test.yml --limit localhost\n"
 
 echo "Run manual functional tests by executing the following:"
-echo -e "# /root/ansible25/bin/ansible-playbook -i tests/inventory/test-container-inventory.yml site.yml\n"
+echo -e "# ${HOME}/ansible_venv/bin/ansible-playbook -i tests/inventory/test-container-inventory.yml site.yml\n"

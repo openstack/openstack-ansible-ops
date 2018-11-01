@@ -31,15 +31,15 @@ source "${TEST_DIR}/osquery/tests/manual-test.rc"
 source "${TEST_DIR}/osquery/bootstrap-embedded-ansible.sh"
 deactivate
 
-${HOME}/ansible25/bin/ansible-galaxy install --force \
-                                             --roles-path="${HOME}/ansible25/repositories/roles" \
+${HOME}/ansible_venv/bin/ansible-galaxy install --force \
+                                             --roles-path="${HOME}/ansible_venv/repositories/roles" \
                                              --role-file="${TEST_DIR}/osquery/tests/ansible-role-requirements.yml"
 
 if [[ ! -e "${TEST_DIR}/osquery/tests/src" ]]; then
   ln -s ${TEST_DIR}/../ ${TEST_DIR}/osquery/tests/src
 fi
 
-${HOME}/ansible25/bin/ansible-playbook -i 'localhost,' \
+${HOME}/ansible_venv/bin/ansible-playbook -i 'localhost,' \
                                        -vv \
                                        -e ansible_connection=local \
                                        -e test_clustered_kolide=${CLUSTERED:-no} \

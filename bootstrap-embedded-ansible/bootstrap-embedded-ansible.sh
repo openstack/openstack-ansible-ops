@@ -15,7 +15,7 @@
 
 export OPTS=()
 export ANSIBLE_VERSION="${ANSIBLE_VERSION:-2.5.5.0}"
-export ANSIBLE_EMBED_HOME="${HOME}/ansible${ANSIBLE_VERSION}"
+export ANSIBLE_EMBED_HOME="${HOME}/ansible_venv"
 OPTS+=('ANSIBLE_EMBED_HOME')
 
 source /etc/os-release

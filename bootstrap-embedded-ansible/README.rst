@@ -19,7 +19,7 @@ Usage
    source bootstrap-embedded-ansible.sh
 
 
-With the script sourced, the ansible enviornment will create a virtual environment at
-`${HOME}/ansible${ANSIBLE_VERSION}` if it does not already exist.
+With the script sourced, the ansible environment will create a virtual environment at
+`${HOME}/ansible_venv` if it does not already exist.
 
 To leave the embedded ansible enviornment run the function `deactivate`.

@@ -21,6 +21,7 @@
     post-run: "elk_metrics_6x/tests/post-run.yml"
     files:
       - ^elk_metrics_6x/.*
+      - ^bootstrap-embedded-ansible/.*
     vars:
       osa_test_repo: "openstack/openstack-ansible-ops"
       test_clustered_elk: false
@@ -93,6 +94,7 @@
     voting: true
     files:
       - ^osquery/.*
+      - ^bootstrap-embedded-ansible/.*
 
 - job:
     name: "openstack-ansible-ops:osquery-ubuntu-xenial-clustered"
