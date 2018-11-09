@@ -18,3 +18,7 @@ elastic_metricbeat_rabbitmq_monitoring_hosts: '"localhost:15672"'
 elastic_metricbeat_haproxy_monitoring_hosts: '"unix:///var/run/haproxy.stat"'
 
 metricbeat_service_state: restarted
+
+# Inventory group to configure metricbeat ceph monitoring
+# via either ceph-restapi or mgr prometheus module
+ceph_metricbeat_group: cinder_volume

@@ -86,7 +86,7 @@
       {% endif %}
       {{ ceph_stats }}
 
-- name: Check for Ceph metric port
+- name: Check for Ceph restapi metric port
   wait_for:
     port: "{{ item | regex_replace('^.+:', '') | int }}"
     delay: 2
@@ -102,6 +102,23 @@
     ceph_restapi_listening: true
   when: not (item.failed | default(true))
   with_items: "{{ ceph_restapi_port_check.results }}"
+
+- name: Check for Ceph prometheus metric port
+  wait_for:
+    port: 9283
+    delay: 2
+    timeout: 5
+    host: "{{ item | regex_replace(':\\d+$', '') }}"
+  with_items: "{{ ceph_stats_hosts }}"
+  when: ceph.stat.exists
+  register: ceph_prometheus_port_check
+  ignore_errors: yes
+
+- name: Set ceph_prometheus_listening
+  set_fact:
+    ceph_prometheus_listening: true
+  when: not (item.failed | default(true))
+  with_items: "{{ ceph_prometheus_port_check.results }}"
 
 - name: Check for etcd
   stat:
@@ -167,16 +184,28 @@
     # Only enable ceph if something is listening on the ceph-rest-api port
     # enable ceph on:  cinder volume hosts when we have a list of ceph mons
     #      otherwise:  all hosts which have /etc/ceph
-    ceph_enabled: |-
+    ceph_restapi_enabled: |-
       {% set ceph_detect = false %}
       {% if ceph_restapi_listening is defined %}
-      {%   if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups['cinder_volume'])  %}
+      {%   if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups[ceph_metricbeat_group])  %}
       {%     set ceph_detect = true %}
       {%   else %}
       {%     set ceph_detect = ceph.stat.exists | bool %}
       {%   endif %}
       {% endif %}
       {{ ceph_detect }}
+
+    ceph_prometheus_enabled: |-
+      {% set ceph_detect = false %}
+      {% if ceph_prometheus_listening is defined %}
+      {%   if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups[ceph_metricbeat_group])  %}
+      {%     set ceph_detect = true %}
+      {%   else %}
+      {%     set ceph_detect = ceph.stat.exists | bool %}
+      {%   endif %}
+      {% endif %}
+      {{ ceph_detect }}
+
 
     docker_enabled: "{{ docker.stat.exists | bool }}"
     etcd_enabled: "{{ etcd.stat.exists | bool }}"

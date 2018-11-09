@@ -152,7 +152,7 @@ metricbeat.modules:
 {% endif %}
 #
 #-------------------------------- Ceph Module --------------------------------
-{% if ceph_enabled | default(false) | bool %}
+{% if ceph_restapi_enabled | default(false) | bool %}
 - module: ceph
   metricsets: ["cluster_disk", "cluster_health", "monitor_health", "pool_disk", "osd_tree"]
   enabled: true
@@ -458,7 +458,7 @@ metricbeat.modules:
 {% if (prometheus_enabled | default(false) | bool) and (prometheus_config is defined) %}
 {% for prometheus in prometheus_config %}
 - module: prometheus
-  metricsets: [{% for mset in prometheus.metricsets|default(["collector"]) %}"{{ mset }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  metricsets: [{% for mset in prometheus.metricsets|default("collector") %}"{{ mset }}"{% if not loop.last %},{% endif %}{% endfor %}]
   enabled: {{ prometheus.enabled | default('true') }}
   period: {{ prometheus.period | default("10s") }}
   hosts: [{% for phost in prometheus.hosts %}"{{ phost }}"{% if not loop.last %},{% endif %}{% endfor %}]
@@ -466,6 +466,16 @@ metricbeat.modules:
   namespace: {{ prometheus.namespace }}
 #
 {% endfor %}
+{% endif %}
+{% if (ceph_prometheus_enabled | default(false) | bool) %}
+- module: prometheus
+  metricsets: ["collector"]
+  enabled: 'true'
+  period: "10s"
+  hosts: [{% for phost in ceph_stats_hosts %}"{{ phost | regex_replace(':\\d+$', '') }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  metrics_path: "/metrics"
+  namespace: ceph
+#
 {% endif %}
 ##------------------------------ RabbitMQ Module ------------------------------
 {% if (rabbitmq_enabled | default(false) | bool) and (rabbitmq_monitoring_password is defined) %}
