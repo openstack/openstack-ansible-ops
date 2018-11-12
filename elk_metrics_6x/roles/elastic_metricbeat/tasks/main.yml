@@ -197,12 +197,8 @@
 
     ceph_prometheus_enabled: |-
       {% set ceph_detect = false %}
-      {% if ceph_prometheus_listening is defined %}
-      {%   if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups[ceph_metricbeat_group])  %}
-      {%     set ceph_detect = true %}
-      {%   else %}
-      {%     set ceph_detect = ceph.stat.exists | bool %}
-      {%   endif %}
+      {% if ceph_prometheus_listening is defined and (inventory_hostname in groups[ceph_metricbeat_group])  %}
+      {%   set ceph_detect = true %}
       {% endif %}
       {{ ceph_detect }}
 
