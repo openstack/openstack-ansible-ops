@@ -27,6 +27,8 @@ all_containers:
         address: "{{ ansible_host }}"
         netmask: "255.255.255.0"
         bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
+    # CI nodes havee limited resources, locking the memory is impossible.
+    elastic_memory_lock: false
 
   children:
     elastic-logstash:
@@ -41,10 +43,6 @@ all_containers:
 
         elastic2:
           ansible_host: 172.29.236.102
-          ansible_user: root
-
-        elastic3:
-          ansible_host: 172.29.236.103
           ansible_user: root
 
     kibana:
