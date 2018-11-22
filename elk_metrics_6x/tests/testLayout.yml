@@ -28,9 +28,9 @@
 
     # the elasticserch cluster elects one master from all those which are marked as master-eligible
     # 1 node cluster can only have one master
-    # 2 node clusters have 1 master-eligable nodes to avoid split-brain
-    # 3 node clusters have 3 master-eligable nodes
-    # >3 node clusters have (nodes // 2) eligable masters rounded up to the next odd number
+    # 2 node clusters have 1 master-eligible nodes to avoid split-brain
+    # 3 node clusters have 3 master-eligible nodes
+    # >3 node clusters have (nodes // 2) eligible masters rounded up to the next odd number
     - name: Master node count fact
       set_fact:
         master_node_count: |-

@@ -31,7 +31,7 @@
 
 
 # TODO: Improve l2 convergence too.
-- name: Remove the reminent neutron agent containers
+- name: Remove the remnant neutron agent containers
   hosts: "neutron_agent[0]"
   gather_facts: false
   user: root
