@@ -19,6 +19,8 @@ export ANSIBLE_EMBED_HOME="${HOME}/ansible_venv"
 OPTS+=('ANSIBLE_EMBED_HOME')
 
 source /etc/os-release
+export ID="$(echo ${ID} | awk -F'-' '{print $1}')"
+
 if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
   if [  ${ID} = "ubuntu" ]; then
     apt-get update

@@ -14,6 +14,4 @@
 # limitations under the License.
 
 journalbeat_distro_packages:
-  - gcc
-  - git
-  - libsystemd-dev
+  - journalbeat

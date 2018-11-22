@@ -32,4 +32,4 @@ galaxy_info:
     - elastic-stack
 dependencies:
   - role: elastic_data_hosts
-  - role: go_install_1.10
+  - role: elastic_repositories

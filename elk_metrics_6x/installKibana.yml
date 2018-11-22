@@ -39,11 +39,6 @@
             attributes:
               title: "*"
               timeFieldName: "@timestamp"
-        - name: "journalbeat-*"
-          index_options:
-            attributes:
-              title: "journalbeat-*"
-              timeFieldName: "@timestamp"
       register: kibana_indexes
       until: kibana_indexes is success
       retries: 6
