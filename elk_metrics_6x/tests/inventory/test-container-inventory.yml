@@ -32,24 +32,20 @@ all_containers:
 
   children:
     elastic-logstash:
-      hosts:
-        elastic0:
-          ansible_host: 172.29.236.100
-          ansible_user: root
+      children:
+        kibana:
+          hosts:
+            elastic0:
+              ansible_host: 172.29.236.100
+              ansible_user: root
 
-        elastic1:
-          ansible_host: 172.29.236.101
-          ansible_user: root
+            elastic1:
+              ansible_host: 172.29.236.101
+              ansible_user: root
 
-        elastic2:
-          ansible_host: 172.29.236.102
-          ansible_user: root
-
-    kibana:
-      hosts:
-        kibana0:
-          ansible_host: 172.29.236.110
-          ansible_user: root
+            elastic2:
+              ansible_host: 172.29.236.102
+              ansible_user: root
 
     apm-server:
       hosts:
