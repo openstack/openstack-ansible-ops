@@ -22,4 +22,4 @@ Usage
 With the script sourced, the ansible environment will create a virtual environment at
 `${HOME}/ansible_venv` if it does not already exist.
 
-To leave the embedded ansible enviornment run the function `deactivate`.
+To leave the embedded ansible environment run the function `deactivate`.
