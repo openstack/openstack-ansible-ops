@@ -13,40 +13,90 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Query es storage
-  uri:
-    url: "http://{{ coordination_nodes[0] }}/_nodes/{{ (data_nodes | map('extract', hostvars, 'ansible_host') | list) | join(',') }}/stats/fs"
-    method: GET
-  register: elk_data
-  environment:
-    no_proxy: "{{ coordination_nodes[0].split(':')[0] }}"
-  until:
-    - elk_data is success and elk_data['json'] is defined
-  retries: 5
-  delay: 30
-  run_once: true
+- name: Ensure local facts directory exists
+  file:
+    dest: "/etc/ansible/facts.d"
+    state: directory
+    group: "root"
+    owner: "root"
+    mode:  "0755"
+    recurse: no
 
-- name: Set retention keys fact
-  set_fact:
-    es_storage_json: "{{ elk_data['json'] }}"
+- name: Initialize local facts
+  ini_file:
+    dest: "/etc/ansible/facts.d/elastic.fact"
+    section: "retention"
+    option: cacheable
+    value: true
 
-- name: Load retention algo variables
-  include_vars: "calculate_index_retention_{{ elastic_index_retention_algorithm }}.yml"
+- name: Refresh local facts
+  setup:
+    filter: ansible_local
+    gather_subset: "!all"
   tags:
     - always
 
-- name: Set retention facts (mb size)
-  set_fact: "elastic_{{ item.key }}_size={{ item.value }}"
-  when:
-    - hostvars[inventory_hostname]["elastic_" ~ item.key ~ "_size"] is undefined
-  with_dict: "{{ es_storage_per_index }}"
+- name: Retention storage block
+  block:
+    - name: Query es storage
+      uri:
+        url: "http://{{ coordination_nodes[0] }}/_nodes/{{ (data_nodes | map('extract', hostvars, 'ansible_host') | list) | join(',') }}/stats/fs"
+        method: GET
+      register: elk_data
+      environment:
+        no_proxy: "{{ coordination_nodes[0].split(':')[0] }}"
+      until:
+        - elk_data is success and elk_data['json'] is defined
+      retries: 5
+      delay: 30
+      run_once: true
 
-- name: Set retention facts (days)
-  set_fact: "elastic_{{ item.key }}_retention={{ item.value }}"
-  when:
-    - hostvars[inventory_hostname]["elastic_" ~ item.key ~ "_retention"] is undefined
-  with_dict: "{{ es_days_per_index }}"
+    - name: Set retention keys fact
+      set_fact:
+        es_storage_json: "{{ elk_data['json'] }}"
 
-- name: Set retention keys fact
-  set_fact:
-    elastic_beat_retention_policy_keys: "{{ elastic_beat_retention_policy_hosts.keys() | list }}"
+    - name: Load retention algo variables
+      include_vars: "calculate_index_retention_{{ elastic_index_retention_algorithm }}.yml"
+      tags:
+        - always
+
+    - name: Set storage fact
+      ini_file:
+        dest: "/etc/ansible/facts.d/elastic.fact"
+        section: "retention"
+        option: "cluster_nodes"
+        value: "{{ groups['elastic-logstash'] | length }}"
+
+    - name: Set retention policy fact
+      ini_file:
+        dest: "/etc/ansible/facts.d/elastic.fact"
+        section: "retention"
+        option: "elastic_beat_retention_policy_keys"
+        value: "{{ elastic_beat_retention_policy_hosts.keys() | list }}"
+
+    - name: Set size fact
+      ini_file:
+        dest: "/etc/ansible/facts.d/elastic.fact"
+        section: "retention"
+        option: "elastic_{{ item.key }}_size"
+        value: "{{ item.value }}"
+      with_dict: "{{ es_storage_per_index }}"
+
+    - name: Set retention fact
+      ini_file:
+        dest: "/etc/ansible/facts.d/elastic.fact"
+        section: "retention"
+        option: "elastic_{{ item.key }}_retention"
+        value: "{{ item.value }}"
+      with_dict: "{{ es_days_per_index }}"
+
+    - name: Refresh local facts
+      setup:
+        filter: ansible_local
+        gather_subset: "!all"
+      tags:
+        - always
+  when:
+      - (ansible_local['elastic']['retention']['cluster_nodes'] is undefined) or
+        ((groups['elastic-logstash'] | length) != (ansible_local['elastic']['retention']['cluster_nodes'] | int)) or
+        (elastic_retention_refresh | bool)

@@ -570,6 +570,22 @@ state variable, `elk_package_state`, to latest.
     ansible-playbook site.yml $USER_VARS -e 'elk_package_state="latest"'
 
 
+Forcing the Elasticsearch cluster retention policy to refresh
+-------------------------------------------------------------
+
+To force the cluster retention policy to refresh set `elastic_retention_refresh`, to
+"yes". When setting `elastic_retention_refresh` to "yes" the retention policy will forcibly
+be refresh across all hosts. This option should only be used when the Elasticsearch storage
+array is modified on an existing cluster. Should the Elasticseach cluster size change
+(nodes added or removed) the retention policy will automatically be refreshed on playbook
+execution.
+
+.. code-block:: bash
+
+    cd /opt/openstack-ansible-ops/elk_metrics_6x
+    ansible-playbook site.yml $USER_VARS -e 'elastic_retention_refresh="yes"'
+
+
 Trouble shooting
 ----------------
 

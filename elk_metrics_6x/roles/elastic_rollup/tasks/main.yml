@@ -33,6 +33,7 @@
       OK with the old rollup job being purged, add the following option
       `elastic_allow_rollup_purge=yes` to the command line and rerun the
       playbook.
+  run_once: true
   when:
     - check_rollup['json']['jobs'] | length > 0
     - not elastic_allow_rollup_purge | bool
@@ -44,7 +45,7 @@
         min_days_until_rollup: |-
           {% set index_retention = [] %}
           {% for item in ansible_play_hosts %}
-          {%   set _ = index_retention.append(hostvars[item]['elastic_' + index_name + '_retention'] | int) %}
+          {%   set _ = index_retention.append(ansible_local['elastic']['retention']['elastic_' + index_name + '_retention'] | int) %}
           {% endfor %}
           {{ index_retention | min }}
       run_once: true

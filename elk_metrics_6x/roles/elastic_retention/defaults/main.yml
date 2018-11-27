@@ -94,3 +94,6 @@ elastic_beat_retention_policy_hosts:
   packetbeat:
     weight: 1
     hosts: "{{ groups['hosts'] | default([]) }}"
+
+# Refresh the elasticsearch retention policy local facts.
+elastic_retention_refresh: false

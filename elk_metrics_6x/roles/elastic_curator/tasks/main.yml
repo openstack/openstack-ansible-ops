@@ -30,6 +30,13 @@
   when:
       ansible_service_mgr != 'systemd'
 
+- name: Refresh local facts
+  setup:
+    filter: ansible_local
+    gather_subset: "!all"
+  tags:
+    - always
+
 - name: Ensure virtualenv is installed
   package:
     name: "{{ curator_distro_packages }}"

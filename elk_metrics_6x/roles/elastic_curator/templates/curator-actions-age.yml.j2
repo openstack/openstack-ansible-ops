@@ -15,10 +15,10 @@
 
 {% set action_items = [] -%}
 {# Delete index loop #}
-{% for key in elastic_beat_retention_policy_keys -%}
+{% for key in (ansible_local['elastic']['retention']['elastic_beat_retention_policy_keys'] | from_yaml) -%}
 {%   set delete_indices = {} -%}
 {# Total retention size in days #}
-{%   set _index_retention = hostvars[inventory_hostname]['elastic_' + key + '_retention'] -%}
+{%   set _index_retention = ansible_local['elastic']['retention']['elastic_' + key + '_retention'] -%}
 {%   set index_retention = ((_index_retention | int) > 0) | ternary(_index_retention, 1) | int %}
 {%   set _ = delete_indices.update(
    {
