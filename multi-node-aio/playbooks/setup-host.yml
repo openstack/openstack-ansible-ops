@@ -333,37 +333,49 @@
         autostart: yes
       with_dict: "{{ mnaio_host_networks }}"
 
-    - name: Locate the largest writable data disk if mnaio_data_disk is not set
-      shell: >
-        lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | awk '/d[b-z]+ disk +0/{ if ($4>m){m=$4; d=$1}}; END{print d}'
-      register: lsblk
-      changed_when: false
+    - name: If mnaio_data_disk is not set, discover and set it if possible
       when:
         - mnaio_data_disk is undefined
+      block:
+        - name: Locate the largest writable data disk if mnaio_data_disk is not set
+          shell: >
+            lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | awk '/d[b-z]+ disk +0/{ if ($4>m){m=$4; d=$1}}; END{print d}'
+          register: lsblk
+          changed_when: false
 
-    - name: Setup the data disk partition
-      parted:
-        device: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}"
-        label: gpt
-        number: 1
-        name: data1
-        state: present
-      register: _add_partition
+        - name: Set mnaio_data_disk fact if a suitable disk was found
+          set_fact:
+            mnaio_data_disk: "{{ lsblk.stdout | trim }}"
+          when:
+            - lsblk.stdout | trim != ''
 
-    - name: Prepare the data disk file system
-      filesystem:
-        fstype: ext4
-        dev: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
-        force: yes
+    - name: Setup the data disk if one was set or found
       when:
-        - _add_partition is changed
+        - mnaio_data_disk is defined
+      block:
+        - name: Setup the data disk partition
+          parted:
+            device: "/dev/{{ mnaio_data_disk }}"
+            label: gpt
+            number: 1
+            name: data1
+            state: present
+          register: _add_partition
 
-    - name: Mount the data disk
-      mount:
-        src: "/dev/{{ mnaio_data_disk | default(lsblk.stdout) }}1"
-        path: /data
-        state: mounted
-        fstype: ext4
+        - name: Prepare the data disk file system
+          filesystem:
+            fstype: ext4
+            dev: "/dev/{{ mnaio_data_disk }}1"
+            force: yes
+          when:
+            - _add_partition is changed
+
+        - name: Mount the data disk
+          mount:
+            src: "/dev/{{ mnaio_data_disk }}1"
+            path: /data
+            state: mounted
+            fstype: ext4
 
     - name: Create the images directory
       file:
