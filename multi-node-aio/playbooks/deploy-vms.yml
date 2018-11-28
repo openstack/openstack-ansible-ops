@@ -177,6 +177,8 @@
       copy:
         content: "{{ item.1.get_xml }}"
         dest: "/etc/libvirt/qemu/{{ item.1.item }}.xml"
+      when:
+        - server_vm | default(false) | bool
       delegate_to: "{{ item.0 }}"
       with_nested:
         - "{{ groups['vm_hosts'] }}"
@@ -309,8 +311,8 @@
         state: restarted
 
 
-- name: Make space for swift and cinder volumes
-  hosts: cinder_hosts:swift_hosts
+- name: Make space for swift/cinder/ceph volumes
+  hosts: cinder_hosts:swift_hosts:ceph_hosts:&vm_servers
   gather_facts: "{{ gather_facts | default(true) }}"
   environment: "{{ deployment_environment_variables | default({}) }}"
   tags:
@@ -348,27 +350,27 @@
         _force_format_disks: "{{ (_remove_mounts is changed) or (_remove_lvs is changed) }}"
 
 - name: Setup cinder host volume
-  hosts: cinder_hosts
+  hosts: cinder_hosts:&vm_servers
   gather_facts: "{{ gather_facts | default(true) }}"
   environment: "{{ deployment_environment_variables | default({}) }}"
   tags:
     - deploy-vms
   tasks:
-    - name: Create cinder-volumes lv
+    - name: Create cinder-volumes LV
       lvol:
         vg: vmvg00
         lv: cinder-volumes00
         size: "100%FREE"
         shrink: false
 
-    - name: Create data cinder-volumes group
+    - name: Create data cinder-volumes VG
       lvg:
         vg: cinder-volumes
         pvs: "/dev/vmvg00/cinder-volumes00"
 
 
 - name: Setup swift host volume
-  hosts: swift_hosts
+  hosts: swift_hosts:&vm_servers
   gather_facts: "{{ gather_facts | default(true) }}"
   environment: "{{ deployment_environment_variables | default({}) }}"
   tags:
@@ -405,3 +407,30 @@
         - disk1
         - disk2
         - disk3
+
+- name: Setup ceph OSD volumes
+  hosts: ceph_hosts:&vm_servers
+  gather_facts: "{{ gather_facts | default(true) }}"
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - deploy-vms
+  tasks:
+    - name: Create ceph OSD journal LV's
+      lvol:
+        vg: vmvg00
+        lv: "{{ item }}"
+        size: "{{ ceph_journal_size }}"
+      with_items:
+        - journal1
+        - journal2
+        - journal3
+
+    - name: Create ceph OSD disk LV's
+      lvol:
+        vg: vmvg00
+        lv: "{{ item }}"
+        size: "{{ ceph_osds_size }}"
+      with_items:
+        - data1
+        - data2
+        - data3

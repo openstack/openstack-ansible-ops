@@ -70,7 +70,12 @@ global_overrides:
           - cinder_api
           - cinder_volume
           - nova_compute
+{% if (osa_enable_object_storage | bool) and not (enable_ceph_storage | bool) %}
           - swift_proxy
+{% endif %}
+{% if enable_ceph_storage | bool %}
+          - ceph-osd
+{% endif %}
     - network:
         container_bridge: "br-lbaas"
         container_type: "veth"
@@ -83,7 +88,7 @@ global_overrides:
           - "octavia-worker"
           - "octavia-housekeeping"
           - "octavia-health-monitor"
-{% if osa_enable_object_storage | bool %}
+{% if (osa_enable_object_storage | bool) and not (enable_ceph_storage | bool) %}
   swift:
     part_power: 8
     storage_network: 'br-storage'
@@ -103,7 +108,7 @@ global_overrides:
 ###
 ### Anchors
 ###
-{% if osa_enable_block_storage | bool %}
+{% if (osa_enable_block_storage | bool) and not (enable_ceph_storage | bool) %}
 cinder_block: &cinder_block
 {%   for host in groups['cinder_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
@@ -159,7 +164,7 @@ log_block: &log_block
 {% endfor %}
 
 
-{% if osa_enable_object_storage | bool %}
+{% if (osa_enable_object_storage | bool) and not (enable_ceph_storage | bool) %}
 swift_block: &swift_block
 {%   for host in groups['swift_hosts'] %}
   {{ hostvars[host]['server_hostname'] }}:
@@ -167,6 +172,30 @@ swift_block: &swift_block
     container_vars:
       container_tech: "{{ default_container_tech }}"
 {%   endfor %}
+{% endif %}
+
+
+{% if enable_ceph_storage | bool %}
+ceph_osds_block: &ceph_osds_block
+{% for host in groups['ceph_hosts'] %}
+  {{ hostvars[host]['server_hostname'] }}:
+    ip: {{ hostvars[host]['server_networks']['mgmt']['address'].split('/')[0] }}
+    container_vars:
+      container_tech: "{{ default_container_tech }}"
+      lvm_volumes:
+        - data: data1
+          data_vg: vmvg00
+          journal: journal1
+          journal_vg: vmvg00
+        - data: data2
+          data_vg: vmvg00
+          journal: journal2
+          journal_vg: vmvg00
+        - data: data3
+          data_vg: vmvg00
+          journal: journal3
+          journal_vg: vmvg00
+{% endfor %}
 {% endif %}
 
 
@@ -188,6 +217,17 @@ log_hosts: *log_block
 haproxy_hosts: *loadbalancer_block
 {% endif %}
 
+{% if enable_ceph_storage | bool %}
+# Ceph Mon Hosts
+ceph-mon_hosts: *infra_block
+
+# Ceph RGW Hosts
+ceph-rgw_hosts: *infra_block
+
+# Ceph OSDs Hosts
+ceph-osd_hosts: *ceph_osds_block
+{% endif %}
+
 ###
 ### OpenStack
 ###
@@ -203,12 +243,14 @@ os-infra_hosts: *infra_block
 identity_hosts: *infra_block
 {% endif %}
 
-{% if osa_enable_block_storage | bool %}
+{% if (osa_enable_block_storage | bool) or (enable_ceph_storage | bool)  %}
 # cinder api services
 storage-infra_hosts: *infra_block
 
+{% if not (enable_ceph_storage | bool) %}
 # cinder storage host (LVM-backed)
 storage_hosts: *cinder_block
+{% endif %}
 {% endif %}
 
 {% if osa_enable_image | bool %}
@@ -258,7 +300,7 @@ metrics_hosts: *infra_block
 metering-compute_hosts: *compute_block
 {% endif %}
 
-{% if osa_enable_object_storage | bool %}
+{% if (osa_enable_object_storage | bool) and not (enable_ceph_storage | bool) %}
 # swift storage hosts
 swift_hosts: *swift_block
 

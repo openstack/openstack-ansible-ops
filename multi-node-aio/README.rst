@@ -107,12 +107,11 @@ to change this password please edit the pre-seed files.
 Set an external inventory used for the MNAIO:
   ``MNAIO_INVENTORY=${MNAIO_INVENTORY:-playbooks/inventory}``
 
-
 Set to instruct the preseed what the default network is expected to be:
   ``DEFAULT_NETWORK="${DEFAULT_NETWORK:-eth0}"``
 
 Set the VM disk size in gigabytes:
-  ``VM_DISK_SIZE="${VM_DISK_SIZE:-252}"``
+  ``VM_DISK_SIZE="${VM_DISK_SIZE:-92160}"``
 
 Instruct the system do all of the required host setup:
   ``SETUP_HOST=${SETUP_HOST:-true}``
@@ -181,7 +180,7 @@ Instruct the system to use a set amount of ram for compute VM type:
   ``COMPUTE_VM_SERVER_RAM=${COMPUTE_VM_SERVER_RAM:-8196}``
 
 Instruct the system to use a set amount of ram for infra VM type:
-  ``INFRA_VM_SERVER_RAM=${INFRA_VM_SERVER_RAM:-8196}``
+  ``INFRA_VM_SERVER_RAM=${INFRA_VM_SERVER_RAM:-16384}``
 
 Instruct the system to use a set amount of ram for load balancer VM type:
   ``LOADBALANCER_VM_SERVER_RAM=${LOADBALANCER_VM_SERVER_RAM:-1024}``
@@ -198,6 +197,8 @@ Instruct the system where to obtain iPXE kernels (looks for ipxe.lkrn, ipxe.efi,
 Instruct the system to use a customized iPXE script during boot of VMs:
   ``IPXE_PATH_URL=${IPXE_PATH_URL:-''}``
 
+Instruct the system to use CEPH block & object storage instead of the default LVM/swift:
+  ``ENABLE_CEPH_STORAGE=${ENABLE_CEPH_STORAGE:-false}``
 
 Re-kicking VM(s)
 ----------------
@@ -295,4 +296,12 @@ available via a URL, they can be downloaded and used on a fresh host as follows.
 
     # Then kick off the VM's from those images
     ansible-playbook ${ANSIBLE_PARAMETERS} playbooks/deploy-vms.yml
+
+Using Ceph-backed Block and Object Storage
+------------------------------------------
+
+To make use of Ceph in the environment, set ``ENABLE_CEPH_STORAGE`` to
+``true``. This will disable the use of Swift as the Object Storage back-end
+and disable the use of LVM as the Block Storage back-end, replacing both of
+these with Ceph services.
 
