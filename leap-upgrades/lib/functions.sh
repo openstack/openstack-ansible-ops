@@ -415,7 +415,7 @@ function run_items {
 function clone_release {
     # If the git directory is not present clone the source into place at the given directory
     if [[ ! -d "/opt/leap42/openstack-ansible-base/.git" ]]; then
-      git clone https://git.openstack.org/openstack/openstack-ansible "/opt/leap42/openstack-ansible-base"
+      git clone ${OSA_REPO_URL} "/opt/leap42/openstack-ansible-base"
     fi
 
     # The clone release function clones everything from upstream into the leap42 directory as needed.

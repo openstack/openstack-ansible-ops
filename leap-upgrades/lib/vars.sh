@@ -19,6 +19,7 @@ export DEBUG="${DEBUG:-TRUE}"
 export DEBUG_PATH="${DEBUG_PATH:-/tmp/run_debug}"
 
 ## Script Vars ---------------------------------------------------------------
+export OSA_REPO_URL="${OSA_REPO_URL:-https://git.openstack.org/openstack/openstack-ansible}"
 export JUNO_RELEASE="${JUNO_RELEASE:-eol-juno}"
 export KILO_RELEASE="${KILO_RELEASE:-11.2.17}"  # eol-kilo has swift in upper-constraints, preventing venv building
 export LIBERTY_RELEASE="${LIBERTY_RELEASE:-liberty-eol}"
