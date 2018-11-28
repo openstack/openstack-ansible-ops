@@ -14,12 +14,12 @@
 
 - project:
     templates:
-      - openstack-ansible-role-jobs
       - check-requirements
       - publish-openstack-docs-pti
       - release-notes-jobs-python3
     check:
       jobs:
+        - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_6x-centos-7
         - openstack-ansible-ops:elk_metrics_6x-centos-7-clustered
         - openstack-ansible-ops:elk_metrics_6x-opensuse-423
@@ -35,5 +35,6 @@
         - openstack-ansible-ops:osquery-ubuntu-bionic-clustered
     gate:
       jobs:
+        - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
         - openstack-ansible-ops:osquery-ubuntu-bionic
