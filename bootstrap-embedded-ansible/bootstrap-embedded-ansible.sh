@@ -23,9 +23,9 @@ if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
   if [  ${ID} = "ubuntu" ]; then
     apt-get update
     apt-get -y install python-virtualenv
-  elif [  ${ID} = "opensuse" ]; then
+  elif [  ${ID} = "opensuse" ] || [ ${ID} = "suse" ]; then
     zypper install -y python-virtualenv
-  elif [ ${ID} = "centos" ] || [ ${ID} ="redhat" ]; then
+  elif [ ${ID} = "centos" ] || [ ${ID} = "redhat" ] || [ ${ID} = "rhel" ]; then
     yum install -y python-virtualenv
   else
     echo "Unknown operating system"
