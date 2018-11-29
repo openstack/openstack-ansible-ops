@@ -61,7 +61,7 @@ if [[ ! -d "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins" ]]; th
   mkdir -p "${ANSIBLE_EMBED_HOME}/repositories"
   git clone https://git.openstack.org/openstack/openstack-ansible-plugins "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins"
   pushd "${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins"
-    git checkout cef7946b3b3b3e4d02406c228741985a94b72cff  # HEAD of master from 20-06-18
+    git checkout 761338d09c4cfb356c53fbd0d28a0e55a4776da0  # HEAD of master from 29-11-18
   popd
 fi
 
@@ -94,7 +94,12 @@ EOF
   export USER_VARS="$(for i in $(ls -1 /etc/openstack_deploy/user_*secret*.yml); do echo -n "-e@$i "; done)"
   OPTS+=('USER_VARS')
   echo "env USER_VARS set"
-  echo "Extra users variables can be expanded by including the option \$USER_VARS on a playbook run."
+
+  export USER_ALL_VARS="$(for i in $(ls -1 /etc/openstack_deploy/user_*.yml); do echo -n "-e@$i "; done)"
+  OPTS+=('USER_ALL_VARS')
+  echo "env USER_ALL_VARS set"
+
+  echo "Extra users variables can be expanded by including the option \$USER_VARS or \$USER_ALL_VARS on a playbook run."
 
   export ANSIBLE_INVENTORY="${ANSIBLE_EMBED_HOME}/inventory/openstack_inventory.sh"
   OPTS+=('ANSIBLE_INVENTORY')
@@ -116,6 +121,22 @@ echo "env ANSIBLE_ACTION_PLUGINS set"
 export ANSIBLE_CONNECTION_PLUGINS="${ANSIBLE_EMBED_HOME}/repositories/openstack-ansible-plugins/connection/"
 OPTS+=('ANSIBLE_CONNECTION_PLUGINS')
 echo "env ANSIBLE_CONNECTION_PLUGINS set"
+
+export ANSIBLE_TRANSPORT="${ANSIBLE_TRANSPORT:-ssh}"
+OPTS+=('ANSIBLE_TRANSPORT')
+echo "env ANSIBLE_TRANSPORT set"
+
+export ANSIBLE_SSH_PIPELINING="${ANSIBLE_SSH_PIPELINING:-True}"
+OPTS+=('ANSIBLE_SSH_PIPELINING')
+echo "env ANSIBLE_SSH_PIPELINING set"
+
+export ANSIBLE_PIPELINING="${ANSIBLE_SSH_PIPELINING}"
+OPTS+=('ANSIBLE_SSH_PIPELINING')
+echo "env ANSIBLE_SSH_PIPELINING set"
+
+export ANSIBLE_SSH_RETRIES="${ANSIBLE_SSH_RETRIES:-5}"
+OPTS+=('ANSIBLE_SSH_RETRIES')
+echo "env ANSIBLE_SSH_RETRIES set"
 
 source ${ANSIBLE_EMBED_HOME}/bin/activate
 echo "Embedded Ansible has been activated. Run 'deactivate' to leave the embedded environment".
