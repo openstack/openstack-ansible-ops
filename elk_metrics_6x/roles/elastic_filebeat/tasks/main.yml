@@ -43,7 +43,7 @@
 
 - name: Ensure beat is installed (aarch64)
   apt:
-    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/filebeat-6.4.1-arm64.deb'
+    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/filebeat-6.5.0-arm64.deb'
   when:
     - ansible_pkg_mgr == 'apt'
     - ansible_architecture == 'aarch64'

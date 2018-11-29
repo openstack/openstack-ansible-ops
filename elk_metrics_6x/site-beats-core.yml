@@ -35,3 +35,5 @@
 - import_playbook: fieldRefresh.yml
   vars:
     index_pattern: filebeat-*
+
+- import_playbook: installJournalbeat.yml

@@ -25,6 +25,14 @@
   tags:
     - always
 
+- name: Uninstall legacy journalbeat
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/systemd/system/journalbeat.service
+    - /usr/local/bin/journalbeat
+
 - name: Ensure beat is installed
   package:
     name: "{{ journalbeat_distro_packages }}"
@@ -39,42 +47,16 @@
   tags:
     - package_install
 
-- name: create the system group
-  group:
-    name: "journalbeat"
-    state: "present"
-    system: "yes"
-
-- name: Create the journalbeat user
-  user:
-    name: "journalbeat"
-    group: "journalbeat"
-    comment: "journalbeat user"
-    shell: "/bin/false"
-    createhome: "yes"
-    home: "/usr/share/journalbeat"
-
-- name: Create journalbeat data path
-  file:
-    path: "{{ item }}"
-    state: directory
-    owner: "journalbeat"
-    group: "journalbeat"
-    mode: "0755"
-  with_items:
-    - "/usr/share/journalbeat"
-    - "/var/lib/journalbeat"
-    - "/etc/journalbeat"
-
-- name: Install journalbeat
-  shell: /opt/go1.10.1/go/bin/go get -v github.com/mheese/journalbeat
-  args:
-    creates: /usr/local/bin/journalbeat
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/opt/go1.10.1/go/bin"
-    GOPATH: /usr/local
+- name: Ensure beat is installed (aarch64)
+  apt:
+    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/journalbeat-6.5.0-arm64.deb'
+  when:
+    - ansible_pkg_mgr == 'apt'
+    - ansible_architecture == 'aarch64'
   notify:
-    - Enable and restart journalbeat
+    - Enable and restart heartbeat
+  tags:
+    - package_install
 
 - name: Create journalbeat systemd service config dir
   file:
@@ -95,7 +77,7 @@
   notify:
     - Enable and restart journalbeat
 
-- name: Drop journalbeat conf files
+- name: Drop journalbeat configs
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
@@ -105,30 +87,6 @@
       dest: "/etc/journalbeat/journalbeat.yml"
   notify:
     - Enable and restart journalbeat
-
-- name: Run the systemd service role
-  include_role:
-    name: systemd_service
-    private: true
-  vars:
-    systemd_service_enabled: "{{ ((elk_package_state | default('present')) != 'absent') | ternary(true, false) }}"
-    systemd_service_restart_changed: false
-    systemd_services:
-      - service_name: "journalbeat"
-        execstarts:
-          - /usr/local/bin/journalbeat
-            -c /etc/journalbeat/journalbeat.yml
-            -path.home /usr/share/journalbeat
-            -path.config /etc/journalbeat
-            -path.data /var/lib/journalbeat
-            -path.logs /var/log/beats
-        config_overrides:
-          Service:
-            EnvironmentFile: "-/etc/default/go1.10.1"
-          Unit:
-            Documentation: https://github.com/mheese/journalbeat/blob/master/README.md
-            Wants: network-online.target
-            After: network-online.target
 
 - include_tasks: journalbeat_setup.yml
   tags:

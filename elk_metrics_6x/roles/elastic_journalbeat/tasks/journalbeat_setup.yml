@@ -13,32 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Notice
-  debug:
-    msg: >-
-      The setup task for templates and dashboards is broken due to missing
-      configuration. Once the following issue
-      [ https://github.com/mheese/journalbeat/issues/136 ] is
-      resolved, this should be enabled.
-
-# - name: Load templates
-#   shell: >-
-#     /usr/local/bin/journalbeat -setup
-#     {{ item }}
-#     -E 'output.logstash.enabled=false'
-#     -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
-#     -E 'setup.template.enabled=true'
-#     -E 'setup.template.overwrite=true'
-#     -e -v
-#   with_items:
-#     - "--template"
-#     - "--pipelines"
-#     - "--machine-learning"
-#     - "--dashboards"
-#   register: templates
-#   until: templates is success
-#   retries: 5
-#   delay: 5
-#   run_once: true
-#   tags:
-#     - setup
+- name: Load templates
+  shell: >-
+    journalbeat setup
+    {{ item }}
+    -E 'output.logstash.enabled=false'
+    -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
+    -E 'setup.template.enabled=true'
+    -E 'setup.template.overwrite=true'
+    -e -v
+  with_items:
+    - "--template"
+    - "--pipelines"
+    - "--machine-learning"
+    - "--dashboards"
+  register: templates
+  until: templates is success
+  retries: 5
+  delay: 5
+  run_once: true
+  tags:
+    - setup
