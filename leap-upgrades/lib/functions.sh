@@ -197,7 +197,12 @@ function discover_code_version {
         get_openstack_release_file
     fi
 
-    if [[ ! -f "/etc/openstack-release" && ! -f "/etc/rpc-release" ]]; then
+    if [[ -f "/opt/leap42/openstack-release.leap" ]]; then
+        # if openstack-release.leap is found, then it is the source
+        # of truth for the original release being upgraded from
+        source /opt/leap42/openstack-release.leap
+        determine_openstack_release
+    elif [[ ! -f "/etc/openstack-release" && ! -f "/etc/rpc-release" ]]; then
         failure "No release file could be found."
         exit 99
     elif [[ ! -f "/etc/openstack-release" && -f "/etc/rpc-release" ]]; then
@@ -205,25 +210,29 @@ function discover_code_version {
         notice "You seem to be running Juno"
     else
         source /etc/openstack-release
-        case "${DISTRIB_RELEASE%%.*}" in
-            *11|eol-kilo)
-                export CODE_UPGRADE_FROM="KILO"
-                notice "You seem to be running Kilo"
-            ;;
-            *12|liberty-eol)
-                export CODE_UPGRADE_FROM="LIBERTY"
-                notice "You seem to be running Liberty"
-            ;;
-            *13|mitaka-eol)
-                export CODE_UPGRADE_FROM="MITAKA"
-                notice "You seem to be running Mitaka"
-            ;;
-            *14|newton-eol)
-                export CODE_UPGRADE_FROM="NEWTON"
-                notice "You seem to be running Newton"
-            ;;
-        esac
+        determine_openstack_release
     fi
+}
+
+function determine_openstack_release {
+    case "${DISTRIB_RELEASE%%.*}" in
+        *11|eol-kilo)
+           export CODE_UPGRADE_FROM="KILO"
+           notice "You seem to be running Kilo"
+        ;;
+        *12|liberty-eol)
+            export CODE_UPGRADE_FROM="LIBERTY"
+            notice "You seem to be running Liberty"
+        ;;
+        *13|mitaka-eol)
+            export CODE_UPGRADE_FROM="MITAKA"
+            notice "You seem to be running Mitaka"
+        ;;
+        *14|newton-eol)
+            export CODE_UPGRADE_FROM="NEWTON"
+            notice "You seem to be running Newton"
+        ;;
+    esac
 }
 
 function get_openstack_release_file {
@@ -338,6 +347,13 @@ function pre_flight {
     fi
 
     mkdir -p /opt/leap42/venvs
+
+    # Make a copy of the original origin release so that we know what the
+    # original version was in case it's overwritten later on so that we can
+    # resume from the proper release
+    if [[ ! -f "/opt/leap42/openstack-release.leap" ]]; then
+        cp /etc/openstack-release /opt/leap42/openstack-release.leap
+    fi
 
     # If the lxc backend store was not set halt and instruct the user to set it. In Juno we did more to detect the backend storage
     #  size than we do in later releases. While the auto-detection should still work it's best to have the deployer set the value
