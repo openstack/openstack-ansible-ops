@@ -100,14 +100,28 @@
     # See:
     # https://bugzilla.redhat.com/show_bug.cgi?id=1591617
     # https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1615337
+    # Exit codes:
+    # 0 - Fix already enabled
+    # 1 - Error
+    # 2 - Fix enabled by task (should show task as changed)
     - name: Apply workaround for older versions to make guestfish work
       shell: |
-        echo dash > /usr/lib/x86_64-linux-gnu/guestfs/supermin.d/zz-dash-packages
-        rm -rf /var/tmp/.guestfs*
+        set -e
+        TEST_FILE_PATH='/usr/lib/x86_64-linux-gnu/guestfs/supermin.d/zz-dash-packages'
+        if [[ ! -e ${TEST_FILE_PATH} ]] || ! grep -q dash ${TEST_FILE_PATH}; then
+          echo dash > ${TEST_FILE_PATH}
+          rm -rf /var/tmp/.guestfs*
+          exit 2
+        fi
+      args:
+        executable: /bin/bash
       when:
-        - "{{ (_libguestfs_version.stdout is version('1.38.1', '<')) or
-              ((_libguestfs_version.stdout is version('1.39.0', '>=')) and
-               (_libguestfs_version.stdout is version('1.39.1', '<'))) }}"
+        - (_libguestfs_version.stdout is version('1.38.1', '<')) or
+          ((_libguestfs_version.stdout is version('1.39.0', '>=')) and
+           (_libguestfs_version.stdout is version('1.39.1', '<')))
+      register: _libguestfs_fix
+      changed_when: _libguestfs_fix.rc == 2
+      failed_when: _libguestfs_fix.rc not in [0, 2]
 
     # If the host had already installed kvm_intel.ko without nested=1, then
     # re-load it now, honoring whatever is in qemu-system-x86.modprobe
@@ -118,6 +132,7 @@
     # 3 - Nested virt not available
     - name: Ensure that nested virtualization is enabled (if it is available)
       shell: |
+        set -e
         INTEL_NESTED=/sys/module/kvm_intel/parameters/nested
         if grep -q kvm_intel /proc/modules; then
           echo "Intel CPU found. Checking for nested virtualization capabilities."
