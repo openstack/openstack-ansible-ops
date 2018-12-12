@@ -131,7 +131,7 @@
           command: /opt/prepare-image-galera.sh
           register: _galera_prepare
 
-        # guestfissh does not always give a return code which indicates
+        # guestfish does not always give a return code which indicates
         # failure, so we look for our final stdout output as an indicator
         - name: Fail if the preparation script did not complete
           fail:

@@ -54,6 +54,10 @@ for cnt in $(ls -1 /tmp | grep galera_container); do
       master_gvwstate_path=${gvwstate_path}
       master_cnt=${cnt}
     fi
+  else
+    # if there is no gvwstate.dat file, then we will
+    # need to use my_uuid later to generate one
+    my_uuid=${uuid_map[$cnt]}
   fi
 
   # if a master container was found, overwrite the uuid
@@ -70,8 +74,15 @@ if [[ "${master_gvwstate_path:-none}" != "none" ]]; then
 elif [[ "${last_gvwstate_path:-none}" != "none" ]]; then
   cp ${last_gvwstate_path} ${tmp_gvwstate}
 else
-  echo "ERROR: No gvwstate.dat file was found. Cannot prepare galera cluster for cluster initialization."
-  exit 1
+  echo "No gvwstate.dat file was found. Attempting to put one together."
+cat > ${tmp_gvwstate}<< EOF
+my_uuid: ${my_uuid}
+#vwbeg
+view_id: 3 ${my_uuid} 3
+bootstrap: 0
+member: ${my_uuid} 0
+#vwend
+EOF
 fi
 member_num=$(awk '/^member: '${my_uuid}'/ {print $3}' ${tmp_gvwstate})
 
