@@ -7,5 +7,5 @@ The ``osa-differ`` script provides a report of detailed differences between two
 OpenStack-Ansible releases, including commits to OpenStack-Ansible, its
 independent roles, and the OpenStack projects it deploys.
 
-* `GitHub repository <https://github.com/major/osa_differ>`_
+* `GitHub repository <https://github.com/rcbops/osa_differ>`_
 * `PyPi package <https://pypi.org/project/osa_differ>`_
