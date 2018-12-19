@@ -23,3 +23,19 @@
   include_vars: "data-node-variables.yml"
   tags:
     - always
+
+- name: Ensure local facts directory exists
+  file:
+    dest: "/etc/ansible/facts.d"
+    state: directory
+    group: "root"
+    owner: "root"
+    mode:  "0755"
+    recurse: no
+
+- name: Initialize local facts
+  ini_file:
+    dest: "/etc/ansible/facts.d/elastic.fact"
+    section: "setup"
+    option: cacheable
+    value: true

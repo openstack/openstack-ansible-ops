@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Refresh local facts
+  setup:
+    filter: ansible_local
+    gather_subset: "!all"
+  tags:
+    - always
+
 - name: Load templates
   shell: >-
     journalbeat setup
@@ -28,9 +35,26 @@
     - "--machine-learning"
     - "--dashboards"
   register: templates
+  environment:
+    no_proxy: "{{ hostvars[groups['kibana'][0]]['ansible_host'] }}"
   until: templates is success
   retries: 5
   delay: 5
   run_once: true
+  when:
+    - ((ansible_local['elastic']['setup']['journalbeat_loaded_templates'] is undefined) or
+       (not (ansible_local['elastic']['setup']['journalbeat_loaded_templates'] | bool))) or
+      (elk_package_state | default('present')) == "latest"
+  tags:
+    - setup
+
+- name: Set template fact
+  ini_file:
+    dest: "/etc/ansible/facts.d/elastic.fact"
+    section: "setup"
+    option: journalbeat_loaded_templates
+    value: true
+  when:
+    - templates is changed
   tags:
     - setup
