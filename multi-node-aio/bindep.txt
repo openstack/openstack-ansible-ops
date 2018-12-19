@@ -2,7 +2,7 @@
 # before the execution of any tests.
 #
 # See the following for details:
-#  - http://docs.openstack.org/infra/bindep/
+#  - https://docs.openstack.org/infra/bindep/
 #  - https://git.openstack.org/cgit/openstack-infra/bindep
 #
 # Even if the role does not make use of this facility, it
