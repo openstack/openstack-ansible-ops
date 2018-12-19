@@ -67,12 +67,12 @@
         option: "cluster_nodes"
         value: "{{ groups['elastic-logstash'] | length }}"
 
-    - name: Set retention policy fact
+    - name: Set retention policy keys fact
       ini_file:
         dest: "/etc/ansible/facts.d/elastic.fact"
         section: "retention"
         option: "elastic_beat_retention_policy_keys"
-        value: "{{ elastic_beat_retention_policy_hosts.keys() | list }}"
+        value: "{{ elastic_beat_retention_policy_hosts.keys() | list | sort }}"
 
     - name: Set size fact
       ini_file:
@@ -99,4 +99,6 @@
   when:
       - (ansible_local['elastic']['retention']['cluster_nodes'] is undefined) or
         ((groups['elastic-logstash'] | length) != (ansible_local['elastic']['retention']['cluster_nodes'] | int)) or
+        ((ansible_local['elastic']['retention']['elastic_beat_retention_policy_keys'] is defined) and
+         ((ansible_local['elastic']['retention']['elastic_beat_retention_policy_keys'] | from_yaml) != (elastic_beat_retention_policy_hosts.keys() | list | sort))) or
         (elastic_retention_refresh | bool)

@@ -16,7 +16,8 @@
   become: true
 
   vars:
-    elastic_refresh_interval: "{{ (elasticsearch_number_of_replicas | int) * 5 }}"
+    _elastic_refresh_interval: "{{ (elasticsearch_number_of_replicas | int) * 5 }}"
+    elastic_refresh_interval: "{{ (_elastic_refresh_interval > 0) | ternary(30, _elastic_refresh_interval) }}"
 
   vars_files:
     - vars/variables.yml
@@ -47,7 +48,7 @@
                 mapping:
                   total_fields:
                     limit: "10000"
-                refresh_interval: "5s"
+                refresh_interval: "{{ elastic_refresh_interval }}"
         - name: "_all/_settings?preserve_existing=true"
           index_options:
             index.queries.cache.enabled: "true"
@@ -63,7 +64,6 @@
         url: http://127.0.0.1:9200/_template/basic-index-template
         method: HEAD
       failed_when: false
-      register: check_basicIndexTemplate
       register: check_basicIndexTemplate
       until: check_basicIndexTemplate is success
       retries: 3
