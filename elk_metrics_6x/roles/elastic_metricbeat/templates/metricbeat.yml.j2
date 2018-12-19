@@ -458,7 +458,7 @@ metricbeat.modules:
 {% if (prometheus_enabled | default(false) | bool) and (prometheus_config is defined) %}
 {% for prometheus in prometheus_config %}
 - module: prometheus
-  metricsets: [{% for mset in prometheus.metricsets|default("collector") %}"{{ mset }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  metricsets: [{% for mset in prometheus.metricsets|default(["collector"]) %}"{{ mset }}"{% if not loop.last %},{% endif %}{% endfor %}]
   enabled: {{ prometheus.enabled | default('true') }}
   period: {{ prometheus.period | default("10s") }}
   hosts: [{% for phost in prometheus.hosts %}"{{ phost }}"{% if not loop.last %},{% endif %}{% endfor %}]
@@ -472,7 +472,7 @@ metricbeat.modules:
   metricsets: ["collector"]
   enabled: 'true'
   period: "10s"
-  hosts: [{% for phost in ceph_stats_hosts %}"{{ phost | regex_replace(':\\d+$', '') }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  hosts: [{% for phost in ceph_stats_hosts %}"{{ phost | regex_replace(':\\d+$', '') }}:9283"{% if not loop.last %},{% endif %}{% endfor %}]
   metrics_path: "/metrics"
   namespace: ceph
 #
