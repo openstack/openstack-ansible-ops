@@ -8,7 +8,7 @@ output.elasticsearch:
   # Scheme and port can be left out and will be set to the default (http and 9200)
   # In case you specify and additional path, the scheme is required: http://localhost:9200/path
   # IPv6 addresses should always be defined as: https://[2001:db8::1]:9200
-  hosts: {{ data_hosts | to_json }}
+  hosts: {{ (data_hosts | default([])) | to_json }}
 
   # Set gzip compression level.
   compression_level: 3
@@ -99,7 +99,7 @@ output.logstash:
   enabled: true
 
   # The Logstash hosts
-  hosts: {{ data_hosts | to_json }}
+  hosts: {{ (data_hosts | default([])) | to_json }}
 
   # Number of workers per Logstash host.
   worker: 1
@@ -393,7 +393,7 @@ xpack.monitoring.elasticsearch:
   # Scheme and port can be left out and will be set to the default (http and 9200)
   # In case you specify and additional path, the scheme is required: http://localhost:9200/path
   # IPv6 addresses should always be defined as: https://[2001:db8::1]:9200
-  hosts: {{ data_hosts | to_json }}
+  hosts: {{ (data_hosts | default([])) | to_json }}
 
   # Set gzip compression level.
   compression_level: 9

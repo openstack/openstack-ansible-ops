@@ -11,7 +11,9 @@
 ############################# Heartbeat ######################################
 {%   set icmp_hosts = [] %}
 {%   for host_item in groups['all'] %}
-{%     set _ = icmp_hosts.extend([hostvars[host_item]['ansible_host']]) %}
+{%     if hostvars[host_item]['ansible_host'] is defined %}
+{%       set _ = icmp_hosts.extend([hostvars[host_item]['ansible_host']]) %}
+{%     endif %}
 {%   endfor %}
 # Configure monitors
 heartbeat.monitors:
@@ -28,7 +30,7 @@ heartbeat.monitors:
   schedule: '@every 30s' # every 30 seconds from start of beat
 
   # List of hosts to ping
-  hosts: {{ icmp_hosts | to_json }}
+  hosts: {{ (icmp_hosts | default([])) | to_json }}
   # Configure IP protocol types to ping on if hostnames are configured.
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
   ipv4: true
@@ -103,7 +105,7 @@ heartbeat.monitors:
   #     Using `tls`/`ssl`, an SSL connection is established. If no ssl is configured,
   #     system defaults will be used (not supported on windows).
   #     If `port` is missing in url, the ports setting is required.
-  hosts: {{ hosts | to_json }}
+  hosts: {{ (hosts | default([])) | to_json }}
 
   # Configure IP protocol types to ping on if hostnames are configured.
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
@@ -169,7 +171,7 @@ heartbeat.monitors:
   schedule: '@every 60s' # every 30 seconds from start of beat
 
   # Configure URLs to ping
-  urls: {{ hosts | to_json }}
+  urls: {{ (hosts | default([])) | to_json }}
 
   # Configure IP protocol types to ping on if hostnames are configured.
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
