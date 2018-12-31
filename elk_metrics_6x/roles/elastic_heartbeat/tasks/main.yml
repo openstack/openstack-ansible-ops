@@ -88,9 +88,14 @@
   notify:
     - Enable and restart heartbeat
 
-- include_tasks: heartbeat_setup.yml
-  tags:
-    - setup
+- name: Run the beat setup role
+  include_role:
+    name: elastic_beat_setup
+    private: true
+  when:
+    - (groups['kibana'] | length) > 0
+  vars:
+    elastic_beat_name: "heartbeat"
 
 - name: Force beat handlers
   meta: flush_handlers

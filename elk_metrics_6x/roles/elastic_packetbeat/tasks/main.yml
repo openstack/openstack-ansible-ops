@@ -73,9 +73,14 @@
   notify:
     - Enable and restart packetbeat
 
-- include_tasks: packetbeat_setup.yml
-  tags:
-    - setup
+- name: Run the beat setup role
+  include_role:
+    name: elastic_beat_setup
+    private: true
+  when:
+    - (groups['kibana'] | length) > 0
+  vars:
+    elastic_beat_name: "packetbeat"
 
 - name: Force beat handlers
   meta: flush_handlers

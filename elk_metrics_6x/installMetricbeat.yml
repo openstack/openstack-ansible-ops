@@ -24,8 +24,28 @@
 
   roles:
     - role: elastic_metricbeat
+
+  tags:
+    - beat-install
+
+- name: Setup metricbeat rollup
+  hosts: elastic-logstash[0]
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  roles:
     - role: elastic_rollup
       index_name: metricbeat
 
   tags:
-    - beat-install
+    - metricbeat
+
+- import_playbook: fieldRefresh.yml
+  vars:
+    index_pattern: metricbeat-*

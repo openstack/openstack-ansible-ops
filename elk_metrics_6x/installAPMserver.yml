@@ -29,3 +29,21 @@
 
   tags:
     - apm-server
+
+- name: Setup apm-server rollup
+  hosts: elastic-logstash[0]
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  roles:
+    - role: elastic_rollup
+      index_name: apm
+
+  tags:
+    - apm-server

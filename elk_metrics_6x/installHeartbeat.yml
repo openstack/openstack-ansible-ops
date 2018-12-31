@@ -38,8 +38,28 @@
 
   roles:
     - role: elastic_heartbeat
+
+  tags:
+    - beat-install
+
+- name: Setup heartbeat rollup
+  hosts: elastic-logstash[0]
+  become: true
+  vars:
+    haproxy_ssl: false
+
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  roles:
     - role: elastic_rollup
       index_name: heartbeat
 
   tags:
-    - beat-install
+    - heartbeat
+
+- import_playbook: fieldRefresh.yml
+  vars:
+    index_pattern: heartbeat-*

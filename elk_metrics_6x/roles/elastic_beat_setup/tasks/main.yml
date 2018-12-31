@@ -13,6 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Check for coordination_nodes var
+  fail:
+    msg: >-
+      To use this role the variable `coordination_nodes` must be defined.
+  when:
+    - coordination_nodes is undefined
+
+- name: Check for elastic_beat_name var
+  fail:
+    msg: >-
+      To use this role the variable `elastic_beat_name` must be defined.
+  when:
+    - elastic_beat_name is undefined
+
 - name: Refresh local facts
   setup:
     filter: ansible_local
@@ -22,28 +36,21 @@
 
 - name: Load templates
   shell: >-
-    journalbeat setup
+    {{ elastic_beat_name }} setup
     {{ item }}
-    -E 'output.logstash.enabled=false'
-    -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
-    -E 'setup.template.enabled=true'
-    -E 'setup.template.overwrite=true'
+    {{ elastic_beat_setup_options }}
     -e -v
-  with_items:
-    - "--template"
-    - "--pipelines"
-    - "--machine-learning"
-    - "--dashboards"
+  with_items: "{{ elastic_setup_flags }}"
   register: templates
   environment:
-    no_proxy: "{{ hostvars[groups['kibana'][0]]['ansible_host'] }}"
+    no_proxy: "{{ elastic_beat_kibana_host }}"
   until: templates is success
   retries: 5
   delay: 5
   run_once: true
   when:
-    - ((ansible_local['elastic']['setup']['journalbeat_loaded_templates'] is undefined) or
-       (not (ansible_local['elastic']['setup']['journalbeat_loaded_templates'] | bool))) or
+    - ((ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] is undefined) or
+       (not (ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] | bool))) or
       (elk_package_state | default('present')) == "latest"
   tags:
     - setup
@@ -52,7 +59,7 @@
   ini_file:
     dest: "/etc/ansible/facts.d/elastic.fact"
     section: "setup"
-    option: journalbeat_loaded_templates
+    option: "{{ elastic_beat_name + '_loaded_templates' }}"
     value: true
   when:
     - templates is changed

@@ -121,9 +121,14 @@ master_nodes: |-
   {{ nodes }}
 master_node_count: "{{ master_nodes | length }}"
 
-coordination_nodes: >-
+coordination_nodes: |-
+  {% if (groups['kibana'] | length) > 0 %}
+  {%   set c_nodes = groups['kibana'] %}
+  {% else %}
+  {%   set c_nodes = groups['elastic-logstash'] %}
+  {% endif %}
   {{
-    (groups['kibana'] | map('extract', hostvars, 'ansible_host') | list)
+    (c_nodes | map('extract', hostvars, 'ansible_host') | list)
       | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port)
       | list
   }}

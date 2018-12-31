@@ -137,7 +137,9 @@ apm-server:
 {{ elk_macros.setup_template('apm', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
 
 #============================== Kibana =====================================
-{{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] + ':' + kibana_port|string) }}
+{% if (groups['kibana'] | length) > 0 %}
+{{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ kibana_port) }}
+{% endif %}
 
 #================================ Logging ======================================
 {{ elk_macros.beat_logging('apm-server') }}
