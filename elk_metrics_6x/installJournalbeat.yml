@@ -56,11 +56,14 @@
       tags:
         - always
 
+    - name: Halt this playbook if no journal is found
+      meta: end_play
+      when:
+        - not (journal_dir.stat.exists | bool) or
+          (ansible_service_mgr != 'systemd')
+
   roles:
     - role: elastic_journalbeat
-      when:
-        - journal_dir.stat.exists | bool
-        - ansible_service_mgr == 'systemd'
 
   tags:
     - beat-install
@@ -76,11 +79,22 @@
 
   environment: "{{ deployment_environment_variables | default({}) }}"
 
+  pre_tasks:
+    - name: Check for journal directory
+      stat:
+        path: /var/log/journal
+      register: journal_dir
+      tags:
+        - always
+
+    - name: Halt this playbook if no journal is found
+      meta: end_play
+      when:
+        - not (journal_dir.stat.exists | bool) or
+          (ansible_service_mgr != 'systemd')
+
   roles:
     - role: elastic_rollup
-      when:
-        - journal_dir.stat.exists | bool
-        - ansible_service_mgr == 'systemd'
       index_name: journalbeat
 
   tags:
