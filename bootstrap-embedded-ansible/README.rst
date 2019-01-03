@@ -23,3 +23,21 @@ With the script sourced, the ansible environment will create a virtual environme
 `${HOME}/ansible_venv` if it does not already exist.
 
 To leave the embedded ansible environment run the function `deactivate`.
+
+
+Options
+^^^^^^^
+
+All options are passed in using environment variables.
+
+ANSIBLE_VERSION:
+  Allows for the Ansible XXX to be overridden. When set the full ansible version is required.
+
+ANSIBLE_EMBED_HOME:
+  Allows for the Ansible XXX to be overridden. When set the full path is required.
+
+ANSIBLE_ROLE_REQUIREMENTS:
+  Allows for the Ansible XXX to be overridden. When set the full path to the role requirements file is required.
+
+ANSIBLE_PYTHON_REQUIREMENTS:
+  Allows for the Ansible XXX to be overridden. When set the full path to the python requirements file is required.

@@ -1,0 +1,17 @@
+---
+- name: config_template
+  scm: git
+  src: https://git.openstack.org/openstack/ansible-config_template
+  version: d97279293d09ab3cae6e20119662029d6b64b3b7
+- name: plugins
+  scm: git
+  src: https://git.openstack.org/openstack/openstack-ansible-plugins
+  version: 7fd6dd21123f162091631d87bf1db8fb7700fcda
+- name: systemd_service
+  scm: git
+  src: https://git.openstack.org/openstack/ansible-role-systemd_service
+  version: 86ad639f4171b0c01bba030ebc3fd96ec020aa45
+- name: systemd_mount
+  scm: git
+  src: https://git.openstack.org/openstack/ansible-role-systemd_mount
+  version: master

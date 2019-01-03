@@ -16,7 +16,6 @@
 - name: Run the systemd service role
   include_role:
     name: systemd_service
-    private: true
   vars:
     systemd_service_restart_changed: false
     systemd_services:

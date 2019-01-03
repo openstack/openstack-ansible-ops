@@ -28,7 +28,6 @@
 - name: Run the systemd service role
   include_role:
     name: redis
-    private: true
 
 # install kolide fleet server
 - include_tasks: fleetServerInstall.yml

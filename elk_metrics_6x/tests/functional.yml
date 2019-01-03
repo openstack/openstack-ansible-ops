@@ -26,6 +26,9 @@
     ANSIBLE_PACKAGE: "{{ ansible_package | default('') }}"
     ANSIBLE_HOST_KEY_CHECKING: "False"
     ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+    ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/roles/config_template/action"
+    ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/roles/plugins/connection"
+    ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
 
   vars:
     inventory_file: "inventory/test-{{ (contianer_inventory | bool) | ternary('container', 'metal') }}-inventory.yml"
@@ -114,10 +117,7 @@
       become_user: root
       command: "${HOME}/ansible_venv/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _key-setup.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
-        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
       when:
@@ -129,10 +129,7 @@
       become_user: root
       command: "${HOME}/ansible_venv/bin/ansible-playbook -i {{ inventory_file }} -e @test-vars.yml _container-setup.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-container-setup.log"
-        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x/tests"
       when:
@@ -150,10 +147,7 @@
       become_user: root
       command: "${HOME}/ansible_venv/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml site.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-deployment.log"
-        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x"
 
@@ -162,9 +156,6 @@
       become_user: root
       command: "${HOME}/ansible_venv/bin/ansible-playbook -i tests/{{ inventory_file }} -e @tests/test-vars.yml showElasticCluster.yml"
       environment:
-        ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/ansible-config_template/action"
-        ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/openstack-ansible-plugins/connection"
         ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test-show-cluster.log"
-        ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_6x"

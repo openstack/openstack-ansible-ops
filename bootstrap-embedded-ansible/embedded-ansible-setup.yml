@@ -1,0 +1,34 @@
+---
+- name: Setup embedded ansible
+  hosts: localhost
+  connection: local
+  user: root
+  gather_facts: no
+  vars:
+    default_ansible_venv_path: "{{ lookup('env','HOME') + '/ansible_venv' }}"
+  tasks:
+    - name: Ensure pip packages are installed
+      pip:
+        requirements: "{{ ansible_python_requirement_file | default('python-requirements.txt') }}"
+        virtualenv: "{{ ansible_venv_path | default(default_ansible_venv_path) }}"
+        extra_args: '--isolated'
+
+    - name: Check for OSA inventory
+      stat:
+        path: /etc/openstack_deploy/openstack_inventory.json
+      register: osa_inventory
+
+    - name: osa block
+      block:
+        - name: Create inventory shim directory
+          file:
+            path: "{{ default_ansible_venv_path }}/inventory"
+            state: "directory"
+
+        - name: Copy embedded ansible inventory shim
+          copy:
+            dest: "{{ default_ansible_venv_path }}/inventory/openstack_inventory.sh"
+            src: osa-inventory.sh
+            mode: '0755'
+      when:
+        - osa_inventory.stat.exists | bool

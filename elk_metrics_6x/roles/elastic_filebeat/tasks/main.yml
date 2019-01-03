@@ -85,7 +85,6 @@
 - name: Run the beat setup role
   include_role:
     name: elastic_beat_setup
-    private: true
   when:
     - (groups['kibana'] | length) > 0
   vars:
