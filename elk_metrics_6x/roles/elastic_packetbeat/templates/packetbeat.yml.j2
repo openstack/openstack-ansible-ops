@@ -63,15 +63,7 @@ packetbeat.protocols:
 
 - type: amqp
   # Enable AMQP monitoring. Default: true
-{% set ns = namespace(enabled=(inventory_hostname in groups['rabbitmq_all'] | default([]))) %}
-{% if not ns.enabled | bool %}
-{%   for _item in groups['rabbitmq_all'] | default([]) %}
-{%     if not ns.enabled | bool | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
-{%       set ns.enabled = true %}
-{%     endif %}
-{%   endfor %}
-{% endif %}
-  enabled: {{ ns.enabled | bool }}
+  enabled: true
 
   # Configure the ports where to listen for AMQP traffic. You can disable
   # the AMQP protocol by commenting out the list of ports.
@@ -230,15 +222,7 @@ packetbeat.protocols:
 
 - type: memcache
   # Enable memcache monitoring. Default: true
-{% set ns = namespace(enabled=(inventory_hostname in groups['memcached_all'] | default([]))) %}
-{% if not ns.enabled | bool %}
-{%   for _item in groups['memcached_all'] | default([]) %}
-{%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
-{%       set ns.enabled = true %}
-{%     endif %}
-{%   endfor %}
-{% endif %}
-  enabled: {{ ns.enabled }}
+  enabled: true
 
   # Configure the ports where to listen for memcache traffic. You can disable
   # the Memcache protocol by commenting out the list of ports.
@@ -287,15 +271,7 @@ packetbeat.protocols:
 
 - type: mysql
   # Enable mysql monitoring. Default: true
-{% set ns = namespace(enabled=(inventory_hostname in groups['galera_all'] | default([]))) %}
-{% if not ns.enabled | bool %}
-{%   for _item in groups['galera_all'] | default([]) %}
-{%     if not ns.enabled | bool and _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
-{%       set ns.enabled = true %}
-{%     endif %}
-{%   endfor %}
-{% endif %}
-  enabled: {{ ns.enabled }}
+  enabled: true
 
   # Configure the ports where to listen for MySQL traffic. You can disable
   # the MySQL protocol by commenting out the list of ports.
@@ -440,15 +416,7 @@ packetbeat.protocols:
 
 - type: nfs
   # Enable NFS monitoring. Default: true
-{% set ns = namespace(enabled=((inventory_hostname in groups['glance_all'] | default([])) or (inventory_hostname in groups['nova_compute'] | default([])) or 'nfs4' in (ansible_mounts | map(attribute='fstype') | list))) %}
-{% if not ns.enabled | bool %}
-{%   for _item in groups['glance_all'] | default([]) + groups['nova_compute'] | default([]) %}
-{%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
-{%       set ns.enabled = true %}
-{%     endif %}
-{%   endfor %}
-{% endif %}
-  enabled: {{ ns.enabled }}
+  enabled: true
 
   # Configure the ports where to listen for NFS traffic. You can disable
   # the NFS protocol by commenting out the list of ports.
@@ -468,15 +436,7 @@ packetbeat.protocols:
 
 - type: tls
   # Enable TLS monitoring. Default: true
-{% set ns = namespace(enabled=((inventory_hostname in groups['haproxy_all'] | default([])) or (inventory_hostname in groups['horizon_all'] | default([])))) %}
-{% if not ns.enabled | bool %}
-{%   for _item in groups['haproxy_all'] | default([]) + groups['horizon_all'] | default([]) %}
-{%     if not ns.enabled | bool or _item in groups[inventory_hostname + '-host_containers'] | default([]) %}
-{%       set ns.enabled = true %}
-{%     endif %}
-{%   endfor %}
-{% endif %}
-  enabled: {{ ns.enabled }}
+  enabled: true
 
   # Configure the ports where to listen for TLS traffic. You can disable
   # the TLS protocol by commenting out the list of ports.
