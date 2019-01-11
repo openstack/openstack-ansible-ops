@@ -1,0 +1,4 @@
+# Ensure the openvswitch kernel module is loaded
+openstack_host_specific_kernel_modules:
+  - name: "openvswitch"
+    pattern: "CONFIG_OPENVSWITCH"

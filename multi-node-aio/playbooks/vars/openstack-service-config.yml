@@ -75,6 +75,18 @@ networks:
     network_type: vxlan
     segmentation_id: 101
 
+networks_ovn:
+  - name: "{{ provider_net_name }}"
+    shared: true
+    external: true
+    network_type: flat
+    physical_network: flat
+  - name: "{{ private_net_name }}"
+    shared: true
+    external: true
+    network_type: geneve
+    segmentation_id: 101
+
 subnets:
   - name: "{{ provider_subnet_name }}"
     network_name: "{{ provider_net_name }}"
