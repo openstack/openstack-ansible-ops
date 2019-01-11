@@ -365,14 +365,14 @@
         - name: Prepare the data disk file system
           filesystem:
             fstype: ext4
-            dev: "/dev/{{ mnaio_data_disk }}1"
+            dev: "/dev/{{ mnaio_data_disk }}{{ mnaio_data_disk_suffix | default('1') }}"
             force: yes
           when:
             - _add_partition is changed
 
         - name: Mount the data disk
           mount:
-            src: "/dev/{{ mnaio_data_disk }}1"
+            src: "/dev/{{ mnaio_data_disk }}{{ mnaio_data_disk_suffix | default('1') }}"
             path: /data
             state: mounted
             fstype: ext4

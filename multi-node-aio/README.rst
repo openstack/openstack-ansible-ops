@@ -33,6 +33,14 @@ by exporting the extra var before running build.sh, eg:
     export MNAIO_ANSIBLE_PARAMETERS="-e mnaio_data_disk=sdb"
     ./build.sh
 
+NVMe partitions generally show a ``p`` before the partition number. The default
+suffix of ``1`` for ``sdb1`` can be changed to ``p1`` to support NVMe naming
+conventions using the ``mnaio_data_disk_suffix`` extra var shown here:
+
+ .. code-block:: bash
+     export MNAIO_ANSIBLE_PARAMETERS="-e mnaio_data_disk=nvme0n1 -e mnaio_data_disk_suffix=p1"
+    ./build.sh
+
 The playbooks will look for a volume group named "vg01", if this volume group
 exists no partitioning or setup on the data disk will take place. To effectively
 use this process for testing it's recommended that the host machine have at least
