@@ -1,0 +1,51 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Refresh local facts
+  setup:
+    filter: ansible_local
+    gather_subset: "!all"
+  tags:
+    - always
+
+- name: Run the systemd service role
+  include_role:
+    name: systemd_service
+  vars:
+    systemd_service_enabled: true
+    systemd_service_restart_changed: false
+    systemd_services:
+      - service_name: "skydive-agent"
+        execstarts:
+          - /usr/local/bin/skydive agent
+
+- name: Force handlers
+  meta: flush_handlers
+
+- name: Set skydive service state (upstart)
+  service:
+    name: "skydive-agent"
+    state: "{{ (ansible_local['skydive']['skydive']['needs_restart_agent'] | bool) | ternary('restarted', skydive_agent_service_state) }}"
+    enabled: "{{ skydive_agent_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+
+- name: Set skydive service state (systemd)
+  systemd:
+    name: "skydive-agent"
+    state: "{{ (ansible_local['skydive']['skydive']['needs_restart_agent'] | bool) | ternary('restarted', skydive_agent_service_state) }}"
+    enabled: "{{ skydive_agent_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'

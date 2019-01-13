@@ -1,0 +1,80 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Setup localhost
+  hosts: localhost
+  connection: local
+  tags:
+    - always
+
+
+- name: Gather facts
+  hosts: traefik_all
+  tasks:
+    - name: Gather facts on all hosts
+      setup: {}
+  tags:
+    - always
+
+
+- name: Classify traefik build servers
+  hosts: traefik_build_nodes
+  serial: 1
+  tasks:
+    - name: Group repo servers by architecture and os version
+      group_by:
+        key: traefik_build_nodes_{{ ansible_architecture }}
+  tags:
+    - always
+
+
+- name: Prepare group of master build servers
+  hosts: localhost
+  tasks:
+    - name: Prepare group of master build servers
+      add_host:
+        name: "{{ groups[item][0] }}"
+        groups: traefik_build_nodes_masters
+      with_items: "{{ groups | select('match', '^traefik_build_nodes_') | list }}"
+      changed_when: false
+  tags:
+    - always
+
+
+- name: Make traefik
+  hosts: traefik_build_nodes_masters
+  become: yes
+  vars:
+    traefik_build_version: HEAD
+    traefik_build_path: "/opt/traefik-build/{{ traefik_build_version }}"
+    traefik_build_go_path: "{{ traefik_build_path }}/go"
+    traefik_build_project_path: "{{ traefik_build_go_path }}/src"
+  roles:
+    - role: make_traefik
+  post_tasks:
+    - name: Find traefik binaries
+      find:
+        paths: "{{ traefik_build_project_path }}/github.com/containous/traefik"
+        recurse: no
+        patterns: "traefik"
+      register: files_to_copy
+    - name: Fetch traefik binaries
+      fetch:
+        src: "{{ item.path }}"
+        dest: "/tmp/traefik/{{ ansible_architecture }}/{{ item.path | basename }}"
+        flat: true
+      with_items: "{{ files_to_copy.files }}"
+  tags:
+    - traefik-make

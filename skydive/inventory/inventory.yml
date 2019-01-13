@@ -1,0 +1,56 @@
+---
+
+all_systems:
+  vars: {}
+  children:
+    systems:
+      vars:
+        ansible_ssh_extra_args: >-
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+          -o ServerAliveInterval=64
+          -o ServerAliveCountMax=1024
+          -o Compression=no
+          -o TCPKeepAlive=yes
+          -o VerifyHostKeyDNS=no
+          -o ForwardX11=no
+          -o ForwardAgent=yes
+          -T
+        ansible_become: yes
+        ansible_become_user: "root"
+        ansible_user: "root"
+
+      children:
+        traefik_all:
+          children:
+            traefik_build_nodes:
+              hosts:
+                build1:
+                  ansible_host: "172.17.24.2"
+                  ansible_user: ubuntu
+
+        skydive_all:
+          children:
+            skydive_build_nodes:
+              hosts:
+                build1:
+                  ansible_host: "172.17.24.2"
+                  ansible_user: ubuntu
+
+            skydive_agents:
+              hosts:
+                agent1:
+                  ansible_host: "172.17.24.3"
+                  ansible_user: ubuntu
+                agent2:
+                  ansible_host: "172.17.24.4"
+                  ansible_user: centos
+                agent3:
+                  ansible_host: "172.17.24.5"
+                  ansible_user: opensuse
+
+            skydive_analyzers:
+              hosts:
+                analyzer1:
+                  ansible_host: "172.17.24.6"
+                  ansible_user: ubuntu

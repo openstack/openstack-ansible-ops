@@ -1,0 +1,98 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: create the system group
+  group:
+    name: "traefik"
+    state: "present"
+    system: "yes"
+
+- name: Create the traefik user
+  user:
+    name: "traefik"
+    group: "traefik"
+    comment: "traefik user"
+    shell: "/bin/false"
+    createhome: "yes"
+    home: "/usr/share/traefik"
+
+- name: Create traefik data path
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "traefik"
+    group: "traefik"
+    mode: "0755"
+  with_items:
+    - "/var/lib/traefik"
+    - "/etc/traefik"
+
+- name: Check for docker
+  stat:
+    path: "{{ traefik_docker_socket }}"
+  register: stat_docker
+
+- name: Set stat fact exists
+  set_fact:
+    traefik_docker_exists: "{{ stat_docker.stat.exists }}"
+
+- name: Create basic auth file
+  htpasswd:
+    path: "{{ traefik_basic_auth_file }}"
+    name: "{{ item.key }}"
+    password: "{{ item.value }}"
+    owner: root
+    group: traefik
+    mode: 0640
+  with_dict: "{{ traefik_basic_auth_users }}"
+  when:
+    - traefik_dashboard_enabled | bool
+    - traefik_basic_auth_users
+
+- name: Drop traefik conf files
+  template:
+    src: "traefik.toml.j2"
+    dest: "/etc/traefik/traefik.toml"
+    mode: "0640"
+
+- name: Run the systemd service role
+  include_role:
+    name: systemd_service
+  vars:
+    systemd_service_enabled: true
+    systemd_service_restart_changed: false
+    systemd_services:
+      - service_name: "traefik"
+        execstarts:
+          - /usr/local/bin/traefik --file.directory="/etc/traefik"
+
+- name: Force handlers
+  meta: flush_handlers
+
+- name: Set traefik service state (upstart)
+  service:
+    name: "traefik"
+    state: "{{ traefik_analyzer_service_state }}"
+    enabled: "{{ traefik_analyzer_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+
+- name: Set traefik service state (systemd)
+  systemd:
+    name: "traefik"
+    state: "{{ traefik_analyzer_service_state }}"
+    enabled: "{{ traefik_analyzer_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'

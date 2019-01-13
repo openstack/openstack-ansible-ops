@@ -13,21 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-galaxy_info:
-  author: OpenStack
-  description: Elastic v6.x go install role
-  company: Rackspace
-  license: Apache2
-  min_ansible_version: 2.5
-  platforms:
-    - name: Ubuntu
-      versions:
-        - trusty
-        - xenial
-        - bionic
-  categories:
-    - cloud
-    - development
-    - elasticsearch
-    - elastic-stack
-dependencies: []
+- import_playbook: functional.yml

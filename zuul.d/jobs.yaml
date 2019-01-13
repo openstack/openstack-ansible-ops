@@ -116,3 +116,34 @@
     vars:
       osa_test_repo: "openstack/openstack-ansible-ops"
       test_clustered_kolide: true
+
+- job:
+    name: "openstack-ansible-ops:skydive-ubuntu-xenial"
+    parent: base
+    description: "Runs a gate test on the skydive project."
+    run: "skydive/tests/test.yml"
+    post-run: "skydive/tests/post-run.yml"
+    voting: false
+    files:
+      - ^skydive/.*
+      - ^bootstrap-embedded-ansible/.*
+
+- job:
+    name: "openstack-ansible-ops:skydive-ubuntu-bionic"
+    parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
+    nodeset: ubuntu-bionic
+
+- job:
+    name: "openstack-ansible-ops:skydive-centos-7"
+    parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
+    nodeset: centos-7
+
+- job:
+    name: "openstack-ansible-ops:skydive-opensuse-423"
+    parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
+    nodeset: opensuse-423
+
+# - job:
+#     name: "openstack-ansible-ops:skydive-opensuse-15"
+#     parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
+#     nodeset: opensuse-15

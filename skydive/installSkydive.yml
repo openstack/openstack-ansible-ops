@@ -1,0 +1,139 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Deploy skydive binaries
+  hosts: skydive_agents:skydive_analyzers
+  become: yes
+  vars:
+    skydive_binary_version: "v0.21.0"
+    skydive_binary_url: "https://github.com/skydive-project/skydive/releases/download/{{ skydive_binary_version }}/skydive"
+    skydive_staging_node: "localhost"
+  pre_tasks:
+    - name: Create skydive temp path
+      file:
+        path: "/tmp/skydive/{{ ansible_architecture }}"
+        state: directory
+      delegate_to: "{{ skydive_staging_node }}"
+      become: false
+  tasks:
+    - name: Built skydive installation
+      block:
+        - name: Find skydive binaries
+          find:
+            paths: "/tmp/skydive/{{ ansible_architecture }}/"
+            recurse: no
+            patterns: "*skydive*"
+          register: files_to_copy
+          delegate_to: "{{ skydive_staging_node }}"
+          become: false
+        - name: Install built skydive
+          copy:
+            src: "{{ item.path }}"
+            dest: "/usr/local/bin/{{ item.path | basename }}"
+            mode: "0755"
+          with_items: "{{ files_to_copy.files }}"
+      when:
+        - ((groups['skydive_build_nodes'] | default([])) | length) > 0
+
+    - name: Upstream skydive installation
+      block:
+        - name: Get skydive binary
+          get_url:
+            url: "{{ skydive_binary_url }}"
+            dest: "/tmp/skydive/{{ ansible_architecture }}/{{ skydive_binary_url | basename }}"
+            mode: '0755'
+          delegate_to: "{{ skydive_staging_node }}"
+          become: false
+        - name: Install binary skydive
+          copy:
+            src: "/tmp/skydive/{{ ansible_architecture }}/{{ skydive_binary_url | basename }}"
+            dest: "/usr/local/bin/skydive"
+            mode: "0755"
+      when:
+        - ((groups['skydive_build_nodes'] | default([])) | length) < 1
+  tags:
+    - skydive-install
+
+
+- name: Deploy traefik binaries
+  hosts: skydive_analyzers
+  become: yes
+  vars:
+    traefik_binary_version: "v1.7.7"
+    traefik_binary_url: "https://github.com/containous/traefik/releases/download/{{ traefik_binary_version }}/traefik"
+    traefik_staging_node: "localhost"
+  pre_tasks:
+    - name: Create traefik temp path
+      file:
+        path: "/tmp/traefik/{{ ansible_architecture }}"
+        state: directory
+      delegate_to: "{{ traefik_staging_node }}"
+      become: false
+  tasks:
+    - name: Built traefik installation
+      block:
+        - name: Find traefik binaries
+          find:
+            paths: "/tmp/traefik/{{ ansible_architecture }}/"
+            recurse: no
+            patterns: "*traefik*"
+          register: files_to_copy
+          delegate_to: "{{ traefik_staging_node }}"
+          become: false
+        - name: Install built traefik
+          copy:
+            src: "{{ item.path }}"
+            dest: "/usr/local/bin/{{ item.path | basename }}"
+            mode: "0755"
+          with_items: "{{ files_to_copy.files }}"
+      when:
+        - ((groups['traefik_build_nodes'] | default([])) | length) > 0
+
+    - name: Upstream traefik installation
+      block:
+        - name: Get traefik binary
+          get_url:
+            url: "{{ traefik_binary_url }}"
+            dest: "/tmp/traefik/{{ ansible_architecture }}/{{ traefik_binary_url | basename }}"
+            mode: '0755'
+          delegate_to: "{{ traefik_staging_node }}"
+          become: false
+        - name: Install binary traefik
+          copy:
+            src: "/tmp/traefik/{{ ansible_architecture }}/{{ traefik_binary_url | basename }}"
+            dest: "/usr/local/bin/traefik"
+            mode: "0755"
+      when:
+        - ((groups['traefik_build_nodes'] | default([])) | length) < 1
+  tags:
+    - traefik-install
+
+
+- name: Configure Skydive analyzers
+  hosts: skydive_analyzers
+  become: yes
+  roles:
+    - role: skydive_analyzer
+  tags:
+    - skydive-analyzer-setup
+
+
+- name: Configure Skydive agents
+  hosts: skydive_agents
+  become: yes
+  roles:
+    - role: skydive_agent
+  tags:
+    - skydive-agent-setup

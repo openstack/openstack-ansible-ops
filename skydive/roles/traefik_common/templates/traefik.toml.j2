@@ -1,0 +1,205 @@
+################################################################
+# Global configuration
+################################################################
+
+# Enable debug mode
+#
+# Optional
+# Default: false
+#
+debug = false
+
+# Log level
+#
+# Optional
+# Default: "ERROR"
+#
+logLevel = "INFO"
+
+# Entrypoints to be used by frontends that do not specify any entrypoint.
+# Each frontend can specify its own entrypoints.
+#
+# Optional
+# Default: ["http"]
+#
+# defaultEntryPoints = ["http", "https"]
+
+################################################################
+# Entrypoints configuration
+################################################################
+
+# Entrypoints definition
+#
+# Optional
+# Default:
+[entryPoints]
+  [entryPoints.traefik]
+    address = "{{ traffic_dashboard_bind }}:{{ traefik_dashboard_port }}"
+{% if traefik_dashboard_enabled | bool %}
+    [entryPoints.traefik.auth]
+      [entryPoints.traefik.auth.basic]
+        removeHeader = true
+        usersFile = "{{ traefik_basic_auth_file }}"
+{% endif %}
+
+{% for key, value in traefik_destinations.items() %}
+  [entryPoints.{{ key }}-{{ value.proto }}]
+    address = "{{ value.bind | default('127.0.0.1') }}:{{ value.port }}"
+{% endfor %}
+
+[file]
+watch = true
+
+  ################################################################
+  # Backends configuration
+  ################################################################
+  [backends]
+  {% for key, value in traefik_destinations.items() %}
+    [backends.{{ key }}]
+  {%   for server in value.servers %}
+      [backends.{{ key }}.loadbalancer.stickiness]
+      [backends.{{ key }}.servers.{{ server.name }}]
+      url = "{{ server.proto | default(value.proto) }}://{{ server.address }}:{{ server.port | default(value.port) }}"
+      weight = {{ server.weight | default(100)  }}
+  {%   endfor %}
+  {% endfor %}
+
+  ################################################################
+  # Frontends configuration
+  ################################################################
+  [frontends]
+  {% for key, value in traefik_destinations.items() %}
+    [frontends.{{ key }}]
+      entryPoints = ["{{ key }}-{{ value.proto }}"]
+      backend = "{{ key }}"
+      passHostHeader = true
+
+  {% endfor %}
+
+################################################################
+# Traefik logs configuration
+################################################################
+
+# Traefik logs
+# Enabled by default and log to stdout
+#
+# Optional
+#
+[traefikLog]
+
+# Sets the filepath for the traefik log. If not specified, stdout will be used.
+# Intermediate directories are created if necessary.
+#
+# Optional
+# Default: os.Stdout
+#
+# filePath = "/var/log/traefik/traefik.log"
+
+# Format is either "json" or "common".
+#
+# Optional
+# Default: "common"
+#
+# format = "common"
+
+################################################################
+# Access logs configuration
+################################################################
+
+# Enable access logs
+# By default it will write to stdout and produce logs in the textual
+# Common Log Format (CLF), extended with additional fields.
+#
+# Optional
+#
+[accessLog]
+
+# Sets the file path for the access log. If not specified, stdout will be used.
+# Intermediate directories are created if necessary.
+#
+# Optional
+# Default: os.Stdout
+#
+# filePath = "/var/log/traefik/access.log"
+
+# Format is either "json" or "common".
+#
+# Optional
+# Default: "common"
+#
+# format = "common"
+
+################################################################
+# API and dashboard configuration
+################################################################
+
+# Enable API and dashboard
+[api]
+  # Name of the related entry point
+  #
+  # Optional
+  # Default: "traefik"
+  #
+  entryPoint = "traefik"
+
+  # Enabled Dashboard
+  #
+  # Optional
+  # Default: true
+  #
+  dashboard = true
+
+  # Enable debug mode.
+  # This will install HTTP handlers to expose Go expvars under /debug/vars and
+  # pprof profiling data under /debug/pprof/.
+  # Additionally, the log level will be set to DEBUG.
+  #
+  # Optional
+  # Default: false
+  #
+  debug = true
+
+################################################################
+# Ping configuration
+################################################################
+
+# Enable ping
+# [ping]
+
+  # Name of the related entry point
+  #
+  # Optional
+  # Default: "traefik"
+  #
+  # entryPoint = "traefik"
+
+{% if traefik_docker_exists | bool %}
+################################################################
+# Docker configuration backend
+################################################################
+
+# Enable Docker configuration backend
+[docker]
+
+# Docker server endpoint. Can be a tcp or a unix socket endpoint.
+#
+# Required
+# Default: "unix:///var/run/docker.sock"
+#
+endpoint = "{{ traefik_docker_socket }}"
+
+# Default domain used.
+# Can be overridden by setting the "traefik.domain" label on a container.
+#
+# Optional
+# Default: ""
+#
+# domain = "docker.localhost"
+
+# Expose containers by default in traefik
+#
+# Optional
+# Default: true
+#
+# exposedByDefault = true
+{% endif %}

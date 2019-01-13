@@ -1,0 +1,137 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Set the analyzer port
+skydive_analyzer_port: 8082
+
+# Set the agent api port
+skydive_agent_port: 8081
+
+# Set the flow protocol
+skydive_flow_protocol: udp
+
+# Set a particulare network interface used for skydive traffic
+skydive_network_device: "{{ ansible_default_ipv4['interface'] }}"
+
+# The skydive elasticsearch uri(s) is required
+# Set the elasticsearch URI(s), the system will attempt to connect to the URI.
+# If this URI is unreachable the deployment will fail. If there is more than
+# one elasticsearch ingest node or smart loadbancer use comma delimation to
+# list multiple nodes.
+skydive_elasticsearch_proto: "http"
+
+# The skydive elasticsearch port is set to 9200 which is the default, however, to
+# ensure there's no conflict in thee event an elasticsearch installation is on the
+# same host as the analyzer, the frontend port will always be 19200. The port binding
+# will be to localhost, and via traefik it will be load balanced to the cluster.
+skydive_elasticsearch_port: "9200"
+
+# The elastic search servers must be defined, each hostname, or IP address is
+# separated by commas.
+# skydive_elasticsearch_servers: "server1,server2"
+
+# Setup skydive to use embedded etcd. When set, skydive will run etcd from
+# the analyzer nodes.
+skydive_etcd_embedded: yes
+skydive_etcd_port: 12379
+skydive_etcd_listen_uri: "0.0.0.0:{{ skydive_etcd_port }}"
+skydive_etcd_scheme: http
+
+# If embedded etcd is disabled the etcd server must be defined.
+# skydive_etcd_servers:
+#   - http://127.0.0.1:12379
+skydive_etcd_servers: []
+
+# If not using the embedded etcd the peers must be defined.
+# Hash of peers for etcd clustering between analyzers.
+# each entry is composed of the peer name and the endpoints for this peer.
+# skydive_etcd_peers:
+#   analyzer1: http://172.17.0.2:12380
+#   analyzer2: http://172.17.0.3:12380
+
+# The fabric setup will auto detect all intefaces throughout the cluster
+# where agents will be installed. A user can define the fabric as needed.
+# Review the skydive documentation for more information on setting up
+# fabric.
+# skydive_fabric:
+#   - TOR[Name=tor] -> TOR_PORT1[Name=port1]
+#   - TOR1[Name=tor1] -> TOR1_PORT1[Name=port1]
+#   - TOR1[Name=tor1] -> [color=red] TOR1_PORT2[Name=port2, MTU=1500]
+#   - TOR_PORT1 --> TOR1_PORT1
+#   - TOR1_PORT2 --> *[Type=host]/eth0
+
+# Path to the openvswitch db socket on a local system running skydive
+skydive_ovs_db_socket: /var/run/openvswitch/db.sock
+
+# Path to the docker socket on a local system running skydive
+skydive_docker_socket: /var/run/docker.sock
+
+# Set the skydive collection probes, available options are: ovsdb, docker, neutron, opencontrail, socketinfo, lxd, lldp, runc
+skydive_probes:
+  - "socketinfo"
+  - "lldp"
+  - "lxd"
+
+skydive_username: skydive
+
+# The skydive user name is required
+# skydive_password: secrete
+
+# The cluster username and password can be defined independently from the normal system user.
+skydive_cluster_username: "{{ skydive_username }}"
+skydive_cluster_password: "{{ skydive_password }}"
+
+skydive_auth_type: mybasic
+skydive_basic_auth_file: /var/lib/skydive/skydive.secret
+
+# Set basic authentication users and passwords into a basic auth file.
+# This is optional and will only be created if user defined.
+# skydive_basic_auth_users:
+#   skydive: secrete
+skydive_basic_auth_users: {}
+
+# Skydive openstack setup
+skydive_os_service_username: "{{ skydive_username }}.service"
+skydive_os_service_password: "{{ skydive_password }}"
+skydive_os_service_tenant_name: service
+skydive_os_service_domain_name: Default
+skydive_os_service_region_name: RegionOne
+skydive_os_service_endpoint_type: internal
+skydive_os_service_insecure: true
+
+skydive_os_auth_url: null
+skydive_auth_os_tenant_name: "{{ skydive_username }}"
+skydive_auth_os_domain_name: Default
+skydive_auth_os_domain_id: default
+skydive_auth_os_user_role: admin
+
+
+os_auth_url:
+os_username:
+os_password:
+os_tenant_name: admin
+os_user_domain_name: Default
+os_project_domain_name: Default
+os_identity_api_version: 3
+
+# Role of the user created that will be used for the probe
+# authentication
+skydive_os_service_user_role: admin
+
+
+# Configuration overrides can be set using a config template.
+# `config_template` provides an interface that will inser any
+#  option into the compatible configuration file using a deep merge.
+skydive_config_overrides: {}

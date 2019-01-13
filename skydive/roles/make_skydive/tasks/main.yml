@@ -1,0 +1,65 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Ensure build libraries are installed
+  package:
+    name: "{{ sykdive_build_distro_packages }}"
+    state: "present"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
+- name: Ensure skydive-project directory exists
+  file:
+    path: "{{ skydive_build_project_path }}/github.com/skydive-project/skydive"
+    state: directory
+
+- name: Get the skydive archive
+  git:
+    dest: "{{ skydive_build_project_path }}/github.com/skydive-project/skydive"
+    repo: https://github.com/skydive-project/skydive.git
+    force: yes
+    track_submodules: yes
+    clone: yes
+    update: yes
+    recursive: yes
+    version: "{{ skydive_build_version }}"
+
+- name: Make install skydive
+  shell: |
+    source /etc/default/go
+    export PATH="{{ skydive_build_go_path }}/bin:${PATH}"
+    export GOPATH="{{ skydive_build_go_path }}"
+    make install {{ skydive_build_use_flags }}
+  args:
+    chdir: "{{ skydive_build_project_path }}/github.com/skydive-project/skydive"
+    executable: "/bin/bash"
+    creates: "{{ skydive_build_go_path }}/bin/skydive"

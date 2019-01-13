@@ -1,0 +1,117 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: create the system group
+  group:
+    name: "skydive"
+    state: "present"
+    system: "yes"
+
+- name: Create the skydive user
+  user:
+    name: "skydive"
+    group: "skydive"
+    comment: "skydive user"
+    shell: "/bin/false"
+    createhome: "yes"
+    home: "/usr/share/skydive"
+
+- name: Create skydive data path
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "skydive"
+    group: "skydive"
+    mode: "0755"
+  with_items:
+    - "/var/lib/skydive"
+    - "/etc/skydive"
+
+- name: Check for ovsdb
+  stat:
+    path: "{{ skydive_ovs_db_socket }}"
+  register: stat_ovsdb
+
+- name: Check for docker
+  stat:
+    path: "{{ skydive_docker_socket }}"
+  register: stat_docker
+
+- name: Check for libvirt
+  stat:
+    path: /run/libvirt/libvirt-sock
+  register: stat_libvirt
+
+- name: Check for runc
+  stat:
+    path: /var/run/runc
+  register: stat_runc
+
+- name: Set stat fact exists
+  set_fact:
+    skydive_ovs_db_exists: "{{ stat_ovsdb.stat.exists }}"
+    skydive_docker_exists: "{{ stat_docker.stat.exists }}"
+    skydive_libvirt_exists: "{{ stat_libvirt.stat.exists }}"
+    skydive_runc_exists: "{{ stat_runc.stat.exists }}"
+
+- name: Create basic auth file
+  htpasswd:
+    path: "{{ skydive_basic_auth_file }}"
+    name: "{{ item.key }}"
+    password: "{{ item.value }}"
+    owner: root
+    group: skydive
+    mode: 0640
+  with_dict: "{{ _skydive_basic_auth_users | combine(skydive_basic_auth_users) }}"
+  register: skydive_basic_auth_create
+
+- name: Drop skydive conf files
+  config_template:
+    src: "skydive.yml.j2"
+    dest: "/etc/skydive/skydive.yml"
+    mode: "0640"
+    config_overrides: "{{ skydive_config_overrides }}"
+    config_type: yaml
+  register: skydive_template_create
+
+- name: Ensure local facts directory exists
+  file:
+    dest: "/etc/ansible/facts.d"
+    state: directory
+    group: "root"
+    owner: "root"
+    mode:  "0755"
+    recurse: no
+
+- name: Initialize local facts
+  ini_file:
+    dest: "/etc/ansible/facts.d/skydive.fact"
+    section: "skydive"
+    option: initialized
+    value: true
+
+- name: Set restart fact exists
+  set_fact:
+    skydive_needs_restart: "{{ (skydive_template_create is changed) or (skydive_basic_auth_create is changed) }}"
+
+- name: Set storage fact
+  ini_file:
+    dest: "/etc/ansible/facts.d/skydive.fact"
+    section: "skydive"
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+  with_dict:
+    needs_restart_agent: "{{ (inventory_hostname in groups['skydive_agents']) and (skydive_needs_restart | bool) }}"
+    needs_restart_analyzers: "{{ (inventory_hostname in groups['skydive_analyzers']) and (skydive_needs_restart | bool) }}"

@@ -1,0 +1,51 @@
+---
+all_systems:
+  vars:
+    ansible_ssh_extra_args: >-
+      -o UserKnownHostsFile=/dev/null
+      -o StrictHostKeyChecking=no
+      -o ServerAliveInterval=64
+      -o ServerAliveCountMax=1024
+      -o Compression=no
+      -o TCPKeepAlive=yes
+      -o VerifyHostKeyDNS=no
+      -o ForwardX11=no
+      -o ForwardAgent=yes
+      -T
+    ansible_become: yes
+    ansible_become_user: "root"
+    ansible_user: "root"
+  children:
+    systems:
+      children:
+        hosts:
+          children:
+            physical_hosts:
+              hosts:
+                localhost:
+                  ansible_host: 127.0.0.1
+                  ansible_user: root
+              vars:
+                physical_host: localhost
+
+        elk_all:
+          children:
+            elastic-logstash:
+              hosts:
+                localhost: {}
+
+        traefik_all:
+          children:
+            traefik_build_nodes: {}
+
+        skydive_all:
+          children:
+            skydive_build_nodes: {}
+
+            skydive_agents:
+              hosts:
+                localhost: {}
+
+            skydive_analyzers:
+              hosts:
+                localhost: {}

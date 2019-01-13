@@ -1,5 +1,5 @@
 ---
-# Copyright 2018, Rackspace US, Inc.
+# Copyright 2019, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,3 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+skydive_build_version: HEAD
+
+skydive_build_path: "/opt/skydive-build/{{ skydive_build_version }}"
+
+skydive_build_go_path: "{{ skydive_build_path }}/go"
+
+skydive_build_project_path: "{{ skydive_build_go_path }}/src"
+
+skydive_build_use_flags: >-
+  WITH_EBPF=true
+  WITH_NEUTRON=true
+  WITH_LXD=true
+  WITH_PROF=true
+  WITH_CDD=true

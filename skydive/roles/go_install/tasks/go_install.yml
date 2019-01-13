@@ -35,10 +35,16 @@
     dest: "/opt/go{{ go_download_version }}"
     remote_src: yes
 
-- name: Create go defaults file
+- name: Create go versioned default file
   copy:
     content: |
       GOROOT=/opt/go{{ go_download_version }}/go
       GOPATH=/usr/local
       PATH=${PATH}:${GOROOT}/bin
     dest: "/etc/default/go{{ go_download_version }}"
+
+- name: Create go default file
+  file:
+    src: "/etc/default/go{{ go_download_version }}"
+    dest: "/etc/default/go"
+    state: link

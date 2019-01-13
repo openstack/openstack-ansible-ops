@@ -1,0 +1,71 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Check for skydive password
+  fail:
+    msg: >-
+      The skydive password is undefined. Set the `skydive_password` option before continuing.
+  when:
+    - skydive_password is undefined
+  tags:
+    - always
+
+- name: Check for skydive elasticsearch uri
+  fail:
+    msg: >-
+      The elasticsearch backend for skydive is undefined. Set the `skydive_elasticsearch_servers`
+      option before continuing.
+  when:
+    - skydive_elasticsearch_servers is undefined
+  tags:
+    - always
+
+- name: Check elasticsearch status
+  uri:
+    url: "{{ skydive_elasticsearch_proto }}://{{ skydive_elasticsearch_servers.split(',')[0] }}:{{ skydive_elasticsearch_port }}"
+    method: GET
+    status_code: "200"
+  register: response
+  changed_when: false
+  until: response is success
+  retries: 3
+  delay: 2
+  run_once: true
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Ensure distro packages are installed
+  package:
+    name: "{{ sykdive_distro_packages }}"
+    state: "present"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
+- include_tasks: skydive_setup.yml

@@ -1,0 +1,519 @@
+---
+
+# Skydive config file
+
+# host_id is used to reference the agent, by default set to hostname
+host_id: {{ ansible_hostname }}
+
+tls:
+  # File path to X509 Certificate and Private Key to enable TLS communication
+  # Unique certificate per agent is recommended
+  # client_cert: /etc/ssl/certs/agent.domain.com.crt
+  # client_key:  /etc/ssl/certs/agent.domain.com.key
+
+  # server_cert: /etc/ssl/certs/analyzer.domain.com.crt
+  # server_key:  /etc/ssl/certs/analyzer.domain.com.key
+
+  # ca_cert: /etc/ssl/certs/ca.domain.com.crt
+
+http:
+  # define the Cookie HTTP Request Header
+  cookie:
+    # <name1>: <value1>
+    # <name2>: <value2>
+
+  rest:
+    # log the HTTP client request and response (to log level DEBUG)
+    # debug: false
+
+  ws:
+    # WebSocket delay between two pings.
+    # ping_delay: 2
+
+    # WebSocket Ping/Pong timeout in second.
+    # pong_timeout: 5
+
+    # maximum number of topology aggregated messages before sending
+    # bulk_maxmsgs: 100
+
+    # duration in seconds before flushing topology aggregated messages
+    # bulk_maxdelay: 2
+
+    # Maximum size of the message queue
+    # queue_size: 10000
+
+    # enable write compression
+    # enable_write_compression: true
+
+{% if inventory_hostname in groups['skydive_analyzers'] %}
+analyzer:
+  # address and port for the analyzer API, Format: addr:port.
+  # Default addr is 127.0.0.1
+  listen: {{ hostvars[inventory_hostname]["ansible_" ~ (skydive_network_device | replace('-', '_') | string)]['ipv4']['address'] ~ ':' ~ skydive_analyzer_port }}
+
+  auth:
+    # auth section for API request
+    api:
+      # Specify the name of the auth backend definition, see auth section.
+      backend: {{ skydive_auth_type }}
+
+    cluster:
+      # Specify the name of the auth backend definition, see auth section.
+      backend: {{ skydive_auth_type }}
+
+      # Specify username, password for cluster authentication. Used for analyzer/analyzer communication.
+      username: {{ skydive_cluster_username }}
+      password: {{ skydive_cluster_password }}
+
+  # Section defining things to be invoked on startup
+  startup:
+    # By default no capturing,  set filter to capture from selected nodes
+    # from the beginning automatically
+    # capture_gremlin: "G.V().has('Name', NE('lo'))"
+    # capture_bpf: "port 80"
+
+  # Flow storage engine
+  flow:
+    # Storage backend name: myelasticsearch, myorientdb
+    backend: myelasticsearch
+
+    # Max number of flows in write buffer (after which all flows accumulated are dropped)
+    # max_buffer_size: 100000
+
+  topology:
+    # Storage backend name: mymemory, myelasticsearch, myorientdb
+    backend: myelasticsearch
+
+    # Define static interfaces and links updating Skydive topology
+    # Can be useful to define external resources like : TOR, Router, etc.
+    #
+    # A description language similar to the dot language is used to define
+    # interfaces and links. An arrow (->) is used to define a link between
+    # two interfaces (parent -> child). An arrow with a single dash will
+    # create an OwnerShip and a L2 link between the parent and the child.
+    # An arrow with two dashes (-->) will only create a L2 link between the
+    # parent and the child.
+    #
+    # Square brackets after the arrow is used to define additional metadata
+    # of the link (->[key=value,..]). Each interface described will be
+    # created in the topology excepted interfaces with the local prefix.
+    # In that specific case the interface of the local host will be used.
+    # Attributes of interfaces are declared using square brackets ([]).
+    # The following example creates a TOR node linked to TOR_PORT1 linked
+    # (l2 only) to TOR1_PORT1 linked to the TOR1 node, linked to TOR1_PORT2,
+    # which is linked to the local interface eth0, with an l2 only link.
+    fabric: {{ skydive_fabric | to_json }}
+
+    # list of probes used by the analyzers
+    probes:
+      # - k8s
+      # - istio
+
+    k8s:
+      # EXPERIMENTAL: k8s probe is still under development and should not be used
+      # on production systems
+
+      # kubeconfig resolution order:
+      # - if config_file param is defined then use it;
+      # - else if $KUBECONFIG environment is define then use it;
+      # - else if $HOME/.kube/config file exists then use it;
+      # - else use empty configuration (for accessing from within the k8s cluster).
+
+      # specify the path of k8s configuration YAML file.
+      # config_file: /etc/skydive/kubeconfig
+
+      # list of (sub) probes comprising k8s probe.
+      # if list is empty then will resolve to all existing (sub) probes.
+      probes:
+        - cluster
+        - container
+        - cronjob
+        - deployment
+        - endpoints
+        - ingress
+        - job
+        - namespace
+        - networkpolicy
+        - node
+        - persistentvolume
+        - persistentvolumeclaim
+        - pod
+        - replicaset
+        - replicationcontroller
+        - service
+        - statefulset
+        - storageclass
+
+    istio:
+      # specify the path of istio configuration YAML file.
+      # config_file: /etc/skydive/kubeconfig
+
+      # EXPERIMENTAL: istio probe is still under development and should not be used
+      # on production systems
+      probes:
+        - destinationrule
+        - gateway
+        - quotaspec
+        - quotaspecbinding
+        - serviceentry
+        - virtualservice
+
+  replication:
+    # debug: false
+{% endif %}
+
+# list of analyzers used by analyzers and agents
+{% set analyzers = [] %}
+{% for node in groups['skydive_analyzers'] %}
+{%   set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
+{%   set _ = analyzers.append(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'] ~ ':' ~ skydive_analyzer_port) %}
+{% endfor %}
+analyzers: {{ analyzers | to_json }}
+
+{% if inventory_hostname in groups['skydive_agents'] %}
+agent:
+  # address and port for the agent API, Format: addr:port.
+  # Default addr is 127.0.0.1
+  listen: {{ hostvars[inventory_hostname]["ansible_" ~ (skydive_network_device | replace('-', '_') | string)]['ipv4']['address'] ~ ':' ~ skydive_agent_port }}
+
+  auth:
+    # auth section for API request
+    api:
+      # Specify the name of the auth backend definition, see auth section.
+      backend: {{ skydive_auth_type }}
+
+    cluster:
+      # Specify username, password for cluster authentication. Used for agent/analyzer communication.
+      username: {{ skydive_cluster_username }}
+      password: {{ skydive_cluster_password }}
+
+  topology:
+    # Probes used to capture topology information like interfaces,
+    # bridges, namespaces, etc...
+    # Available: ovsdb, docker, neutron, opencontrail, socketinfo, lxd, lldp
+{% if skydive_docker_exists | bool %}
+{%   set _ = skydive_probes.append('docker') %}
+{% endif %}
+{% if skydive_ovs_db_exists | bool %}
+{%   set _ = skydive_probes.append('ovsdb') %}
+{% endif %}
+    probes: {{ skydive_probes | to_json }}
+
+    netlink:
+      # delay in seconds between two metric updates
+      # metrics_update: 30
+
+    # Define OpenStack Neutron credentials and the enpoint type
+    # used by the neutron probe
+    neutron:
+      # auth_url:
+      # username: neutron
+      # password: secret
+      # tenant_name: service
+      # region_name: RegionOne
+      # domain_name: Default
+      # ssl_insecure: false
+
+      # The endpoint_type value must be 'public', 'internal' or 'admin'
+      # endpoint_type: public
+
+    lldp:
+      # Interfaces to listen for LLDP frames. If no list is specified,
+      # use all interfaces
+      interfaces:
+
+{% if skydive_libvirt_exists | bool %}
+    libvirt:
+      url: qemu:///system
+{% endif %}
+
+{% if skydive_runc_exists | bool %}
+    runc:
+      run_path:
+        - /var/run/runc
+{% endif %}
+
+  capture:
+    # Period in second to get capture stats from the probe. Note this
+    # stats_update: 1
+
+  metadata:
+    # info: This is compute node
+{% endif %}
+
+dpdk:
+  # DPDK port listening flows from
+  ports:
+    # - 0
+    # - 1
+
+  # nb workers per port
+  # workers: 4
+
+  # debug message every n seconds
+  # debug: 1
+
+sflow:
+  # Default listening address is 127.0.0.1
+  # bind_address: 127.0.0.1
+
+  # Port min/max used when starting a sflow probe, a agent will be started
+  # with a port from this range
+  # port_min: 6345
+  # port_max: 6355
+
+{% if skydive_ovs_db_exists | bool %}
+ovs:
+  # ovsdb connection, Format supported :
+  # * addr:port
+  # * tcp://addr:port
+  # * unix:///var/run/openvswitch/db.sock
+  # If you use the tcp connection you need to authorize connexion to ovsdb agent
+  # at least locally
+  # % sudo ovs-appctl -t ovsdb-server ovsdb-server/add-remote ptcp:6400:127.0.0.1
+  ovsdb: unix://{{ skydive_ovs_db_socket }}
+
+  oflow:
+    # Enable the parsing of openflow rules (disabled by default)
+    # enable: false
+
+    # Openflow versions used by ovs-ofctl when queries are made to the
+    # switch. 1.0 should always be supported. 1.3 gives a nicer output and
+    # it is recommended to add it if it is supported.
+    # 1.4 can be broken on some switch, 1.5 and 1.6 are still considered
+    # as experimental.
+    # openflow_versions:
+    #  - OpenFlow10
+
+    # The probe can connect to remote bridge over TLS (ssl url).
+    # The default value is empty for those options.
+    # Path to the private key file (TLS connection)
+    # key: /etc/ssl/private/agent.key
+
+    # Path to the certificate associated to the key (TLS connection)
+    # cert: /etc/ssl/certs/agent.crt
+
+    # Path to certificate authority validating bridge connections (TLS connection)
+    # ca: /etc/ssl/certs/ca.crt
+
+    address:
+      # Map translating bridge names into URL for remote connection
+      # - bridge: ssl:xxx.yyy.zzz.ttt:port
+{% endif %}
+
+{% if skydive_docker_exists | bool %}
+docker:
+  url: unix://{{ skydive_docker_socket }}
+{% endif %}
+
+netns:
+  # allow to specify where the netns probe is watching network namespace
+  run_path: /var/run/netns
+
+opencontrail:
+  # Host address of the OpenContrail vrouter agent
+  # host: localhost
+
+  # TCP port of the OpenContrail vrouter agent
+  # port: 8086
+
+  # UDP dest port for MPLS traffic
+  # mpls_udp_port: 51234
+
+storage:
+  # Elasticsearch backend information.
+  myelasticsearch:
+    driver: elasticsearch
+    host: "127.0.0.1:19200"
+
+    # Define the maximum delay before flushing document
+    # bulk_maxdelay: 5
+
+    # If a limit is specified, when the index reaches it, it is rolled.
+    # index_entries_limit specifies the maximum number of entries allowed in an index.
+    # index_age_limit specifies the maximum age (in minutes) allowed for an index.
+    # For both limits, a value of 0 specifies that there is no limitation.
+    # index_entries_limit: 0
+    # index_age_limit: 0
+
+    # The number of indices to keep before deleting.
+    # A value of 0 specifies no limit (i.e. indices will never be deleted)
+    # indices_to_keep: 0
+
+  # OrientDB backend information.
+  myorientdb:
+    # driver: orientdb
+    # addr: http://127.0.0.1:2480
+    # database: Skydive
+    # username: root
+    # password: hello
+
+  # Memory backend
+  mymemory:
+    # driver: memory
+
+logging:
+  # level: INFO
+
+  # Default backend used: stderr
+  backends:
+    # - stderr
+    # - stdout
+    - file
+    # - syslog
+
+  # configuration of the 'file' backend
+  file:
+    path: /var/log/skydive.log
+
+  # configuration encoder could be for all backends or for specific one
+  # encoder: json
+  # color: false
+
+auth:
+  mybasic:
+    # Define a basic auth authentication backend
+    type: basic
+
+    # Specify the htpassword file to be used
+    file: {{ skydive_basic_auth_file }}
+
+    # Users can be declared in this section instead of using a file.
+    # users:
+      # user1: secret1
+      # user2: secret2
+
+  mykeystone:
+    # Define a basic auth authentication backend
+    type: keystone
+    auth_url: {{ skydive_os_auth_url }}
+
+    # define the tenant and the domain that the users have to belong to
+    tenant_name: {{ skydive_auth_os_tenant_name }}
+    domain_name: {{ skydive_auth_os_domain_name }}
+
+    # define which role an authenticated user will have. Only used for API authentication.
+    # two roles are predefined, admin and guest.
+    role: {{ skydive_auth_os_user_role }}
+
+etcd:
+  # server parameters
+  # when 'embedded' is set to true, the analyzer will start an embedded etcd server
+  embedded: {{ skydive_etcd_embedded }}
+  listen: {{ skydive_etcd_listen_uri }}
+
+  # maximum number of WAL and snapshot files. 0 means unlimited
+  # max_wal_files: 0
+  # max_snap_files: 0
+
+  # path where the etcd files will be stored.
+  # data_dir: /var/lib/skydive/etcd
+
+  # client parameters
+{% if skydive_etcd_servers %}
+  servers: {{ skydive_etcd_servers | to_json }}
+{% endif %}
+  # name to use for clustering, by default it is set to the host id
+  name: {{ inventory_hostname }}
+
+  # list of peers for etcd clustering between analyzers
+  # each entry is composed of the peer name and the endpoints for this peer
+{% set peers = {} %}
+{% for node in groups['skydive_analyzers'] %}
+{%   set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
+{%   set _ = peers.__setitem__(inventory_hostname, 'http://' ~ hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'] ~ ':' ~ skydive_etcd_port) %}
+{% endfor %}
+  peers: {{ skydive_etcd_peers | default(peers) | to_json }}
+
+  # client_timeout: 5
+
+flow:
+  # Without any new packets, a flow expires after flow.expire
+  # seconds
+  # expire: 600
+
+  # Seconds between flow updates (metrics, enhancements,...)
+  # update: 60
+
+  # Protocol to use to send flows to the analyzer: websocket or udp
+  protocol: {{ skydive_flow_protocol }}
+
+  # Define the layer key mode used by default for captures. The key mode defines
+  # the layers used to identify a unique flow.
+  # * L2, this mode includes layer 2 and beyond.
+  # * L3, this mode includes layer 3 and beyond and takes layer 2 if there is no layer 3.
+  # default_layer_key_mode: L2
+
+  # Set the application field according to the following port mapping
+  application_ports:
+    tcp:
+      # 80: HTTP
+      # 8080: HTTP
+      # 443: HTTPS
+      # 1194: OPENVPN
+    udp:
+      # 1194: OPENVPN
+
+ui:
+  # Specify the extra assets folder. Javascript and CSS files present in this
+  # folder will be added to the WebUI.
+  # extra_assets: /usr/share/skydive/assets
+
+  # select between light, dark themes
+  # theme: dark
+
+  # Settings specific to the topology view
+  topology:
+    # Pre-defined Gremlin expression used in the WebUI for Filtering and Highlighting.
+    # Note: Key should be in lower case
+    favorites:
+    #   namespaces: "g.V().Has('Type', 'netns').OutE().BothV()"
+    #   layer2: "g.E().Has('RelationType', 'layer2')"
+
+    # Highlight Gremlin expression used by default and applied on WebUI load.
+    # default_highlight: "layer2"
+    # Filter Gremlin expression used by default and applied on WebUI load.
+    # default_filter: "layer2"
+
+  # update rate of links in seconds
+  bandwidth_update_rate: 5
+
+  # 'absolute' - thresholds in Kbit
+  # 'relative' - thresholds in % relative to link speed reported by netlink
+  bandwidth_threshold: absolute
+  bandwidth_absolute_active: 1
+  bandwidth_absolute_warning: 10
+  bandwidth_absolute_alert: 100
+  bandwidth_relative_active: 0.1
+  bandwidth_relative_warning: 0.4
+  bandwidth_relative_alert: 0.8
+
+  # Enable/disable ssh to hosts
+  # ssh_enabled: false
+
+  # Enable/disable k8s related elements
+  # k8s_enabled: false
+
+  bpf:
+    # Pre-defined BPF filters
+    favorites:
+      # filter1: ip broadcast
+      # filter2: ip multicast
+
+rbac:
+  model:
+    # RBAC model
+    # request_definition:
+    # - sub, obj, act
+    # policy_definition:
+    # - sub, obj, act, eft
+    # role_definition:
+    # - _, _
+    # policy_effect:
+    # - some(where (p_eft == allow)) && !some(where (p_eft == deny))
+    # matchers:
+    # - g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+  policy:
+    # additional RBAC policy:
+    # - p, myuser, capture, write, deny
+    # - g, myuser, myrole

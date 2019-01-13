@@ -33,8 +33,14 @@
         # - openstack-ansible-ops:osquery-ubuntu-xenial-clustered
         - openstack-ansible-ops:osquery-ubuntu-bionic
         # - openstack-ansible-ops:osquery-ubuntu-bionic-clustered
+        - openstack-ansible-ops:skydive-ubuntu-xenial
+        - openstack-ansible-ops:skydive-ubuntu-bionic
+        - openstack-ansible-ops:skydive-centos-7
+        - openstack-ansible-ops:skydive-opensuse-423
+        # - openstack-ansible-ops:skydive-opensuse-15
     gate:
       jobs:
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
         - openstack-ansible-ops:osquery-ubuntu-bionic
+        - openstack-ansible-ops:skydive-ubuntu-bionic

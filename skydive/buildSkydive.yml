@@ -1,0 +1,79 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Setup localhost
+  hosts: localhost
+  connection: local
+  tags:
+    - always
+
+
+- name: Gather facts
+  hosts: skydive_all
+  tasks:
+    - name: Gather facts on all hosts
+      setup: {}
+  tags:
+    - always
+
+
+- name: Classify skydive build servers
+  hosts: skydive_build_nodes
+  serial: 1
+  tasks:
+    - name: Group repo servers by architecture and os version
+      group_by:
+        key: skydive_build_nodes_{{ ansible_architecture }}
+  tags:
+    - always
+
+
+- name: Prepare group of master build servers
+  hosts: localhost
+  tasks:
+    - name: Prepare group of master build servers
+      add_host:
+        name: "{{ groups[item][0] }}"
+        groups: skydive_build_nodes_masters
+      with_items: "{{ groups | select('match', '^skydive_build_nodes_') | list }}"
+      changed_when: false
+  tags:
+    - always
+
+
+- name: Make skydive
+  hosts: skydive_build_nodes_masters
+  become: yes
+  vars:
+    skydive_build_version: HEAD
+    skydive_build_path: "/opt/skydive-build/{{ skydive_build_version }}"
+    skydive_build_go_path: "{{ skydive_build_path }}/go"
+  roles:
+    - role: make_skydive
+  post_tasks:
+    - name: Find skydive binaries
+      find:
+        paths: "{{ skydive_build_go_path }}/bin/"
+        recurse: no
+        patterns: "*skydive*"
+      register: files_to_copy
+    - name: Fetch skydive binaries
+      fetch:
+        src: "{{ item.path }}"
+        dest: "/tmp/skydive/{{ ansible_architecture }}/{{ item.path | basename }}"
+        flat: true
+      with_items: "{{ files_to_copy.files }}"
+  tags:
+    - skydive-make
