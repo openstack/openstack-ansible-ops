@@ -18,25 +18,27 @@ skydive_fabric: |-
   {% set fabric = [] %}
   {% set nodes = [] %}
   {% for node in groups['skydive_analyzers'] %}
-  {%   set agents_loop = loop %}
-  {%   for interface in (hostvars[node]['ansible_interfaces'] | map('replace', '-','_') | list) %}
-  {%     if interface != 'lo' %}
-  {%       set ansible_interface_name = "ansible_" ~ interface %}
-  {%       set port_entry = "TOR[Name=TOR] -> TOR_PORT" ~ agents_loop.index ~ "[Name=port" ~ agents_loop.index ~ "]" %}
-  {%       if hostvars[node][ansible_interface_name] is defined %}
-  {%         set interface_data = hostvars[node][ansible_interface_name] %}
-  {%         if interface_data['mtu'] is defined %}
-  {%           set port_entry = "TOR[Name=TOR] -> [color=red] TOR_PORT" ~ agents_loop.index ~ "[Name=port" ~ agents_loop.index ~ ",MTU=" ~ interface_data['mtu'] ~ "]" %}
+  {%   if node in ansible_play_hosts %}
+  {%     set agents_loop = loop %}
+  {%     for interface in (hostvars[node]['ansible_interfaces'] | map('replace', '-','_') | list) %}
+  {%       if interface != 'lo' %}
+  {%         set ansible_interface_name = "ansible_" ~ interface %}
+  {%         set port_entry = "TOR[Name=TOR] -> TOR_PORT" ~ agents_loop.index ~ "[Name=port" ~ agents_loop.index ~ "]" %}
+  {%         if hostvars[node][ansible_interface_name] is defined %}
+  {%           set interface_data = hostvars[node][ansible_interface_name] %}
+  {%           if interface_data['mtu'] is defined %}
+  {%             set port_entry = "TOR[Name=TOR] -> [color=red] TOR_PORT" ~ agents_loop.index ~ "[Name=port" ~ agents_loop.index ~ ",MTU=" ~ interface_data['mtu'] ~ "]" %}
+  {%           endif %}
   {%         endif %}
+  {%         set _ = fabric.append((port_entry)) %}
+  {%         if not interface in nodes %}
+  {%           set host_entry = "TOR_PORT" ~ agents_loop.index ~ "-> *[Type=host,Name=" ~ hostvars[node]['ansible_hostname'] ~ "/" ~ interface %}
+  {%           set _ = fabric.append((host_entry)) %}
+  {%         endif %}
+  {%         set _ = nodes.append(interface) %}
   {%       endif %}
-  {%       set _ = fabric.append((port_entry)) %}
-  {%       if not interface in nodes %}
-  {%         set host_entry = "TOR_PORT" ~ agents_loop.index ~ "-> *[Type=host,Name=" ~ hostvars[node]['ansible_hostname'] ~ "/" ~ interface %}
-  {%         set _ = fabric.append((host_entry)) %}
-  {%       endif %}
-  {%       set _ = nodes.append(interface) %}
-  {%     endif %}
-  {%   endfor %}
+  {%     endfor %}
+  {%   endif %}
   {% endfor %}
   {{ fabric }}
 

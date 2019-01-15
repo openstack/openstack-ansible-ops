@@ -420,8 +420,10 @@ etcd:
   # each entry is composed of the peer name and the endpoints for this peer
 {% set peers = {} %}
 {% for node in groups['skydive_analyzers'] %}
-{%   set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
-{%   set _ = peers.__setitem__(inventory_hostname, 'http://' ~ (hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'])) ~ ':' ~ skydive_etcd_port) %}
+{%   if node in ansible_play_hosts %}
+{%     set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
+{%     set _ = peers.__setitem__(inventory_hostname, 'http://' ~ (hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'])) ~ ':' ~ skydive_etcd_port) %}
+{%   endif %}
 {% endfor %}
   peers: {{ skydive_etcd_peers | default(peers) | to_json }}
 
