@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-skydive_analyzer_service_state: started
+skydive_analyzer_service_state: restarted
 
 skydive_username: skydive
 

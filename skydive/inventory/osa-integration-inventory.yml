@@ -1,0 +1,60 @@
+---
+
+all_systems:
+  vars: {}
+  children:
+    systems:
+      vars:
+        ansible_become: yes
+        ansible_become_user: "root"
+        ansible_user: "root"
+        skydive_password: "{{ haproxy_stats_password }}"
+        skydive_elasticsearch_servers: "{{ groups['elastic-logstash'] | map('extract', hostvars, ['ansible_host']) | list | join(',') }}"
+        skydive_bind_address: "{{ container_address | default(ansible_host) }}"
+        haproxy_extra_services:
+          - service:
+              haproxy_service_name: skydive_analyzer
+              haproxy_backend_nodes: "{{ groups['skydive_analyzers'] | default([]) }}"
+              haproxy_bind: "{{ [internal_lb_vip_address] }}"
+              haproxy_port: 8082
+              haproxy_balance_type: http
+              haproxy_ssl: true
+              haproxy_backend_options:
+                - "httpchk HEAD / HTTP/1.0\\r\\nUser-agent:\\ osa-haproxy-healthcheck"
+          - service:
+              haproxy_service_name: traefik
+              haproxy_backend_nodes: "{{ groups['skydive_analyzers'] | default([]) }}"
+              haproxy_bind: "{{ [internal_lb_vip_address] }}"
+              haproxy_port: 8090
+              haproxy_balance_type: http
+              haproxy_ssl: true
+              haproxy_backend_options:
+                - "httpchk HEAD / HTTP/1.0\\r\\nUser-agent:\\ osa-haproxy-healthcheck"
+              haproxy_backend_httpcheck_options:
+                - expect rstatus 200|401
+      children:
+        traefik_all:
+          children:
+            traefik_build_nodes: {}
+
+        skydive_all:
+          children:
+            skydive_build_nodes: {}
+
+            skydive_agents:
+              children:
+                hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+            skydive_analyzers:
+              children:
+                utility_all: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+        elk_all:
+          children:
+            elastic-logstash:
+              children:
+                log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+            kibana:
+              children:
+                log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.

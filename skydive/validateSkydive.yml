@@ -19,7 +19,7 @@
     skydive_username: skydive
     skydive_analyzer_port: 8082
     skydive_network_device: "{{ ansible_default_ipv4['interface'] | replace('-', '_') }}"
-    skydive_analyzer_uri: "{{ hostvars[inventory_hostname]['ansible_' ~ skydive_network_device]['ipv4']['address'] ~ ':' ~ skydive_analyzer_port }}"
+    skydive_analyzer_uri: "{{ (skydive_bind_address | default(hostvars[inventory_hostname]['ansible_' ~ skydive_network_device]['ipv4']['address'])) ~ ':' ~ skydive_analyzer_port }}"
   tasks:
     - name: Check API login
       uri:

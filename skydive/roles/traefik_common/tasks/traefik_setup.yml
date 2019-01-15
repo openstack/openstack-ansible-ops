@@ -76,7 +76,7 @@
     systemd_services:
       - service_name: "traefik"
         execstarts:
-          - /usr/local/bin/traefik --file.directory="/etc/traefik"
+          - "/usr/local/bin/traefik --file.directory=/etc/traefik"
 
 - name: Force handlers
   meta: flush_handlers

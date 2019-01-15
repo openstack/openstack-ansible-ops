@@ -49,7 +49,7 @@ http:
 analyzer:
   # address and port for the analyzer API, Format: addr:port.
   # Default addr is 127.0.0.1
-  listen: {{ hostvars[inventory_hostname]["ansible_" ~ (skydive_network_device | replace('-', '_') | string)]['ipv4']['address'] ~ ':' ~ skydive_analyzer_port }}
+  listen: {{ (skydive_bind_address | default(hostvars[inventory_hostname]["ansible_" ~ (skydive_network_device | replace('-', '_') | string)]['ipv4']['address'])) ~ ':' ~ skydive_analyzer_port }}
 
   auth:
     # auth section for API request
@@ -166,7 +166,7 @@ analyzer:
 {% set analyzers = [] %}
 {% for node in groups['skydive_analyzers'] %}
 {%   set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
-{%   set _ = analyzers.append(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'] ~ ':' ~ skydive_analyzer_port) %}
+{%   set _ = analyzers.append((hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'])) ~ ':' ~ skydive_analyzer_port) %}
 {% endfor %}
 analyzers: {{ analyzers | to_json }}
 
@@ -174,7 +174,7 @@ analyzers: {{ analyzers | to_json }}
 agent:
   # address and port for the agent API, Format: addr:port.
   # Default addr is 127.0.0.1
-  listen: {{ hostvars[inventory_hostname]["ansible_" ~ (skydive_network_device | replace('-', '_') | string)]['ipv4']['address'] ~ ':' ~ skydive_agent_port }}
+  listen: {{ (skydive_bind_address | default(hostvars[inventory_hostname]["ansible_" ~ (skydive_network_device | replace('-', '_') | string)]['ipv4']['address'])) ~ ':' ~ skydive_agent_port }}
 
   auth:
     # auth section for API request
@@ -421,7 +421,7 @@ etcd:
 {% set peers = {} %}
 {% for node in groups['skydive_analyzers'] %}
 {%   set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
-{%   set _ = peers.__setitem__(inventory_hostname, 'http://' ~ hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'] ~ ':' ~ skydive_etcd_port) %}
+{%   set _ = peers.__setitem__(inventory_hostname, 'http://' ~ (hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'])) ~ ':' ~ skydive_etcd_port) %}
 {% endfor %}
   peers: {{ skydive_etcd_peers | default(peers) | to_json }}
 

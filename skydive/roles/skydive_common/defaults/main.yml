@@ -25,6 +25,11 @@ skydive_flow_protocol: udp
 # Set a particulare network interface used for skydive traffic
 skydive_network_device: "{{ ansible_default_ipv4['interface'] }}"
 
+# The skydive bind address can also be used to set the specific bind address of
+# a given node running the skydive analyzer. By default this variable is undefined
+# so the bind address is determined using the `skydive_network_device`.
+# skydive_bind_address: 10.0.0.2
+
 # The skydive elasticsearch uri(s) is required
 # Set the elasticsearch URI(s), the system will attempt to connect to the URI.
 # If this URI is unreachable the deployment will fail. If there is more than
