@@ -27,6 +27,7 @@ elastic_index_retention_algorithm: default
 #  elastic_journalbeat_retention: 1
 #  elastic_metricbeat_retention: 1
 #  elastic_packetbeat_retention: 1
+#  elastic_skydive_retention: 1
 
 ## These options are all in megabytes.
 #  elastic_logstash_size: 1024
@@ -37,6 +38,7 @@ elastic_index_retention_algorithm: default
 #  elastic_journalbeat_size: 1024
 #  elastic_metricbeat_size: 1024
 #  elastic_packetbeat_size: 1024
+#  elastic_skydive_size: 1024
 
 ## WHen a static retention policy option is not defined these options will be
 ## used for dynamic fact generation.
@@ -94,6 +96,9 @@ elastic_beat_retention_policy_hosts:
   packetbeat:
     weight: 1
     hosts: "{{ groups['hosts'] | default([]) }}"
+  skydive:
+    weight: 1
+    hosts: "{{ groups['skydive_analyzers'] | default([]) }}"
 
 # Refresh the elasticsearch retention policy local facts.
 elastic_retention_refresh: false

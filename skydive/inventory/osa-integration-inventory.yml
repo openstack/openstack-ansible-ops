@@ -11,6 +11,8 @@ all_systems:
         skydive_password: "{{ haproxy_stats_password }}"
         skydive_elasticsearch_servers: "{{ groups['elastic-logstash'] | map('extract', hostvars, ['ansible_host']) | list | join(',') }}"
         skydive_bind_address: "{{ container_address | default(ansible_host) }}"
+        elastic_skydive_retention: 2  # Elastic retention set to 2 days max
+        elastic_skydive_size: 51200  # Elastic retention set to 50GiB max
         haproxy_extra_services:
           - service:
               haproxy_service_name: skydive_analyzer
@@ -32,6 +34,7 @@ all_systems:
                 - "httpchk HEAD / HTTP/1.0\\r\\nUser-agent:\\ osa-haproxy-healthcheck"
               haproxy_backend_httpcheck_options:
                 - expect rstatus 200|401
+
       children:
         traefik_all:
           children:
