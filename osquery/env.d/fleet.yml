@@ -5,10 +5,10 @@ component_skel:
       - fleet_all
       - kolide-fleet_all
 
-  mariadb:
+  kolide-db:
     belongs_to:
       - fleet_all
-      - mariadb_all
+      - kolide-db_all
 
 container_skel:
   kolide-fleet_container:
@@ -16,7 +16,7 @@ container_skel:
       - kolide_containers
     contains:
       - kolide-fleet
-      - mariadb
+      - kolide-db
 
 physical_skel:
   kolide_containers:

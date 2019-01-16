@@ -20,7 +20,7 @@
     login_host: "127.0.0.1"
     name: "{{ kolide_fleet_db_name }}"
     state: "present"
-  delegate_to: "{{ groups['mariadb_all'][0] }}"
+  delegate_to: "{{ groups['kolide-db_all'][0] }}"
   no_log: False
   run_once: true
 
@@ -35,7 +35,7 @@
     state: "present"
     priv: "{{ kolide_fleet_db_name }}.*:ALL"
     append_privs: "{{ kolide_fleet_db_append_privs | default(omit) }}"
-  delegate_to: "{{ groups['mariadb_all'][0] }}"
+  delegate_to: "{{ groups['kolide-db_all'][0] }}"
   with_items:
     - 'localhost'
     - '127.0.0.1'

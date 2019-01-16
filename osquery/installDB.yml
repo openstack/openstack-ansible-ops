@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Install MariaDB Galera Cluster
-  hosts: "mariadb_all"
+  hosts: "kolide-db_all"
   become: true
   user: root
   gather_facts: "{{ osa_gather_facts | default(True) }}"
@@ -34,7 +34,7 @@
 
   roles:
     - role: galera_server
-      galera_cluster_members: "{{ groups['mariadb_all'] }}"
+      galera_cluster_members: "{{ groups['kolide-db_all'] }}"
       galera_wsrep_node_name: "{{ inventory_hostname }}"
       galera_cluster_name: telemetry_galera_cluster
       galera_monitoring_allowed_source: "0.0.0.0/0"

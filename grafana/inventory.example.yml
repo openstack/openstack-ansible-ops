@@ -24,6 +24,6 @@ hosts:
     logging01:
 
 # This is the location where grafana(s) will live
-grafana:
+grafana_all:
   hosts:
     logging01:

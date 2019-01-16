@@ -20,7 +20,9 @@ all:
       ansible_user: root
 
 
-hosts:
+osquery_all:
+  hosts:
+    localhost: {}
   vars:
     physical_host: localhost
     management_cidr: "172.29.236.0/24"
@@ -29,9 +31,6 @@ hosts:
         address: "172.29.236.1"
         netmask: "255.255.255.0"
         bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
-
-  hosts:
-    localhost: {}
 
 
 all_containers:
@@ -45,9 +44,9 @@ all_containers:
         bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
 
   children:
-    mariadb_all:
+    kolide-db_all:
       children:
-        mariadb:
+        kolide-db:
           hosts:
             kolide-fleet0: {}
             kolide-fleet1: {}

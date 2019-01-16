@@ -106,7 +106,7 @@ While it is possible to integrate skydive into an OSA cloud using environment
 extensions and `openstack_user_config.yml` additions, the deployment of this
 system is possible through the use of an inventory overlay.
 
-> The example overlay inventory file inventory/osa-integration-inventory.yml
+> The example overlay inventory file `inventory/osa-integration-inventory.yml`
   assumes elasticsearch is already deployed and is located on the baremetal
   machine(s) within the log_hosts group. If this is not the case, adjust the
   overlay inventory for your environment.
@@ -117,7 +117,7 @@ source bootstrap-embedded-ansible.sh
 
 # Run the skydive deployment NOTE: This is using multiple inventories.
 ansible-playbook -i /opt/openstack-ansible/inventory/dynamic_inventory.py \
-                 -i /opt/openstack-ansible/ops/skydive/inventory/osa-integration-inventory.yml \
+                 -i /opt/openstack-ansible-ops/overlay-inventories/osa-integration-inventory.yml \
                  -e @/etc/openstack_deploy/user_secrets.yml \
                  site.yml
 
@@ -127,9 +127,12 @@ deactivate
 # If using haproxy, run the haproxy playbook using the multiple inventory sources.
 cd /opt/openstack-ansible/playbooks
 openstack-ansible -i /opt/openstack-ansible/inventory/dynamic_inventory.py \
-                  -i /opt/openstack-ansible/ops/skydive/inventory/osa-integration-inventory.yml \
+                  -i /opt/openstack-ansible-ops/overlay-inventories/osa-integration-inventory.yml \
                   haproxy-install.yml
 ```
+
+More on using overlay inventories can be seen in the `overlay-inventory`
+directory.
 
 ##### Configuration | Haproxy
 

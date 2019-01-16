@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Deploy Grafana
-  hosts: grafana
+  hosts: grafana_all
   become: true
   vars_files:
     - vars/variables.yml
@@ -35,6 +35,10 @@
               The database root password is undefined
           when:
             - galera_root_password is undefined
+
+        - name: Install PyMySQL
+          package:
+            name: python-pymysql
 
         - name: Create DB for service
           mysql_db:

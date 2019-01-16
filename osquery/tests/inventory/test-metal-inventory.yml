@@ -7,14 +7,15 @@ all:
       ansible_host: 127.0.0.1
       ansible_user: root
 
-hosts:
+
+osquery_all:
   hosts:
     localhost: {}
 
 
-mariadb_all:
+kolide-db_all:
   children:
-    mariadb:
+    kolide-db:
       hosts:
         localhost: {}
 

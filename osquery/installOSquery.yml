@@ -64,7 +64,7 @@
 
 
 - name: Install osquery
-  hosts: "hosts:all_containers"
+  hosts: "osquery_all"
   become: true
   vars_files:
     - vars/variables.yml
