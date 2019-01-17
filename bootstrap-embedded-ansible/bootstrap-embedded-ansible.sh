@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # Check if embedded ansible is already activated. If it is active, deactivate it.
-alias deactivate &> /dev/null && deactivate
+(alias deactivate &> /dev/null && deactivate) || true
 
 export OPTS=()
 export CLONE_DIR="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
