@@ -134,7 +134,7 @@ openstack-ansible -i /opt/openstack-ansible/inventory/dynamic_inventory.py \
 More on using overlay inventories can be seen in the `overlay-inventory`
 directory.
 
-##### Configuration | Haproxy
+##### Configuration | Haproxy (frontend)
 
 The example overlay inventory contains a section for general haproxy
 configuration which exposes the skydive UI internally.
@@ -170,12 +170,27 @@ This config will provide access to the web UI for both **skydive** and
 * **Skydive** runs on port `8082`
 * **Traefik** runs on port `8090`
 
+##### OpenStack Integration
+
+Skydive can be configured to work with OpenStack. For this to work a
+`clouds.yaml` must be present on one of the nodes used within the deployment;
+the path is typically to the clouds config is typically
+`$HOME/.config/openstack/clouds.yaml`. The playbooks will use the
+`clouds.yaml` file to read nessisary credentials used to create a new users
+and roles to be used with `skydive` and to enable neutron probes within the
+`skydive` agent.
+
+When OpenStack integration is enabled, all authentication will be done through
+keystone. User access to the skydive UI will be restricted to only users that
+have the skydive role assigned to them.
+
+All available options for the OpenStack integration can be found in the
+`defaults/main.yml` file.
+
 ### Validating the skydive installation
 
 Post-deployment, the skydive installation can be validated by simply running
 the `validateSkydive.yml` playbook.
 
 TODOs:
-[] Setup cert based agent/server auth
-[] Add OpenStack integration
-[] Document OpenStack integration, what it adds to the admin service
+- [] Setup cert based agent/server auth

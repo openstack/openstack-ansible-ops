@@ -43,7 +43,7 @@ http:
     # queue_size: 10000
 
     # enable write compression
-    # enable_write_compression: true
+    enable_write_compression: true
 
 {% if inventory_hostname in groups['skydive_analyzers'] %}
 analyzer:
@@ -191,47 +191,50 @@ agent:
     # Probes used to capture topology information like interfaces,
     # bridges, namespaces, etc...
     # Available: ovsdb, docker, neutron, opencontrail, socketinfo, lxd, lldp
-{% if skydive_docker_exists | bool %}
-{%   set _ = skydive_probes.append('docker') %}
-{% endif %}
-{% if skydive_ovs_db_exists | bool %}
-{%   set _ = skydive_probes.append('ovsdb') %}
-{% endif %}
+{%   if skydive_docker_exists | bool %}
+{%     set _ = skydive_probes.append('docker') %}
+{%   endif %}
+{%   if skydive_ovs_db_exists | bool %}
+{%     set _ = skydive_probes.append('ovsdb') %}
+{%   endif %}
+{%   if skydive_openstack_enabled | bool %}
+{%     set _ = skydive_probes.append('neutron') %}
+{%   endif %}
     probes: {{ skydive_probes | to_json }}
 
     netlink:
       # delay in seconds between two metric updates
-      # metrics_update: 30
+      metrics_update: 30
 
+{%   if skydive_openstack_enabled | bool %}
     # Define OpenStack Neutron credentials and the enpoint type
     # used by the neutron probe
     neutron:
-      # auth_url:
-      # username: neutron
-      # password: secret
-      # tenant_name: service
-      # region_name: RegionOne
-      # domain_name: Default
-      # ssl_insecure: false
-
-      # The endpoint_type value must be 'public', 'internal' or 'admin'
-      # endpoint_type: public
+      auth_url: {{ skydive_os_auth_url | default(clouds_yaml['clouds'][skydive_os_cloud]['auth']['auth_url']) }}
+      username: {{ skydive_os_service_user }}
+      password: {{ skydive_os_service_password }}
+      tenant_name: {{ skydive_os_project_name }}
+      region_name: {{ skydive_os_region_name | default(clouds_yaml['clouds'][skydive_os_cloud]['region_name']) }}
+      domain_name: {{ skydive_os_domain_name }}
+      ssl_insecure: {{ not (skydive_os_service_insecure | bool) }}
+      endpoint_type: {{ skydive_os_endpoint_type | default(clouds_yaml['clouds'][skydive_os_cloud]['interface']) }}
+{%   endif %}
 
     lldp:
       # Interfaces to listen for LLDP frames. If no list is specified,
       # use all interfaces
       interfaces:
 
-{% if skydive_libvirt_exists | bool %}
+{%   if skydive_libvirt_exists | bool %}
     libvirt:
       url: qemu:///system
-{% endif %}
+{%   endif %}
 
-{% if skydive_runc_exists | bool %}
+{%   if skydive_runc_exists | bool %}
     runc:
       run_path:
         - /var/run/runc
-{% endif %}
+{%   endif %}
 
   capture:
     # Period in second to get capture stats from the probe. Note this
@@ -239,7 +242,6 @@ agent:
 
   metadata:
     # info: This is compute node
-{% endif %}
 
 dpdk:
   # DPDK port listening flows from
@@ -253,6 +255,7 @@ dpdk:
   # debug message every n seconds
   # debug: 1
 
+{%   if skydive_ovs_db_exists | bool %}
 sflow:
   # Default listening address is 127.0.0.1
   # bind_address: 127.0.0.1
@@ -262,7 +265,6 @@ sflow:
   # port_min: 6345
   # port_max: 6355
 
-{% if skydive_ovs_db_exists | bool %}
 ovs:
   # ovsdb connection, Format supported :
   # * addr:port
@@ -299,12 +301,12 @@ ovs:
     address:
       # Map translating bridge names into URL for remote connection
       # - bridge: ssl:xxx.yyy.zzz.ttt:port
-{% endif %}
+{%   endif %}
 
-{% if skydive_docker_exists | bool %}
+{%   if skydive_docker_exists | bool %}
 docker:
   url: unix://{{ skydive_docker_socket }}
-{% endif %}
+{%   endif %}
 
 netns:
   # allow to specify where the netns probe is watching network namespace
@@ -319,7 +321,9 @@ opencontrail:
 
   # UDP dest port for MPLS traffic
   # mpls_udp_port: 51234
+{% endif %}
 
+{% if inventory_hostname in groups['skydive_analyzers'] %}
 storage:
   # Elasticsearch backend information.
   myelasticsearch:
@@ -351,6 +355,7 @@ storage:
   # Memory backend
   mymemory:
     # driver: memory
+{% endif %}
 
 logging:
   # level: INFO
@@ -383,19 +388,22 @@ auth:
       # user1: secret1
       # user2: secret2
 
+{% if skydive_openstack_enabled | bool %}
   mykeystone:
     # Define a basic auth authentication backend
     type: keystone
-    auth_url: {{ skydive_os_auth_url }}
+    auth_url: {{ skydive_os_auth_url | default(clouds_yaml['clouds'][skydive_os_cloud]['auth']['auth_url']) }}
 
     # define the tenant and the domain that the users have to belong to
-    tenant_name: {{ skydive_auth_os_tenant_name }}
-    domain_name: {{ skydive_auth_os_domain_name }}
+    tenant_name: {{ skydive_os_project_name }}
+    domain_name: {{ skydive_os_domain_name }}
 
     # define which role an authenticated user will have. Only used for API authentication.
     # two roles are predefined, admin and guest.
-    role: {{ skydive_auth_os_user_role }}
+    role: {{ skydive_os_user_role }}
+{% endif %}
 
+{% if inventory_hostname in groups['skydive_analyzers'] %}
 etcd:
   # server parameters
   # when 'embedded' is set to true, the analyzer will start an embedded etcd server
@@ -410,25 +418,27 @@ etcd:
   # data_dir: /var/lib/skydive/etcd
 
   # client parameters
-{% if skydive_etcd_servers %}
+{%   if skydive_etcd_servers %}
   servers: {{ skydive_etcd_servers | to_json }}
-{% endif %}
+{%   endif %}
   # name to use for clustering, by default it is set to the host id
   name: {{ inventory_hostname }}
 
   # list of peers for etcd clustering between analyzers
   # each entry is composed of the peer name and the endpoints for this peer
-{% set peers = {} %}
-{% for node in groups['skydive_analyzers'] %}
-{%   if node in ansible_play_hosts %}
-{%     set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
-{%     set _ = peers.__setitem__(inventory_hostname, 'http://' ~ (hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'])) ~ ':' ~ skydive_etcd_port) %}
-{%   endif %}
-{% endfor %}
+{%   set peers = {} %}
+{%   for node in groups['skydive_analyzers'] %}
+{%     if node in ansible_play_hosts %}
+{%       set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
+{%       set _ = peers.__setitem__(inventory_hostname, 'http://' ~ (hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address'])) ~ ':' ~ skydive_etcd_port) %}
+{%     endif %}
+{%   endfor %}
   peers: {{ skydive_etcd_peers | default(peers) | to_json }}
 
   # client_timeout: 5
+{% endif %}
 
+{% if inventory_hostname in groups['skydive_agents'] %}
 flow:
   # Without any new packets, a flow expires after flow.expire
   # seconds
@@ -455,6 +465,7 @@ flow:
       # 1194: OPENVPN
     udp:
       # 1194: OPENVPN
+{% endif %}
 
 ui:
   # Specify the extra assets folder. Javascript and CSS files present in this

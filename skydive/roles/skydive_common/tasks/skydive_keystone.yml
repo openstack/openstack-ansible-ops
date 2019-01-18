@@ -1,0 +1,131 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Check credentials and clouds data
+  fail:
+    msg: >-
+      The following variable "{{ item.default }}" is undefined and no known value was defined
+      in the "{{ skydive_os_cloud_file }}" file.
+  when:
+    - hostvars[inventory_hostname][item.default] is undefined
+    - clouds_yaml['clouds'] is undefined
+    - clouds_yaml['clouds'][skydive_os_cloud] is undefined
+    - clouds_yaml['clouds'][skydive_os_cloud]['auth'] is undefined
+    - clouds_yaml['clouds'][skydive_os_cloud]['auth'][item.cfg] is undefined
+  with_items:
+    - default: "skydive_os_auth_url"
+      cfg: "auth_url"
+
+- name: Create skydive venv
+  command: "/usr/bin/virtualenv --no-site-packages --no-setuptools /opt/skydive"
+  args:
+    creates: /opt/skydive/bin/pip
+
+- name: Setup skydive venv
+  pip:
+    name:
+      - pip
+      - setuptools
+    extra_args: "-U"
+    virtualenv: /opt/skydive
+
+- name: Ensure the openstacksdk is installed
+  pip:
+    name:
+      - openstacksdk
+    extra_args: "-U"
+    virtualenv: /opt/skydive
+
+- name: Capture current ansible python interpreter
+  set_fact:
+    old_ansible_python_interpreter: "{{ ansible_python_interpreter | default('/usr/bin/python') }}"
+
+- name: Set ansible python interpreter to skydive venv
+  set_fact:
+    ansible_python_interpreter: "/opt/skydive/bin/python"
+
+- name: Add skydive project
+  os_project:
+    cloud: "{{ skydive_os_cloud }}"
+    state: present
+    name: "{{ skydive_os_project_name }}"
+    description: "Skydive admin project"
+    domain_id: "{{ skydive_os_domain_name }}"
+    verify: "{{ not (skydive_os_service_insecure | bool) }}"
+    enabled: true
+  register: keystone_api
+  until: keystone_api is success
+  retries: 5
+  delay: 10
+
+- name: Add skydive user
+  os_user:
+    cloud: "{{ skydive_os_cloud }}"
+    state: present
+    name: "{{ skydive_os_user_name }}"
+    password: "{{ skydive_password }}"
+    update_password: on_create
+    domain: "{{ skydive_os_domain_name }}"
+    default_project: "{{ skydive_os_project_name }}"
+    verify: "{{ not (skydive_os_service_insecure | bool) }}"
+    enabled: true
+  register: keystone_api
+  until: keystone_api is success
+  retries: 5
+  delay: 10
+
+- name: Assign skydive user role
+  os_user_role:
+    cloud: "{{ skydive_os_cloud }}"
+    state: present
+    user: "{{ skydive_os_user_name }}"
+    role: "{{ skydive_os_user_role }}"
+    project: "{{ skydive_os_project_name }}"
+    verify: "{{ not (skydive_os_service_insecure | bool) }}"
+  register: keystone_api
+  until: keystone_api is success
+  retries: 5
+  delay: 10
+
+- name: Add skydive service user
+  os_user:
+    cloud: "{{ skydive_os_cloud }}"
+    state: present
+    name: "{{ skydive_os_service_user }}"
+    password: "{{ skydive_os_service_password }}"
+    domain: "{{ skydive_os_domain_name }}"
+    default_project: "{{ skydive_os_project_name }}"
+    verify: "{{ not (skydive_os_service_insecure | bool) }}"
+  register: keystone_api
+  until: keystone_api is success
+  retries: 5
+  delay: 10
+
+- name: Assign skydive service user role
+  os_user_role:
+    cloud: "{{ skydive_os_cloud }}"
+    state: present
+    user: "{{ skydive_os_service_user }}"
+    role: "{{ skydive_os_service_user_role }}"
+    project: "{{ skydive_os_project_name }}"
+    verify: "{{ not (skydive_os_service_insecure | bool) }}"
+  register: keystone_api
+  until: keystone_api is success
+  retries: 5
+  delay: 10
+
+- name: Reset ansible python
+  set_fact:
+    ansible_python_interpreter: "{{ old_ansible_python_interpreter }}"

@@ -68,4 +68,31 @@
   tags:
     - package_install
 
+- name: Check for openstack deployment
+  block:
+    - name: Slurp clouds file
+      slurp:
+        src: "{{ skydive_os_cloud_file }}"
+      register: clouds_file
+
+    - name: Enable OpenStack integration
+      set_fact:
+        clouds_yaml: "{{ clouds_file['content'] | b64decode | from_yaml }}"
+        skydive_auth_type: mykeystone
+        skydive_openstack_enabled: true
+      run_once: true
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      with_items: "{{ ansible_play_hosts }}"
+
+    - include_tasks: skydive_keystone.yml
+      run_once: true
+  rescue:
+    - name: Notice
+      debug:
+        msg: >-
+          OpenStack setup is not possible, running in without it.
+      when:
+        - not (skydive_openstack_enabled | bool)
+
 - include_tasks: skydive_setup.yml

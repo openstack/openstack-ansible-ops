@@ -37,6 +37,7 @@
             patterns: "*skydive*"
           register: files_to_copy
           delegate_to: "{{ skydive_staging_node }}"
+          run_once: true
           become: false
         - name: Install built skydive
           copy:
@@ -55,6 +56,7 @@
             dest: "/tmp/skydive/{{ ansible_architecture }}/{{ skydive_binary_url | basename }}"
             mode: '0755'
           delegate_to: "{{ skydive_staging_node }}"
+          run_once: true
           become: false
         - name: Install binary skydive
           copy:
@@ -91,6 +93,7 @@
             patterns: "*traefik*"
           register: files_to_copy
           delegate_to: "{{ traefik_staging_node }}"
+          run_once: true
           become: false
         - name: Install built traefik
           copy:
@@ -109,6 +112,7 @@
             dest: "/tmp/traefik/{{ ansible_architecture }}/{{ traefik_binary_url | basename }}"
             mode: '0755'
           delegate_to: "{{ traefik_staging_node }}"
+          run_once: true
           become: false
         - name: Install binary traefik
           copy:

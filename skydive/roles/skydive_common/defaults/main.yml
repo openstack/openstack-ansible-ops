@@ -108,32 +108,23 @@ skydive_basic_auth_file: /var/lib/skydive/skydive.secret
 skydive_basic_auth_users: {}
 
 # Skydive openstack setup
-skydive_os_service_username: "{{ skydive_username }}.service"
-skydive_os_service_password: "{{ skydive_password }}"
-skydive_os_service_tenant_name: service
-skydive_os_service_domain_name: Default
-skydive_os_service_region_name: RegionOne
-skydive_os_service_endpoint_type: internal
-skydive_os_service_insecure: true
 
-skydive_os_auth_url: null
-skydive_auth_os_tenant_name: "{{ skydive_username }}"
-skydive_auth_os_domain_name: Default
-skydive_auth_os_domain_id: default
-skydive_auth_os_user_role: admin
+## These options are normally undefined, if undefined the value will be pulled from the local clouds.yml.
+skydive_openstack_enabled: false
+# skydive_os_auth_url: http://localhost:5000/v3
+# skydive_os_region_name: RegionOne
+# skydive_os_endpoint_type: public
 
-
-os_auth_url:
-os_username:
-os_password:
-os_tenant_name: admin
-os_user_domain_name: Default
-os_project_domain_name: Default
-os_identity_api_version: 3
-
-# Role of the user created that will be used for the probe
-# authentication
+skydive_os_cloud: default
+skydive_os_cloud_file: "{{ ansible_env.HOME }}/.config/openstack/clouds.yaml"
+skydive_os_domain_name: Default
+skydive_os_project_name: "{{ skydive_username }}"
+skydive_os_user_name: "{{ skydive_username }}"
+skydive_os_user_role: admin
+skydive_os_service_user: "{{ skydive_username }}.service"
 skydive_os_service_user_role: admin
+skydive_os_service_password: "{{ skydive_password }}"
+skydive_os_service_insecure: true
 
 
 # Configuration overrides can be set using a config template.
