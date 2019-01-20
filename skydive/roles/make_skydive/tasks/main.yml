@@ -45,7 +45,7 @@
 - name: Get the skydive archive
   git:
     dest: "{{ skydive_build_project_path }}/github.com/skydive-project/skydive"
-    repo: https://github.com/skydive-project/skydive.git
+    repo: "{{ skydive_build_git_repo }}"
     force: yes
     track_submodules: yes
     clone: yes
@@ -53,12 +53,12 @@
     recursive: yes
     version: "{{ skydive_build_version }}"
 
-- name: Make install skydive
+- name: Make static skydive
   shell: |
     source /etc/default/go
     export PATH="{{ skydive_build_go_path }}/bin:${PATH}"
     export GOPATH="{{ skydive_build_go_path }}"
-    make install {{ skydive_build_use_flags }}
+    make static {{ skydive_build_use_flags }}
   args:
     chdir: "{{ skydive_build_project_path }}/github.com/skydive-project/skydive"
     executable: "/bin/bash"

@@ -172,17 +172,20 @@ This config will provide access to the web UI for both **skydive** and
 
 ##### OpenStack Integration
 
-Skydive can be configured to work with OpenStack. For this to work a
-`clouds.yaml` must be present on one of the nodes used within the deployment;
-the path is typically to the clouds config is typically
-`$HOME/.config/openstack/clouds.yaml`. The playbooks will use the
-`clouds.yaml` file to read nessisary credentials used to create a new users
-and roles to be used with `skydive` and to enable neutron probes within the
-`skydive` agent.
+Skydive can be configured to work with OpenStack. For this to be enabled, a
+`clouds.yaml` file must be present on one of the nodes used within the
+deployment.
+
+> The default check path for the `clouds.yaml` file is:
+  `$HOME/.config/openstack/clouds.yaml`
+
+The playbooks will use the `clouds.yaml` file to read nessisary credentials
+used to create a new user and role, which will provide the skydive-agents
+access to neutron.
 
 When OpenStack integration is enabled, all authentication will be done through
-keystone. User access to the skydive UI will be restricted to only users that
-have the skydive role assigned to them.
+keystone. User access to the skydive UI will be restricted to only users with
+the `skydive` role assigned to them.
 
 All available options for the OpenStack integration can be found in the
 `defaults/main.yml` file.

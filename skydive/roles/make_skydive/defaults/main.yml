@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Build properties
 skydive_build_version: HEAD
+
+skydive_build_git_repo: https://github.com/skydive-project/skydive.git
 
 skydive_build_path: "/opt/skydive-build/{{ skydive_build_version }}"
 
@@ -21,9 +24,14 @@ skydive_build_go_path: "{{ skydive_build_path }}/go"
 
 skydive_build_project_path: "{{ skydive_build_go_path }}/src"
 
+# Skydive has a number of build flags, most of which are undocumented. That said,
+# Please review the documentation for more on build properties:
+# http://skydive.network/documentation/build
 skydive_build_use_flags: >-
   WITH_EBPF=true
   WITH_NEUTRON=true
   WITH_LXD=true
   WITH_PROF=true
   WITH_CDD=true
+  WITH_LIBVIRT=true
+  WITH_SCALE=true
