@@ -68,13 +68,35 @@
   tags:
     - package_install
 
-- name: Check for openstack deployment
+# NOTE(cloudnull): Locate a clouds.yaml file on the service setup host or localhost.
+- name: Check for OpenStack deployment
   block:
     - name: Slurp clouds file
       slurp:
         src: "{{ skydive_os_cloud_file }}"
       register: clouds_file
+      delegate_to: "{{ skydive_service_setup_host }}"
+  rescue:
+    - name: Slurp clouds file (fallback to localhost)
+      slurp:
+        src: "{{ skydive_os_cloud_file }}"
+      register: clouds_file
+      delegate_to: "localhost"
+      failed_when: false
+      when:
+        - not (skydive_service_setup_host in ['localhost', '127.0.0.1'])
 
+    - name: OpenStack integration notice
+      debug:
+        msg: >-
+          No clouds file found, running without OpenStack integration.
+      when:
+        - not (clouds_file is success)
+
+# NOTE(cloudnull): If a clouds file is found the facts for the clouds file will be delegated 
+#                  to all hosts throughout the skydive deployment.
+- name: Run OpenStack ingetration deployment
+  block:
     - name: Enable OpenStack integration
       set_fact:
         clouds_yaml: "{{ clouds_file['content'] | b64decode | from_yaml }}"
@@ -87,12 +109,7 @@
 
     - include_tasks: skydive_keystone.yml
       run_once: true
-  rescue:
-    - name: Notice
-      debug:
-        msg: >-
-          OpenStack setup is not possible, running in without it.
-      when:
-        - not (skydive_openstack_enabled | bool)
+  when:
+    - clouds_file is success
 
 - include_tasks: skydive_setup.yml

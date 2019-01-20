@@ -28,104 +28,108 @@
     - default: "skydive_os_auth_url"
       cfg: "auth_url"
 
-- name: Create skydive venv
-  command: "/usr/bin/virtualenv --no-site-packages --no-setuptools /opt/skydive"
-  args:
-    creates: /opt/skydive/bin/pip
+- name: Create service setup environment when localhost is the service setup host
+  delegate_to: "{{ skydive_service_setup_host }}"
+  run_once: yes
+  when:
+    - skydive_service_setup_host_python_interpreter == '/opt/skydive/bin/python'
+  block:
+      - name: Create skydive venv
+        command: "/usr/bin/virtualenv --no-site-packages --no-setuptools /opt/skydive"
+        args:
+          creates: /opt/skydive/bin/pip
 
-- name: Setup skydive venv
-  pip:
-    name:
-      - pip
-      - setuptools
-    extra_args: "-U"
-    virtualenv: /opt/skydive
+      - name: Setup skydive venv
+        pip:
+          name:
+            - pip
+            - setuptools
+          extra_args: "-U"
+          virtualenv: /opt/skydive
 
-- name: Ensure the openstacksdk is installed
-  pip:
-    name:
-      - openstacksdk
-    extra_args: "-U"
-    virtualenv: /opt/skydive
+      - name: Ensure the openstacksdk is installed
+        pip:
+          name:
+            - openstacksdk
+          extra_args: "-U"
+          virtualenv: /opt/skydive
 
-- name: Capture current ansible python interpreter
-  set_fact:
-    old_ansible_python_interpreter: "{{ ansible_python_interpreter | default('/usr/bin/python') }}"
+- name: Show ansible interpreter
+  debug:
+    var: skydive_service_setup_host_python_interpreter
 
-- name: Set ansible python interpreter to skydive venv
-  set_fact:
-    ansible_python_interpreter: "/opt/skydive/bin/python"
+- name: Setup the skydive service
+  delegate_to: "{{ skydive_service_setup_host }}"
+  run_once: yes
+  vars:
+    ansible_python_interpreter: "{{ skydive_service_setup_host_python_interpreter }}"
+  block:
+    - name: Add skydive project
+      os_project:
+        cloud: "{{ skydive_os_cloud }}"
+        state: present
+        name: "{{ skydive_os_project_name }}"
+        description: "Skydive admin project"
+        domain_id: "{{ skydive_os_domain_name }}"
+        verify: "{{ not (skydive_os_service_insecure | bool) }}"
+        enabled: true
+      register: keystone_api
+      until: keystone_api is success
+      retries: 5
+      delay: 10
 
-- name: Add skydive project
-  os_project:
-    cloud: "{{ skydive_os_cloud }}"
-    state: present
-    name: "{{ skydive_os_project_name }}"
-    description: "Skydive admin project"
-    domain_id: "{{ skydive_os_domain_name }}"
-    verify: "{{ not (skydive_os_service_insecure | bool) }}"
-    enabled: true
-  register: keystone_api
-  until: keystone_api is success
-  retries: 5
-  delay: 10
+    - name: Add skydive user
+      os_user:
+        cloud: "{{ skydive_os_cloud }}"
+        state: present
+        name: "{{ skydive_os_user_name }}"
+        password: "{{ skydive_password }}"
+        update_password: on_create
+        domain: "{{ skydive_os_domain_name }}"
+        default_project: "{{ skydive_os_project_name }}"
+        verify: "{{ not (skydive_os_service_insecure | bool) }}"
+        enabled: true
+      register: keystone_api
+      until: keystone_api is success
+      retries: 5
+      delay: 10
 
-- name: Add skydive user
-  os_user:
-    cloud: "{{ skydive_os_cloud }}"
-    state: present
-    name: "{{ skydive_os_user_name }}"
-    password: "{{ skydive_password }}"
-    update_password: on_create
-    domain: "{{ skydive_os_domain_name }}"
-    default_project: "{{ skydive_os_project_name }}"
-    verify: "{{ not (skydive_os_service_insecure | bool) }}"
-    enabled: true
-  register: keystone_api
-  until: keystone_api is success
-  retries: 5
-  delay: 10
+    - name: Assign skydive user role
+      os_user_role:
+        cloud: "{{ skydive_os_cloud }}"
+        state: present
+        user: "{{ skydive_os_user_name }}"
+        role: "{{ skydive_os_user_role }}"
+        project: "{{ skydive_os_project_name }}"
+        verify: "{{ not (skydive_os_service_insecure | bool) }}"
+      register: keystone_api
+      until: keystone_api is success
+      retries: 5
+      delay: 10
 
-- name: Assign skydive user role
-  os_user_role:
-    cloud: "{{ skydive_os_cloud }}"
-    state: present
-    user: "{{ skydive_os_user_name }}"
-    role: "{{ skydive_os_user_role }}"
-    project: "{{ skydive_os_project_name }}"
-    verify: "{{ not (skydive_os_service_insecure | bool) }}"
-  register: keystone_api
-  until: keystone_api is success
-  retries: 5
-  delay: 10
+    - name: Add skydive service user
+      os_user:
+        cloud: "{{ skydive_os_cloud }}"
+        state: present
+        name: "{{ skydive_os_service_user }}"
+        password: "{{ skydive_os_service_password }}"
+        domain: "{{ skydive_os_domain_name }}"
+        default_project: "{{ skydive_os_project_name }}"
+        verify: "{{ not (skydive_os_service_insecure | bool) }}"
+      register: keystone_api
+      until: keystone_api is success
+      retries: 5
+      delay: 10
 
-- name: Add skydive service user
-  os_user:
-    cloud: "{{ skydive_os_cloud }}"
-    state: present
-    name: "{{ skydive_os_service_user }}"
-    password: "{{ skydive_os_service_password }}"
-    domain: "{{ skydive_os_domain_name }}"
-    default_project: "{{ skydive_os_project_name }}"
-    verify: "{{ not (skydive_os_service_insecure | bool) }}"
-  register: keystone_api
-  until: keystone_api is success
-  retries: 5
-  delay: 10
-
-- name: Assign skydive service user role
-  os_user_role:
-    cloud: "{{ skydive_os_cloud }}"
-    state: present
-    user: "{{ skydive_os_service_user }}"
-    role: "{{ skydive_os_service_user_role }}"
-    project: "{{ skydive_os_project_name }}"
-    verify: "{{ not (skydive_os_service_insecure | bool) }}"
-  register: keystone_api
-  until: keystone_api is success
-  retries: 5
-  delay: 10
-
-- name: Reset ansible python
-  set_fact:
-    ansible_python_interpreter: "{{ old_ansible_python_interpreter }}"
+    - name: Assign skydive service user role
+      os_user_role:
+        cloud: "{{ skydive_os_cloud }}"
+        state: present
+        user: "{{ skydive_os_service_user }}"
+        role: "{{ skydive_os_service_user_role }}"
+        project: "{{ skydive_os_project_name }}"
+        verify: "{{ not (skydive_os_service_insecure | bool) }}"
+      register: keystone_api
+      until: keystone_api is success
+      retries: 5
+      delay: 10

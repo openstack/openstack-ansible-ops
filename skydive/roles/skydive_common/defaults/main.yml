@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Set the host which will execute the shade modules
+# for the skydive openstack service setup. The host must already have
+# clouds.yaml properly configured.
+skydive_service_setup_host: "{{ openstack_service_setup_host | default(ansible_play_hosts[0]) }}"
+skydive_service_setup_host_python_interpreter: "{{ (openstack_service_setup_host is undefined) | ternary('/opt/skydive/bin/python', ansible_python['executable']) }}"
+
 # Set the analyzer port
 skydive_analyzer_port: 8082
 
