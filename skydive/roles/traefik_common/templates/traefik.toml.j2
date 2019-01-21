@@ -57,7 +57,6 @@ watch = true
   {% for key, value in traefik_destinations.items() %}
     [backends.{{ key }}]
   {%   for server in value.servers %}
-      [backends.{{ key }}.loadbalancer.stickiness]
       [backends.{{ key }}.servers.{{ server.name }}]
       url = "{{ server.proto | default(value.proto) }}://{{ server.address }}:{{ server.port | default(value.port) }}"
       weight = {{ server.weight | default(100)  }}
