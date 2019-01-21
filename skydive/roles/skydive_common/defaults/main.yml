@@ -58,7 +58,6 @@ skydive_elasticsearch_port: "9200"
 skydive_etcd_embedded: yes
 skydive_etcd_port: 12379
 skydive_etcd_listen_uri: "0.0.0.0:{{ skydive_etcd_port }}"
-skydive_etcd_scheme: http
 
 # If embedded etcd is disabled the etcd server must be defined.
 # skydive_etcd_servers:
@@ -137,3 +136,11 @@ skydive_os_service_insecure: true
 # `config_template` provides an interface that will inser any
 #  option into the compatible configuration file using a deep merge.
 skydive_config_overrides: {}
+
+# Skydive SSL certificates will be generated when they do not exist. If the
+# vertificates need to be regenerated set this option to true to force
+# regenerate certificates.
+skydive_ssl_regen: false
+
+# Set the log level used by skydive
+skydive_log_level: INFO

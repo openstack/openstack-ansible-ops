@@ -36,8 +36,19 @@
     group: "skydive"
     mode: "0755"
   with_items:
-    - "/var/lib/skydive"
     - "/etc/skydive"
+    - "/var/lib/skydive"
+    - "/var/lib/skydive/etcd"
+
+- name: Create skydive ssl path
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "skydive"
+    group: "skydive"
+    mode: "0700"
+  with_items:
+    - "/var/lib/skydive/ssl"
 
 - name: Check for ovsdb
   stat:

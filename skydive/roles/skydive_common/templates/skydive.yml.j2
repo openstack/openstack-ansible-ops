@@ -8,13 +8,17 @@ host_id: {{ ansible_hostname }}
 tls:
   # File path to X509 Certificate and Private Key to enable TLS communication
   # Unique certificate per agent is recommended
-  # client_cert: /etc/ssl/certs/agent.domain.com.crt
-  # client_key:  /etc/ssl/certs/agent.domain.com.key
+{% if inventory_hostname in groups['skydive_agents'] %}
+  client_cert: {{ skydive_ssl_cert }}
+  client_key:  {{ skydive_ssl_key }}
+{% endif %}
 
-  # server_cert: /etc/ssl/certs/analyzer.domain.com.crt
-  # server_key:  /etc/ssl/certs/analyzer.domain.com.key
+{% if inventory_hostname in groups['skydive_analyzers'] %}
+  server_cert: {{ skydive_ssl_cert }}
+  server_key:  {{ skydive_ssl_key }}
+{% endif %}
 
-  # ca_cert: /etc/ssl/certs/ca.domain.com.crt
+  ca_cert: {{ skydive_ssl_ca_cert }}
 
 http:
   # define the Cookie HTTP Request Header
@@ -358,7 +362,7 @@ storage:
 {% endif %}
 
 logging:
-  # level: INFO
+  level: {{ skydive_log_level }}
 
   # Default backend used: stderr
   backends:
@@ -368,8 +372,15 @@ logging:
     # - syslog
 
   # configuration of the 'file' backend
+{% if (inventory_hostname in groups['skydive_analyzers']) and (inventory_hostname in groups['skydive_agents']) %}
+{%   set _log_segment = 'aio' %}
+{% elif (inventory_hostname in groups['skydive_analyzers']) %}
+{%   set _log_segment = 'analyzer' %}
+{% else %}
+{%   set _log_segment = 'agent' %}
+{% endif %}
   file:
-    path: /var/log/skydive.log
+    path: /var/log/skydive-{{ _log_segment }}.log
 
   # configuration encoder could be for all backends or for specific one
   # encoder: json
@@ -415,7 +426,7 @@ etcd:
   # max_snap_files: 0
 
   # path where the etcd files will be stored.
-  # data_dir: /var/lib/skydive/etcd
+  data_dir: /var/lib/skydive/etcd
 
   # client parameters
 {%   if skydive_etcd_servers %}
@@ -467,13 +478,14 @@ flow:
       # 1194: OPENVPN
 {% endif %}
 
+{% if inventory_hostname in groups['skydive_analyzers'] %}
 ui:
   # Specify the extra assets folder. Javascript and CSS files present in this
   # folder will be added to the WebUI.
   # extra_assets: /usr/share/skydive/assets
 
   # select between light, dark themes
-  # theme: dark
+  theme: light
 
   # Settings specific to the topology view
   topology:
@@ -530,3 +542,4 @@ rbac:
     # additional RBAC policy:
     # - p, myuser, capture, write, deny
     # - g, myuser, myrole
+{% endif %}

@@ -70,6 +70,7 @@
 
 # NOTE(cloudnull): Locate a clouds.yaml file on the service setup host or localhost.
 - name: Check for OpenStack deployment
+  run_once: true
   block:
     - name: Slurp clouds file
       slurp:
@@ -82,7 +83,7 @@
         src: "{{ skydive_os_cloud_file }}"
       register: clouds_file
       delegate_to: "localhost"
-      failed_when: false
+      ignore_errors: yes
       when:
         - not (skydive_service_setup_host in ['localhost', '127.0.0.1'])
 
@@ -91,25 +92,26 @@
         msg: >-
           No clouds file found, running without OpenStack integration.
       when:
-        - not (clouds_file is success)
+        - clouds_file['content'] is undefined
 
-# NOTE(cloudnull): If a clouds file is found the facts for the clouds file will be delegated 
+# NOTE(cloudnull): If a clouds file is found the facts for the clouds file will be delegated
 #                  to all hosts throughout the skydive deployment.
 - name: Run OpenStack ingetration deployment
+  run_once: true
   block:
     - name: Enable OpenStack integration
       set_fact:
         clouds_yaml: "{{ clouds_file['content'] | b64decode | from_yaml }}"
         skydive_auth_type: mykeystone
         skydive_openstack_enabled: true
-      run_once: true
       delegate_to: "{{ item }}"
       delegate_facts: true
       with_items: "{{ ansible_play_hosts }}"
 
     - include_tasks: skydive_keystone.yml
-      run_once: true
   when:
-    - clouds_file is success
+    - clouds_file['content'] is defined
 
 - include_tasks: skydive_setup.yml
+
+- include_tasks: skydive_ssl.yml

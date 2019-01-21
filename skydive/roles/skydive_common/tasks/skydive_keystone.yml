@@ -64,6 +64,18 @@
   vars:
     ansible_python_interpreter: "{{ skydive_service_setup_host_python_interpreter }}"
   block:
+    - name: Ensure clouds file directory
+      file:
+        path: "{{ skydive_os_cloud_file | dirname }}"
+        state: directory
+        mode: "0750"
+
+    - name: Install binary skydive
+      copy:
+        content: "{{ clouds_yaml | to_nice_yaml }}"
+        dest: "{{ skydive_os_cloud_file }}"
+        mode: "0640"
+
     - name: Add skydive project
       os_project:
         cloud: "{{ skydive_os_cloud }}"

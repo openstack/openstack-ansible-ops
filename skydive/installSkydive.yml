@@ -139,5 +139,6 @@
   become: yes
   roles:
     - role: skydive_agent
+      skydive_service_setup_host: "{{ openstack_service_setup_host | default(groups['skydive_analyzers'][0]) }}"
   tags:
     - skydive-agent-setup
