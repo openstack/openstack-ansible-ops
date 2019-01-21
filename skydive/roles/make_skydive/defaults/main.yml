@@ -35,3 +35,4 @@ skydive_build_use_flags: >-
   WITH_CDD=true
   WITH_LIBVIRT=true
   WITH_SCALE=true
+  WITH_OPENCONTRAIL=false
