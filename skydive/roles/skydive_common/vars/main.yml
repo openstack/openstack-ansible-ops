@@ -45,3 +45,19 @@ skydive_fabric: |-
 # Inject the required basic authentication information
 _skydive_basic_auth_users:
   "{{ skydive_username }}": "{{ skydive_password }}"
+
+skydive_ssl_cnf: "/var/lib/skydive/ssl/skydive-openssl.cnf"
+skydive_ssl_key: "/var/lib/skydive/ssl/skydive.key"
+skydive_ssl_csr: "/var/lib/skydive/ssl/skydive.csr"
+skydive_ssl_cert: "/var/lib/skydive/ssl/skydive-{{ inventory_hostname | replace('_', '-') | replace(' ', '-') }}.crt"
+skydive_ssl_signed_subject: "/C=XX/L=OpenStack-Cloud/O=OpenStack/OU=IT/CN={{ ((ansible_domain | length) > 0) | ternary(ansible_domain, ansible_hostname) }}"
+
+skydive_ssl_ca_key: "/var/lib/skydive/ssl/skydive-ca.key"
+skydive_ssl_ca_cert: "/var/lib/skydive/ssl/skydive-ca.crt"
+skydive_ssl_ca_subject: "/C=XX/L=OpenStack-Cloud/O=OpenStack"
+
+skydive_ssl_bundle:
+  - path: "{{ skydive_ssl_csr }}"
+  - path: "{{ skydive_ssl_cert }}"
+  - path: "{{ skydive_ssl_key }}"
+  - path: "{{ skydive_ssl_ca_cert }}"

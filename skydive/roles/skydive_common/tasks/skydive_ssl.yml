@@ -1,0 +1,131 @@
+---
+# Copyright 2019, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Purge skydive ssl certificates
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ skydive_ssl_bundle }}"
+  when:
+    - skydive_ssl_regen | bool
+
+- name: SSL Block
+  run_once: true
+  delegate_to: "{{ skydive_service_setup_host }}"
+  block:
+    - name: Create CNF
+      template:
+        src: "skydive-openssl.cnf.j2"
+        dest: "{{ skydive_ssl_cnf }}"
+        owner: skydive
+        group: skydive
+
+    - name: Create CA cert
+      command: >-
+        openssl req
+        -new
+        -nodes
+        -x509
+        -subj "{{ skydive_ssl_ca_subject }}"
+        -days 3650
+        -keyout {{ skydive_ssl_ca_key }}
+        -out {{ skydive_ssl_ca_cert }}
+      args:
+        creates: "{{ skydive_ssl_ca_cert }}"
+
+    - name: Create CSR
+      command: >-
+        openssl req
+        -new
+        -nodes
+        -sha256
+        -subj "{{ skydive_ssl_signed_subject }}"
+        -days 3650
+        -keyout {{ skydive_ssl_key }}
+        -out {{ skydive_ssl_csr }}
+        -config {{ skydive_ssl_cnf }}
+      args:
+        creates: "{{ skydive_ssl_csr }}"
+
+- name: Create SSL signed cert
+  command: >-
+    openssl x509
+    -req
+    -days 3650
+    -in {{ skydive_ssl_csr }}
+    -CA {{ skydive_ssl_ca_cert }}
+    -CAkey {{ skydive_ssl_ca_key }}
+    -out {{ skydive_ssl_cert }}
+    -set_serial 01
+    -extensions v3_req
+    -extfile {{ skydive_ssl_cnf }}
+  args:
+    creates: "{{ skydive_ssl_cert }}"
+  delegate_to: "{{ skydive_service_setup_host }}"
+
+- name: Fetch skydive ssl csr
+  fetch:
+    src: "{{ skydive_ssl_csr }}"
+    dest: "/tmp/skydive/ssl/{{ skydive_ssl_csr | basename }}"
+    flat: true
+  run_once: true
+  delegate_to: "{{ skydive_service_setup_host }}"
+
+- name: Fetch skydive ssl cert
+  fetch:
+    src: "{{ skydive_ssl_cert }}"
+    dest: "/tmp/skydive/ssl/{{ skydive_ssl_cert | basename }}"
+    flat: true
+  delegate_to: "{{ skydive_service_setup_host }}"
+
+- name: Fetch skydive ssl key
+  fetch:
+    src: "{{ skydive_ssl_key }}"
+    dest: "/tmp/skydive/ssl/{{ skydive_ssl_key | basename }}"
+    flat: true
+  run_once: true
+  delegate_to: "{{ skydive_service_setup_host }}"
+
+- name: Fetch skydive ca cert
+  fetch:
+    src: "{{ skydive_ssl_ca_cert }}"
+    dest: "/tmp/skydive/ssl/{{ skydive_ssl_ca_cert | basename }}"
+    flat: true
+  run_once: true
+  delegate_to: "{{ skydive_service_setup_host }}"
+
+- name: Copy certifactes over
+  copy:
+    src: "/tmp/skydive/ssl/{{ item.path | basename }}"
+    dest: "{{ item.path }}"
+    owner: skydive
+    group: skydive
+  with_items: "{{ skydive_ssl_bundle }}"
+
+- name: Cleanup system
+  delegate_to: "localhost"
+  run_once: true
+  block:
+    - name: Find temp skydive ssl certificates
+      find:
+        paths: "/tmp/skydive/ssl"
+        recurse: no
+      register: files_to_purge
+
+    - name: Purge temp skydive host ssl
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ files_to_purge.files }}"

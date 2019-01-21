@@ -14,4 +14,7 @@
 # limitations under the License.
 
 sykdive_distro_packages:
+  - openssl
+  - python3-openssl
+  - python-openssl
   - python-passlib
