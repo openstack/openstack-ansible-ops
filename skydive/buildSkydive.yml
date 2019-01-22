@@ -22,9 +22,7 @@
 
 - name: Gather facts
   hosts: skydive_all
-  tasks:
-    - name: Gather facts on all hosts
-      setup: {}
+  gather_facts: true
   tags:
     - always
 

@@ -25,6 +25,31 @@
   run_once: true
   delegate_to: "{{ skydive_service_setup_host }}"
   block:
+    - name: create the system group
+      group:
+        name: "skydive"
+        state: "present"
+        system: "yes"
+
+    - name: Create the skydive user
+      user:
+        name: "skydive"
+        group: "skydive"
+        comment: "skydive user"
+        shell: "/bin/false"
+        createhome: "yes"
+        home: "/usr/share/skydive"
+
+    - name: Create skydive ssl path
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "skydive"
+        group: "skydive"
+        mode: "0700"
+      with_items:
+        - "/var/lib/skydive/ssl"
+
     - name: Create CNF
       template:
         src: "skydive-openssl.cnf.j2"

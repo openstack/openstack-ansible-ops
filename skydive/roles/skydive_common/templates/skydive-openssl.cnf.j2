@@ -24,14 +24,16 @@ subjectAltName = @alt_names
 {% set ips = [] %}
 {% set hostnames = [] %}
 {% for node in groups['skydive_all'] %}
-{%   set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
-{%   set _skydive_ip = hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address']) %}
-{%   set _skydive_ansible_domain = hostvars[node]['ansible_domain'] | default(hostvars[node]['ansible_hostname'] ) %}
-{%   set _skydive_dns_name = ((_skydive_ansible_domain | length) > 0) | ternary(_skydive_ansible_domain, hostvars[node]['ansible_hostname']) %}
-{%   set _ = ips.append(_skydive_ip) %}
-{%   set _ = hostnames.append(_skydive_dns_name) %}
+{%   if hostvars[node]['ansible_default_ipv4'] is defined %}
+{%     set _ansible_interface_name = hostvars[node]['skydive_network_device'] | default(hostvars[node]['ansible_default_ipv4']['interface']) | replace('-', '_') %}
+{%     set _skydive_ip = hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address']) %}
+{%     set _skydive_ansible_domain = hostvars[node]['ansible_fqdn'] | default(hostvars[node]['ansible_hostname'] ) %}
+{%     set _skydive_dns_name = ((_skydive_ansible_domain | length) > 0) | ternary(_skydive_ansible_domain, hostvars[node]['ansible_hostname']) %}
+{%     set _ = ips.append(_skydive_ip) %}
+{%     set _ = hostnames.append(_skydive_dns_name) %}
 IP.{{ loop.index }} = {{ _skydive_ip }}
 DNS.{{ loop.index }} = {{ _skydive_dns_name }}
+{%   endif %}
 {% endfor %}
 
 {% set localhost_index = (groups['skydive_all'] | length) + 1 %}

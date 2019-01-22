@@ -13,6 +13,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Setup localhost
+  hosts: localhost
+  connection: local
+  tags:
+    - always
+
+
+- name: Configure skydive-service-setup-host
+  hosts: skydive_all[0]
+  connection: local
+  become: yes
+  tasks:
+    # NOTE(cloudnull): When the host entry is an IP, these tasks will construct a basic
+    #                  host entry for the delegated node, which will ensure facts are
+    #                  available for the deployment host.
+    - name: Add dynamic host entry
+      add_host:
+        name: "{{ skydive_service_setup_host }}"
+        groups: skydive_all
+        ansible_host: "{{ skydive_service_setup_host }}"
+      when:
+        - ((skydive_service_setup_host is defined) and (skydive_service_setup_host | ipaddr)) or
+          (skydive_service_setup_host not in groups['all']) or
+          (skydive_service_setup_host not in groups['skydive_all'])
+  tags:
+    - always
+
+
+- name: Gather all facts
+  hosts: skydive_all
+  become: yes
+  gather_facts: yes
+  tags:
+    - always
+
+
 - name: Deploy skydive binaries
   hosts: skydive_agents:skydive_analyzers
   become: yes
@@ -130,6 +166,8 @@
   become: yes
   roles:
     - role: skydive_analyzer
+  vars:
+    skydive_service_setup_host: "{{ openstack_service_setup_host | default(groups['skydive_analyzers'][0]) }}"
   tags:
     - skydive-analyzer-setup
 
@@ -139,6 +177,7 @@
   become: yes
   roles:
     - role: skydive_agent
-      skydive_service_setup_host: "{{ openstack_service_setup_host | default(groups['skydive_analyzers'][0]) }}"
+  vars:
+    skydive_service_setup_host: "{{ openstack_service_setup_host | default(groups['skydive_analyzers'][0]) }}"
   tags:
     - skydive-agent-setup

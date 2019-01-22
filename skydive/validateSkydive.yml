@@ -27,4 +27,5 @@
       delay: 10
 
     - name: Show Skydive client
-      debug: var=skydive_client
+      debug:
+        msg: "{{ skydive_client.stdout | from_json }}"

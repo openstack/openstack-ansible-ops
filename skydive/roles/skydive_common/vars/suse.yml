@@ -18,3 +18,4 @@ sykdive_distro_packages:
   - python2-pyOpenSSL
   - python3-pyOpenSSL
   - python-passlib
+  - python2-virtualenv

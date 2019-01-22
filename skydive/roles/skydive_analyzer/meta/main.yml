@@ -38,7 +38,7 @@ galaxy_info:
 dependencies:
   - role: traefik_common
     traefik_basic_auth_users: "{{ _skydive_basic_auth_users | combine(skydive_basic_auth_users) }}"
-    traffic_dashboard_bind: "{{ skydive_bind_address | default(hostvars[inventory_hostname]['ansible_' ~ (skydive_network_device | replace('-', '_') | string)]['ipv4']['address']) }}"
+    traffic_dashboard_bind: "{{ skydive_bind_address | default(hostvars[inventory_hostname]['ansible_' ~ ((skydive_network_device | default(ansible_default_ipv4['interface'])) | replace('-', '_') | string)]['ipv4']['address']) }}"
     traefik_dashboard_enabled: true
     traefik_destinations:
       elasticsearch:

@@ -112,6 +112,12 @@
   when:
     - clouds_file['content'] is defined
 
+- name: Set network device fact
+  set_fact:
+    skydive_network_device: "{{ ansible_default_ipv4['interface'] }}"
+  when:
+    - skydive_network_device is undefined
+
 - include_tasks: skydive_setup.yml
 
 - include_tasks: skydive_ssl.yml
