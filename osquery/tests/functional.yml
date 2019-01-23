@@ -31,7 +31,7 @@
     ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
 
   vars:
-    inventory_file: "inventory/test-{{ (contianer_inventory | bool) | ternary('container', 'metal') }}-inventory.yml"
+    inventory_file: "inventory/test-{{ (container_inventory | bool) | ternary('container', 'metal') }}-inventory.yml"
 
   pre_tasks:
     - name: Create swap file
@@ -122,7 +122,7 @@
         chdir: "src/{{ current_test_repo }}/osquery/tests"
       when:
         - ansible_service_mgr != 'systemd' or
-          not (contianer_inventory | bool)
+          not (container_inventory | bool)
 
     - name: Run environment setup
       become: yes
@@ -134,7 +134,7 @@
         chdir: "src/{{ current_test_repo }}/osquery/tests"
       when:
         - ansible_service_mgr == 'systemd'
-        - contianer_inventory | bool
+        - container_inventory | bool
 
     - name: Wait 15 seconds
       command: "sleep 15"
