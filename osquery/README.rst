@@ -152,11 +152,11 @@ Create some basic passwords keys that are needed by fleet
 
 .. code-block:: bash
 
-    echo "kolide_fleet_db_password: $(openssl rand -base64 16)" > /etc/openstack_deploy/user_secrets.yml
+    echo "kolide_fleet_db_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/user_secrets.yml
     echo "kolide_fleet_jwt_key: $(openssl rand -base64 32)" >> /etc/openstack_deploy/user_secrets.yml
     echo "kolide_fleet_admin_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/user_secrets.yml
     # NOTICE: This may already be defined
-    echo "galera_root_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/user_secrets.yml
+    echo "kolide_galera_root_password: $(openssl rand -base64 16)" >> /etc/openstack_deploy/user_secrets.yml
 
 
 Install master/data Fleet nodes on the elastic-logstash containers,

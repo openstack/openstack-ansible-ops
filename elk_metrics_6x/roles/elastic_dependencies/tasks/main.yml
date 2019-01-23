@@ -76,6 +76,41 @@
   tags:
     - sysctl
 
+- name: Create the system group
+  group:
+    name: "{{ service_group }}"
+    gid: "{{ service_group_gid | default(omit) }}"
+    state: "present"
+    system: "yes"
+
+- name: Create the system user
+  block:
+    - name: Create the system user
+      user:
+        name: "{{ service_owner }}"
+        uid: "{{ service_owner_uid | default(omit) }}"
+        group: "{{ service_group }}"
+        shell: "/bin/false"
+        system: "yes"
+        createhome: "no"
+        home: "/var/lib/{{ service_name }}"
+  rescue:
+    - name: Check for system user
+      debug:
+        msg: >-
+          The general user creation task failed. This typically means that the
+          user already exists and something in the user configuration provided
+          is changing the system user in way that is simply not possible at this
+          time. The playbooks will now simply ensure the user exists and before
+          carrying on to the next task. While it's not required, it may be
+          benificial to schedule a maintenance where the elastic services are
+          stopped.
+
+    - name: Ensure the system user exists
+      user:
+        name: "{{ service_owner }}"
+        group: "{{ service_group }}"
+
 - name: Physical host block
   block:
     - name: Check for directory
@@ -101,8 +136,7 @@
         owner: "{{ service_owner }}"
         group: "{{ service_group }}"
       when:
-        - service_dir.stat.isdir is defined and
-          not service_dir.stat.isdir
+        - not (service_dir.stat.exists | bool)
 
     - name: Ensure data link exists
       file:
@@ -112,8 +146,7 @@
         group: "{{ service_group }}"
         state: link
       when:
-        - service_dir.stat.isdir is defined and
-          not service_dir.stat.isdir
+        - not (service_dir.stat.exists | bool)
   when:
     - physical_host == inventory_hostname
 
@@ -124,20 +157,19 @@
         path: "/openstack/{{ inventory_hostname }}/{{ service_name }}"
         state: "directory"
       delegate_to: "{{ physical_host }}"
+
     - name: Pull lxc version
       command: "lxc-ls --version"
       delegate_to: "{{ physical_host }}"
       changed_when: false
       register: lxc_version
-      when:
-        - container_tech | default('lxc') == 'lxc'
       tags:
         - skip_ansible_lint
+
     - name: Enable or Disable lxc three syntax
       set_fact:
         lxc_major_version: "{{ lxc_version.stdout.split('.')[0] }}"
-      when:
-        - container_tech | default('lxc') == 'lxc'
+
     - name: elasticsearch datapath bind mount
       lxc_container:
         name: "{{ inventory_hostname }}"
@@ -147,9 +179,8 @@
           - "{{ elastic_lxc_template_config[(lxc_major_version | int)]['mount'] }}=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
           - "{{ elastic_lxc_template_config[(lxc_major_version | int)]['aa_profile'] }}=unconfined"
       delegate_to: "{{ physical_host }}"
-      when:
-        - container_tech | default('lxc') == 'lxc'
   when:
+    - container_tech | default('lxc') == 'lxc'
     - physical_host != inventory_hostname
 
 - name: Ensure Java is installed
@@ -164,41 +195,6 @@
   delay: 2
   tags:
     - package_install
-
-- name: Create the system group
-  group:
-    name: "{{ service_group }}"
-    gid: "{{ service_group_gid | default(omit) }}"
-    state: "present"
-    system: "yes"
-
-- name: Create the system user
-  block:
-    - name: Create the system user
-      user:
-        name: "{{ service_owner }}"
-        uid: "{{ service_owner_uid | default(omit) }}"
-        group: "{{ service_group }}"
-        shell: "/bin/false"
-        system: "yes"
-        createhome: "yes"
-        home: "/var/lib/{{ service_name }}"
-  rescue:
-    - name: Check for system user
-      debug:
-        msg: >-
-          The general user creation task failed. This typically means that the
-          user already exists and something in the user configuration provided
-          is changing the system user in way that is simply not possible at this
-          time. The playbooks will now simply ensure the user exists and before
-          carrying on to the next task. While it's not required, it may be
-          benificial to schedule a maintenance where the elastic services are
-          stopped.
-
-    - name: Ensure the system user exists
-      user:
-        name: "{{ service_owner }}"
-        group: "{{ service_group }}"
 
 - name: Ensure service directories exists
   file:

@@ -27,10 +27,10 @@
       fail:
         msg: >-
           The root password for the galera cluster is not defined. To proceed with this
-          installation define the variable `galera_root_password` in line or within a
-          variable file.
+          installation define the variable `kolide_galera_root_password` in line or
+          within a variable file.
       when:
-        - galera_root_password is undefined
+        - kolide_galera_root_password is undefined
 
   roles:
     - role: galera_server
@@ -38,5 +38,6 @@
       galera_wsrep_node_name: "{{ inventory_hostname }}"
       galera_cluster_name: telemetry_galera_cluster
       galera_monitoring_allowed_source: "0.0.0.0/0"
+      galera_root_password: "{{ kolide_galera_root_password }}"
 
   environment: "{{ deployment_environment_variables | default({}) }}"

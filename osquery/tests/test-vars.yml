@@ -15,9 +15,10 @@
 
 physical_host: localhost
 
-galera_root_password: secrete
+# kolide_galera_root_password: secrete
 kolide_fleet_db_password: secrete
 kolide_fleet_admin_password: secrete
 kolide_fleet_jwt_key: secrete
+kolide_galera_root_password: secrete
 
 osa_test_repo: "openstack/openstack-ansible-ops"

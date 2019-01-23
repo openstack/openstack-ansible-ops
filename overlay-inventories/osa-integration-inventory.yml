@@ -1,41 +1,19 @@
 ---
 
 all_systems:
-  vars: {}
+  vars:
+    # General Ansible options for OSA
+    ansible_become: yes
+    ansible_become_user: "root"
+    ansible_user: "root"
+    physical_host: "{{ inventory_hostname }}"
   children:
+    all_hosts:
+      children:
+        hosts: {}
+
     systems:
       vars:
-        # General Ansible options for OSA
-        ansible_become: yes
-        ansible_become_user: "root"
-        ansible_user: "root"
-        ## Grafana options
-        grafana_admin_password: "{{ haproxy_stats_password }}"
-        ## Kolide options
-        kolide_fleet_db_password: "{{ haproxy_stats_password }}"
-        kolide_fleet_jwt_key: "{{ haproxy_stats_password }}"
-        kolide_fleet_admin_password: "{{ haproxy_stats_password }}"
-        galera_root_password: "{{ galera_root_password | default(haproxy_stats_password) }}"
-        ## Skydive options
-        skydive_password: "{{ haproxy_stats_password }}"
-        skydive_elasticsearch_servers: "{{ groups['elastic-logstash'] | map('extract', hostvars, ['ansible_host']) | list | join(',') }}"
-        skydive_bind_address: "{{ container_address | default(ansible_host) }}"
-        ## Elastic-stack options
-        elastic_skydive_retention: 2  # Elastic retention set to 2 days max
-        elastic_skydive_size: 51200   # Elastic retention set to 50GiB max
-        ## Beat options
-        beat_service_states:
-          true:
-            state: restarted
-          false:
-            state: stopped
-        elastic_retention_refresh: true
-        auditbeat_service_state: "{{ beat_service_states[(inventory_hostname in (groups['hosts'] | default([])) | string | lower)]['state'] }}"
-        filebeat_service_state: "{{ beat_service_states[(inventory_hostname in (groups['hosts'] | default([])) | string | lower)]['state'] }}"
-        heartbeat_service_state: "{{ beat_service_states[(inventory_hostname in (groups['utility_all'] | default([])) | string | lower)]['state'] }}"
-        journalbeat_service_state: "{{ beat_service_states[(inventory_hostname in (groups['hosts'] | default([])) | string | lower)]['state'] }}"
-        metricbeat_service_state: "{{ beat_service_states[(inventory_hostname in (groups['hosts'] | default([])) | string | lower)]['state'] }}"
-        packetbeat_service_state: "{{ beat_service_states[(inventory_hostname in (groups['network_hosts'] | default([])) | string | lower)]['state'] }}"
         ## HAProxy options
         haproxy_extra_services:
           - service:
@@ -106,21 +84,33 @@ all_systems:
       children:
         traefik_all:
           children:
-            traefik_build_nodes: {}
+            traefik_build_nodes:
+              hosts: {}
+              vars: {}
+              children: {}
 
         skydive_all:
+          vars:
+            skydive_elasticsearch_servers: "{{ groups['elastic-logstash_all'] | map('extract', hostvars, ['ansible_host']) | list | join(',') }}"
+            skydive_bind_address: "{{ container_address | default(ansible_host) }}"
           children:
-            skydive_build_nodes: {}
+            skydive_build_nodes:
+              hosts: {}
+              vars: {}
+              children: {}
 
             skydive_agents:
               children:
-                hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
 
             skydive_analyzers:
               children:
                 utility_all: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
 
         elk_all:
+          vars:
+            elastic_skydive_retention: 2  # Elastic retention set to 2 days max
+            elastic_skydive_size: 51200   # Elastic retention set to 50GiB max
           children:
             elastic-logstash_all:
               children:
@@ -133,6 +123,51 @@ all_systems:
                 kibana:
                   children:
                     log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+            beats_all:
+              vars:
+                beat_service_states:
+                  true:
+                    state: restarted
+                  false:
+                    state: stopped
+                elastic_retention_refresh: true
+                auditbeat_service_state: "{{ auditbeat_service_state | default(beat_service_states[(inventory_hostname in (groups['hosts'] | default([])) | string | lower)]['state']) }}"
+                filebeat_service_state: "{{ filebeat_service_state | default(beat_service_states[(inventory_hostname in (groups['hosts'] | default([])) | string | lower)]['state']) }}"
+                heartbeat_service_state: "{{ heartbeat_service_state | default(beat_service_states[(inventory_hostname in (groups['kibana_all'] | default([])) | string | lower)]['state']) }}"
+                journalbeat_service_state: "{{ journalbeat_service_state | default(beat_service_states[(inventory_hostname in (groups['hosts'] | default([])) | string | lower)]['state']) }}"
+                metricbeat_service_state: "{{ metricbeat_service_state | default(beat_service_states[(inventory_hostname in (groups['hosts'] | default([])) | string | lower)]['state']) }}"
+                packetbeat_service_state: "{{ packetbeat_service_state | default(beat_service_states[(inventory_hostname in (groups['network_hosts'] | default([])) | string | lower)]['state']) }}"
+              children:
+                auditbeat:
+                  children:
+                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+                filebeat:
+                  children:
+                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+                heatbeat:
+                  children:
+                    kibana_all: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+                journalbeat:
+                  children:
+                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+                metricbeat:
+                  children:
+                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+                packetbeat:
+                  children:
+                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+            apm-server_all:
+              children:
+                apm-server:
+                  children:
+                    log_hosts: {}    # This is an osa native group, as such nothing needs to be added. Values will be inherited.
 
         fleet_all:
           children:
@@ -152,7 +187,7 @@ all_systems:
               children:
                 osquery:
                   children:
-                    hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
 
         grafana_all:
           children:

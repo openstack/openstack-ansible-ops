@@ -16,7 +16,7 @@
 - name: Create DB for service
   mysql_db:
     login_user: "root"
-    login_password: "{{ galera_root_password }}"
+    login_password: "{{ kolide_galera_root_password }}"
     login_host: "127.0.0.1"
     name: "{{ kolide_fleet_db_name }}"
     state: "present"
@@ -27,7 +27,7 @@
 - name: Grant access to the DB for the service
   mysql_user:
     login_user: "root"
-    login_password: "{{ galera_root_password }}"
+    login_password: "{{ kolide_galera_root_password }}"
     login_host: "127.0.0.1"
     name: "{{ kolide_fleet_db_user }}"
     password: "{{ kolide_fleet_db_password }}"

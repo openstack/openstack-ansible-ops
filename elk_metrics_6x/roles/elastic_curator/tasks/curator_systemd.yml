@@ -31,7 +31,7 @@
           state: "started"
           options:
             OnBootSec: 30min
-            OnUnitActiveSec: 24h
+            OnUnitActiveSec: 12h
             Persistent: true
       - service_name: "curator-size"
         execstarts:
@@ -42,5 +42,5 @@
           state: "started"
           options:
             OnBootSec: 30min
-            OnUnitActiveSec: 5h
+            OnUnitActiveSec: 1h
             Persistent: true

@@ -35,7 +35,7 @@
     - skydive_service_setup_host_python_interpreter == '/opt/skydive/bin/python'
   block:
       - name: Create skydive venv
-        command: "/usr/bin/virtualenv --no-site-packages --no-setuptools /opt/skydive"
+        command: "virtualenv --no-site-packages --no-setuptools /opt/skydive"
         args:
           creates: /opt/skydive/bin/pip
 
@@ -51,7 +51,7 @@
         pip:
           name:
             - openstacksdk
-          extra_args: "-U"
+          extra_args: "-U --isolated"
           virtualenv: /opt/skydive
 
 - name: Show ansible interpreter
