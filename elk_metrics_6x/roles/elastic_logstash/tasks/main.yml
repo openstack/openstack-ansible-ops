@@ -122,13 +122,18 @@
       when:
         - ansible_service_mgr == 'systemd'
 
+    - name: Read logstash queue path
+      command: "readlink -f /var/lib/logstash/queue"
+      register: logstash_queue_path
+      changed_when: false
+
     - name: Run the systemd mount role
       include_role:
         name: systemd_mount
       vars:
         systemd_mounts:
           - what: "tmpfs"
-            where: "/var/lib/logstash/queue"
+            where: "{{ logstash_queue_path.stdout.strip() }}"
             type: "tmpfs"
             options: "size={{ (q_mem | int) // 2 }}m,uid={{ logstash_uid.stdout }},gid={{ logstash_gid.stdout }},nodev,nodiratime,noatime"
             unit:
@@ -141,7 +146,7 @@
 
     - name: Apply fstab options for memory queues
       mount:
-        path: /var/lib/logstash/queue
+        path: "{{ logstash_queue_path.stdout.strip() }}"
         src: tmpfs
         fstype: tmpfs
         opts: size={{ (q_mem | int) // 2 }}m
