@@ -39,5 +39,7 @@
       galera_cluster_name: telemetry_galera_cluster
       galera_monitoring_allowed_source: "0.0.0.0/0"
       galera_root_password: "{{ kolide_galera_root_password }}"
+      galera_monitoring_check_enabled: false
+      galera_monitoring_check_port: 29200
 
   environment: "{{ deployment_environment_variables | default({}) }}"
