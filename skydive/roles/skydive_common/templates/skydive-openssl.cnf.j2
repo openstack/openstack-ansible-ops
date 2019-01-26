@@ -29,9 +29,13 @@ subjectAltName = @alt_names
 {%     set _skydive_ip = hostvars[node]['skydive_bind_address'] | default(hostvars[node]["ansible_" ~ _ansible_interface_name]['ipv4']['address']) %}
 {%     set _skydive_ansible_domain = hostvars[node]['ansible_fqdn'] | default(hostvars[node]['ansible_hostname'] ) %}
 {%     set _skydive_dns_name = ((_skydive_ansible_domain | length) > 0) | ternary(_skydive_ansible_domain, hostvars[node]['ansible_hostname']) %}
-{%     set _ = ips.append(_skydive_ip) %}
+{%     if _skydive_ip | ipaddr %}
+{%       set _ = ips.append(_skydive_ip) %}
+{%     endif %}
 {%     set _ = hostnames.append(_skydive_dns_name) %}
+{%   if _skydive_ip | ipaddr %}
 IP.{{ loop.index }} = {{ _skydive_ip }}
+{%   endif %}
 DNS.{{ loop.index }} = {{ _skydive_dns_name }}
 {%   endif %}
 {% endfor %}
