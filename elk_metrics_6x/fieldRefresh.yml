@@ -88,6 +88,14 @@
           retries: 6
           delay: 30
           run_once: true
+      rescue:
+        - name: Notify deployer
+          debug:
+            msg: >-
+              Index pattern refresh was not possible at this time. Either there are no dashboards
+              loaded or the index being refreshed does not exist. While the task failed, this is
+              not a fatal error, so the play has been rescued.
+          run_once: true
       when:
         - index_fields_return.status == 200
         - index_fields_format_return.status == 200
