@@ -73,6 +73,12 @@ cinder_backends:
 {% endraw %}
 {% endif %}
 
+{% if osa_enable_dnsaas | bool %}
+{% raw %}
+designate_galera_address: "{{ internal_lb_vip_address }}"
+{% endraw %}
+{% endif %}
+
 {% if osa_enable_elk_metrics | bool %}
 # NOTE(d34dh0r53): The disk detection to determine the logstash_queue_type
 # can fail spectacularly on an MNAIO so I'm hard setting it here to bypass

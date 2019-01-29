@@ -263,6 +263,11 @@ image_hosts: *infra_block
 octavia-infra_hosts: *infra_block
 {% endif %}
 
+{% if osa_enable_dnsaas | bool %}
+# designate
+dnsaas_hosts: *infra_block
+{% endif %}
+
 {% if osa_enable_compute | bool %}
 # nova api, conductor, etc services
 compute-infra_hosts: *infra_block
