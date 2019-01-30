@@ -71,6 +71,12 @@
     - key: LS_OPEN_FILES
       value: 32768
 
+- name: Set service specific haap size
+  set_fact:
+    _service_heap_size: "{{ logstash_heap_size }}"
+  when:
+    - logstash_heap_size is defined
+
 - name: Drop jvm conf file(s)
   template:
     src: "{{ item.src }}"

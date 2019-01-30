@@ -81,6 +81,12 @@
     - key: MAX_MAP_COUNT
       value: 524288
 
+- name: Set service specific haap size
+  set_fact:
+    _service_heap_size: "{{ elastic_heap_size }}"
+  when:
+    - elastic_heap_size is defined
+
 - name: Drop jvm conf file(s)
   template:
     src: "{{ item.src }}"

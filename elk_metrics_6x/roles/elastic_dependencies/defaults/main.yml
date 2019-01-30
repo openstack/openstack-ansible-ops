@@ -42,3 +42,8 @@ elastic_lxc_template_config:
   2:
     aa_profile: lxc.aa_profile
     mount: lxc.mount.entry
+
+# Set the elastic search heap size. If this option is undefined the value will
+# be derived automatically using 1/4 of the available RAM for logstash and 1/2
+# of the available RAM for elasticsearch. The value is expected to be in MiB.
+# elastic_heap_size_default: 10240  # type `int`

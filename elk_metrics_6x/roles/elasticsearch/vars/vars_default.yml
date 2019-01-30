@@ -13,5 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Set elasticsearch facts
-elastic_heap_size: "{{ elastic_heap_size_default }}"
+place_holder: true

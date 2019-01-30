@@ -49,9 +49,8 @@
   tags:
     - always
 
-- name: Set elastic heap defaults
+- name: Set elastic log rotate path
   set_fact:
-    elastic_heap_size_default: "{{ _elastic_heap_size_default }}"
     elastic_log_rotate_path: "/var/log/{{ service_name }}"
 
 - name: Configure systcl vm.max_map_count=524288 on elastic hosts

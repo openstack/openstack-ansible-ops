@@ -18,7 +18,6 @@ elasticsearch_node_master: false
 elasticsearch_node_data: false
 elasticsearch_node_ingest: false
 elastic_coordination_node: true
-elastic_heap_size: "{{ (elastic_heap_size_default | int) // 3 }}"
 
 # This variable is redefined because kibana runs elasticsearch but only in a
 # load balancer capacity.

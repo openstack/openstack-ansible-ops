@@ -86,3 +86,8 @@ logstash_arcsight_event_brokers: []
 ## detect the media type where the queue will exist. If the media type is
 ## "rotational" in memory queues will be used.
 # logstash_queue_type:
+
+# Set the logstash search heap size. If this option is undefined the value will
+# be derived automatically using 1/4 of the available RAM for logstash and 1/2
+# of the available RAM for elasticsearch. The value is expected to be in MiB.
+# logstash_heap_size: 10240  # type `int`
