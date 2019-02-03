@@ -50,8 +50,22 @@
       provider_network_type: "{{ item.network_type }}"
       provider_physical_network: "{{ item.physical_network | default ('') }}"
     with_items: "{{ networks }}"
+    when: not (osa_enable_networking_ovn | bool)
     tags:
       - create_networks
+
+  - name: Create networks (OVN)
+    os_network:
+      endpoint_type: internal
+      cloud: default
+      state: present
+      name: "{{ item.name }}"
+      shared: "{{ item.shared }}"
+      external: "{{ item.external }}"
+      provider_network_type: "{{ item.network_type }}"
+      provider_physical_network: "{{ item.physical_network | default ('') }}"
+    with_items: "{{ networks_ovn }}"
+    when: osa_enable_networking_ovn | default(false) | bool
 
   - name: Create subnets on networks
     os_subnet:

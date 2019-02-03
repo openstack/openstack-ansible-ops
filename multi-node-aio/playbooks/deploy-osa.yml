@@ -51,6 +51,16 @@
       when:
         - pre_config_osa | default(true) | bool
 
+    - name: Create OSA group_vars directory
+      file:
+        path: "/etc/openstack_deploy/group_vars"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      when:
+        - pre_config_osa | default(true) | bool
+
     - name: Copy default config files and directories
       shell: >-
         rsync
@@ -97,6 +107,39 @@
       when:
         - pre_config_osa | default(true) | bool
         - osa_disable_serial | default(false) | bool
+
+    - name: Drop OVS group_vars config
+      template:
+        src: "osa/ovs_network_hosts_group.yml"
+        dest: "/etc/openstack_deploy/group_vars/network_hosts"
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - pre_config_osa | default(true) | bool
+        - osa_enable_networking_ovn | default(false) | bool
+
+    - name: Drop NEUTRON OVN env.d config
+      template:
+        src: "osa/neutron-ovn-envd.yml"
+        dest: "/etc/openstack_deploy/env.d/neutron.yml"
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - pre_config_osa | default(true) | bool
+        - osa_enable_networking_ovn | default(false) | bool
+
+    - name: Drop NOVA OVN env.d config
+      template:
+        src: "osa/nova-ovn-envd.yml"
+        dest: "/etc/openstack_deploy/env.d/nova.yml"
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - pre_config_osa | default(true) | bool
+        - osa_enable_networking_ovn | default(false) | bool
 
     - name: Drop ELK env.d config
       template:
