@@ -18,7 +18,7 @@ elastic_setup_flags:
   - "--template"
   - "--pipelines"
   - "--machine-learning"
-  - "--dashboards"
+  # - "--dashboards"
 
 # Setup options are cast as a string with, one option per line.
 elastic_beat_setup_options: >-

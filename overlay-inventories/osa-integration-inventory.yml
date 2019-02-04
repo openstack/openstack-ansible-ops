@@ -111,6 +111,10 @@ all_systems:
           vars:
             elastic_skydive_retention: 2  # Elastic retention set to 2 days max
             elastic_skydive_size: 51200   # Elastic retention set to 50GiB max
+            elastic_setup_flags:
+              - "--template"
+              - "--pipelines"
+              - "--machine-learning"
           children:
             elastic-logstash_all:
               children:
