@@ -14,6 +14,13 @@ elastic_hap_port: 9201
 logstash_beat_input_port: 5044
 logstash_syslog_input_port: 5140
 logstash_syslog_input_mode: udp
+logstash_collectd_input_enabled: false
+logstash_collectd_port: 25826
+logstash_collectd_buffer_size: 1452
+# Security level can be ["Sign", "Encrypt"].
+logstash_collectd_security_level: Sign
+# To enable security the auth file is required.
+#logstash_collectd_authfile: /etc/collectd/passwd
 kibana_port: 5601
 kibana_nginx_port: 81
 

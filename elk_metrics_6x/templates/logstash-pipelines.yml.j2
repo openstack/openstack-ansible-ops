@@ -38,10 +38,32 @@
 {%   endif %}
     }
 {% endif %}
+{% if logstash_collectd_input_enabled | bool %}
+    input {
+      udp {
+        port => {{ logstash_collectd_port }}
+        buffer_size => {{ logstash_collectd_buffer_size }}
+        codec => collectd { }
+{%   if (logstash_collectd_security_level is defined) and (logstash_collectd_authfile is defined) %}
+        security_level => {{ logstash_collectd_security_level }}
+        authfile => {{ logstash_collectd_authfile }}
+{%   endif %}
+        add_field => {
+          "[@metadata][source_type]" => "collectd"
+        }
+      }
+    }
+{% endif %}
     filter {
       if [@metadata][source_type] == "syslog" {
         mutate {
           add_tag => ["syslog"]
+        }
+      }
+
+      if [@metadata][source_type] == "collectd" {
+        mutate {
+          add_tag => ["collectd"]
         }
       }
 
@@ -496,6 +518,15 @@
             manage_template => {{ (data_node | bool) | lower }}
             index => "syslog-%{+YYYY.MM.dd}"
           }
+        } else if "collectd" in [tags] {
+          elasticsearch {
+            id => "elasticsearchCollectdDocIDOutputPipeline"
+            document_id => "%{[@metadata][fingerprint]}"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "collectd-%{+YYYY.MM.dd}"
+          }
         } else {
           elasticsearch {
             id => "elasticsearchUndefinedDocIDOutputPipeline"
@@ -530,6 +561,14 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "syslog-%{+YYYY.MM.dd}"
+          }
+        } else if "collectd" in [tags] {
+          elasticsearch {
+            id => "elasticsearchCollectdOutputPipeline"
+            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
+            manage_template => {{ (data_node | bool) | lower }}
+            index => "collectd-%{+YYYY.MM.dd}"
           }
         } else {
           elasticsearch {

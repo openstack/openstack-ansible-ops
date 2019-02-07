@@ -25,6 +25,25 @@
   tags:
     - always
 
+- name: Check collectd plugin
+  block:
+    - name: Check for collectd authentication file
+      stat:
+        path: "{{ logstash_collectd_authfile }}"
+      register: _logstash_collectd
+      when:
+        - logstash_collectd_authfile is defined
+
+    - name: Notify collectd plugin failure
+      fail:
+        msg: >-
+          The logstash collectd plugin was enabled with security
+          enabled however the authentication file was not found.
+      when:
+        - not (_logstash_collectd.stat.exists | bool)
+  when:
+    - logstash_collectd_input_enabled | bool
+
 - name: Ensure Logstash is installed
   package:
     name: "{{ logstash_distro_packages }}"
