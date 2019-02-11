@@ -42,7 +42,8 @@
   roles:
     - role: elastic_rollup
       index_name: auditbeat
-
+      when:
+        - elastic_create_rollup | bool
   tags:
     - auditbeat
 

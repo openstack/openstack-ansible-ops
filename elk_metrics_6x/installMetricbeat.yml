@@ -42,7 +42,8 @@
   roles:
     - role: elastic_rollup
       index_name: metricbeat
-
+      when:
+        - elastic_create_rollup | bool
   tags:
     - metricbeat
 
