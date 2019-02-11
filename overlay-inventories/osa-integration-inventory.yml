@@ -10,7 +10,21 @@ all_systems:
   children:
     all_hosts:
       children:
-        hosts: {}
+        physical_hosts:
+          children:
+            hosts: {}
+
+    all_metering:
+      children:
+        metering:
+          children:
+            metering_ui_targets:
+              children:
+                log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+
+            metering_infra_targets:
+              children:
+                log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
 
     systems:
       vars:
@@ -85,8 +99,8 @@ all_systems:
         traefik_all:
           children:
             traefik_build_nodes:
-              hosts: {}
               vars: {}
+              hosts: {}
               children: {}
 
         skydive_all:
@@ -101,72 +115,69 @@ all_systems:
 
             skydive_agents:
               children:
-                all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                physical_hosts: {}
 
             skydive_analyzers:
               children:
-                utility_all: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                metering_ui_targets: {}
 
         elk_all:
           vars:
             elastic_skydive_retention: 2  # Elastic retention set to 2 days max
             elastic_skydive_size: 51200   # Elastic retention set to 50GiB max
-            elastic_setup_flags:
-              - "--template"
-              - "--pipelines"
-              - "--machine-learning"
           children:
             elastic-logstash_all:
               children:
                 elastic-logstash:
                   children:
-                    log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    metering_infra_targets: {}
 
             kibana_all:
               children:
                 kibana:
                   children:
-                    log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    metering_ui_targets: {}
 
             beats_all:
               vars:
                 elastic_retention_refresh: true
-                auditbeat_service_state: "{{ (inventory_hostname in (groups['hosts'] | default([]))) | ternary('restarted', 'stopped') }}"
-                filebeat_service_state: "{{ (inventory_hostname in (groups['hosts'] | default([]))) | ternary('restarted', 'stopped') }}"
-                heartbeat_service_state: "{{ (inventory_hostname in (groups['kibana_all'] | default([]))) | ternary('restarted', 'stopped') }}"
-                journalbeat_service_state: "{{ (inventory_hostname in (groups['hosts'] | default([]))) | ternary('restarted', 'stopped') }}"
-                metricbeat_service_state: "{{ (inventory_hostname in (groups['hosts'] | default([]))) | ternary('restarted', 'stopped') }}"
-                packetbeat_service_state: "{{ (inventory_hostname in (groups['network_hosts'] | default([]))) | ternary('restarted', 'stopped') }}"
+                auditbeat_service_state: "{{ (inventory_hostname in (groups['auditbeat'] | default([]))) | ternary('restarted', 'stopped') }}"
+                filebeat_service_state: "{{ (inventory_hostname in (groups['filebeat'] | default([]))) | ternary('restarted', 'stopped') }}"
+                heartbeat_service_state: "{{ (inventory_hostname in (groups['heartbeat'] | default([]))) | ternary('restarted', 'stopped') }}"
+                journalbeat_service_state: "{{ (inventory_hostname in (groups['journalbeat'] | default([]))) | ternary('restarted', 'stopped') }}"
+                metricbeat_service_state: "{{ (inventory_hostname in (groups['metricbeat'] | default([]))) | ternary('restarted', 'stopped') }}"
+                packetbeat_service_state: "{{ (inventory_hostname in (groups['packetbeat'] | default([]))) | ternary('restarted', 'stopped') }}"
               children:
                 auditbeat:
                   children:
-                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    physical_hosts: {}
 
                 filebeat:
                   children:
-                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    physical_hosts: {}
 
-                heatbeat:
+                heartbeat:
                   children:
-                    kibana_all: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    kibana_all: {}
 
                 journalbeat:
                   children:
-                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    physical_hosts: {}
 
                 metricbeat:
                   children:
-                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    physical_hosts: {}
+                    all_containers: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
 
                 packetbeat:
                   children:
-                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    network_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
 
             apm-server_all:
               children:
                 apm-server:
                   children:
-                    log_hosts: {}    # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    metering_ui_targets: {}
 
         fleet_all:
           children:
@@ -174,22 +185,22 @@ all_systems:
               children:
                 kolide-db:
                   children:
-                    log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    metering_ui_targets: {}
 
             kolide-fleet_all:
               children:
                 kolide-fleet:
                   children:
-                    log_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    metering_ui_targets: {}
 
             osquery_all:
               children:
                 osquery:
                   children:
-                    all_hosts: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                    physical_hosts: {}
 
         grafana_all:
           children:
             grafana:
               children:
-                utility_all: {}  # This is an osa native group, as such nothing needs to be added. Values will be inherited.
+                metering_ui_targets: {}
