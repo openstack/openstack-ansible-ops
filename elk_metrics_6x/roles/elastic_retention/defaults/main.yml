@@ -70,35 +70,45 @@ elastic_index_retention_algorithm: default
 
 elastic_beat_retention_policy_hosts:
   logstash:
+    make_index: true
     weight: 1
     hosts: "{{ groups['elastic-logstash'] | default([]) }}"
   apm:
+    make_index: true
+    timeFieldName: '@timestamp'
     weight: 1
     hosts: "{{ groups['apm-server'] | default([]) }}"
   auditbeat:
+    timeFieldName: '@timestamp'
     weight: 10
     hosts: "{{ groups['hosts'] | default([]) }}"
   filebeat:
+    timeFieldName: '@timestamp'
     weight: 10
     hosts: "{{ groups['hosts'] | default([]) }}"
   syslog:
+    make_index: true
     weight: 1
     hosts: "{{ groups['hosts'] | default([]) }}"
   heartbeat:
+    timeFieldName: '@timestamp'
     weight: 1
     hosts: "{{ groups['kibana'][:3] | default([]) }}"
   journalbeat:
+    timeFieldName: '@timestamp'
     weight: 3
-    hosts: "{{ groups['all'] | default([]) }}"
+    hosts: "{{ groups['hosts'] | default([]) }}"
   metricbeat:
+    timeFieldName: '@timestamp'
     weight: 2
     hosts: "{{ groups['all'] | default([]) }}"
   packetbeat:
+    timeFieldName: '@timestamp'
     weight: 1
     hosts: "{{ groups['hosts'] | default([]) }}"
   skydive:
     weight: 1
-    hosts: "{{ groups['skydive_analyzers'] | default([]) }}"
+    hosts: "{{ (((groups['skydive_analyzers'] | default([])) | length) > 0) | ternary((groups['hosts'] | default([])), []) }}"
 
 # Refresh the elasticsearch retention policy local facts.
 elastic_retention_refresh: false

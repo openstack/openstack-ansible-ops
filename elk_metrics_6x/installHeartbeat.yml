@@ -56,7 +56,8 @@
   roles:
     - role: elastic_rollup
       index_name: heartbeat
-
+      when:
+        - elastic_create_rollup | bool
   tags:
     - heartbeat
 

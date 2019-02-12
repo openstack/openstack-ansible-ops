@@ -11,6 +11,7 @@ q_storage: "{{ (ansible_processor_count | int) * (ansible_processor_threads_per_
 apm_port: 8200
 elastic_port: 9200
 elastic_hap_port: 9201
+elastic_create_rollup: false
 logstash_beat_input_port: 5044
 logstash_syslog_input_port: 5140
 logstash_syslog_input_mode: udp

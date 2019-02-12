@@ -26,7 +26,8 @@
     - role: elastic_apm_server
     - role: elastic_rollup
       index_name: apm
-
+      when:
+        - elastic_create_rollup | bool
   tags:
     - apm-server
 
@@ -44,6 +45,7 @@
   roles:
     - role: elastic_rollup
       index_name: apm
-
+      when:
+        - elastic_create_rollup | bool
   tags:
     - apm-server

@@ -42,7 +42,8 @@
   roles:
     - role: elastic_rollup
       index_name: filebeat
-
+      when:
+        - elastic_create_rollup | bool
   tags:
     - filebeat
 
