@@ -15,12 +15,6 @@
 # service_group_gid: 5000
 # service_owner_uid: 5000
 
-# Option to define third memory
-q_mem: "{{ (ansible_memtotal_mb | int) // 3 }}"
-
-# Option to define half memory
-h_mem: "{{ (ansible_memtotal_mb | int) // 2 }}"
-
 #define this in host/group vars as needed to mount remote filesystems
 #set the client address as appropriate, eth1 assumes osa container mgmt network
 #mountpoints and server paths are just examples

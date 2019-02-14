@@ -160,7 +160,7 @@
           - what: "tmpfs"
             where: "{{ logstash_queue_path.stdout.strip() }}"
             type: "tmpfs"
-            options: "size={{ (q_mem | int) // 2 }}m,uid={{ logstash_uid.stdout }},gid={{ logstash_gid.stdout }},nodev,nodiratime,noatime"
+            options: "size={{ (elastic_memory_lower_limit | int) // 2 }}m,uid={{ logstash_uid.stdout }},gid={{ logstash_gid.stdout }},nodev,nodiratime,noatime"
             unit:
               Before:
                 - logstash.service
@@ -174,7 +174,7 @@
         path: "{{ logstash_queue_path.stdout.strip() }}"
         src: tmpfs
         fstype: tmpfs
-        opts: size={{ (q_mem | int) // 2 }}m
+        opts: size={{ (elastic_memory_lower_limit | int) // 2 }}m
         state: mounted
       when:
         - ansible_service_mgr != 'systemd'

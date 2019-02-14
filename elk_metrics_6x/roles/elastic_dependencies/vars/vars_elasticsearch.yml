@@ -14,4 +14,4 @@
 # The heap size is set using the a half of the total memory available with
 # a cap of 32GiB. If the total available memory is less than 32GiB a buffer of
 # 10% will be used to ensure the underlying system is not starved of memory.
-_elastic_heap_size_default: "{{ ((h_mem | int) > 30720) | ternary(30720, ((h_mem | int) - ((h_mem | int) * 0.1))) }}"
+_elastic_heap_size_default: "{{ ((elastic_memory_upper_limit | int) > 30720) | ternary(30720, ((elastic_memory_upper_limit | int) - ((elastic_memory_upper_limit | int) * 0.1))) }}"

@@ -1,9 +1,6 @@
 ---
-# Option to define quarter memory
-q_mem: "{{ (ansible_memtotal_mb | int) // 4 }}"
-
-# Option to define half memory
-h_mem: "{{ (ansible_memtotal_mb | int) // 2 }}"
+elastic_memory_lower_limit: "{{ (ansible_memtotal_mb | int) * 0.15 // 1 }}"
+elastic_memory_upper_limit: "{{ (ansible_memtotal_mb | int) * 0.35 // 1 }}"
 
 # Option to set persistent queue storage in gigabytes
 q_storage: "{{ (ansible_processor_count | int) * (ansible_processor_threads_per_core | int) * 2 }}"

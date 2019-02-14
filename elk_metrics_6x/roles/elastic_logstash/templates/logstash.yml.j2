@@ -159,7 +159,7 @@ queue.type: persisted
 {% if logstash_queue_type == 'memory' %}
 # An in memory queue is being used. The actual size of the queue is 90% of the
 # total memory limit, which is set using 50% of the heap size.
-{%   set _memory_queue_size = ((q_mem | int) // 2) %}
+{%   set _memory_queue_size = ((elastic_memory_lower_limit | int) // 2) %}
 {%   set _memory_queue_size_buffer = (((_memory_queue_size | int) * 0.1) | int) %}
 queue.max_bytes: {{ (_memory_queue_size | int) - (_memory_queue_size_buffer | int) }}mb
 {% else %}
