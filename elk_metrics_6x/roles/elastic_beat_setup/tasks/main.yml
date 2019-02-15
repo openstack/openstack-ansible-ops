@@ -36,6 +36,10 @@
 
 - name: Load templates
   shell: >-
+    {% if item == '--dashboards' %}
+      sed -i 's@\\\"index\\\": \\\"{{ elastic_beat_name }}-\*\\\"@\\\"index\\\": \\\"{{ elastic_beat_name }}\\\"@g' /usr/share/{{ elastic_beat_name }}/kibana/6/dashboard/*.json
+      sed -i 's@"id": "{{ elastic_beat_name }}\-\*",@"id": "{{ elastic_beat_name }}",@g' /usr/share/{{ elastic_beat_name }}/kibana/6/index-pattern/*.json
+    {% endif %}
     {{ elastic_beat_name }} setup
     {{ item }}
     {{ elastic_beat_setup_options }}
@@ -51,7 +55,8 @@
   when:
     - ((ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] is undefined) or
        (not (ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] | bool))) or
-      (elk_package_state | default('present')) == "latest"
+      ((elk_package_state | default('present')) == "latest") or
+      (elk_beat_setup | default(false) | bool)
   tags:
     - setup
 

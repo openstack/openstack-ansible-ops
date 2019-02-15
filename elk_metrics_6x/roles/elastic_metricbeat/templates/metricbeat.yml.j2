@@ -139,7 +139,7 @@ metricbeat.modules:
   period: 30s
 #
 #  # Apache hosts
-  hosts: ["http://{{ ansible_hostname }}"]
+  hosts: ["http://127.0.1.1:18181"]
 #
 #  # Path to server status. Default server-status
 #  #server_status_path: "server-status"
@@ -158,8 +158,8 @@ metricbeat.modules:
   enabled: true
   period: 30s
   hosts: {{ ceph_stats_hosts | to_json }}
-#
 {% endif %}
+#
 ##------------------------------ Couchbase Module -----------------------------
 #- module: couchbase
 #  metricsets: ["bucket", "cluster", "node"]
@@ -179,8 +179,8 @@ metricbeat.modules:
     #certificate_authority: "/etc/pki/root/ca.pem"
     #certificate:           "/etc/pki/client/cert.pem"
     #key:                   "/etc/pki/client/cert.key"
-
 {% endif %}
+#
 ##----------------------------- Dropwizard Module -----------------------------
 #- module: dropwizard
 #  metricsets: ["collector"]
@@ -196,8 +196,8 @@ metricbeat.modules:
   enabled: true
   period: 30s
   hosts: ["localhost:{{ elastic_port }}"]
-#
 {% endif %}
+#
 ##-------------------------------- Etcd Module --------------------------------
 {% if etcd_enabled | default(false) | bool %}
 - module: etcd
@@ -205,8 +205,8 @@ metricbeat.modules:
   enabled: true
   period: 30s
   hosts: ["localhost:2379"]
-#
 {% endif %}
+#
 ##------------------------------- Golang Module -------------------------------
 #- module: golang
 #  metricsets: ["expvar","heap"]
@@ -236,8 +236,8 @@ metricbeat.modules:
   enabled: true
   period: 30s
   hosts: [ {{ elastic_metricbeat_haproxy_monitoring_hosts }} ]
-#
 {% endif %}
+#
 ##-------------------------------- HTTP Module --------------------------------
 #- module: http
 #  metricsets: ["json"]
@@ -297,8 +297,8 @@ metricbeat.modules:
   enabled: true
   period: 30s
   hosts: ["localhost:{{ kibana_port }}"]
-#
 {% endif %}
+#
 ##----------------------------- Kubernetes Module -----------------------------
 ## Node metrics, from kubelet:
 #- module: kubernetes
@@ -347,9 +347,8 @@ metricbeat.modules:
   enabled: true
   period: 30s
   hosts: ["localhost:9600"]
-#
-#
 {% endif %}
+#
 ##------------------------------ Memcached Module -----------------------------
 {% if memcached_enabled | default(false) | bool %}
 - module: memcached
@@ -357,8 +356,8 @@ metricbeat.modules:
   enabled: true
   period: 30s
   hosts: ["{{ ansible_hostname }}:11211"]
-
 {% endif %}
+#
 ##------------------------------- MongoDB Module ------------------------------
 #- module: mongodb
 #  metricsets: ["dbstats", "status"]
@@ -407,7 +406,7 @@ metricbeat.modules:
 #  #raw: false
 #
 {% endif %}
-
+#
 ##-------------------------------- Nginx Module -------------------------------
 {% if nginx_enabled | default(false) | bool %}
 - module: nginx
@@ -416,11 +415,12 @@ metricbeat.modules:
   period: 30s
 
   # Nginx hosts
-  hosts: ["http://{{ ansible_hostname }}"]
+  hosts: ["http://127.0.1.1:18181"]
 
   # Path to server status. Default server-status
   server_status_path: "server-status"
 {% endif %}
+#
 ##------------------------------- PHP_FPM Module ------------------------------
 #- module: php_fpm
 #  metricsets: ["pool"]
@@ -456,7 +456,7 @@ metricbeat.modules:
 #
 ##----------------------------- Prometheus Module -----------------------------
 {% if (prometheus_enabled | default(false) | bool) and (prometheus_config is defined) %}
-{% for prometheus in prometheus_config %}
+{%   for prometheus in prometheus_config %}
 - module: prometheus
   metricsets: [{% for mset in prometheus.metricsets|default(["collector"]) %}"{{ mset }}"{% if not loop.last %},{% endif %}{% endfor %}]
   enabled: {{ prometheus.enabled | default('true') }}
@@ -465,7 +465,7 @@ metricbeat.modules:
   metrics_path: {{ prometheus.metrics_path | default("/metrics") }}
   namespace: {{ prometheus.namespace }}
 #
-{% endfor %}
+{%   endfor %}
 {% endif %}
 {% if (ceph_prometheus_enabled | default(false) | bool) %}
 - module: prometheus
@@ -475,8 +475,8 @@ metricbeat.modules:
   hosts: [{% for phost in ceph_stats_hosts %}"{{ phost | regex_replace(':\\d+$', '') }}:9283"{% if not loop.last %},{% endif %}{% endfor %}]
   metrics_path: "/metrics"
   namespace: ceph
-#
 {% endif %}
+#
 ##------------------------------ RabbitMQ Module ------------------------------
 {% if (rabbitmq_enabled | default(false) | bool) and (rabbitmq_monitoring_password is defined) %}
 - module: rabbitmq
@@ -486,9 +486,8 @@ metricbeat.modules:
   hosts: [ {{ elastic_metricbeat_rabbitmq_monitoring_hosts }} ]
   username: {{ rabbitmq_monitoring_userid | default('monitoring') }}
   password: {{ rabbitmq_monitoring_password  }}
-#
 {% endif %}
-
+#
 ##-------------------------------- Redis Module -------------------------------
 #- module: redis
 #  metricsets: ["info", "keyspace"]
@@ -531,8 +530,8 @@ metricbeat.modules:
 {%   else %}
   hosts: ["tcp://127.0.0.1:9191"]
 {%   endif %}
-#
 {% endif %}
+#
 ##------------------------------- vSphere Module ------------------------------
 #- module: vsphere
 #  metricsets: ["datastore", "host", "virtualmachine"]

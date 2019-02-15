@@ -204,12 +204,15 @@
                set _index = {
                  'name': key,
                  'index_options': {
-                   'attributes': {
-                     'title': (key ~ '*')
-                   }
+                   'attributes': {}
                  }
                }
         %}
+        {%     if 'beat' in key %}
+        {%       set _ = _index.index_options.attributes.__setitem__('title', (key ~ '-*')) %}
+        {%     else %}
+        {%       set _ = _index.index_options.attributes.__setitem__('title', (key ~ '*')) %}
+        {%     endif %}
         {%     if value.timeFieldName is defined %}
         {%       set _ = _index.index_options.attributes.__setitem__('timeFieldName', (value.timeFieldName | string)) %}
         {%     endif %}
