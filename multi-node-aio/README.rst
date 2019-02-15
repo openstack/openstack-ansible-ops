@@ -37,8 +37,9 @@ NVMe partitions generally show a ``p`` before the partition number. The default
 suffix of ``1`` for ``sdb1`` can be changed to ``p1`` to support NVMe naming
 conventions using the ``mnaio_data_disk_suffix`` extra var shown here:
 
- .. code-block:: bash
-     export MNAIO_ANSIBLE_PARAMETERS="-e mnaio_data_disk=nvme0n1 -e mnaio_data_disk_suffix=p1"
+.. code-block:: bash
+
+    export MNAIO_ANSIBLE_PARAMETERS="-e mnaio_data_disk=nvme0n1 -e mnaio_data_disk_suffix=p1"
     ./build.sh
 
 The playbooks will look for a volume group named "vg01", if this volume group
@@ -62,11 +63,12 @@ at this time include:
 * ML2/LinuxBridge
 * ML2/Open Virtual Network (OVN)
 
- To deploy an MNAIO with support for OVN, set the following parameter(s) prior
+To deploy an MNAIO with support for OVN, set the following parameter(s) prior
 to executing the build:
 
- .. code-block:: bash
-     export MNAIO_ANSIBLE_PARAMETERS="-e osa_enable_networking_ovn=true"
+.. code-block:: bash
+
+    export MNAIO_ANSIBLE_PARAMETERS="-e osa_enable_networking_ovn=true"
     ./build.sh
 
 When your ready, run the build script by executing ``bash ./build.sh``. The
