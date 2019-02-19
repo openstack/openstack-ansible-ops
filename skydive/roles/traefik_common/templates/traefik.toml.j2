@@ -36,10 +36,12 @@ logLevel = "INFO"
   [entryPoints.traefik]
     address = "{{ traffic_dashboard_bind }}:{{ traefik_dashboard_port }}"
 {% if traefik_dashboard_enabled | bool %}
+{%   if traefik_basic_auth_users %}
     [entryPoints.traefik.auth]
       [entryPoints.traefik.auth.basic]
         removeHeader = true
         usersFile = "{{ traefik_basic_auth_file }}"
+{%   endif %}
 {% endif %}
 
 {% for key, value in traefik_destinations.items() %}

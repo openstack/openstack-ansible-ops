@@ -13,6 +13,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Deploy traefik binaries
+  hosts: grafana_all
+  become: yes
+  vars:
+    traefik_binary_version: "v1.7.7"
+    traefik_binary_url: "https://github.com/containous/traefik/releases/download/{{ traefik_binary_version }}/traefik"
+    traefik_staging_node: "localhost"
+  pre_tasks:
+    - name: Create traefik temp path
+      file:
+        path: "/tmp/traefik/{{ ansible_architecture }}"
+        state: directory
+      delegate_to: "{{ traefik_staging_node }}"
+      become: false
+  tasks:
+    - name: Built traefik installation
+      block:
+        - name: Find traefik binaries
+          find:
+            paths: "/tmp/traefik/{{ ansible_architecture }}/"
+            recurse: no
+            patterns: "*traefik*"
+          register: files_to_copy
+          delegate_to: "{{ traefik_staging_node }}"
+          run_once: true
+          become: false
+        - name: Install built traefik
+          copy:
+            src: "{{ item.path }}"
+            dest: "/usr/local/bin/{{ item.path | basename }}"
+            mode: "0755"
+          with_items: "{{ files_to_copy.files }}"
+      when:
+        - ((groups['traefik_build_nodes'] | default([])) | length) > 0
+
+    - name: Upstream traefik installation
+      block:
+        - name: Get traefik binary
+          get_url:
+            url: "{{ traefik_binary_url }}"
+            dest: "/tmp/traefik/{{ ansible_architecture }}/{{ traefik_binary_url | basename }}"
+            mode: '0755'
+          delegate_to: "{{ traefik_staging_node }}"
+          run_once: true
+          become: false
+        - name: Install binary traefik
+          copy:
+            src: "/tmp/traefik/{{ ansible_architecture }}/{{ traefik_binary_url | basename }}"
+            dest: "/usr/local/bin/traefik"
+            mode: "0755"
+      when:
+        - ((groups['traefik_build_nodes'] | default([])) | length) < 1
+  tags:
+    - traefik-install
+
+
 - name: Deploy Grafana
   hosts: grafana_all
   become: true
@@ -81,4 +137,23 @@
         state: "latest"
 
   roles:
+    - role: traefik_common
+      traffic_dashboard_bind: "{{ hostvars[inventory_hostname]['ansible_' ~ (ansible_default_ipv4['interface'] | replace('-', '_') | string)]['ipv4']['address'] }}"
+      traefik_dashboard_enabled: true
+      traefik_destinations:
+        elasticsearch:
+          proto: "http"
+          port: "19200"
+          bind: "127.0.0.1"
+          servers: |-
+            {% set nodes = [] %}
+            {% for target in groups['kibana'] %}
+            {%   set node = {} %}
+            {%   set _ = node.__setitem__('name', 'elasticsearch' ~ loop.index) %}
+            {%   set _ = node.__setitem__('address', hostvars[target]['ansible_host']) %}
+            {%   set _ = node.__setitem__('weight', (100 - loop.index)) %}
+            {%   set _ = node.__setitem__('port', "9200") %}
+            {%   set _ = nodes.append(node) %}
+            {% endfor %}
+            {{ nodes }}
     - role: grafana

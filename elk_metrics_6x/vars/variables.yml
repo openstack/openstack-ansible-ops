@@ -24,12 +24,7 @@ kibana_nginx_port: 81
 
 # This is the URL external services can use to communicate with the
 # elasticsearch cluster.
-elastic_vip_url: >-
-  {% if internal_lb_vip_address is defined %}
-  http://{{ internal_lb_vip_address ~ ':' ~ elastic_hap_port }}
-  {% else %}
-  http://{{ hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ elastic_port }}
-  {% endif %}
+elastic_vip_url: "http://127.0.0.1:19200"
 
 # Elasticsearch can query the itself and loadbalance requests across the cluster.
 # This function is automatically enabled on non-data nodes however this setting
