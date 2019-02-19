@@ -11,8 +11,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Detect monitorstack host deployment group(s)
+  hosts: "hosts:all_containers"
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: Add hosts to dynamic inventory group
+      group_by:
+        key: monitorstack_deployment
+        parents: monitorstack_all
+      when:
+        - inventory_hostanme in (
+            (groups['nova_compute'] | default([])) |
+            union(groups['utility_all'] | default([])) |
+            union(groups['memcached_all'] | default([])) |
+            union(groups['memcached_all'] | default([]))
+          )
+        - ansible_service_mgr == 'systemd'
+  tags:
+    - always
+
 - name: Install MonitorStack
-  hosts: "nova_compute:utility_all:memcached_all"
+  hosts: monitorstack_all
   become: true
   gather_facts: true
   vars:
