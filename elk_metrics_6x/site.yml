@@ -13,4 +13,5 @@
 
 - import_playbook: site-elka.yml
 - import_playbook: site-beats-core.yml
+- import_playbook: installMonitorStack.yml
 - import_playbook: createElasticIndexes.yml
