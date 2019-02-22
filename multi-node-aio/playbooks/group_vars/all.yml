@@ -50,8 +50,8 @@ images:
     image_os: "ubuntu"
     image-version: "bionic"
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
-    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
-    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
+    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/bionic-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
+    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/bionic-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
     image_configs:
       vm:
         url: "http://{{ tftp_server }}/configs/vm.config"
@@ -65,8 +65,8 @@ images:
     image_os: "ubuntu"
     image-version: "xenial"
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
-    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
-    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
+    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
+    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
     image_configs:
       vm:
         url: "http://{{ tftp_server }}/configs/vm.config"
@@ -80,8 +80,8 @@ images:
     image_os: "ubuntu"
     image_version: "trusty"
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical quiet splash"
-    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
-    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
+    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
+    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
     image_configs:
       vm:
         url: "http://{{ tftp_server }}/configs/vm.config"
