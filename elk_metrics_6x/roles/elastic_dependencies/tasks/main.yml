@@ -195,6 +195,21 @@
   tags:
     - package_install
 
+- name: Set java alternatives
+  block:
+    - name: Get java version alternantive
+      shell: >-
+        update-alternatives --query java | awk -F':' '/{{ elastic_java_version }}/ && /Alternative/ {print $2}'
+      register: java_alternatives
+      changed_when: false
+
+    - name: Set java version alternantive
+      alternatives:
+        name: java
+        path: "{{ java_alternatives.stdout.strip() }}"
+  when:
+    - (ansible_os_family | lower) == 'debian'
+
 - name: Ensure service directories exists
   file:
     path: "/etc/{{ service_name }}"

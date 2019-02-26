@@ -41,3 +41,6 @@ elastic_lxc_template_config:
 # be derived automatically using 1/4 of the available RAM for logstash and 1/2
 # of the available RAM for elasticsearch. The value is expected to be in MiB.
 # elastic_heap_size_default: 10240  # type `int`
+
+# Set the friendly name of the version of java that will be used as the default.
+elastic_java_version: java-8
