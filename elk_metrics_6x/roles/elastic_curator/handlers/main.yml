@@ -20,5 +20,6 @@
     state: restarted
   when:
     - (elk_package_state | default('present')) != 'absent'
+    - ansible_service_mgr == 'systemd'
   tags:
     - config

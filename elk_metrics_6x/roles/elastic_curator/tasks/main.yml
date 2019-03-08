@@ -25,11 +25,6 @@
   tags:
     - always
 
-- name: exit playbook after uninstall
-  meta: end_play
-  when:
-      ansible_service_mgr != 'systemd'
-
 - name: Refresh local facts
   setup:
     filter: ansible_local

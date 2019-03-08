@@ -109,7 +109,7 @@ metricbeat.modules:
   process.cmdline.cache.enabled: true
 
   # Enable collection of cgroup metrics from processes on Linux.
-  process.cgroups.enabled: true
+  process.cgroups.enabled: {{ ansible_service_mgr == 'systemd' }}
 
   # A list of regular expressions used to whitelist environment variables
   # reported with the process metricset's events. Defaults to empty.
