@@ -26,8 +26,6 @@ elastic_memory_lock: true
 # playbooks are executed, which ensures the plugins are always upgraded.
 elastic_plugins:
   - ingest-attachment
-  - ingest-geoip
-  - ingest-user-agent
 
 # Set the logstash search heap size. If this option is undefined the value will
 # be derived automatically using 1/4 of the available RAM for logstash and 1/2
