@@ -82,7 +82,7 @@ previously defined password whose shasum was given into ``graylog_root_password_
 
 In the web interface, add the inputs you need.
 
-If you want to configure your your nodes with the provided playbook, you will need to
+If you want to configure your nodes with the provided playbook, you will need to
 create a new GELF UDP input on at least one of your Graylog2 nodes (select ``global`` if you want to
 listen on all the nodes).
 
