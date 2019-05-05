@@ -92,7 +92,7 @@ if [[ ${#BINDEP_PKGS} > 0 ]]; then
 fi
 
 # Install latest OSA supported Ansible version
-sudo pip install -r https://git.openstack.org/cgit/openstack/openstack-ansible-tests/plain/test-ansible-deps.txt?h=${OSA_DEPS_BRANCH}
+sudo pip install -r https://git.opendev.org/cgit/openstack/openstack-ansible-tests/plain/test-ansible-deps.txt?h=${OSA_DEPS_BRANCH}
 
 # Get the latest OSA plugins
 # This is used to allow access from the MNAIO host to
@@ -100,5 +100,5 @@ sudo pip install -r https://git.openstack.org/cgit/openstack/openstack-ansible-t
 # do execute things from infra1.
 mkdir -p ~/.ansible
 if [[ ! -d ~/.ansible/plugins ]]; then
-    git clone -b ${OSA_DEPS_BRANCH} https://git.openstack.org/openstack/openstack-ansible-plugins ~/.ansible/plugins
+    git clone -b ${OSA_DEPS_BRANCH} https://git.opendev.org/openstack/openstack-ansible-plugins ~/.ansible/plugins
 fi

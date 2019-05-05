@@ -34,7 +34,7 @@
     # Example read-write git checkout from github
     - name: Get OSA
       git:
-        repo: "{{ osa_repo | default('https://git.openstack.org/openstack/openstack-ansible') }}"
+        repo: "{{ osa_repo | default('https://git.opendev.org/openstack/openstack-ansible') }}"
         dest: /opt/openstack-ansible
         version: "{{ osa_branch | default('master') }}"
       when:

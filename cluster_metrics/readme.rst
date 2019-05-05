@@ -19,7 +19,7 @@ Clone the OPS repo
 .. code-block:: bash
 
     cd /opt
-    git clone https://git.openstack.org/openstack/openstack-ansible-ops
+    git clone https://git.opendev.org/openstack/openstack-ansible-ops
 
 Copy the env.d files into place
 

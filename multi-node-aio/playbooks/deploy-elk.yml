@@ -34,7 +34,7 @@
     # Example read-write git checkout from github
     - name: Get openstack-ansible-ops
       git:
-        repo: "{{ os_ops_repo | default('https://git.openstack.org/openstack/openstack-ansible-ops') }}"
+        repo: "{{ os_ops_repo | default('https://git.opendev.org/openstack/openstack-ansible-ops') }}"
         dest: /opt/openstack-ansible-ops
         version: "{{ os_ops_branch | default('master') }}"
         force: true

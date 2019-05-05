@@ -15,7 +15,7 @@
 
 MYWD=$(pwd)
 if [ ! -d "openstack-ansible" ]; then
-  git clone https://git.openstack.org/openstack/openstack-ansible
+  git clone https://git.opendev.org/openstack/openstack-ansible
 fi
 cd openstack-ansible
 git checkout master
