@@ -43,3 +43,4 @@
         /opt/neutron-ha-tool.py --replicate-dhcp --now --insecure
       args:
         executable: /bin/bash
+      when: (neutron_legacy_ha_tool_enabled | default('no')) | bool
