@@ -29,6 +29,7 @@
       pip:
         name: "{{ graylog_forwarder_pip_packages }}"
         state: present
+        extra_args: --isolated
     - name: Install the log forwarder service.
       include_role:
         name: systemd_service
