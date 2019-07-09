@@ -1,0 +1,335 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Refresh physical host facts
+  setup: {}
+  delegate_to: "{{ physical_host }}"
+  delegate_facts: true
+  when:
+    - physical_host is defined and physical_host != inventory_hostname
+  tags:
+    - always
+
+- name: Ensure beat is installed
+  package:
+    name: "{{ metricbeat_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  when:
+    - ansible_architecture == 'x86_64'
+  notify:
+    - Enable and restart metricbeat
+  tags:
+    - package_install
+
+- name: Ensure beat is installed (aarch64)
+  apt:
+    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/metricbeat-6.5.0-arm64.deb'
+  when:
+    - ansible_pkg_mgr == 'apt'
+    - ansible_architecture == 'aarch64'
+  notify:
+    - Enable and restart metricbeat
+  tags:
+    - package_install
+
+- name: Check for apache
+  stat:
+    path: /etc/apache2/sites-available
+  register: apache2
+
+- name: Check for ceph
+  stat:
+    path: /etc/ceph
+  register: ceph
+
+# gather ceph stats from localhost
+# except when a list of mons is provided
+- name: Set ceph stats hosts
+  set_fact:
+    ceph_stats_hosts: |-
+      {% set ceph_stats = [] %}
+      {% if (ceph_mons is defined) and (ceph_mons | length > 0) %}
+      {%   for mon in ceph_mons %}
+      {%     set _ = ceph_stats.insert(loop.index, (mon + ":5000")) %}
+      {%   endfor %}
+      {% else %}
+      {%   set ceph_stats = [ ansible_hostname + ":5000" ] %}
+      {% endif %}
+      {{ ceph_stats }}
+
+- name: Check for Ceph restapi metric port
+  wait_for:
+    port: "{{ item | regex_replace('^.+:', '') | int }}"
+    delay: 2
+    timeout: 5
+    host: "{{ item | regex_replace(':\\d+$', '') }}"
+  with_items: "{{ ceph_stats_hosts }}"
+  when: ceph.stat.exists
+  register: ceph_restapi_port_check
+  ignore_errors: yes
+
+- name: Set ceph_restapi_listening
+  set_fact:
+    ceph_restapi_listening: true
+  when: not (item.failed | default(true))
+  with_items: "{{ ceph_restapi_port_check.results }}"
+
+- name: Check for Ceph prometheus metric port
+  wait_for:
+    port: 9283
+    delay: 2
+    timeout: 5
+    host: "{{ item | regex_replace(':\\d+$', '') }}"
+  with_items: "{{ ceph_stats_hosts }}"
+  when: ceph.stat.exists
+  register: ceph_prometheus_port_check
+  ignore_errors: yes
+
+- name: Set ceph_prometheus_listening
+  set_fact:
+    ceph_prometheus_listening: true
+  when: not (item.failed | default(true))
+  with_items: "{{ ceph_prometheus_port_check.results }}"
+
+- name: Check for etcd
+  stat:
+    path: /etc/etcd
+  register: etcd
+
+- name: Check for docker
+  stat:
+    path: /var/run/docker.sock
+  register: docker
+
+- name: Check for haproxy
+  stat:
+    path: /etc/haproxy
+  register: haproxy
+
+- name: Check for httpd
+  stat:
+    path: /etc/httpd
+  register: httpd
+
+- name: Check for kvm
+  stat:
+    path: /var/run/libvirt/libvirt-sock
+  register: kvm
+
+- name: Check for memcached
+  stat:
+    path: /etc/memcached.conf
+  register: memcached
+
+- name: Check for mysql
+  stat:
+    path: /var/lib/mysql
+  register: mysql
+
+- name: Check for nginx
+  stat:
+    path: /etc/nginx/nginx.conf
+  register: nginx
+
+- name: Check for rabbitmq
+  stat:
+    path: /var/lib/rabbitmq
+  register: rabbitmq
+
+- name: Check for uwsgi
+  stat:
+    path: /etc/uwsgi
+  register: uwsgi
+
+- name: Check for uwsgi stats sockets
+  find:
+    paths: /tmp
+    file_type: any
+    patterns: '*uwsgi-stats.sock'
+  register: uwsgi_find_sockets
+
+- name: Set discovery facts
+  set_fact:
+    apache_enabled: "{{ (apache2.stat.exists | bool) or (httpd.stat.exists | bool) }}"
+
+    # Only enable ceph if something is listening on the ceph-rest-api port
+    # enable ceph on:  cinder volume hosts when we have a list of ceph mons
+    #      otherwise:  all hosts which have /etc/ceph
+    ceph_restapi_enabled: |-
+      {% set ceph_detect = false %}
+      {% if ceph_restapi_listening is defined %}
+      {%   if (ceph_mons is defined) and (ceph_mons | length > 0) and (inventory_hostname in groups[ceph_metricbeat_group])  %}
+      {%     set ceph_detect = true %}
+      {%   else %}
+      {%     set ceph_detect = ceph.stat.exists | bool %}
+      {%   endif %}
+      {% endif %}
+      {{ ceph_detect }}
+
+    ceph_prometheus_enabled: |-
+      {% set ceph_detect = false %}
+      {% if ceph_prometheus_listening is defined and (inventory_hostname in groups[ceph_metricbeat_group])  %}
+      {%   set ceph_detect = true %}
+      {% endif %}
+      {{ ceph_detect }}
+
+
+    docker_enabled: "{{ docker.stat.exists | bool }}"
+    etcd_enabled: "{{ etcd.stat.exists | bool }}"
+    haproxy_enabled: "{{ haproxy.stat.exists | bool }}"
+    kvm_enabled: "{{ kvm.stat.exists | bool }}"
+    memcached_enabled: "{{ memcached.stat.exists | bool }}"
+    mysql_enabled: "{{ mysql.stat.exists | bool }}"
+    nginx_enabled: "{{ nginx.stat.exists | bool }}"
+    rabbitmq_enabled: "{{ rabbitmq.stat.exists | bool }}"
+    uwsgi_enabled: "{{ uwsgi.stat.exists | bool }}"
+    uwsgi_sockets: "{{ uwsgi_find_sockets }}"
+
+# Apache 2 stats enablement
+- name: Enable apache2
+  block:
+    - name: Drop apache2 stats site config
+      template:
+        src: apache-status.conf.j2
+        dest: /etc/apache2/sites-available/apache-status.conf
+
+    - name: Enable apache2 stats site
+      file:
+        src: /etc/apache2/sites-available/apache-status.conf
+        dest: /etc/apache2/sites-enabled/apache-status.conf
+        state: link
+
+    - name: Ensure apache2 stats mode is enabled
+      apache2_module:
+        name: status
+        state: present
+      register: apache_status_mod
+
+    - name: Reload apache2
+      service:
+        name: apache2
+        state: reloaded
+      when:
+        - apache_status_mod is changed
+  rescue:
+    - name: Apache2 monitoring not enabled
+      debug:
+        msg: >-
+          The apache2 module was not enabled because of an error within the
+          enablement process. Check the host to ensure apache2 is really
+          available and resolve the noted errors before continuing.
+
+    - name: Disable apache2 check
+      set_fact:
+        apache_enabled: false
+  when:
+    - apache_enabled | bool
+
+
+# NGINX stats enablement
+- name: Drop nginx stats site config
+  template:
+    src: nginx-status.conf.j2
+    dest: "{{ metricbeat_nginx_vhost_path }}/nginx-status.conf"
+  register: nginx_status
+  when: nginx_enabled
+
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded
+  when:
+    - nginx_enabled
+    - nginx_status is changed
+
+- name: Create metricbeat systemd service config dir
+  file:
+    path: "/etc/systemd/system/metricbeat.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "/etc/systemd/system/metricbeat.service.d/metricbeat-overrides.conf"
+  notify:
+    - Enable and restart metricbeat
+
+- name: Drop metricbeat conf files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  with_items:
+    - src: "metricbeat.yml.j2"
+      dest: "/etc/metricbeat/metricbeat.yml"
+  notify:
+    - Enable and restart metricbeat
+
+- name: Run the beat setup role
+  include_role:
+    name: elastic_beat_setup
+  when:
+    - (groups['kibana'] | length) > 0
+  vars:
+    elastic_beat_name: "metricbeat"
+
+- name: Force beat handlers
+  meta: flush_handlers
+
+- name: set metricbeat service state (upstart)
+  service:
+    name: "metricbeat"
+    state: "{{ metricbeat_service_state }}"
+    enabled: "{{ metricbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - metricbeat_service_state in ['started', 'stopped']
+
+- name: set metricbeat service state (systemd)
+  systemd:
+    name: "metricbeat"
+    state: "{{ metricbeat_service_state }}"
+    enabled: "{{ metricbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - metricbeat_service_state in ['started', 'stopped']

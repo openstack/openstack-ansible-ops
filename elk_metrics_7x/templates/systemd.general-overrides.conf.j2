@@ -1,0 +1,12 @@
+[Service]
+# This creates a specific slice to operate from. The accounting options give us
+# the ability to see resource usage through the `systemd-cgtop` command and
+# further isolate this service from the host machine.
+Slice=elastic.slice
+CPUAccounting=true
+BlockIOAccounting=true
+MemoryAccounting=true
+TasksAccounting=true
+
+# Sandbox setup
+PrivateTmp=true

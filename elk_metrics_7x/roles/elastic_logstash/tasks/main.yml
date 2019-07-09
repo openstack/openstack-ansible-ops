@@ -1,0 +1,250 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Check collectd plugin
+  block:
+    - name: Check for collectd authentication file
+      stat:
+        path: "{{ logstash_collectd_authfile }}"
+      register: _logstash_collectd
+      when:
+        - logstash_collectd_authfile is defined
+
+    - name: Notify collectd plugin failure
+      fail:
+        msg: >-
+          The logstash collectd plugin was enabled with security
+          enabled however the authentication file was not found.
+      when:
+        - not (_logstash_collectd.stat.exists | bool)
+  when:
+    - logstash_collectd_input_enabled | bool
+
+- name: Ensure Logstash is installed
+  package:
+    name: "{{ logstash_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  notify:
+    - Enable and restart logstash
+  tags:
+    - package_install
+
+- name: Create logstash systemd service config dir
+  file:
+    path: "/etc/systemd/system/logstash.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "/etc/systemd/system/logstash.service.d/logstash-overrides.conf"
+  notify:
+    - Enable and restart logstash
+
+- name: Set sysconfig service defaults
+  lineinfile:
+    path: "{{ logstash_sysconfig_path }}"
+    regexp: '^{{ item.key }}='
+    line: '{{ item.key }}={{ item.value }}'
+  with_items:
+    - key: LS_OPEN_FILES
+      value: 32768
+
+- name: Set service specific haap size
+  set_fact:
+    _service_heap_size: "{{ logstash_heap_size }}"
+  when:
+    - logstash_heap_size is defined
+
+- name: Drop jvm conf file(s)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "jvm.options.j2"
+      dest: "/etc/logstash/jvm.options"
+  notify:
+    - Enable and restart logstash
+
+- name: Check queue type
+  block:
+    - name: Get block device for logstash
+      command: findmnt -vno SOURCE --target=/var/lib/logstash
+      changed_when: false
+      register: _logstash_block_device
+
+    - name: Set device fact
+      set_fact:
+        _logstash_device: "{{ _logstash_block_device.stdout.split('/')[-1] | regex_replace('[0-9]$','') }}"
+
+    - name: Set device info fact
+      set_fact:
+        _logstash_device_info: "{{ ansible_devices[_logstash_device] }}"
+
+    - name: Set persisted queue fact
+      set_fact:
+        logstash_queue_type: "{{ ((_logstash_device_info['rotational'] | int) != 1) | ternary('persisted', 'memory') }}"
+  rescue:
+    - name: Set persisted queue fact (fallback)
+      set_fact:
+        logstash_queue_type: memory
+  when:
+    - logstash_queue_type is undefined
+
+- name: Systemd memory backed queue block
+  block:
+    - name: Get logstash UID
+      command: id -u logstash
+      register: logstash_uid
+      changed_when: false
+      when:
+        - ansible_service_mgr == 'systemd'
+
+    - name: Get logstash GID
+      command: id -g logstash
+      register: logstash_gid
+      changed_when: false
+      when:
+        - ansible_service_mgr == 'systemd'
+
+    - name: Read logstash queue path
+      command: "readlink -f /var/lib/logstash/queue"
+      register: logstash_queue_path
+      changed_when: false
+
+    - name: Run the systemd mount role
+      include_role:
+        name: systemd_mount
+      vars:
+        systemd_mounts:
+          - what: "tmpfs"
+            where: "{{ logstash_queue_path.stdout.strip() }}"
+            type: "tmpfs"
+            options: "size={{ (elastic_memory_lower_limit | int) // 2 }}m,uid={{ logstash_uid.stdout }},gid={{ logstash_gid.stdout }},nodev,nodiratime,noatime"
+            unit:
+              Before:
+                - logstash.service
+            state: 'started'
+            enabled: true
+      when:
+        - ansible_service_mgr == 'systemd'
+
+    - name: Apply fstab options for memory queues
+      mount:
+        path: "{{ logstash_queue_path.stdout.strip() }}"
+        src: tmpfs
+        fstype: tmpfs
+        opts: size={{ (elastic_memory_lower_limit | int) // 2 }}m
+        state: mounted
+      when:
+        - ansible_service_mgr != 'systemd'
+  when:
+    - logstash_queue_type == 'memory'
+
+- name: Create patterns directory
+  file:
+    name: "/opt/logstash/patterns"
+    owner: "logstash"
+    group: "logstash"
+    state: directory
+  tags:
+    - logstash-patterns
+
+- name: Logstash Extra Patterns
+  template:
+    src: "extras"
+    dest: "/opt/logstash/patterns/extras"
+    owner: "logstash"
+    group: "logstash"
+  when:
+    - logstash_deploy_filters
+  notify:
+    - Enable and restart logstash
+  tags:
+    - logstash-filters
+    - config
+
+- name: Run kafka ssl deployment
+  include_tasks: logstash_kafka_ssl.yml
+  when:
+    - logstash_kafka_options is defined
+    - logstash_kafka_ssl_keystore_location is defined
+
+- name: Drop logstash conf file(s)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "logstash.yml.j2"
+      dest: "/etc/logstash/logstash.yml"
+    - src: "logstash-pipelines.yml.j2"
+      dest: "/etc/logstash/pipelines.yml"
+  notify:
+    - Enable and restart logstash
+  tags:
+    - config
+
+- name: Ensure logstash ownership
+  file:
+    path: "/var/lib/logstash/"
+    owner: logstash
+    group: logstash
+    recurse: true
+  register: l_perms
+  until: l_perms is success
+  retries: 3
+  delay: 1
+
+- name: Ensure logstash tmp dir
+  file:
+    path: "/var/lib/logstash/tmp"
+    state: directory
+    owner: "logstash"
+    group: "logstash"
+    mode: "0750"
+
+- name: Deploy arcsight collector
+  include_tasks: logstash_arcsight.yml
+  when:
+    - logstash_arcsight_smart_connectors or
+      logstash_arcsight_event_brokers

@@ -1,0 +1,33 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+cluster_name: openstack_elk
+elastic_log_rotate_path: "/var/log/elasticsearch"
+
+temp_dir: /var/lib/elasticsearch/tmp
+nfs_query: "[?fstype=='nfs' || fstype=='nfs4']"
+
+# Enable or Disable memory locking.
+elastic_memory_lock: true
+
+# Elasticsearch plugin list. These plugins will be re-installed whenever the
+# playbooks are executed, which ensures the plugins are always upgraded.
+elastic_plugins:
+  - ingest-attachment
+
+# Set the logstash search heap size. If this option is undefined the value will
+# be derived automatically using 1/4 of the available RAM for logstash and 1/2
+# of the available RAM for elasticsearch. The value is expected to be in MiB.
+# elastic_heap_size: 10240  # type `int`

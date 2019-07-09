@@ -1,0 +1,72 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Check for coordination_nodes var
+  fail:
+    msg: >-
+      To use this role the variable `coordination_nodes` must be defined.
+  when:
+    - coordination_nodes is undefined
+
+- name: Check for elastic_beat_name var
+  fail:
+    msg: >-
+      To use this role the variable `elastic_beat_name` must be defined.
+  when:
+    - elastic_beat_name is undefined
+
+- name: Refresh local facts
+  setup:
+    filter: ansible_local
+    gather_subset: "!all"
+  tags:
+    - always
+
+- name: Load templates
+  shell: >-
+    {% if item == '--dashboards' %}
+      sed -i 's@\\\"index\\\": \\\"{{ elastic_beat_name }}-\*\\\"@\\\"index\\\": \\\"{{ elastic_beat_name }}\\\"@g' /usr/share/{{ elastic_beat_name }}/kibana/6/dashboard/*.json
+      sed -i 's@"id": "{{ elastic_beat_name }}\-\*",@"id": "{{ elastic_beat_name }}",@g' /usr/share/{{ elastic_beat_name }}/kibana/6/index-pattern/*.json
+    {% endif %}
+    {{ elastic_beat_name }} setup
+    {{ item }}
+    {{ elastic_beat_setup_options }}
+    -e -v
+  with_items: "{{ elastic_setup_flags }}"
+  register: templates
+  environment:
+    no_proxy: "{{ elastic_beat_kibana_host }}"
+  until: templates is success
+  retries: 5
+  delay: 5
+  run_once: true
+  when:
+    - ((ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] is undefined) or
+       (not (ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] | bool))) or
+      ((elk_package_state | default('present')) == "latest") or
+      (elk_beat_setup | default(false) | bool)
+  tags:
+    - setup
+
+- name: Set template fact
+  ini_file:
+    dest: "/etc/ansible/facts.d/elastic.fact"
+    section: "setup"
+    option: "{{ elastic_beat_name + '_loaded_templates' }}"
+    value: true
+  when:
+    - templates is changed
+  tags:
+    - setup

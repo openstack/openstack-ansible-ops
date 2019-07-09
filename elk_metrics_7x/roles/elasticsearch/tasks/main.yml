@@ -1,0 +1,140 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Set elasticsearch variables
+  include_vars: "vars_{{ ((inventory_hostname in (groups['kibana'] | default([])) and not inventory_hostname in (groups['elastic-logstash']) | default([]))) | ternary('kibana', 'default') }}.yml"
+  tags:
+    - always
+
+- name: Ensure elasticsearch is installed
+  package:
+    name: "{{ elasticsearch_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  notify:
+    - Enable and restart elastic
+  tags:
+    - package_install
+
+- name: Create elasticsearch systemd service config dir
+  file:
+    path: "/etc/systemd/system/elasticsearch.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.elasticsearch-overrides.conf.j2"
+      dest: "/etc/systemd/system/elasticsearch.service.d/elasticsearch-overrides.conf"
+  notify:
+    - Enable and restart elastic
+  tags:
+    - config
+
+- name: Set sysconfig service defaults
+  lineinfile:
+    path: "{{ elasticsearch_sysconfig_path }}"
+    regexp: '^{{ item.key }}='
+    line: '{{ item.key }}={{ item.value }}'
+  with_items:
+    - key: MAX_OPEN_FILES
+      value: 65536
+    - key: MAX_LOCKED_MEMORY
+      value: unlimited
+    - key: MAX_MAP_COUNT
+      value: 524288
+
+- name: Set service specific haap size
+  set_fact:
+    _service_heap_size: "{{ elastic_heap_size }}"
+  when:
+    - elastic_heap_size is defined
+
+- name: Drop jvm conf file(s)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "jvm.options.j2"
+      dest: "/etc/elasticsearch/jvm.options"
+  notify:
+    - Enable and restart elastic
+
+- name: Drop elasticsearch conf file
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "elasticsearch.yml.j2"
+      dest: "/etc/elasticsearch/elasticsearch.yml"
+    - src: "es-log4j2.properties.j2"
+      dest: "/etc/elasticsearch/log4j2.properties"
+  notify:
+    - Enable and restart elastic
+  tags:
+    - config
+
+- name: Ensure elasticsearch ownership
+  file:
+    path: "/var/lib/elasticsearch/"
+    owner: elasticsearch
+    group: elasticsearch
+    recurse: true
+  register: e_perms
+  until: e_perms is success
+  retries: 3
+  delay: 1
+  tags:
+    - config
+
+- name: Ensure elasticsearch tmp dir
+  file:
+    path: "/var/lib/elasticsearch/tmp"
+    state: directory
+    owner: "elasticsearch"
+    group: "elasticsearch"
+    mode: "0750"
+
+- include_tasks: "elasticsearch_nfs_setup.yml"
+  when:
+    - elastic_shared_fs_repos is defined
+    - (elastic_shared_fs_repos | json_query(nfs_query)) | length > 0
+
+- include_tasks: "elasticsearch_plugins.yml"

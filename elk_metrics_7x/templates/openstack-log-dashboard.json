@@ -1,0 +1,107 @@
+{
+   "_index":".kibana",
+   "_type":"doc",
+   "_id":"visualization:439b9700-78a4-11e8-b957-6d408ad5f3d7",
+   "_score":1,
+   "_source":{
+      "type":"visualization",
+      "visualization":{
+         "title":"[OpenStack] Log Level",
+         "visState":"{\"title\":\"[OpenStack] Log Level\",\"type\":\"pie\",\"params\":{\"type\":\"pie\",\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"isDonut\":true,\"labels\":{\"show\":false,\"values\":true,\"last_level\":true,\"truncate\":100}},\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"schema\":\"metric\",\"params\":{\"customLabel\":\"\"}},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"loglevel\",\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\",\"size\":5,\"order\":\"desc\",\"orderBy\":\"1\",\"customLabel\":\"OpenStack LOG\"}}]}",
+         "uiStateJSON":"{}",
+         "description":"",
+         "version":1,
+         "kibanaSavedObjectMeta":{
+            "searchSourceJSON":"{\"index\":\"*\",\"filter\":[],\"query\":{\"query\":\"\",\"language\":\"lucene\"}}"
+         }
+      }
+   }
+}
+{
+   "_index":".kibana",
+   "_type":"doc",
+   "_id":"visualization:aee19340-78b6-11e8-b957-6d408ad5f3d7",
+   "_score":1,
+   "_source":{
+      "type":"visualization",
+      "updated_at":"2018-06-25T20:31:04.820Z",
+      "visualization":{
+         "title":"[OpenStack] Log Level by Module Name",
+         "visState":"{\"title\":\"[OpenStack] Log Level by Module Name\",\"type\":\"pie\",\"params\":{\"addLegend\":true,\"addTooltip\":true,\"isDonut\":true,\"labels\":{\"last_level\":true,\"show\":false,\"truncate\":100,\"values\":true},\"legendPosition\":\"right\",\"type\":\"pie\"},\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"module\",\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\",\"size\":5,\"order\":\"desc\",\"orderBy\":\"1\"}}]}",
+         "uiStateJSON":"{}",
+         "description":"",
+         "version":1,
+         "kibanaSavedObjectMeta":{
+            "searchSourceJSON":"{\"index\":\"*\",\"filter\":[],\"query\":{\"language\":\"lucene\",\"query\":\"\"}}"
+         }
+      }
+   }
+}
+{
+   "_index":".kibana",
+   "_type":"doc",
+   "_id":"visualization:7b6488c0-78b5-11e8-b957-6d408ad5f3d7",
+   "_score":1,
+   "_source":{
+      "type":"visualization",
+      "updated_at":"2018-06-25T20:22:28.939Z",
+      "visualization":{
+         "title":"[Openstack] Log Level Bar Per Host",
+         "visState":"{\"title\":\"[Openstack] Log Level Bar Per Host\",\"type\":\"histogram\",\"params\":{\"type\":\"histogram\",\"grid\":{\"categoryLines\":false,\"style\":{\"color\":\"#eee\"}},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"LeftAxis-1\",\"type\":\"value\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Count\"}}],\"seriesParams\":[{\"show\":true,\"mode\":\"stacked\",\"type\":\"histogram\",\"drawLinesBetweenPoints\":true,\"showCircles\":true,\"data\":{\"id\":\"2\",\"label\":\"Count\"},\"valueAxis\":\"ValueAxis-1\"}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false},\"aggs\":[{\"id\":\"2\",\"enabled\":true,\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"beat.hostname\",\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\",\"size\":20,\"order\":\"desc\",\"orderBy\":\"2\"}},{\"id\":\"4\",\"enabled\":true,\"type\":\"terms\",\"schema\":\"group\",\"params\":{\"field\":\"loglevel\",\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\",\"size\":5,\"order\":\"desc\",\"orderBy\":\"2\"}}]}",
+         "uiStateJSON":"{}",
+         "description":"",
+         "version":1,
+         "kibanaSavedObjectMeta":{
+            "searchSourceJSON":"{\"index\":\"*\",\"filter\":[],\"query\":{\"language\":\"lucene\",\"query\":\"\"}}"
+         }
+      }
+   }
+}
+{
+   "_index":".kibana",
+   "_type":"doc",
+   "_id":"search:51d3fb90-78b9-11e8-b957-6d408ad5f3d7",
+   "_score":1,
+   "_source":{
+      "type":"search",
+      "updated_at":"2018-06-25T20:51:10.156Z",
+      "search":{
+         "title":"AllLogs",
+         "description":"",
+         "hits":0,
+         "columns":[
+            "_source"
+         ],
+         "sort":[
+            "@timestamp",
+            "desc"
+         ],
+         "version":1,
+         "kibanaSavedObjectMeta":{
+            "searchSourceJSON":"{\"index\":\"*\",\"highlightAll\":true,\"version\":true,\"query\":{\"language\":\"lucene\",\"query\":\"*\"},\"filter\":[]}"
+         }
+      }
+   }
+}
+{
+   "_index":".kibana",
+   "_type":"doc",
+   "_id":"dashboard:1ffbe820-78b0-11e8-b957-6d408ad5f3d7",
+   "_score":1,
+   "_source":{
+      "type":"dashboard",
+      "updated_at":"2018-06-25T20:52:44.699Z",
+      "dashboard":{
+         "title":"[Openstack] Log Dashboard",
+         "hits":0,
+         "description":"",
+         "panelsJSON":"[{\"panelIndex\":\"1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":6,\"h\":3,\"i\":\"1\"},\"id\":\"439b9700-78a4-11e8-b957-6d408ad5f3d7\",\"type\":\"visualization\",\"version\":\"6.2.4\"},{\"panelIndex\":\"2\",\"gridData\":{\"x\":0,\"y\":3,\"w\":12,\"h\":5,\"i\":\"2\"},\"id\":\"7b6488c0-78b5-11e8-b957-6d408ad5f3d7\",\"type\":\"visualization\",\"version\":\"6.2.4\"},{\"panelIndex\":\"3\",\"gridData\":{\"x\":6,\"y\":0,\"w\":6,\"h\":3,\"i\":\"3\"},\"id\":\"aee19340-78b6-11e8-b957-6d408ad5f3d7\",\"type\":\"visualization\",\"version\":\"6.2.4\"},{\"panelIndex\":\"5\",\"gridData\":{\"x\":0,\"y\":8,\"w\":12,\"h\":5,\"i\":\"5\"},\"version\":\"6.2.4\",\"type\":\"search\",\"id\":\"51d3fb90-78b9-11e8-b957-6d408ad5f3d7\"}]",
+         "optionsJSON":"{\"darkTheme\":false,\"hidePanelTitles\":false,\"useMargins\":true}",
+         "version":1,
+         "timeRestore":false,
+         "kibanaSavedObjectMeta":{
+            "searchSourceJSON":"{\"query\":{\"language\":\"lucene\",\"query\":\"\"},\"filter\":[],\"highlightAll\":true,\"version\":true}"
+         }
+      }
+   }
+}

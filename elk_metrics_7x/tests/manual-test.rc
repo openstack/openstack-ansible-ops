@@ -1,0 +1,16 @@
+export ANSIBLE_HOST_KEY_CHECKING="False"
+export ANSIBLE_ROLES_PATH="${HOME}/ansible_venv/repositories/roles"
+export ANSIBLE_ACTION_PLUGINS="${HOME}/ansible_venv/repositories/roles/config_template/action"
+export ANSIBLE_CONNECTION_PLUGINS="${HOME}/ansible_venv/repositories/roles/plugins/connection"
+export ANSIBLE_LOG_PATH="/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+
+if [[ ! -d "/tmp/elk-metrics-6x-logs" ]]; then
+  mkdir -pv "/tmp/elk-metrics-6x-logs"
+  chmod 0777 "/tmp/elk-metrics-6x-logs"
+fi
+
+echo "To build a test environment run the following:"
+echo -e "# ${HOME}/ansible_venv/bin/ansible-playbook -i tests/inventory/test-container-inventory.yml tests/test.yml --limit localhost\n"
+
+echo "Run manual functional tests by executing the following:"
+echo -e "# ${HOME}/ansible_venv/bin/ansible-playbook -i tests/inventory/test-container-inventory.yml site.yml\n"

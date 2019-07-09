@@ -1,0 +1,251 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Create/Setup known indexes in Elasticsearch
+  hosts: "elastic-logstash[0]"
+  become: true
+
+  vars:
+    _elastic_refresh_interval: "{{ (elasticsearch_number_of_replicas | int) * 5 }}"
+    elastic_refresh_interval: "{{ (_elastic_refresh_interval > 0) | ternary(30, _elastic_refresh_interval) }}"
+
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  roles:
+    - role: elastic_retention
+
+  post_tasks:
+    - name: Create beat indexes
+      uri:
+        url: http://127.0.0.1:9200/{{ item.name }}
+        method: PUT
+        body: "{{ item.index_options | to_json }}"
+        status_code: 200,400
+        body_format: json
+      register: elk_indexes
+      until: elk_indexes is success
+      retries: 3
+      delay: 30
+      with_items: |-
+        {% set beat_indexes = [] %}
+        {% for key, value in elastic_beat_retention_policy_hosts.items() %}
+        {%   if ((value.hosts | length) > 0) and (value.make_index | default(false) | bool) %}
+        {%
+               set _index = {
+                 'name': key,
+                 'index_options': {
+                   'settings': {
+                     'index': {
+                       'codec': 'best_compression',
+                       'mapping': {
+                         'total_fields': {
+                           'limit': '10000'
+                         }
+                       },
+                       'refresh_interval': elastic_refresh_interval
+                     }
+                   }
+                 }
+               }
+        %}
+        {%     set _ = beat_indexes.append(_index) %}
+        {%   endif %}
+        {% endfor %}
+        {{ beat_indexes }}
+    - name: Create basic indexes
+      uri:
+        url: http://127.0.0.1:9200/{{ item.name }}
+        method: PUT
+        body: "{{ item.index_options | to_json }}"
+        status_code: 200,400
+        body_format: json
+      register: elk_indexes
+      until: elk_indexes is success
+      retries: 3
+      delay: 30
+      with_items:
+        - name: "_all/_settings?preserve_existing=true"
+          index_options:
+            index.queries.cache.enabled: "true"
+            indices.queries.cache.size: "5%"
+        - name: "_all/_settings"
+          index_options:
+            index.number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            index.translog.durability: "async"
+            index.refresh_interval: "{{ ((elastic_refresh_interval | int) > 30) | ternary(30, elastic_refresh_interval) }}s"
+
+    - name: Check for basic index template
+      uri:
+        url: http://127.0.0.1:9200/_template/basic-index-template
+        method: HEAD
+      failed_when: false
+      register: check_basicIndexTemplate
+      until: check_basicIndexTemplate is success
+      retries: 3
+      delay: 30
+
+    - name: Check for basic index template
+      uri:
+        url: http://127.0.0.1:9200/_template/basic-index-template
+        method: DELETE
+        status_code: 200
+      register: delete_basicIndexTemplate
+      until: delete_basicIndexTemplate is success
+      retries: 3
+      delay: 30
+      when:
+        - check_basicIndexTemplate.status == 200
+
+    - name: Create basic index template
+      uri:
+        url: http://127.0.0.1:9200/_template/basic-index-template
+        method: PUT
+        body: "{{ index_option | to_json }}"
+        status_code: 200
+        body_format: json
+      register: create_basicIndexTemplate
+      until: create_basicIndexTemplate is success
+      retries: 3
+      delay: 30
+      vars:
+        index_option:
+          index_patterns: >-
+            {{
+              (elastic_beat_retention_policy_hosts.keys() | list)
+                | map('regex_replace', '(.*)', '\1-' ~ '*')
+                | list
+            }}
+          settings:
+            number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            index:
+              mapping:
+                total_fields:
+                  limit: "3072"
+
+    - name: Create custom monitoring index template
+      uri:
+        url: http://127.0.0.1:9200/_template/custom_monitoring
+        method: PUT
+        body: "{{ index_option | to_json }}"
+        status_code: 200
+        body_format: json
+      register: create_basicIndexTemplate
+      until: create_basicIndexTemplate is success
+      retries: 3
+      delay: 30
+      vars:
+        index_option:
+          template: ".monitoring*"
+          order: 1
+          settings:
+            number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            number_of_shards: "{{ ((elasticsearch_number_of_replicas | int) * 2) + 1 }}"
+
+    - name: Create custom skydive index template
+      uri:
+        url: http://127.0.0.1:9200/_template/skydive
+        method: PUT
+        body: "{{ index_option | to_json }}"
+        status_code: 200
+        body_format: json
+      register: create_basicIndexTemplate
+      until: create_basicIndexTemplate is success
+      retries: 3
+      delay: 30
+      vars:
+        index_option:
+          template: "skydive*"
+          order: 1
+          settings:
+            number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            number_of_shards: "{{ ((elasticsearch_number_of_replicas | int) * 2) + 1 }}"
+
+
+- name: Create/Setup known indexes in Kibana
+  hosts: kibana
+  become: true
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  roles:
+    - role: elastic_retention
+
+  post_tasks:
+    - name: Create kibana indexe patterns
+      uri:
+        url: "http://127.0.0.1:5601/api/saved_objects/index-pattern/{{ item.name }}"
+        method: POST
+        body: "{{ item.index_options | to_json }}"
+        status_code: 200,409
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+      with_items: |-
+        {% set beat_indexes = [] %}
+        {% for key, value in elastic_beat_retention_policy_hosts.items() %}
+        {%   if (value.hosts | length) > 0 %}
+        {%
+               set _index = {
+                 'name': key,
+                 'index_options': {
+                   'attributes': {}
+                 }
+               }
+        %}
+        {%     if 'beat' in key %}
+        {%       set _ = _index.index_options.attributes.__setitem__('title', (key ~ '-*')) %}
+        {%     else %}
+        {%       set _ = _index.index_options.attributes.__setitem__('title', (key ~ '*')) %}
+        {%     endif %}
+        {%     if value.timeFieldName is defined %}
+        {%       set _ = _index.index_options.attributes.__setitem__('timeFieldName', (value.timeFieldName | string)) %}
+        {%     endif %}
+        {%     set _ = beat_indexes.append(_index) %}
+        {%   endif %}
+        {% endfor %}
+        {% set _ = beat_indexes.append({'name': 'default', 'index_options': {'attributes': {'title': '*'}}}) %}
+        {{ beat_indexes }}
+      register: kibana_indexes
+      until: kibana_indexes is success
+      retries: 6
+      delay: 30
+      run_once: true
+
+    - name: Create basic indexes
+      uri:
+        url: "http://127.0.0.1:5601/api/kibana/settings/defaultIndex"
+        method: POST
+        body: "{{ item.index_options | to_json }}"
+        status_code: 200
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+      with_items:
+        - name: "default"
+          index_options:
+            value: "default"
+      register: kibana_indexes
+      until: kibana_indexes is success
+      retries: 6
+      delay: 30
+      run_once: true
+
+  tags:
+    - server-install

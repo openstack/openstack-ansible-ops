@@ -1,0 +1,88 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Ensure distro packages are installed
+  package:
+    name: "{{ kibana_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  notify:
+    - Enable and restart services
+  tags:
+    - package_install
+
+- name: create kibana user to access web interface
+  htpasswd:
+    path: "/etc/nginx/htpasswd.users"
+    name: "{{ kibana_username }}"
+    password: "{{ kibana_password }}"
+    owner: root
+    mode: 0644
+  when:
+    - kibana_enable_basic_auth
+
+- name: Drop Nginx default conf file
+  template:
+    src: "nginx_default.j2"
+    dest: "{{ kibana_nginx_vhost_path }}/default"
+  notify:
+    - Enable and restart services
+
+- name: Create kibana systemd service config dir
+  file:
+    path: "/etc/systemd/system/kibana.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "/etc/systemd/system/kibana.service.d/kibana-overrides.conf"
+  notify:
+    - Enable and restart services
+
+- name: Drop kibana conf file
+  template:
+    src: "kibana.yml.j2"
+    dest: "/etc/kibana/kibana.yml"
+    mode: "0666"
+  notify:
+    - Enable and restart services

@@ -1,0 +1,95 @@
+## JVM configuration
+{% if _service_heap_size is defined %}
+{%   set heap_size = _service_heap_size %}
+{% else %}
+{%   if (not (elasticsearch_node_master | default(master_node)) | bool) and (not (elasticsearch_node_data | default(data_node)) | bool) %}
+{%     set heap_size = elastic_heap_size_default | default((_elastic_heap_size_default | int) // 2) %}
+{%   else %}
+{%     set heap_size = elastic_heap_size_default | default(_elastic_heap_size_default | int) %}
+{%   endif %}
+{% endif %}
+# Xms represents the initial size of total heap space
+-Xms{{ heap_size }}m
+# Xmx represents the maximum size of total heap space
+-Xmx{{ heap_size }}m
+# Sets the thread stack size
+-Xss1m
+
+################################################################
+## Expert settings
+################################################################
+##
+## All settings below this section are considered
+## expert settings. Don't tamper with them unless
+## you understand what you are doing
+##
+################################################################
+
+## GC Configuration
+{% if ((heap_size | int) > 6144) and (elastic_g1gc_enabled | bool) %}
+-XX:+UseG1GC
+-XX:MaxGCPauseMillis=400
+-XX:InitiatingHeapOccupancyPercent=75
+{% else %}
+-XX:+UseParNewGC
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=75
+-XX:+UseCMSInitiatingOccupancyOnly
+{% endif %}
+
+## optimizations
+
+# disable calls to System#gc
+-XX:+DisableExplicitGC
+
+## locale
+# Set the locale language
+#-Duser.language=en
+
+# Set the locale country
+#-Duser.country=US
+
+# Set the locale variant, if any
+#-Duser.variant=
+
+## basic
+
+# set the I/O temp directory
+-Djava.io.tmpdir={{ temp_dir }}
+
+# set to headless, just in case
+-Djava.awt.headless=true
+
+# ensure UTF-8 encoding by default (e.g. filenames)
+-Dfile.encoding=UTF-8
+
+# use our provided JNA always versus the system one
+#-Djna.nosys=true
+
+## heap dumps
+
+# generate a heap dump when an allocation from the Java heap fails
+# heap dumps are created in the working directory of the JVM
+-XX:+HeapDumpOnOutOfMemoryError
+
+# specify an alternative path for heap dumps
+# ensure the directory exists and has sufficient space
+#-XX:HeapDumpPath=${LOGSTASH_HOME}/heapdump.hprof
+
+## GC logging
+#-XX:+PrintGCDetails
+#-XX:+PrintGCTimeStamps
+#-XX:+PrintGCDateStamps
+#-XX:+PrintClassHistogram
+#-XX:+PrintTenuringDistribution
+#-XX:+PrintGCApplicationStoppedTime
+
+# log GC status to a file with time stamps
+# ensure the directory exists
+#-Xloggc:${LS_GC_LOG_FILE}
+
+#listen on IPv4 addresses
+-Djava.net.preferIPv4Stack=true
+
+# Disable log4j because its not supported by elastic
+-Dlog4j2.disable.jmx=true

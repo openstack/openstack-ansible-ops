@@ -1,0 +1,297 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Detect monitorstack host deployment group(s)
+  hosts: "hosts:all_containers"
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: Add hosts to dynamic inventory group
+      group_by:
+        key: monitorstack_deployment
+        parents: monitorstack_all
+      when:
+        - inventory_hostanme in (
+            (groups['nova_compute'] | default([])) |
+            union(groups['utility_all'] | default([])) |
+            union(groups['memcached_all'] | default([])) |
+            union(groups['memcached_all'] | default([]))
+          )
+        - ansible_service_mgr == 'systemd'
+  tags:
+    - always
+
+- name: Install MonitorStack
+  hosts: monitorstack_all
+  become: true
+  gather_facts: true
+  vars:
+    haproxy_ssl: false
+    monitorstack_distro_packages:
+      ubuntu:
+        - gcc
+        - git
+        - python-dev
+        - pkg-config
+      redhat:
+        - gcc
+        - git
+        - python-devel
+      suse:
+        - gcc
+        - git
+        - python-devel
+        - pkg-config
+
+    monitorstack_config_enabled:
+      - check: kvm
+        options: ''
+        condition: >-
+          {{
+            inventory_hostname in (groups['nova_compute'] | default([]))
+          }}
+      - check: memcache
+        options: >-
+          --host {{ (monitorstack_memcached_access.stdout_lines[0] | default("127.0.0.1:11211")).split(":")[0] }}
+          --port {{ (monitorstack_memcached_access.stdout_lines[0] | default("127.0.0.1:11211")).split(":")[1] }}
+        condition: >-
+          {{
+            inventory_hostname in (groups['memcached_all'] | default([]))
+          }}
+      - check: os_block_pools_totals
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: os_block_pools_usage
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: os_vm_quota_cores
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: os_vm_quota_instance
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: os_vm_quota_ram
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: os_vm_used_cores
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: os_vm_used_disk
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: os_vm_used_instance
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: os_vm_used_ram
+        options: ''
+        condition: >-
+          {{
+            (clouds_config.stat.exists | bool) and
+            (inventory_hostname in (groups['utility_all'] | default([]))) and
+            (inventory_hostname == (groups['utility_all'] | default([null]))[0])
+          }}
+      - check: uptime
+        options: ''
+        condition: true
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  roles:
+    - role: elastic_data_hosts
+
+  post_tasks:
+    - name: Find clouds config
+      stat:
+        path: "{{ ansible_env.HOME }}/.config/openstack/clouds.yaml"
+      register: clouds_config
+
+    - name: Find openstack release
+      stat:
+        path: "/etc/openstack-release"
+      register: openstack_release
+
+    - name: Find osp release
+      stat:
+        path: "/etc/rhosp-release"
+      register: rhosp_release
+
+    - name: MonitorStack block
+      when:
+        - (openstack_release.stat.exists | bool) or
+          (rhosp_release.stat.exists | bool)
+      block:
+        - name: Ensure disto packages are installed
+          package:
+            name: "{{ monitorstack_distro_packages[(ansible_distribution | lower)] }}"
+            state: "{{ monitorstack_package_state | default('present') }}"
+            update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+
+        - name: Refresh local facts
+          setup:
+            filter: ansible_local
+            gather_subset: "!all"
+          tags:
+            - always
+
+        - name: create the system group
+          group:
+            name: "monitorstack"
+            state: "present"
+            system: "yes"
+
+        - name: Create the monitorstack system user
+          user:
+            name: "monitorstack"
+            group: "monitorstack"
+            comment: "monitorstack user"
+            shell: "/bin/false"
+            createhome: "yes"
+            home: "/var/lib/monitorstack"
+
+        - name: Create monitorstack data path
+          file:
+            path: "{{ item }}"
+            state: directory
+            owner: "monitorstack"
+            group: "monitorstack"
+            mode: "0750"
+            recurse: true
+          with_items:
+            - "/var/lib/monitorstack"
+            - "/var/lib/monitorstack/.config"
+            - "/var/lib/monitorstack/.config/openstack"
+            - "/var/lib/monitorstack/venv"
+            - "/var/log/monitorstack"
+            - "/etc/monitorstack"
+
+        - name: Copy the clouds config into monitorstack
+          copy:
+            src: "{{ ansible_env.HOME }}/.config/openstack/clouds.yaml"
+            dest: "/var/lib/monitorstack/.config/openstack/clouds.yaml"
+            remote_src: yes
+          when:
+            - clouds_config.stat.exists | bool
+
+        - name: Create the virtualenv (if it does not exist)
+          command: "virtualenv --no-setuptools --system-site-packages /var/lib/monitorstack/venv"
+          args:
+            creates: "/var/lib/monitorstack/venv/bin/activate"
+
+        - name: Setup venv
+          pip:
+            name:
+              - pip
+              - setuptools
+            virtualenv_site_packages: yes
+            extra_args: "-U"
+            virtualenv: "/var/lib/monitorstack/venv"
+
+        - name: Ensure monitorstack is installed
+          pip:
+            name: "git+https://github.com/openstack/monitorstack@{{ monitorstack_release | default('master') }}"
+            state: "{{ monitorstack_package_state | default('present') }}"
+            extra_args: --isolated
+            virtualenv: /var/lib/monitorstack/venv
+          register: _pip_task
+          until: _pip_task is success
+          retries: 3
+          delay: 2
+          tags:
+            - package_install
+
+        - name: Create montiorstack config
+          copy:
+            dest: "/etc/monitorstack/monitorstack.ini"
+            content: |
+              [elasticsearch]
+              hosts = {{ elasticsearch_data_hosts | join(',') }}
+              port = {{ elastic_port }}
+
+        - name: Run memcached port scan
+          shell: "ss -ntlp | awk '/11211/ {print $4}'"
+          register: monitorstack_memcached_access
+          changed_when: false
+
+        - name: Run the systemd service role
+          include_role:
+            name: systemd_service
+          vars:
+            systemd_user_name: monitorstack
+            systemd_group_name: monitorstack
+            systemd_services: |-
+              {% set services = [] %}
+              {% for item in monitorstack_config_enabled %}
+              {%   if item.condition | bool %}
+              {%
+                 set check = {
+                   "service_name": ("monitorstack-" ~ item.check),
+                   "execstarts": ("/var/lib/monitorstack/venv/bin/monitorstack --format elasticsearch --config-file /etc/monitorstack/monitorstack.ini " ~ item.check ~ ' ' ~ item.options),
+                   "timer": {
+                     "state": "started",
+                     "options": {
+                       "OnBootSec": "5min",
+                       "OnUnitActiveSec": "10m",
+                       "Persistent": true
+                     }
+                   }
+                 }
+              %}
+              {%     set _ = services.append(check) %}
+              {%   endif %}
+              {% endfor %}
+              {{ services }}
+
+  tags:
+    - beat-install

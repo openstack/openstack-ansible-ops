@@ -1,0 +1,39 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: add Elastic search public GPG key
+  rpm_key:
+    state: "{{ elastic_repo.state }}"
+    key: "{{ elastic_repo.key_url }}"
+  register: _zypp_task
+  until: _zypp_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
+# Force refresh of a repository
+- name: add elk repo to zypper sources list
+  zypper_repository:
+    name: "elastic"
+    repo: "{{ elastic_repo.repo }}"
+    state: "{{ elastic_repo.state }}"
+    runrefresh: yes
+  register: _zypp_task
+  until: _zypp_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install

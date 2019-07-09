@@ -1,0 +1,145 @@
+{% import 'templates/_macros.j2' as elk_macros %}
+######################## APM Server Configuration #############################
+
+############################# APM Server ######################################
+
+apm-server:
+  # Defines the host and port the server is listening on
+  host: "{{ apm_interface }}:{{ apm_port }}"
+
+  # Maximum permitted size in bytes of an unzipped request accepted by the server to be processed.
+  #max_unzipped_size: 52428800
+  # Maximum permitted size in bytes of a request's header accepted by the server to be processed.
+  #max_header_size: 1048576
+
+  # Maximum permitted duration in seconds for reading an entire request.
+  #read_timeout: 2s
+  # Maximum permitted duration in seconds for writing a response.
+  #write_timeout: 2s
+
+  # Maximum duration in seconds before releasing resources when shutting down the server.
+  #shutdown_timeout: 5s
+
+  # Maximum number of requests permitted to be sent to the server concurrently.
+  #concurrent_requests: 40
+
+  # Authorization token to be checked. If a token is set here the agents must
+  # send their token in the following format: Authorization: Bearer <secret-token>.
+  # It is recommended to use an authorization token in combination with SSL enabled.
+  secret_token: {{ apm_token }}
+  #ssl.enabled: false
+  #ssl.certificate : "path/to/cert"
+  #ssl.key : "path/to/private_key"
+
+  # Please be aware that frontend support is an experimental feature at the moment!
+  frontend:
+    # To enable experimental frontend support set this to true.
+    enabled: true
+
+    # Rate limit per second and IP address for requests sent to the frontend endpoint.
+    #rate_limit: 10
+
+    # Comma separated list of permitted origins for frontend. User-agents will send
+    # a origin header that will be validated against this list.
+    # An origin is made of a protocol scheme, host and port, without the url path.
+    # Allowed origins in this setting can have * to match anything (eg.: http://*.example.com)
+    # If an item in the list is a single '*', everything will be allowed
+    #allow_origins : ['*']
+
+    # Regexp to be matched against a stacktrace frame's `file_name` and `abs_path` attributes.
+    # If the regexp matches, the stacktrace frame is considered to be a library frame.
+    #library_pattern: "node_modules|bower_components|~"
+
+    # Regexp to be matched against a stacktrace frame's `file_name`.
+    # If the regexp matches, the stacktrace frame is not used for calculating error groups.
+    # The default pattern excludes stacktrace frames that have
+    # - a filename starting with '/webpack'
+    #exclude_from_grouping: "^/webpack"
+
+    # If a source map has previously been uploaded, source mapping is automatically applied
+    # to all error and transaction documents sent to the frontend endpoint.
+    #source_mapping:
+
+      # Source maps are are fetched from Elasticsearch and then kept in an in-memory cache for a certain time.
+      # The `cache.expiration` determines how long a source map should be cached before fetching it again from Elasticsearch.
+      # Note that values configured without a time unit will be interpreted as seconds.
+      #cache:
+        #expiration: 5m
+
+      # Source maps are stored in the same index as transaction and error documents.
+      # If the default index pattern at 'outputs.elasticsearch.index' is changed,
+      # a matching index pattern needs to be specified here.
+      #index_pattern: "apm-*"
+
+#================================ General ======================================
+
+# Internal queue configuration for buffering events to be published.
+#queue:
+  # Queue type by name (default 'mem')
+  # The memory queue will present all available events (up to the outputs
+  # bulk_max_size) to the output, the moment the output is ready to server
+  # another batch of events.
+  #mem:
+    # Max number of events the queue can buffer.
+    #events: 4096
+
+    # Hints the minimum number of events stored in the queue,
+    # before providing a batch of events to the outputs.
+    # A value of 0 (the default) ensures events are immediately available
+    # to be sent to the outputs.
+    #flush.min_events: 2048
+
+    # Maximum duration after which events are available to the outputs,
+    # if the number of events stored in the queue is < min_flush_events.
+    #flush.timeout: 1s
+
+# Sets the maximum number of CPUs that can be executing simultaneously. The
+# default is the number of logical CPUs available in the system.
+#max_procs:
+
+#================================ Outputs ======================================
+
+# Configure what output to use when sending the data collected by the beat.
+
+#----------------------------- Logstash output ---------------------------------
+{{ elk_macros.output_elasticsearch(inventory_hostname, elasticsearch_data_hosts) }}
+
+#================================= Paths ======================================
+
+# The home path for the apm-server installation. This is the default base path
+# for all other path settings and for miscellaneous files that come with the
+# distribution (for example, the sample dashboards).
+# If not set by a CLI flag or in the configuration file, the default for the
+# home path is the location of the binary.
+#path.home:
+
+# The configuration path for the apm-server installation. This is the default
+# base path for configuration files, including the main YAML configuration file
+# and the Elasticsearch template file. If not set by a CLI flag or in the
+# configuration file, the default for the configuration path is the home path.
+#path.config: ${path.home}
+
+# The data path for the apm-server installation. This is the default base path
+# for all the files in which apm-server needs to store its data. If not set by a
+# CLI flag or in the configuration file, the default for the data path is a data
+# subdirectory inside the home path.
+#path.data: ${path.home}/data
+
+# The logs path for a apm-server installation. This is the default location for
+# the Beat's log files. If not set by a CLI flag or in the configuration file,
+# the default for the logs path is a logs subdirectory inside the home path.
+#path.logs: ${path.home}/logs
+
+#============================== Dashboards =====================================
+{{ elk_macros.setup_dashboards('apm') }}
+
+#=============================== Template ======================================
+{{ elk_macros.setup_template('apm', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
+
+#============================== Kibana =====================================
+{% if (groups['kibana'] | length) > 0 %}
+{{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ kibana_port) }}
+{% endif %}
+
+#================================ Logging ======================================
+{{ elk_macros.beat_logging('apm-server') }}

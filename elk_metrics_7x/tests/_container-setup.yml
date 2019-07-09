@@ -1,0 +1,73 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Setup host for nspawn
+  hosts: localhost
+  connection: local
+  become: true
+  vars:
+    nspawn_networks:
+      nspawn_address:
+        bridge: "nspawn0"
+        private_device: true
+        enable_dhcp: true
+        dhcp_range: 10.100.101.2,10.100.101.129
+        address: 10.100.101.1
+        netmask: 255.255.255.0
+        macvlan_mode: bridge
+
+  pre_tasks:
+    - name: Ensure root ssh key
+      user:
+        name: "{{ ansible_env.USER | default('root') }}"
+        generate_ssh_key: "yes"
+        ssh_key_bits: 2048
+        ssh_key_file: ".ssh/id_rsa"
+
+    - name: Get root ssh key
+      slurp:
+        src: '~/.ssh/id_rsa.pub'
+      register: _root_ssh_key
+
+    - name: Prepare container ssh key fact
+      set_fact:
+        nspawn_container_ssh_key: "{{ _root_ssh_key['content'] | b64decode }}"
+
+    - name: Ensure public ssh key is in authorized_keys
+      authorized_key:
+        user: "{{ ansible_env.USER | default('root') }}"
+        key: "{{ nspawn_container_ssh_key }}"
+        manage_dir: no
+
+  roles:
+    - role: "nspawn_hosts"
+
+
+- name: Create container(s)
+  hosts: all_containers
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Show container facts
+      debug:
+        var: hostvars
+
+  roles:
+    - role: "nspawn_container_create"
+
+  post_tasks:
+    - name: Rescan quotas
+      command: "btrfs quota rescan -w /var/lib/machines"
+      delegate_to: "{{ physical_host }}"

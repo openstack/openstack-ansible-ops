@@ -1,0 +1,103 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Refresh local facts
+  setup:
+    filter: ansible_local
+    gather_subset: "!all"
+  tags:
+    - always
+
+- name: Ensure virtualenv is installed
+  package:
+    name: "{{ curator_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  tags:
+    - package_install
+
+- name: Create the virtualenv (if it does not exist)
+  command: "virtualenv --never-download --no-site-packages /opt/elasticsearch-curator"
+  args:
+    creates: "/opt/elasticsearch-curator/bin/activate"
+
+- name: Ensure curator is installed
+  pip:
+    name: "elasticsearch-curator<6"
+    state: "{{ elk_package_state | default('present') }}"
+    extra_args: --isolated
+    virtualenv: /opt/elasticsearch-curator
+  register: _pip_task
+  until: _pip_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
+- name: create the system group
+  group:
+    name: "curator"
+    state: "present"
+    system: "yes"
+
+- name: Create the curator system user
+  user:
+    name: "curator"
+    group: "curator"
+    comment: "curator user"
+    shell: "/bin/false"
+    createhome: "yes"
+    home: "/var/lib/curator"
+
+- name: Create curator data path
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "curator"
+    group: "curator"
+    mode: "0755"
+    recurse: true
+  with_items:
+    - "/var/lib/curator"
+    - "/var/log/curator"
+    - "/etc/curator"
+
+- name: Drop curator conf file(s)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "curator.yml.j2"
+      dest: /var/lib/curator/curator.yml
+    - src: "curator-actions-age.yml.j2"
+      dest: /var/lib/curator/actions-age.yml
+    - src: "curator-actions-size.yml.j2"
+      dest: /var/lib/curator/actions-size.yml
+  notify:
+    - Enable and restart curator.timer
+
+- include_tasks: "curator_{{ ansible_service_mgr }}.yml"
