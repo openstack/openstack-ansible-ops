@@ -15,7 +15,7 @@
 #
 # Note:
 # This file is maintained in the openstack-ansible-tests repository.
-# https://git.opendev.org/cgit/openstack/openstack-ansible-tests/tree/run_tests.sh
+# https://opendev.org/openstack/openstack-ansible-tests/src/branch/master/run_tests.sh
 # If you need to modify this file, update the one in the openstack-ansible-tests
 # repository and then update this file as well. The purpose of this file is to
 # prepare the host and then execute all the tox tests.
@@ -49,7 +49,7 @@ install_pkg_deps() {
 git_clone_repo() {
     if [[ ! -d "${WORKING_DIR}/tests/common" ]]; then
         git clone \
-            https://git.opendev.org/openstack/openstack-ansible-tests \
+            https://opendev.org/openstack/openstack-ansible-tests \
             ${WORKING_DIR}/tests/common
     fi
 }

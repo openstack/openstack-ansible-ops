@@ -124,7 +124,7 @@
     - name: Get the ops repo
       git:
         dest: "/opt/openstack-ansible-ops"
-        repo: https://git.opendev.org/openstack/openstack-ansible-ops
+        repo: https://opendev.org/openstack/openstack-ansible-ops
         force: yes
         track_submodules: yes
         clone: yes

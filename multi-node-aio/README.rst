@@ -155,10 +155,10 @@ Instruct the VM to use the selected kernel meta package, eg. linux-generic:
   ``DEFAULT_KERNEL=${DEFAULT_KERNEL:-linux-image-generic}``
 
 Set the OSA repo for this script to retrieve:
-  ``OSA_REPO=${OSA_REPO:-https://git.opendev.org/openstack/openstack-ansible}``
+  ``OSA_REPO=${OSA_REPO:-https://opendev.org/openstack/openstack-ansible}``
 
 Set the openstack-ansible-ops repo to retrieve for the ELK stack:
-  ``OS_OPS_REPO=${OS_OPS_REPO:-https://git.opendev.org/openstack/openstack-ansible-ops}``
+  ``OS_OPS_REPO=${OS_OPS_REPO:-https://opendev.org/openstack/openstack-ansible-ops}``
 
 Set the OSA branch for this script to deploy:
   ``OSA_BRANCH=${OSA_BRANCH:-master}``

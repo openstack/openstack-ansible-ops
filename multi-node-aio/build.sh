@@ -37,8 +37,8 @@ ansible-playbook -vv \
                  -e deploy_vms=${DEPLOY_VMS:-"true"} \
                  -e deploy_osa=${DEPLOY_OSA:-"true"} \
                  -e deploy_elk=${DEPLOY_ELK:-"false"} \
-                 -e osa_repo=${OSA_REPO:-"https://git.opendev.org/openstack/openstack-ansible"} \
-                 -e os_ops_repo=${OS_OPS_REPO:-"https://git.opendev.org/openstack/openstack-ansible-ops"} \
+                 -e osa_repo=${OSA_REPO:-"https://opendev.org/openstack/openstack-ansible"} \
+                 -e os_ops_repo=${OS_OPS_REPO:-"https://opendev.org/openstack/openstack-ansible-ops"} \
                  -e osa_branch=${OSA_BRANCH:-"master"} \
                  -e os_ops_branch=${OS_OPS_BRANCH:-"master"} \
                  -e default_network=${DEFAULT_NETWORK:-"eth0"} \
