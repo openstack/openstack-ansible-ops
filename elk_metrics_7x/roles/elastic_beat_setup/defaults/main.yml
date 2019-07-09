@@ -15,7 +15,7 @@
 
 # Each setup flag is run one at a time.
 elastic_setup_flags:
-  - "--template"
+  - "--index-management"
   - "--pipelines"
   # - "--dashboards"
 

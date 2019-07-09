@@ -15,6 +15,17 @@
 {%       set _ = icmp_hosts.extend([hostvars[host_item]['ansible_host']]) %}
 {%     endif %}
 {%   endfor %}
+
+# Define a directory to load monitor definitions from. Definitions take the form
+# of individual yaml files.
+heartbeat.config.monitors:
+  # Directory + glob pattern to search for configuration files
+  path: ${path.config}/monitors.d/*.yml
+  # If enabled, heartbeat will periodically check the config.monitors path for changes
+  reload.enabled: false
+  # How often to check for changes
+  reload.period: 5s
+
 # Configure monitors
 heartbeat.monitors:
 - type: icmp # monitor type `icmp` (requires root) uses ICMP Echo Request to ping
@@ -27,7 +38,7 @@ heartbeat.monitors:
   enabled: true
 
   # Configure task schedule using cron-like syntax
-  schedule: '@every 30s' # every 30 seconds from start of beat
+  schedule: '*/30 * * * * * *' # exactly every 30 seconds like 10:00:00, 10:00:30, ...
 
   # List of hosts to ping
   hosts: {{ (icmp_hosts | default([])) | to_json }}
@@ -36,14 +47,6 @@ heartbeat.monitors:
   ipv4: true
   ipv6: true
   mode: any
-
-  # Configure file json file to be watched for changes to the monitor:
-  #watch.poll_file:
-    # Path to check for updates.
-    #path:
-
-    # Interval between file file changed checks.
-    #interval: 5s
 
   # Total running time per ping test.
   timeout: {{ icmp_hosts | length }}s
@@ -100,13 +103,27 @@ heartbeat.monitors:
             # by sending/receiving a custom payload
 
   # Monitor name used for job name and document type
+  name: {{ item.name }}
+
+  # Enable/Disable monitor
+  enabled: true
+
+  # Configure task schedule
+  schedule: '@every 30s' # every 30 seconds from start of beat
+
+  # configure hosts to ping.
+  # Entries can be:
+  #   - plain host name or IP like `localhost`:
+  #       Requires ports configs to be checked. If ssl is configured,
+  #       a SSL/TLS based connection will be established. Otherwise plain tcp connection
+  #       will be established
   name: "{{ item.name }}"
 
   # Enable/Disable monitor
   enabled: true
 
   # Configure task schedule
-  schedule: '@every 45s' # every 30 seconds from start of beat
+  schedule: '@every 45s' # every 5 seconds from start of beat
 
   # configure hosts to ping.
   # Entries can be:
@@ -131,14 +148,6 @@ heartbeat.monitors:
   ipv4: true
   ipv6: true
   mode: any
-
-  # Configure file json file to be watched for changes to the monitor:
-  #watch.poll_file:
-    # Path to check for updates.
-    #path:
-
-    # Interval between file file changed checks.
-    #interval: 5s
 
   # List of ports to ping if host does not contain a port number
   # ports: [80, 9200, 5044]
@@ -178,6 +187,15 @@ heartbeat.monitors:
 {%       endfor %}
 {%     endfor %}
 {%     if hosts | length > 0 %}
+  # NOTE: THIS FEATURE IS DEPRECATED AND WILL BE REMOVED IN A FUTURE RELEASE
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
+
+    # Interval between file file changed checks.
+    #interval: 5s
+
 - type: http # monitor type `http`. Connect via HTTP an optionally verify response
 
   # Monitor name used for job name and document type
@@ -187,7 +205,7 @@ heartbeat.monitors:
   enabled: true
 
   # Configure task schedule
-  schedule: '@every 60s' # every 30 seconds from start of beat
+  schedule: '@every 60s' # every 5 seconds from start of beat
 
   # Configure URLs to ping
   urls: {{ (hosts | default([])) | to_json }}
@@ -196,7 +214,7 @@ heartbeat.monitors:
   # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
   ipv4: true
   ipv6: true
-  mode: "any"
+  mode: any
 
   # Configure file json file to be watched for changes to the monitor:
   #watch.poll_file:
@@ -206,7 +224,7 @@ heartbeat.monitors:
     # Interval between file file changed checks.
     #interval: 5s
 
-  # Optional HTTP proxy url. If not set HTTP_PROXY environment variable will be used.
+  # Optional HTTP proxy url.
   #proxy_url: ''
 
   # Total test connection and data exchange timeout
@@ -233,7 +251,6 @@ heartbeat.monitors:
     # Dictionary of additional HTTP headers to send:
     headers:
       User-agent: osa-heartbeat-healthcheck
-
     # Optional request body content
     #body:
 
@@ -254,6 +271,24 @@ heartbeat.monitors:
 {%     endif %}
 {%   endif %}
 {% endfor %}
+
+    # Parses the body as JSON, then checks against the given condition expression
+    #json:
+    #- description: Explanation of what the check does
+    #  condition:
+    #    equals:
+    #      myField: expectedValue
+
+
+  # NOTE: THIS FEATURE IS DEPRECATED AND WILL BE REMOVED IN A FUTURE RELEASE
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
+
+    # Interval between file file changed checks.
+    #interval: 5s
+
 
 heartbeat.scheduler:
   # Limit number of concurrent tasks executed by heartbeat. The task limit if
@@ -347,7 +382,7 @@ heartbeat.scheduler:
       # Sets the write buffer size.
       #buffer_size: 1MiB
 
-      # Maximum duration after which events are flushed, if the write buffer
+      # Maximum duration after which events are flushed if the write buffer
       # is not full yet. The default value is 1s.
       #flush.timeout: 1s
 
@@ -361,7 +396,7 @@ heartbeat.scheduler:
       #codec: cbor
     #read:
       # Reader flush timeout, waiting for more events to become available, so
-      # to fill a complete batch, as required by the outputs.
+      # to fill a complete batch as required by the outputs.
       # If flush_timeout is 0, all available events are forwarded to the
       # outputs immediately.
       # The default value is 0s.
@@ -515,12 +550,15 @@ processors:
   # Set gzip compression level.
   #compression_level: 0
 
+  # Configure escaping HTML symbols in strings.
+  #escape_html: false
+
   # Optional protocol and basic auth credentials.
   #protocol: "https"
   #username: "elastic"
   #password: "changeme"
 
-  # Dictionary of HTTP parameters to pass within the url with index operations.
+  # Dictionary of HTTP parameters to pass within the URL with index operations.
   #parameters:
     #param1: value1
     #param2: value2
@@ -531,19 +569,19 @@ processors:
   # Optional index name. The default is "heartbeat" plus date
   # and generates [heartbeat-]YYYY.MM.DD keys.
   # In case you modify this pattern you must update setup.template.name and setup.template.pattern accordingly.
-  #index: "heartbeat-%{[beat.version]}-%{+yyyy.MM.dd}"
+  #index: "heartbeat-%{[agent.version]}-%{+yyyy.MM.dd}"
 
   # Optional ingest node pipeline. By default no pipeline will be used.
   #pipeline: ""
 
-  # Optional HTTP Path
+  # Optional HTTP path
   #path: "/elasticsearch"
 
   # Custom HTTP headers to add to each request
   #headers:
   #  X-My-Header: Contents of the header
 
-  # Proxy server url
+  # Proxy server URL
   #proxy_url: http://proxy:3128
 
   # The number of times a particular Elasticsearch index operation is attempted. If
@@ -555,40 +593,50 @@ processors:
   # The default is 50.
   #bulk_max_size: 50
 
-  # Configure http request timeout before failing an request to Elasticsearch.
+  # The number of seconds to wait before trying to reconnect to Elasticsearch
+  # after a network error. After waiting backoff.init seconds, the Beat
+  # tries to reconnect. If the attempt fails, the backoff timer is increased
+  # exponentially up to backoff.max. After a successful connection, the backoff
+  # timer is reset. The default is 1s.
+  #backoff.init: 1s
+
+  # The maximum number of seconds to wait before attempting to connect to
+  # Elasticsearch after a network error. The default is 60s.
+  #backoff.max: 60s
+
+  # Configure HTTP request timeout before failing a request to Elasticsearch.
   #timeout: 90
 
   # Use SSL settings for HTTPS.
   #ssl.enabled: true
 
   # Configure SSL verification mode. If `none` is configured, all server hosts
-  # and certificates will be accepted. In this mode, SSL based connections are
+  # and certificates will be accepted. In this mode, SSL-based connections are
   # susceptible to man-in-the-middle attacks. Use only for testing. Default is
   # `full`.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
+  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
   # 1.2 are enabled.
   #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
 
-  # SSL configuration. By default is off.
   # List of root certificates for HTTPS server verifications
   #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
 
   # Certificate for SSL client authentication
   #ssl.certificate: "/etc/pki/client/cert.pem"
 
-  # Client Certificate Key
+  # Client certificate key
   #ssl.key: "/etc/pki/client/cert.key"
 
-  # Optional passphrase for decrypting the Certificate Key.
+  # Optional passphrase for decrypting the certificate key.
   #ssl.key_passphrase: ''
 
   # Configure cipher suites to be used for SSL connections
   #ssl.cipher_suites: []
 
-  # Configure curve types for ECDHE based cipher suites
-  #ssl.curve_types: []
+  # Configure curve types for ECDHE-based cipher suites
+  # #ssl.curve_types: []
 
   # Configure what types of renegotiation are supported. Valid options are
   # never, once, and freely. Default is never.
@@ -603,7 +651,7 @@ processors:
   # Boolean flag to enable or disable the output module.
   #enabled: true
 
-  # The list of Kafka broker addresses from where to fetch the cluster metadata.
+  # The list of Kafka broker addresses from which to fetch the cluster metadata.
   # The cluster metadata contain the actual Kafka brokers events are published
   # to.
   #hosts: ["localhost:9092"]
@@ -612,7 +660,7 @@ processors:
   # using any event field. To set the topic from document type use `%{[type]}`.
   #topic: beats
 
-  # The Kafka event key setting. Use format string to create unique event key.
+  # The Kafka event key setting. Use format string to create a unique event key.
   # By default no event key will be generated.
   #key: ''
 
@@ -633,28 +681,38 @@ processors:
   #username: ''
   #password: ''
 
-  # Kafka version heartbeat is assumed to run against. Defaults to the oldest
-  # supported stable version (currently version 0.8.2.0)
-  #version: 0.8.2
+  # Kafka version heartbeat is assumed to run against. Defaults to the "1.0.0".
+  #version: '1.0.0'
 
-  # Metadata update configuration. Metadata do contain leader information
-  # deciding which broker to use when publishing.
+  # Configure JSON encoding
+  #codec.json:
+    # Pretty-print JSON event
+    #pretty: false
+
+    # Configure escaping HTML symbols in strings.
+    #escape_html: false
+
+  # Metadata update configuration. Metadata contains leader information
+  # used to decide which broker to use when publishing.
   #metadata:
     # Max metadata request retry attempts when cluster is in middle of leader
     # election. Defaults to 3 retries.
     #retry.max: 3
 
-    # Waiting time between retries during leader elections. Default is 250ms.
+    # Wait time between retries during leader elections. Default is 250ms.
     #retry.backoff: 250ms
 
     # Refresh metadata interval. Defaults to every 10 minutes.
     #refresh_frequency: 10m
 
+    # Strategy for fetching the topics metadata from the broker. Default is true.
+    #full: true
+
   # The number of concurrent load-balanced Kafka output workers.
   #worker: 1
 
   # The number of times to retry publishing an event after a publishing failure.
-  # After the specified number of retries, the events are typically dropped.
+  # After the specified number of retries, events are typically dropped.
   # Some Beats, such as Filebeat, ignore the max_retries setting and retry until
   # all events are published.  Set max_retries to a value less than 0 to retry
   # until all events are published. The default is 3.
@@ -683,6 +741,10 @@ processors:
   # default is gzip.
   #compression: gzip
 
+  # Set the compression level. Currently only gzip provides a compression level
+  # between 0 and 9. The default value is chosen by the compression algorithm.
+  #compression_level: 4
+
   # The maximum permitted size of JSON-encoded messages. Bigger messages will be
   # dropped. The default value is 1000000 (bytes). This value should be equal to
   # or less than the broker's message.max.bytes.
@@ -698,7 +760,7 @@ processors:
   # purposes.  The default is "beats".
   #client_id: beats
 
-  # Enable SSL support. SSL is automatically enabled, if any SSL setting is set.
+  # Enable SSL support. SSL is automatically enabled if any SSL setting is set.
   #ssl.enabled: true
 
   # Optional SSL configuration options. SSL is off by default.
@@ -711,7 +773,7 @@ processors:
   # `full`.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
+  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
   # 1.2 are enabled.
   #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
 
@@ -727,7 +789,7 @@ processors:
   # Configure cipher suites to be used for SSL connections
   #ssl.cipher_suites: []
 
-  # Configure curve types for ECDHE based cipher suites
+  # Configure curve types for ECDHE-based cipher suites
   #ssl.curve_types: []
 
   # Configure what types of renegotiation are supported. Valid options are
@@ -739,20 +801,24 @@ processors:
   # Boolean flag to enable or disable the output module.
   #enabled: true
 
-  # The list of Redis servers to connect to. If load balancing is enabled, the
+  # Configure JSON encoding
+  #codec.json:
+    # Pretty print json event
+    #pretty: false
+
+    # Configure escaping HTML symbols in strings.
+    #escape_html: false
+
+  # The list of Redis servers to connect to. If load-balancing is enabled, the
   # events are distributed to the servers in the list. If one server becomes
   # unreachable, the events are distributed to the reachable servers only.
   #hosts: ["localhost:6379"]
-
-  # The Redis port to use if hosts does not contain a port number. The default
-  # is 6379.
-  #port: 6379
 
   # The name of the Redis list or channel the events are published to. The
   # default is heartbeat.
   #key: heartbeat
 
-  # The password to authenticate with. The default is no authentication.
+  # The password to authenticate to Redis with. The default is no authentication.
   #password:
 
   # The Redis database number where the events are published. The default is 0.
@@ -785,6 +851,17 @@ processors:
   # all events are published. Set max_retries to a value less than 0 to retry
   # until all events are published. The default is 3.
   #max_retries: 3
+
+  # The number of seconds to wait before trying to reconnect to Redis
+  # after a network error. After waiting backoff.init seconds, the Beat
+  # tries to reconnect. If the attempt fails, the backoff timer is increased
+  # exponentially up to backoff.max. After a successful connection, the backoff
+  # timer is reset. The default is 1s.
+  #backoff.init: 1s
+
+  # The maximum number of seconds to wait before attempting to connect to
+  # Redis after a network error. The default is 60s.
+  #backoff.max: 60s
 
   # The maximum number of events to bulk in a single Redis request or pipeline.
   # The default is 2048.
@@ -842,11 +919,11 @@ processors:
 
   # Configure JSON encoding
   #codec.json:
-    # Pretty print json event
+    # Pretty-print JSON event
     #pretty: false
 
-    # Configure escaping html symbols in strings.
-    #escape_html: true
+    # Configure escaping HTML symbols in strings.
+    #escape_html: false
 
   # Path to the directory where to save the generated files. The option is
   # mandatory.
@@ -877,11 +954,11 @@ processors:
 
   # Configure JSON encoding
   #codec.json:
-    # Pretty print json event
+    # Pretty-print JSON event
     #pretty: false
 
-    # Configure escaping html symbols in strings.
-    #escape_html: true
+    # Configure escaping HTML symbols in strings.
+    #escape_html: false
 
 #================================= Paths ======================================
 
@@ -916,8 +993,26 @@ processors:
 #============================== Dashboards =====================================
 {{ elk_macros.setup_dashboards('heartbeat') }}
 
-#=============================== Template ======================================
+#============================== Template =====================================
 {{ elk_macros.setup_template('heartbeat', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
+
+#============================== Setup ILM =====================================
+
+# Configure Index Lifecycle Management Index Lifecycle Management creates a
+# write alias and adds additional settings to the template.
+# The elasticsearch.output.index setting will be replaced with the write alias
+# if ILM is enabled.
+
+# Enabled ILM support. Valid values are true, false, and auto. The beat will
+# detect availabilty of Index Lifecycle Management in Elasticsearch and enable
+# or disable ILM support.
+#setup.ilm.enabled: auto
+
+# Configure the ILM write alias name.
+#setup.ilm.rollover_alias: "heartbeat"
+
+# Configure rollover index pattern.
+#setup.ilm.pattern: "{now/d}-000001"
 
 #============================== Kibana =====================================
 {% if (groups['kibana'] | length) > 0 %}
@@ -949,3 +1044,389 @@ processors:
 
 # Enable or disable seccomp system call filtering on Linux. Default is enabled.
 #seccomp.enabled: true
+
+#================================= Migration ==================================
+
+# This allows to enable 6.7 migration aliases
+#migration.6_to_7.enabled: false
+################### Heartbeat Configuration Example #########################
+
+# This file is a full configuration example documenting all non-deprecated
+# options in comments. For a shorter configuration example, that contains
+# only some common options, please see heartbeat.yml in the same directory.
+#
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/heartbeat/index.html
+
+############################# Heartbeat ######################################
+{%   set icmp_hosts = [] %}
+{%   for host_item in groups['all'] %}
+{%     if hostvars[host_item]['ansible_host'] is defined %}
+{%       set _ = icmp_hosts.extend([hostvars[host_item]['ansible_host']]) %}
+{%     endif %}
+{%   endfor %}
+
+# Define a directory to load monitor definitions from. Definitions take the form
+# of individual yaml files.
+heartbeat.config.monitors:
+  # Directory + glob pattern to search for configuration files
+  path: ${path.config}/monitors.d/*.yml
+  # If enabled, heartbeat will periodically check the config.monitors path for changes
+  reload.enabled: false
+  # How often to check for changes
+  reload.period: 5s
+
+# Configure monitors
+heartbeat.monitors:
+- type: icmp # monitor type `icmp` (requires root) uses ICMP Echo Request to ping
+             # configured hosts
+
+  # Monitor name used for job name and document type.
+  name: icmp
+
+  # Enable/Disable monitor
+  enabled: true
+
+  # Configure task schedule using cron-like syntax
+  schedule: '*/5 * * * * * *' # exactly every 5 seconds like 10:00:00, 10:00:05, ...
+
+  # List of hosts to ping
+  hosts: {{ (icmp_hosts | default([])) | to_json }}
+  # Configure IP protocol types to ping on if hostnames are configured.
+  # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
+  ipv4: true
+  ipv6: true
+  mode: any
+
+  # Total running time per ping test.
+  timeout: {{ icmp_hosts | length }}s
+
+  # Waiting duration until another ICMP Echo Request is emitted.
+  wait: 1s
+
+  # The tags of the monitors are included in their own field with each
+  # transaction published. Tags make it easy to group servers by different
+  # logical properties.
+  #tags: ["service-X", "web-tier"]
+
+  # Optional fields that you can specify to add additional information to the
+  # monitor output. Fields can be scalar values, arrays, dictionaries, or any nested
+  # combination of these.
+  #fields:
+  #  env: staging
+
+  # If this option is set to true, the custom fields are stored as top-level
+  # fields in the output document instead of being grouped under a fields
+  # sub-dictionary. Default is false.
+  #fields_under_root: false
+
+  # NOTE: THIS FEATURE IS DEPRECATED AND WILL BE REMOVED IN A FUTURE RELEASE
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
+
+    # Interval between file file changed checks.
+    #interval: 5s
+
+# Define a directory to load monitor definitions from. Definitions take the form
+# of individual yaml files.
+# heartbeat.config.monitors:
+  # Directory + glob pattern to search for configuration files
+  #path: /path/to/my/monitors.d/*.yml
+  # If enabled, heartbeat will periodically check the config.monitors path for changes
+  #reload.enabled: true
+  # How often to check for changes
+  #reload.period: 1s
+
+{% for item in heartbeat_services %}
+{%   if item.type == 'tcp' %}
+{%     set hosts = [] %}
+{%     for port in item.ports | default([])  %}
+{%       for backend in item.group | default([])  %}
+{%         set backend_host = hostvars[backend]['ansible_host'] %}
+{%         set _ = hosts.extend([backend_host + ":" + (port | string)]) %}
+{%       endfor %}
+{%     endfor %}
+{%     if hosts | length > 0 %}
+- type: tcp # monitor type `tcp`. Connect via TCP and optionally verify endpoint
+            # by sending/receiving a custom payload
+
+  # Monitor name used for job name and document type
+  name: "{{ item.name }}"
+
+  # Enable/Disable monitor
+  enabled: true
+
+  # Configure task schedule
+  schedule: '@every 5s' # every 5 seconds from start of beat
+
+  # configure hosts to ping.
+  # Entries can be:
+  #   - plain host name or IP like `localhost`:
+  #       Requires ports configs to be checked. If ssl is configured,
+  #       a SSL/TLS based connection will be established. Otherwise plain tcp connection
+  #       will be established
+  #   - hostname + port like `localhost:12345`:
+  #       Connect to port on given host. If ssl is configured,
+  #       a SSL/TLS based connection will be established. Otherwise plain tcp connection
+  #       will be established
+  #   - full url syntax. `scheme://<host>:[port]`. The `<scheme>` can be one of
+  #     `tcp`, `plain`, `ssl` and `tls`. If `tcp`, `plain` is configured, a plain
+  #     tcp connection will be established, even if ssl is configured.
+  #     Using `tls`/`ssl`, an SSL connection is established. If no ssl is configured,
+  #     system defaults will be used (not supported on windows).
+  #     If `port` is missing in url, the ports setting is required.
+  hosts: {{ (hosts | default([])) | to_json }}
+
+  # Configure IP protocol types to ping on if hostnames are configured.
+  # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
+  ipv4: true
+  ipv6: true
+  mode: any
+
+  # List of ports to ping if host does not contain a port number
+  # ports: [80, 9200, 5044]
+
+  # Total test connection and data exchange timeout
+  #timeout: 16s
+
+  # Optional payload string to send to remote and expected answer. If none is
+  # configured, the endpoint is expected to be up if connection attempt was
+  # successful. If only `send_string` is configured, any response will be
+  # accepted as ok. If only `receive_string` is configured, no payload will be
+  # send, but client expects to receive expected payload on connect.
+  #check:
+    #send: ''
+    #receive: ''
+
+  # SOCKS5 proxy url
+  # proxy_url: ''
+
+  # Resolve hostnames locally instead on SOCKS5 server:
+  #proxy_use_local_resolver: false
+
+  # TLS/SSL connection settings:
+  #ssl:
+    # Certificate Authorities
+    #certificate_authorities: ['']
+
+    # Required TLS protocols
+    #supported_protocols: ["TLSv1.0", "TLSv1.1", "TLSv1.2"]
+{%     endif %}
+{%   elif item.type == 'http' %}
+{%     set hosts = [] %}
+{%     for port in item.ports | default([])  %}
+{%       for backend in item.group | default([])  %}
+{%         set backend_host = hostvars[backend]['ansible_host'] %}
+{%         set _ = hosts.extend(["http://" + backend_host + ":" + (port | string) + item.path]) %}
+{%       endfor %}
+{%     endfor %}
+{%     if hosts | length > 0 %}
+  # NOTE: THIS FEATURE IS DEPRECATED AND WILL BE REMOVED IN A FUTURE RELEASE
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
+
+    # Interval between file file changed checks.
+    #interval: 5s
+
+- type: http # monitor type `http`. Connect via HTTP an optionally verify response
+
+  # Monitor name used for job name and document type
+  name: "{{ item.name }}"
+
+  # Enable/Disable monitor
+  enabled: true
+
+  # Configure task schedule
+  schedule: '@every 5s' # every 5 seconds from start of beat
+
+  # Configure URLs to ping
+  urls: {{ (hosts | default([])) | to_json }}
+
+  # Configure IP protocol types to ping on if hostnames are configured.
+  # Ping all resolvable IPs if `mode` is `all`, or only one IP if `mode` is `any`.
+  ipv4: true
+  ipv6: true
+  mode: any
+
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
+
+    # Interval between file file changed checks.
+    #interval: 5s
+
+  # Optional HTTP proxy url.
+  #proxy_url: ''
+
+  # Total test connection and data exchange timeout
+  #timeout: 16s
+
+  # Optional Authentication Credentials
+  #username: ''
+  #password: ''
+
+  # TLS/SSL connection settings for use with HTTPS endpoint. If not configured
+  # system defaults will be used.
+  #ssl:
+    # Certificate Authorities
+    #certificate_authorities: ['']
+
+    # Required TLS protocols
+    #supported_protocols: ["TLSv1.0", "TLSv1.1", "TLSv1.2"]
+
+  # Request settings:
+  check.request:
+    # Configure HTTP method to use. Only 'HEAD', 'GET' and 'POST' methods are allowed.
+    method: "{{ item.method }}"
+
+    # Dictionary of additional HTTP headers to send:
+    headers:
+      User-agent: osa-heartbeat-healthcheck
+    # Optional request body content
+    #body:
+
+  # Expected response settings
+{%       if item.check_response is defined %}
+  check.response: {{ item.check_response }}
+  #check.response:
+    # Expected status code. If not configured or set to 0 any status code not
+    # being 404 is accepted.
+    #status: 0
+
+    # Required response headers.
+    #headers:
+
+    # Required response contents.
+    #body:
+{%       endif %}
+{%     endif %}
+{%   endif %}
+{% endfor %}
+
+    # Parses the body as JSON, then checks against the given condition expression
+    #json:
+    #- description: Explanation of what the check does
+    #  condition:
+    #    equals:
+    #      myField: expectedValue
+
+
+  # NOTE: THIS FEATURE IS DEPRECATED AND WILL BE REMOVED IN A FUTURE RELEASE
+  # Configure file json file to be watched for changes to the monitor:
+  #watch.poll_file:
+    # Path to check for updates.
+    #path:
+
+    # Interval between file file changed checks.
+    #interval: 5s
+
+
+heartbeat.scheduler:
+  # Limit number of concurrent tasks executed by heartbeat. The task limit if
+  # disabled if set to 0. The default is 0.
+  #username: "beats_system"
+  #password: "changeme"
+
+  # Dictionary of HTTP parameters to pass within the URL with index operations.
+  #parameters:
+    #param1: value1
+    #param2: value2
+
+  # Custom HTTP headers to add to each request
+  #headers:
+  #  X-My-Header: Contents of the header
+
+  # Proxy server url
+  #proxy_url: http://proxy:3128
+
+  # The number of times a particular Elasticsearch index operation is attempted. If
+  # the indexing operation doesn't succeed after this many retries, the events are
+  # dropped. The default is 3.
+  #max_retries: 3
+
+  # The maximum number of events to bulk in a single Elasticsearch bulk API index request.
+  # The default is 50.
+  #bulk_max_size: 50
+
+  # The number of seconds to wait before trying to reconnect to Elasticsearch
+  # after a network error. After waiting backoff.init seconds, the Beat
+  # tries to reconnect. If the attempt fails, the backoff timer is increased
+  # exponentially up to backoff.max. After a successful connection, the backoff
+  # timer is reset. The default is 1s.
+  #backoff.init: 1s
+
+  # The maximum number of seconds to wait before attempting to connect to
+  # Elasticsearch after a network error. The default is 60s.
+  #backoff.max: 60s
+
+  # Configure HTTP request timeout before failing an request to Elasticsearch.
+  #timeout: 90
+
+  # Use SSL settings for HTTPS.
+  #ssl.enabled: true
+
+  # Configure SSL verification mode. If `none` is configured, all server hosts
+  # and certificates will be accepted. In this mode, SSL based connections are
+  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
+  # `full`.
+  #ssl.verification_mode: full
+
+  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
+  # 1.2 are enabled.
+  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
+
+  # SSL configuration. The default is off.
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client certificate key
+  #ssl.key: "/etc/pki/client/cert.key"
+
+  # Optional passphrase for decrypting the certificate key.
+  #ssl.key_passphrase: ''
+
+  # Configure cipher suites to be used for SSL connections
+  #ssl.cipher_suites: []
+
+  # Configure curve types for ECDHE-based cipher suites
+  #ssl.curve_types: []
+
+  # Configure what types of renegotiation are supported. Valid options are
+  # never, once, and freely. Default is never.
+  #ssl.renegotiation: never
+
+  #metrics.period: 10s
+  #state.period: 1m
+
+#================================ HTTP Endpoint ======================================
+# Each beat can expose internal metrics through a HTTP endpoint. For security
+# reasons the endpoint is disabled by default. This feature is currently experimental.
+# Stats can be access through http://localhost:5066/stats . For pretty JSON output
+# append ?pretty to the URL.
+
+# Defines if the HTTP endpoint is enabled.
+#http.enabled: false
+
+# The HTTP endpoint will bind to this hostname or IP address. It is recommended to use only localhost.
+#http.host: localhost
+
+# Port on which the HTTP endpoint will bind. Default is 5066.
+#http.port: 5066
+
+#============================= Process Security ================================
+
+# Enable or disable seccomp system call filtering on Linux. Default is enabled.
+#seccomp.enabled: true
+
+#================================= Migration ==================================
+
+# This allows to enable 6.7 migration aliases
+#migration.6_to_7.enabled: false

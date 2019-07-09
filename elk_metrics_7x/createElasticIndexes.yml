@@ -15,6 +15,9 @@
   hosts: "elastic-logstash[0]"
   become: true
 
+  roles:
+    - role: elastic_data_hosts
+
   vars:
     _elastic_refresh_interval: "{{ (elasticsearch_number_of_replicas | int) * 5 }}"
     elastic_refresh_interval: "{{ (_elastic_refresh_interval > 0) | ternary(30, _elastic_refresh_interval) }}"
@@ -23,9 +26,6 @@
     - vars/variables.yml
 
   environment: "{{ deployment_environment_variables | default({}) }}"
-
-  roles:
-    - role: elastic_retention
 
   post_tasks:
     - name: Create beat indexes
@@ -41,7 +41,7 @@
       delay: 30
       with_items: |-
         {% set beat_indexes = [] %}
-        {% for key, value in elastic_beat_retention_policy_hosts.items() %}
+        {% for key, value in elastic_beats.items() %}
         {%   if ((value.hosts | length) > 0) and (value.make_index | default(false) | bool) %}
         {%
                set _index = {
@@ -124,7 +124,7 @@
         index_option:
           index_patterns: >-
             {{
-              (elastic_beat_retention_policy_hosts.keys() | list)
+              (elastic_beats.keys() | list)
                 | map('regex_replace', '(.*)', '\1-' ~ '*')
                 | list
             }}
@@ -152,7 +152,7 @@
           order: 1
           settings:
             number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
-            number_of_shards: "{{ ((elasticsearch_number_of_replicas | int) * 2) + 1 }}"
+            number_of_shards: 1
 
     - name: Create custom skydive index template
       uri:
@@ -171,7 +171,7 @@
           order: 1
           settings:
             number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
-            number_of_shards: "{{ ((elasticsearch_number_of_replicas | int) * 2) + 1 }}"
+            number_of_shards: 1
 
 
 - name: Create/Setup known indexes in Kibana
@@ -183,10 +183,10 @@
   environment: "{{ deployment_environment_variables | default({}) }}"
 
   roles:
-    - role: elastic_retention
+    - role: elastic_data_hosts
 
   post_tasks:
-    - name: Create kibana indexe patterns
+    - name: Create kibana index patterns
       uri:
         url: "http://127.0.0.1:5601/api/saved_objects/index-pattern/{{ item.name }}"
         method: POST
@@ -198,7 +198,7 @@
           kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
       with_items: |-
         {% set beat_indexes = [] %}
-        {% for key, value in elastic_beat_retention_policy_hosts.items() %}
+        {% for key, value in elastic_beats.items() %}
         {%   if (value.hosts | length) > 0 %}
         {%
                set _index = {
@@ -219,7 +219,7 @@
         {%     set _ = beat_indexes.append(_index) %}
         {%   endif %}
         {% endfor %}
-        {% set _ = beat_indexes.append({'name': 'default', 'index_options': {'attributes': {'title': '*'}}}) %}
+        {% set _ = beat_indexes.append({'name': 'default', 'index_options': {'attributes': {'timeFieldName': '@timestamp', 'title': '*'}}}) %}
         {{ beat_indexes }}
       register: kibana_indexes
       until: kibana_indexes is success

@@ -30,5 +30,3 @@ galaxy_info:
     - development
     - elasticsearch
     - elastic-stack
-dependencies:
-  - role: elastic_retention

@@ -40,21 +40,6 @@
 
 - name: Create rollup block
   block:
-    - name: Set min retention days fact
-      set_fact:
-        min_days_until_rollup: |-
-          {% set index_retention = [] %}
-          {% for item in ansible_play_hosts %}
-          {%   set _ = index_retention.append(ansible_local['elastic']['retention']['elastic_' + index_name + '_retention'] | int) %}
-          {% endfor %}
-          {{ index_retention | min }}
-      run_once: true
-
-    - name: Set retention days fact
-      set_fact:
-        days_until_rollup: "{{ ((min_days_until_rollup | int) > 1) | ternary(((min_days_until_rollup | int) - 1), min_days_until_rollup) }}"
-      run_once: true
-
     - name: Create rollup job
       uri:
         url: "{{ item.url }}"

@@ -26,16 +26,9 @@
 ################################################################
 
 ## GC Configuration
-{% if ((heap_size | int) > 6144) and (elastic_g1gc_enabled | bool) %}
 -XX:+UseG1GC
 -XX:MaxGCPauseMillis=400
 -XX:InitiatingHeapOccupancyPercent=75
-{% else %}
--XX:+UseParNewGC
--XX:+UseConcMarkSweepGC
--XX:CMSInitiatingOccupancyFraction=75
--XX:+UseCMSInitiatingOccupancyOnly
-{% endif %}
 
 ## optimizations
 

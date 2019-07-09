@@ -376,3 +376,38 @@ grafana_datasources:
       maxConcurrentShardRequests: 256
       timeField: "@timestamp"
       timeInterval: ">60s"
+
+elastic_beats:
+  logstash:
+    make_index: true
+    hosts: "{{ groups['elastic-logstash'] | default([]) }}"
+  apm:
+    make_index: true
+    timeFieldName: '@timestamp'
+    hosts: "{{ groups['apm-server'] | default([]) }}"
+  auditbeat:
+    timeFieldName: '@timestamp'
+    hosts: "{{ groups['hosts'] | default([]) }}"
+  filebeat:
+    timeFieldName: '@timestamp'
+    hosts: "{{ groups['hosts'] | default([]) }}"
+  syslog:
+    make_index: true
+    hosts: "{{ groups['hosts'] | default([]) }}"
+  heartbeat:
+    timeFieldName: '@timestamp'
+    hosts: "{{ groups['kibana'][:3] | default([]) }}"
+  journalbeat:
+    timeFieldName: '@timestamp'
+    hosts: "{{ groups['hosts'] | default([]) }}"
+  metricbeat:
+    timeFieldName: '@timestamp'
+    hosts: "{{ groups['all'] | default([]) }}"
+  packetbeat:
+    timeFieldName: '@timestamp'
+    hosts: "{{ groups['hosts'] | default([]) }}"
+  monitorstack:
+    timeFieldName: '@timestamp'
+    hosts: "{{ (groups['nova_compute'] | default([])) | union((groups['utility_all'] | default([]))) | union((groups['memcached_all'] | default([]))) }}"
+  skydive:
+    hosts: "{{ (((groups['skydive_analyzers'] | default([])) | length) > 0) | ternary((groups['hosts'] | default([])), []) }}"

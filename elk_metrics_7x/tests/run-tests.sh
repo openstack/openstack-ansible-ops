@@ -26,21 +26,21 @@ pushd "${HOME}"
   popd
 popd
 
-source "${TEST_DIR}/elk_metrics_6x/tests/manual-test.rc"
+source "${TEST_DIR}/elk_metrics_7x/tests/manual-test.rc"
 
-source "${TEST_DIR}/elk_metrics_6x/bootstrap-embedded-ansible.sh"
+source "${TEST_DIR}/elk_metrics_7x/bootstrap-embedded-ansible.sh"
 deactivate
 
 ${HOME}/ansible_venv/bin/ansible-galaxy install --force \
                                              --roles-path="${HOME}/ansible_venv/repositories/roles" \
-                                             --role-file="${TEST_DIR}/elk_metrics_6x/tests/ansible-role-requirements.yml"
+                                             --role-file="${TEST_DIR}/elk_metrics_7x/tests/ansible-role-requirements.yml"
 
-if [[ ! -e "${TEST_DIR}/elk_metrics_6x/tests/src" ]]; then
-  ln -s ${TEST_DIR}/../ ${TEST_DIR}/elk_metrics_6x/tests/src
+if [[ ! -e "${TEST_DIR}/elk_metrics_7x/tests/src" ]]; then
+  ln -s ${TEST_DIR}/../ ${TEST_DIR}/elk_metrics_7x/tests/src
 fi
 
 ${HOME}/ansible_venv/bin/ansible-playbook -i 'localhost,' \
                                        -vv \
                                        -e ansible_connection=local \
                                        -e test_clustered_elk=${CLUSTERED:-no} \
-                                       ${TEST_DIR}/elk_metrics_6x/tests/test.yml
+                                       ${TEST_DIR}/elk_metrics_7x/tests/test.yml

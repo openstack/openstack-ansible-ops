@@ -14,3 +14,4 @@
 # limitations under the License.
 
 elastic_allow_rollup_purge: false
+days_until_rollup: 15

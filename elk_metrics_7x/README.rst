@@ -246,7 +246,7 @@ Copy the env.d file into place
 
 .. code-block:: bash
 
-    cd /opt/openstack-ansible-ops/elk_metrics_6x
+    cd /opt/openstack-ansible-ops/elk_metrics_7x
     cp env.d/elk.yml /etc/openstack_deploy/env.d/
 
 Copy the conf.d file into place
@@ -312,7 +312,7 @@ deploy logstash, deploy Kibana, and then deploy all of the service beats.
 
 .. code-block:: bash
 
-    cd /opt/openstack-ansible-ops/elk_metrics_6x
+    cd /opt/openstack-ansible-ops/elk_metrics_7x
     ansible-playbook site.yml $USER_VARS
 
 
@@ -332,7 +332,7 @@ deploy logstash, deploy Kibana, and then deploy all of the service beats.
 
 .. code-block:: bash
 
-    ln -s /opt/openstack-ansible/inventory/group_vars /opt/openstack-ansible-ops/elk_metrics_6x/group_vars
+    ln -s /opt/openstack-ansible/inventory/group_vars /opt/openstack-ansible-ops/elk_metrics_7x/group_vars
 
 
 The individual playbooks found within this repository can be independently run
@@ -434,7 +434,7 @@ configuration file using the key/value pairs as options.
         - server1.local:9092
         - server2.local:9092
         - server3.local:9092
-      client_id: "elk_metrics_6x"
+      client_id: "elk_metrics_7x"
       compression_type: "gzip"
       security_protocol: "SSL"
       id: "UniqueOutputID"
@@ -472,7 +472,7 @@ See the grafana directory for more information on how to deploy grafana. Once
 When deploying grafana, source the variable file from ELK in order to
 automatically connect grafana to the Elasticsearch datastore and import
 dashboards. Including the variable file is as simple as adding
-``-e @../elk_metrics_6x/vars/variables.yml`` to the grafana playbook
+``-e @../elk_metrics_7x/vars/variables.yml`` to the grafana playbook
 run.
 
 Included dashboards.
@@ -485,7 +485,7 @@ Example command using the embedded Ansible from within the grafana directory.
 .. code-block:: bash
 
     ansible-playbook ${USER_VARS} installGrafana.yml \
-                                  -e @../elk_metrics_6x/vars/variables.yml \
+                                  -e @../elk_metrics_7x/vars/variables.yml \
                                   -e 'galera_root_user="root"' \
                                   -e 'galera_address={{ internal_lb_vip_address }}'
 
@@ -566,7 +566,7 @@ state variable, `elk_package_state`, to latest.
 
 .. code-block:: bash
 
-    cd /opt/openstack-ansible-ops/elk_metrics_6x
+    cd /opt/openstack-ansible-ops/elk_metrics_7x
     ansible-playbook site.yml $USER_VARS -e 'elk_package_state="latest"'
 
 
@@ -582,7 +582,7 @@ execution.
 
 .. code-block:: bash
 
-    cd /opt/openstack-ansible-ops/elk_metrics_6x
+    cd /opt/openstack-ansible-ops/elk_metrics_7x
     ansible-playbook site.yml $USER_VARS -e 'elastic_retention_refresh="yes"'
 
 
@@ -593,7 +593,7 @@ If everything goes bad, you can clean up with the following command
 
 .. code-block:: bash
 
-     openstack-ansible /opt/openstack-ansible-ops/elk_metrics_6x/site.yml -e 'elk_package_state="absent"' --tags package_install
+     openstack-ansible /opt/openstack-ansible-ops/elk_metrics_7x/site.yml -e 'elk_package_state="absent"' --tags package_install
      openstack-ansible /opt/openstack-ansible/playbooks/lxc-containers-destroy.yml --limit elk_all
 
 
@@ -616,14 +616,14 @@ deployed to the environment as if this was a production installation.
 
 After the test build is completed the cluster will test it's layout and ensure
 processes are functioning normally. Logs for the cluster can be found at
-`/tmp/elk-metrics-6x-logs`.
+`/tmp/elk-metrics-7x-logs`.
 
 To rerun the playbooks after a test build, source the `tests/manual-test.rc`
 file and follow the onscreen instructions.
 
 To clean-up a test environment and start from a bare server slate the
 `run-cleanup.sh` script can be used. This script is distructive and will purge
-all `elk_metrics_6x` related services within the local test environment.
+all `elk_metrics_7x` related services within the local test environment.
 
 .. code-block:: bash
 

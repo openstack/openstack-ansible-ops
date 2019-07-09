@@ -52,7 +52,7 @@ logstash_deploy_filters: true
 #     - server1.local:9092
 #     - server2.local:9092
 #     - server3.local:9092
-#   client_id: "elk_metrics_6x"
+#   client_id: "elk_metrics_7x"
 #   compression_type: "gzip"
 #   security_protocol: "SSL"
 

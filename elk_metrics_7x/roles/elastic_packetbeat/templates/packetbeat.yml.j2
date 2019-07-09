@@ -25,13 +25,13 @@ packetbeat.interfaces.type: af_packet
 # large enough for almost all networks and interface types. If you sniff on a
 # physical network interface, the optimal setting is the MTU size. On virtual
 # interfaces, however, it's safer to accept the default value.
-packetbeat.interfaces.snaplen: 65535
+#packetbeat.interfaces.snaplen: 65535
 
 # The maximum size of the shared memory buffer to use between the kernel and
 # user space. A bigger buffer usually results in lower CPU usage, but consumes
 # more memory. This setting is only available for the af_packet sniffer type.
 # The default is 30 MB.
-packetbeat.interfaces.buffer_size_mb: 30
+#packetbeat.interfaces.buffer_size_mb: 30
 
 # Packetbeat automatically generates a BPF for capturing only the traffic on
 # ports where it expects to find known protocols. Use this settings to tell
@@ -99,8 +99,6 @@ packetbeat.protocols:
   #transaction_timeout: 10s
 
 - type: cassandra
-  # Enable cassandra monitoring. Default: false
-  enabled: false
 
   #Cassandra port for traffic monitoring.
   ports: [9042]
@@ -134,7 +132,7 @@ packetbeat.protocols:
 
 - type: dns
   # Enable DNS monitoring. Default: true
-  enabled: true
+  #enabled: true
 
   # Configure the ports where to listen for DNS traffic. You can disable
   # the DNS protocol by commenting out the list of ports.
@@ -164,6 +162,7 @@ packetbeat.protocols:
 
 - type: http
   # Enable HTTP monitoring. Default: true
+  #enabled: true
 {% set used_ports = [53, 443, 2049, 3306, 5432, 5672, 6379, 9042, 9090, 11211, 27017] %}
 {% set ports = [] %}
 {% for item in heartbeat_services %}
@@ -173,7 +172,6 @@ packetbeat.protocols:
 {%     endif %}
 {%   endfor %}
 {% endfor %}
-  enabled: true
 
   # Configure the ports where to listen for HTTP traffic. You can disable
   # the HTTP protocol by commenting out the list of ports.
@@ -196,8 +194,21 @@ packetbeat.protocols:
   send_all_headers: true
 
   # The list of content types for which Packetbeat includes the full HTTP
-  # payload in the response field.
+  # payload. If the request's or response's Content-Type matches any on this
+  # list, the full body will be included under the request or response field.
   #include_body_for: []
+
+  # The list of content types for which Packetbeat includes the full HTTP
+  # request payload.
+  #include_request_body_for: []
+
+  # The list of content types for which Packetbeat includes the full HTTP
+  # response payload.
+  #include_response_body_for: []
+
+  # Whether the body of a request must be decoded when a content-encoding
+  # or transfer-encoding has been applied.
+  #decode_body: true
 
   # If the Cookie or Set-Cookie headers are sent, this option controls whether
   # they are split into individual values.
@@ -226,7 +237,7 @@ packetbeat.protocols:
 
 - type: memcache
   # Enable memcache monitoring. Default: true
-  enabled: true
+  #enabled: true
 
   # Configure the ports where to listen for memcache traffic. You can disable
   # the Memcache protocol by commenting out the list of ports.
@@ -275,11 +286,11 @@ packetbeat.protocols:
 
 - type: mysql
   # Enable mysql monitoring. Default: true
-  enabled: true
+  #enabled: true
 
   # Configure the ports where to listen for MySQL traffic. You can disable
   # the MySQL protocol by commenting out the list of ports.
-  ports: [3306]
+  ports: [3306,3307]
 
   # If this option is enabled, the raw message of the request (`request` field)
   # is sent to Elasticsearch. The default is false.
@@ -440,15 +451,26 @@ packetbeat.protocols:
 
 - type: tls
   # Enable TLS monitoring. Default: true
-  enabled: true
+  #enabled: true
 
   # Configure the ports where to listen for TLS traffic. You can disable
   # the TLS protocol by commenting out the list of ports.
-  ports: [443]
+  ports:
+    - 443   # HTTPS
+    - 993   # IMAPS
+    - 995   # POP3S
+    - 5223  # XMPP over SSL
+    - 8443
+    - 8883  # Secure MQTT
+    - 9243  # Elasticsearch
+
+  # List of hash algorithms to use to calculate certificates' fingerprints.
+  # Valid values are `sha1`, `sha256` and `md5`.
+  #fingerprints: [sha1]
 
   # If this option is enabled, the client and server certificates and
   # certificate chains are sent to Elasticsearch. The default is true.
-  send_certificates: true
+  #send_certificates: true
 
   # If this option is enabled, the raw certificates will be stored
   # in PEM format under the `raw` key. The default is false.
@@ -456,33 +478,17 @@ packetbeat.protocols:
 
 #=========================== Monitored processes ==============================
 
-# Configure the processes to be monitored and how to find them. If a process is
-# monitored then Packetbeat attempts to use it's name to fill in the `proc` and
-# `client_proc` fields.
-# The processes can be found by searching their command line by a given string.
-#
-# Process matching is optional and can be enabled by uncommenting the following
-# lines.
-#
-#packetbeat.procs:
-#  enabled: false
-#  monitored:
-#    - process: mysqld
-#      cmdline_grep: mysqld
-#
-#    - process: pgsql
-#      cmdline_grep: postgres
-#
-#    - process: nginx
-#      cmdline_grep: nginx
-#
-#    - process: app
-#      cmdline_grep: gunicorn
+# Packetbeat can enrich events with information about the process associated
+# the socket that sent or received the packet if Packetbeat is monitoring
+# traffic from the host machine. By default process enrichment is disabled.
+# This feature works on Linux and Windows.
+packetbeat.procs.enabled: false
 
-# Uncomment the following if you want to ignore transactions created
-# by the server on which the shipper is installed. This option is useful
-# to remove duplicates if shippers are installed on multiple servers.
-#packetbeat.ignore_outgoing: true
+# If you want to ignore transactions created by the server on which the shipper
+# is installed you can enable this option. This option is useful to remove
+# duplicates if shippers are installed on multiple servers. Default value is
+# false.
+packetbeat.ignore_outgoing: false
 
 #================================ General ======================================
 
@@ -568,7 +574,7 @@ packetbeat.protocols:
       # Sets the write buffer size.
       #buffer_size: 1MiB
 
-      # Maximum duration after which events are flushed, if the write buffer
+      # Maximum duration after which events are flushed if the write buffer
       # is not full yet. The default value is 1s.
       #flush.timeout: 1s
 
@@ -582,7 +588,7 @@ packetbeat.protocols:
       #codec: cbor
     #read:
       # Reader flush timeout, waiting for more events to become available, so
-      # to fill a complete batch, as required by the outputs.
+      # to fill a complete batch as required by the outputs.
       # If flush_timeout is 0, all available events are forwarded to the
       # outputs immediately.
       # The default value is 0s.
@@ -736,12 +742,15 @@ processors:
 #  # Set gzip compression level.
 #  #compression_level: 0
 #
+#  # Configure escaping HTML symbols in strings.
+#  #escape_html: false
+#
 #  # Optional protocol and basic auth credentials.
 #  #protocol: "https"
 #  #username: "elastic"
 #  #password: "changeme"
 #
-#  # Dictionary of HTTP parameters to pass within the url with index operations.
+#  # Dictionary of HTTP parameters to pass within the URL with index operations.
 #  #parameters:
 #    #param1: value1
 #    #param2: value2
@@ -752,19 +761,19 @@ processors:
 #  # Optional index name. The default is "packetbeat" plus date
 #  # and generates [packetbeat-]YYYY.MM.DD keys.
 #  # In case you modify this pattern you must update setup.template.name and setup.template.pattern accordingly.
-#  #index: "packetbeat-%{[beat.version]}-%{+yyyy.MM.dd}"
+#  #index: "packetbeat-%{[agent.version]}-%{+yyyy.MM.dd}"
 #
 #  # Optional ingest node pipeline. By default no pipeline will be used.
 #  #pipeline: ""
 #
-#  # Optional HTTP Path
+#  # Optional HTTP path
 #  #path: "/elasticsearch"
 #
 #  # Custom HTTP headers to add to each request
 #  #headers:
 #  #  X-My-Header: Contents of the header
 #
-#  # Proxy server url
+#  # Proxy server URL
 #  #proxy_url: http://proxy:3128
 #
 #  # The number of times a particular Elasticsearch index operation is attempted. If
@@ -776,55 +785,64 @@ processors:
 #  # The default is 50.
 #  #bulk_max_size: 50
 #
-#  # Configure http request timeout before failing an request to Elasticsearch.
+#  # The number of seconds to wait before trying to reconnect to Elasticsearch
+#  # after a network error. After waiting backoff.init seconds, the Beat
+#  # tries to reconnect. If the attempt fails, the backoff timer is increased
+#  # exponentially up to backoff.max. After a successful connection, the backoff
+#  # timer is reset. The default is 1s.
+#  #backoff.init: 1s
+#
+#  # The maximum number of seconds to wait before attempting to connect to
+#  # Elasticsearch after a network error. The default is 60s.
+#  #backoff.max: 60s
+#
+#  # Configure HTTP request timeout before failing a request to Elasticsearch.
 #  #timeout: 90
 #
 #  # Use SSL settings for HTTPS.
 #  #ssl.enabled: true
 #
 #  # Configure SSL verification mode. If `none` is configured, all server hosts
-#  # and certificates will be accepted. In this mode, SSL based connections are
+#  # and certificates will be accepted. In this mode, SSL-based connections are
 #  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
 #  # `full`.
 #  #ssl.verification_mode: full
 #
-#  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
+#  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
 #  # 1.2 are enabled.
 #  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
 #
-#  # SSL configuration. By default is off.
 #  # List of root certificates for HTTPS server verifications
 #  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
 #
 #  # Certificate for SSL client authentication
 #  #ssl.certificate: "/etc/pki/client/cert.pem"
 #
-#  # Client Certificate Key
+#  # Client certificate key
 #  #ssl.key: "/etc/pki/client/cert.key"
 #
-#  # Optional passphrase for decrypting the Certificate Key.
+#  # Optional passphrase for decrypting the certificate key.
 #  #ssl.key_passphrase: ''
 #
 #  # Configure cipher suites to be used for SSL connections
 #  #ssl.cipher_suites: []
 #
-#  # Configure curve types for ECDHE based cipher suites
+#  # Configure curve types for ECDHE-based cipher suites
 #  #ssl.curve_types: []
 #
 #  # Configure what types of renegotiation are supported. Valid options are
 #  # never, once, and freely. Default is never.
 #  #ssl.renegotiation: never
-
+#
 
 #----------------------------- Logstash output ---------------------------------
 {{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_processor_count) }}
-
 #------------------------------- Kafka output ----------------------------------
 #output.kafka:
   # Boolean flag to enable or disable the output module.
   #enabled: true
 
-  # The list of Kafka broker addresses from where to fetch the cluster metadata.
+  # The list of Kafka broker addresses from which to fetch the cluster metadata.
   # The cluster metadata contain the actual Kafka brokers events are published
   # to.
   #hosts: ["localhost:9092"]
@@ -833,7 +851,7 @@ processors:
   # using any event field. To set the topic from document type use `%{[type]}`.
   #topic: beats
 
-  # The Kafka event key setting. Use format string to create unique event key.
+  # The Kafka event key setting. Use format string to create a unique event key.
   # By default no event key will be generated.
   #key: ''
 
@@ -859,30 +877,33 @@ processors:
 
   # Configure JSON encoding
   #codec.json:
-    # Pretty print json event
+    # Pretty-print JSON event
     #pretty: false
 
-    # Configure escaping html symbols in strings.
-    #escape_html: true
+    # Configure escaping HTML symbols in strings.
+    #escape_html: false
 
-  # Metadata update configuration. Metadata do contain leader information
-  # deciding which broker to use when publishing.
+  # Metadata update configuration. Metadata contains leader information
+  # used to decide which broker to use when publishing.
   #metadata:
     # Max metadata request retry attempts when cluster is in middle of leader
     # election. Defaults to 3 retries.
     #retry.max: 3
 
-    # Waiting time between retries during leader elections. Default is 250ms.
+    # Wait time between retries during leader elections. Default is 250ms.
     #retry.backoff: 250ms
 
     # Refresh metadata interval. Defaults to every 10 minutes.
     #refresh_frequency: 10m
 
+    # Strategy for fetching the topics metadata from the broker. Default is true.
+    #full: true
+
   # The number of concurrent load-balanced Kafka output workers.
   #worker: 1
 
   # The number of times to retry publishing an event after a publishing failure.
-  # After the specified number of retries, the events are typically dropped.
+  # After the specified number of retries, events are typically dropped.
   # Some Beats, such as Filebeat, ignore the max_retries setting and retry until
   # all events are published.  Set max_retries to a value less than 0 to retry
   # until all events are published. The default is 3.
@@ -930,7 +951,7 @@ processors:
   # purposes.  The default is "beats".
   #client_id: beats
 
-  # Enable SSL support. SSL is automatically enabled, if any SSL setting is set.
+  # Enable SSL support. SSL is automatically enabled if any SSL setting is set.
   #ssl.enabled: true
 
   # Optional SSL configuration options. SSL is off by default.
@@ -943,7 +964,7 @@ processors:
   # `full`.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
+  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
   # 1.2 are enabled.
   #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
 
@@ -959,7 +980,7 @@ processors:
   # Configure cipher suites to be used for SSL connections
   #ssl.cipher_suites: []
 
-  # Configure curve types for ECDHE based cipher suites
+  # Configure curve types for ECDHE-based cipher suites
   #ssl.curve_types: []
 
   # Configure what types of renegotiation are supported. Valid options are
@@ -976,23 +997,19 @@ processors:
     # Pretty print json event
     #pretty: false
 
-    # Configure escaping html symbols in strings.
-    #escape_html: true
+    # Configure escaping HTML symbols in strings.
+    #escape_html: false
 
-  # The list of Redis servers to connect to. If load balancing is enabled, the
+  # The list of Redis servers to connect to. If load-balancing is enabled, the
   # events are distributed to the servers in the list. If one server becomes
   # unreachable, the events are distributed to the reachable servers only.
   #hosts: ["localhost:6379"]
-
-  # The Redis port to use if hosts does not contain a port number. The default
-  # is 6379.
-  #port: 6379
 
   # The name of the Redis list or channel the events are published to. The
   # default is packetbeat.
   #key: packetbeat
 
-  # The password to authenticate with. The default is no authentication.
+  # The password to authenticate to Redis with. The default is no authentication.
   #password:
 
   # The Redis database number where the events are published. The default is 0.
@@ -1093,11 +1110,11 @@ processors:
 
   # Configure JSON encoding
   #codec.json:
-    # Pretty print json event
+    # Pretty-print JSON event
     #pretty: false
 
-    # Configure escaping html symbols in strings.
-    #escape_html: true
+    # Configure escaping HTML symbols in strings.
+    #escape_html: false
 
   # Path to the directory where to save the generated files. The option is
   # mandatory.
@@ -1128,11 +1145,11 @@ processors:
 
   # Configure JSON encoding
   #codec.json:
-    # Pretty print json event
+    # Pretty-print JSON event
     #pretty: false
 
-    # Configure escaping html symbols in strings.
-    #escape_html: true
+    # Configure escaping HTML symbols in strings.
+    #escape_html: false
 
 #================================= Paths ======================================
 
@@ -1167,10 +1184,29 @@ processors:
 #============================== Dashboards =====================================
 {{ elk_macros.setup_dashboards('packetbeat') }}
 
-#=============================== Template ======================================
+#============================== Template =====================================
 {{ elk_macros.setup_template('packetbeat', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
 
-#================================ Kibana =======================================
+#============================== Setup ILM =====================================
+
+# Configure Index Lifecycle Management Index Lifecycle Management creates a
+# write alias and adds additional settings to the template.
+# The elasticsearch.output.index setting will be replaced with the write alias
+# if ILM is enabled.
+
+# Enabled ILM support. Valid values are true, false, and auto. The beat will
+# detect availabilty of Index Lifecycle Management in Elasticsearch and enable
+# or disable ILM support.
+#setup.ilm.enabled: auto
+
+# Configure the ILM write alias name.
+#setup.ilm.rollover_alias: "packetbeat"
+
+# Configure rollover index pattern.
+#setup.ilm.pattern: "{now/d}-000001"
+
+
+#============================== Kibana =====================================
 {% if (groups['kibana'] | length) > 0 %}
 {{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ kibana_port) }}
 {% endif %}
@@ -1178,7 +1214,7 @@ processors:
 #================================ Logging ======================================
 {{ elk_macros.beat_logging('packetbeat') }}
 
-#============================== Xpack Monitoring ===============================
+#============================== Xpack Monitoring =====================================
 {{ elk_macros.xpack_monitoring_elasticsearch(inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
 
 #================================ HTTP Endpoint ======================================
@@ -1200,3 +1236,8 @@ processors:
 
 # Enable or disable seccomp system call filtering on Linux. Default is enabled.
 #seccomp.enabled: true
+
+#================================= Migration ==================================
+
+# This allows to enable 6.7 migration aliases
+#migration.6_to_7.enabled: false

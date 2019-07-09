@@ -2,7 +2,7 @@
 # For more information on multiple pipelines, see the documentation:
 #   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html
 
-- pipeline.id: "elk_metrics_6x"
+- pipeline.id: "elk_metrics_7x"
   queue.type: "persisted"
   config.string: |
     input {
@@ -498,7 +498,7 @@
             hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
-            index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+            index => "%{[@metadata][beat]}-%{[@metadata][version]}"
           }
         } else if [@metadata][beat] {
           elasticsearch {
@@ -544,7 +544,7 @@
             hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
-            index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+            index => "%{[@metadata][beat]}-%{[@metadata][version]}"
           }
         } else if [@metadata][beat] {
           elasticsearch {

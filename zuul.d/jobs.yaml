@@ -27,6 +27,20 @@
       test_clustered_elk: false
 
 - job:
+    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic"
+    parent: base
+    nodeset: ubuntu-bionic
+    description: "Runs a gate test on the elk_metrics_7x project."
+    run: "elk_metrics_7x/tests/test.yml"
+    post-run: "elk_metrics_7x/tests/post-run.yml"
+    files:
+      - ^elk_metrics_7x/.*
+      - ^bootstrap-embedded-ansible/.*
+    vars:
+      osa_test_repo: "openstack/openstack-ansible-ops"
+      test_clustered_elk: false
+
+- job:
     name: "openstack-ansible-ops:elk_metrics_6x-centos-7"
     parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
     nodeset: centos-7

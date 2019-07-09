@@ -107,6 +107,9 @@ output.logstash:
   # Set gzip compression level.
   compression_level: 3
 
+  # Configure escaping HTML symbols in strings.
+  #escape_html: false
+
   # Optional maximum time to live for a connection to Logstash, after which the
   # connection will be re-established.  A value of `0s` (the default) will
   # disable this feature.
@@ -114,10 +117,10 @@ output.logstash:
   # Not yet supported for async connections (i.e. with the "pipelining" option set)
   #ttl: 30s
 
-  # Optional load balance the events between the Logstash hosts. Default is false.
+  # Optionally load-balance events between Logstash hosts. Default is false.
   loadbalance: true
 
-  # Number of batches to be sent asynchronously to logstash while processing
+  # Number of batches to be sent asynchronously to Logstash while processing
   # new batches.
   pipelining: 2
 
@@ -126,33 +129,30 @@ output.logstash:
   # if no error is encountered.
   slow_start: true
 
-  # The maximum number of events to bulk in a single Logstash request. The
-  # default is the number of cores multiplied by the number of threads,
-  # the resultant is then multiplied again by 128 which results in a the defined
-  # bulk max size. If the Beat sends single events, the events are collected
-  # into batches. If the Beat publishes a large batch of events (larger than
-  # the value specified by bulk_max_size), the batch is split. Specifying a
-  # larger batch size can improve performance by lowering the overhead of
-  # sending events. However big batch sizes can also increase processing times,
-  # which might result in API errors, killed connections, timed-out publishing
-  # requests, and, ultimately, lower throughput. Setting bulk_max_size to values
-  # less than or equal to 0 disables the splitting of batches. When splitting
-  # is disabled, the queue decides on the number of events to be contained in a
-  # batch.
-  bulk_max_size: {{ (processors | int) * 128 }}
+  # The number of seconds to wait before trying to reconnect to Logstash
+  # after a network error. After waiting backoff.init seconds, the Beat
+  # tries to reconnect. If the attempt fails, the backoff timer is increased
+  # exponentially up to backoff.max. After a successful connection, the backoff
+  # timer is reset. The default is 1s.
+  #backoff.init: 1s
 
-{% if named_index is defined %}
-  # Optional index name. The default index name is set to {{ named_index }}
+  # The maximum number of seconds to wait before attempting to connect to
+  # Logstash after a network error. The default is 60s.
+  #backoff.max: 60s
+
+  # Optional index name. The default index name is set to journalbeat
   # in all lowercase.
+{% if named_index is defined %}
   index: '{{ named_index }}'
 {% endif %}
+
   # SOCKS5 proxy server URL
   #proxy_url: socks5://user:password@socks5-server:2233
 
   # Resolve names locally when using a proxy server. Defaults to false.
   #proxy_use_local_resolver: false
 
-  # Enable SSL support. SSL is automatically enabled, if any SSL setting is set.
+  # Enable SSL support. SSL is automatically enabled if any SSL setting is set.
   #ssl.enabled: true
 
   # Configure SSL verification mode. If `none` is configured, all server hosts
@@ -161,7 +161,7 @@ output.logstash:
   # `full`.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
+  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
   # 1.2 are enabled.
   #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
 
@@ -172,7 +172,7 @@ output.logstash:
   # Certificate for SSL client authentication
   #ssl.certificate: "/etc/pki/client/cert.pem"
 
-  # Client Certificate Key
+  # Client certificate key
   #ssl.key: "/etc/pki/client/cert.key"
 
   # Optional passphrase for decrypting the Certificate Key.
@@ -181,12 +181,27 @@ output.logstash:
   # Configure cipher suites to be used for SSL connections
   #ssl.cipher_suites: []
 
-  # Configure curve types for ECDHE based cipher suites
+  # Configure curve types for ECDHE-based cipher suites
   #ssl.curve_types: []
 
   # Configure what types of renegotiation are supported. Valid options are
   # never, once, and freely. Default is never.
   #ssl.renegotiation: never
+
+  # The number of times to retry publishing an event after a publishing failure.
+  # After the specified number of retries, the events are typically dropped.
+  # Some Beats, such as Filebeat and Winlogbeat, ignore the max_retries setting
+  # and retry until all events are published.  Set max_retries to a value less
+  # than 0 to retry until all events are published. The default is 3.
+  #max_retries: 3
+
+  # The maximum number of events to bulk in a single Logstash request. The
+  # default is 2048.
+  bulk_max_size: {{ (processors | int) * 128 }}
+
+  # The number of seconds to wait for responses from the Logstash server before
+  # timing out. The default is 30s.
+  #timeout: 30s
 {%- endmacro %}
 
 {% macro setup_dashboards(beat_name) -%}
@@ -254,10 +269,19 @@ setup.template.pattern: "{{ beat_name }}-%{[beat.version]}-*"
 # Path to fields.yml file to generate the template
 setup.template.fields: "${path.config}/fields.yml"
 
+# Enable JSON template loading. If this is enabled, the fields.yml is ignored.
+#setup.template.json.enabled: false
+
+# Path to the JSON template file
+#setup.template.json.path: "${path.config}/template.json"
+
+# Name under which the template is stored in Elasticsearch
+#setup.template.json.name: ""
+
 # Overwrite existing template
 setup.template.overwrite: {{ host == data_nodes[0] }}
 
-{% set shards = ((data_nodes | length) * 3) | int %}
+{% set shards = 1 %}
 
 # Elasticsearch template settings
 setup.template.settings:
@@ -443,6 +467,17 @@ xpack.monitoring.elasticsearch:
   # The default is 50.
   bulk_max_size: {{ (processors | int) * 64 }}
 
+  # The number of seconds to wait before trying to reconnect to Elasticsearch
+  # after a network error. After waiting backoff.init seconds, the Beat
+  # tries to reconnect. If the attempt fails, the backoff timer is increased
+  # exponentially up to backoff.max. After a successful connection, the backoff
+  # timer is reset. The default is 1s.
+  #backoff.init: 1s
+
+  # The maximum number of seconds to wait before attempting to connect to
+  # Elasticsearch after a network error. The default is 60s.
+  #backoff.max: 60s
+
   # Configure http request timeout before failing an request to Elasticsearch.
   timeout: 120
 
@@ -481,4 +516,7 @@ xpack.monitoring.elasticsearch:
   # Configure what types of renegotiation are supported. Valid options are
   # never, once, and freely. Default is never.
   #ssl.renegotiation: never
+
+  #metrics.period: 10s
+  #state.period: 1m
 {%- endmacro %}

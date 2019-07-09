@@ -1,74 +1,102 @@
+# ======================== Elasticsearch Configuration =========================
+#
+# NOTE: Elasticsearch comes with reasonable defaults for most settings.
+#       Before you set out to tweak and tune the configuration, make sure you
+#       understand what are you trying to accomplish and the consequences.
+#
+# The primary way of configuring a node is via this file. This template lists
+# the most important settings you may want to configure for a production cluster.
+#
+# Please consult the documentation for further information on configuration options:
+# https://www.elastic.co/guide/en/elasticsearch/reference/index.html
+#
 # ---------------------------------- Cluster -----------------------------------
+#
+# Use a descriptive name for your cluster:
+#
 cluster.name: {{ cluster_name }}
+#
 # ------------------------------------ Node ------------------------------------
-node.name: {{ ansible_nodename }}
-# node.rack: r1
+#
+# Use a descriptive name for the node:
+#
+# ansible_nodename may be appropriate for your instance
+# If you're having issues with bootstrap skipping, check this.
+node.name: {{ inventory_hostname }}
+#
+# Add custom attributes to the node:
 # Set to true to enable machine learning on the node.
 node.ml: false
+#
 # ----------------------------------- Paths ------------------------------------
+#
 # Path to directory where to store the data (separate multiple locations by comma):
 #
-# path.data: /path/to/data
 path.data: /var/lib/elasticsearch
 #
 # Path to log files:
 #
-#
-# Path to log files:
-#
-# path.logs: /path/to/logs
-#path.logs: /var/lib/elasticsearch/logs/
 path.logs: /var/log/elasticsearch/
 #
 # Path to shared filesystem repos
 #
-# path.repo: ["/mount/backups", "/mount/longterm_backups"]
-#
-
 {% if elastic_shared_fs_repos is defined and elastic_shared_fs_repos|length > 0 %}
 path.repo: {{ elastic_shared_fs_repos | json_query("[*].path") | to_json }}
 {% endif %}
-
+#
 # Set the global default index store. More information on these settings can be
 # found here:
 # <https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-store.html>
+#
 index.store.type: niofs
-
+#
 # ----------------------------------- Memory -----------------------------------
 #
 # Lock the memory on startup:
 #
 bootstrap.memory_lock: {{ elastic_memory_lock }}
 #
-# Make sure that the `ES_HEAP_SIZE` environment variable is set to about half the memory
-# available on the system and that the owner of the process is allowed to use this limit.
+# Make sure that the heap size is set to about half the memory available
+# on the system and that the owner of the process is allowed to use this
+# limit.
 #
 # Elasticsearch performs poorly when the system is swapping the memory.
 #
 # ---------------------------------- Network -----------------------------------
 #
 # Set the bind address to a specific IP (IPv4 or IPv6):
+#
 network.host: ["127.0.0.1", "{{ ansible_host }}", "{{ ansible_hostname }}"]
 {% if elasticsearch_publish_host is defined %}
 network.publish_host: "{{ elasticsearch_publish_host }}"
 {% endif %}
+#
 # Set a custom port for HTTP:
-
+#
 http.port: {{ elastic_port }}
+#
+# For more information, consult the network module documentation.
+#
 # --------------------------------- Discovery ----------------------------------
 #
-# Pass an initial list of hosts to perform discovery when new node is started:
+# Pass an initial list of hosts to perform discovery when this node is started:
 # The default list of hosts is ["127.0.0.1", "[::1]"]
 #
-# Node definitions can be seen here:
-#<https://www.elastic.co/guide/en/elasticsearch/reference/6.2/modules-node.html>
-discovery.zen.ping.unicast.hosts: {{ zen_nodes | to_json }}
-# Prevent the "split brain" by configuring the majority of nodes (total number of nodes / 2 + 1):
-discovery.zen.minimum_master_nodes: {{ elasticsearch_master_node_count | default(((master_node_count | int) // 2) + 1) }}
+discovery.seed_hosts: {{ zen_nodes | to_json }}
+#
+# Bootstrap the cluster using an initial set of master-eligible nodes:
+#
+cluster.initial_master_nodes: {{ master_nodes | to_json }}
+#
+# For more information, consult the discovery and cluster formation module documentation.
+#
 # The first set of nodes in the master_node_count are marked as such
+#
 node.master: {{ elasticsearch_node_master | default(master_node) }}
 # Every node in the master list and every other node after will be a data node
+#
 node.data: {{ elasticsearch_node_data | default(data_node) }}
+#
 # Ingest nodes can execute pre-processing pipelines. To override automatic
 # determination, the option `elasticsearch_node_ingest` can be defined as a
 # Boolean which will enable or disable ingest nodes. When using automatic
@@ -76,16 +104,14 @@ node.data: {{ elasticsearch_node_data | default(data_node) }}
 #
 # NOTE(cloudnull): The use of "search remote connect" will follow the enablement
 #                  of an ingest nodes.
+#
 {% if elasticsearch_node_ingest is defined %}
 node.ingest: {{ elasticsearch_node_ingest }}
-search.remote.connect: {{ elasticsearch_node_ingest }}
+cluster.remote.connect: {{ elasticsearch_node_ingest }}
 {% else %}
 node.ingest: {{ data_node }}
-search.remote.connect: {{ data_node }}
+cluster.remote.connect: {{ data_node }}
 {% endif %}
-
-# For more information, see the documentation at:
-# <http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-discovery.html>
 #
 # ---------------------------------- Gateway -----------------------------------
 #
@@ -93,14 +119,9 @@ search.remote.connect: {{ data_node }}
 #
 gateway.recover_after_nodes: {{ elasticsearch_master_node_count | default(((master_node_count | int) // 2) + 1) }}
 #
-# For more information, see the documentation at:
-# <http://www.elastic.co/guide/en/elasticsearch/reference/current/modules-gateway.html>
+# For more information, consult the gateway module documentation.
 #
 # ---------------------------------- Various -----------------------------------
-#
-# Disable starting multiple nodes on a single system:
-#
-# node.max_local_storage_nodes: 1
 #
 # Require explicit names when deleting indices:
 #
@@ -111,8 +132,6 @@ action.destructive_requires_name: true
 # Thread pool settings. For more on this see the documentation at:
 # <https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-threadpool.html>
 thread_pool:
-  index:
-    queue_size: {{ (processors | int) * 256 }}
   get:
     queue_size: {{ (processors | int) * 256 }}
   write:
@@ -139,8 +158,9 @@ indices.recovery.max_bytes_per_sec: {{ elasticserch_interface_speed }}mb
 
 # ---------------------------------- X-Pack ------------------------------------
 # X-Pack Monitoring
-# https://www.elastic.co/guide/en/elasticsearch/reference/6.3/monitoring-settings.html
+#
 xpack.monitoring.collection.enabled: true
 xpack.monitoring.collection.interval: 30s
 # Set to true to enable machine learning on the node.
 xpack.ml.enabled: false
+

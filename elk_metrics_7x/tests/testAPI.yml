@@ -17,7 +17,7 @@
   become: true
 
   environment:
-    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-7x-logs/ansible-elk-test.log"
 
   tasks:
     - name: Check for open TCP
@@ -36,7 +36,7 @@
   become: true
 
   environment:
-    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-7x-logs/ansible-elk-test.log"
 
   tasks:
     - name: Check http
@@ -69,7 +69,7 @@
   become: true
 
   environment:
-    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-7x-logs/ansible-elk-test.log"
 
   tasks:
     - name: Check http
@@ -96,7 +96,7 @@
   become: true
 
   environment:
-    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-7x-logs/ansible-elk-test.log"
 
   tasks:
     - name: Check http

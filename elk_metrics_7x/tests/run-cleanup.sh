@@ -18,7 +18,7 @@ set -e
 export TEST_DIR="$(readlink -f $(dirname ${0})/../../)"
 
 # Stop beat processes
-pushd "${TEST_DIR}/elk_metrics_6x"
+pushd "${TEST_DIR}/elk_metrics_7x"
   for i in $(ls -1 install*beat.yml); do
     LOWER_BEAT="$(echo "${i}" | tr '[:upper:]' '[:lower:]')"
     BEAT_PARTIAL="$(echo ${LOWER_BEAT} | awk -F'.' '{print $1}')"

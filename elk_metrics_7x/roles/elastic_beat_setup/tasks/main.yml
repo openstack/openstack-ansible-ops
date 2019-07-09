@@ -41,7 +41,11 @@
       sed -i 's@"id": "{{ elastic_beat_name }}\-\*",@"id": "{{ elastic_beat_name }}",@g' /usr/share/{{ elastic_beat_name }}/kibana/6/index-pattern/*.json
     {% endif %}
     {{ elastic_beat_name }} setup
-    {{ item }}
+    {% if elastic_beat_name == "heartbeat" and item == "--index-management" -%}
+      --template
+    {%- else -%}
+      {{ item }}
+    {%- endif %}
     {{ elastic_beat_setup_options }}
     -e -v
   with_items: "{{ elastic_setup_flags }}"
@@ -53,10 +57,10 @@
   delay: 5
   run_once: true
   when:
-    - ((ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] is undefined) or
+    - (((ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] is undefined) or
        (not (ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] | bool))) or
       ((elk_package_state | default('present')) == "latest") or
-      (elk_beat_setup | default(false) | bool)
+      (elk_beat_setup | default(false) | bool)) and not (elastic_beat_name == "heartbeat" and item == "--pipelines")
   tags:
     - setup
 

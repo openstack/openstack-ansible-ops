@@ -20,7 +20,7 @@
   tasks:
     - name: Copy logs back to the executor
       synchronize:
-        src: "/tmp/elk-metrics-6x-logs"
+        src: "/tmp/elk-metrics-7x-logs"
         dest: "{{ zuul.executor.log_root }}/"
         mode: pull
         rsync_opts:
