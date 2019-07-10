@@ -92,7 +92,7 @@ if [[ ${#BINDEP_PKGS} > 0 ]]; then
 fi
 
 # Install latest OSA supported Ansible version
-sudo pip install -r https://opendev.org/openstack/openstack-ansible-tests/src/branch/${OSA_DEPS_BRANCH}/test-ansible-deps.txt
+sudo pip install -r https://opendev.org/openstack/openstack-ansible-tests/raw/branch/${OSA_DEPS_BRANCH}/test-ansible-deps.txt
 
 # Get the latest OSA plugins
 # This is used to allow access from the MNAIO host to
