@@ -12,7 +12,7 @@ the elastic stack.
 
 **These playbooks require Ansible 2.5+.**
 
-Highlevel overview of the Elastic-Stack infrastructure these playbooks will
+Highlevel overview of the Elastic Stack infrastructure these playbooks will
 build and operate against.
 
 .. image:: assets/Elastic-Stack-Diagram.svg
@@ -98,7 +98,7 @@ Optional | add OSProfiler to an OpenStack-Ansible deployment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To initialize the `OSProfiler` module within openstack the following overrides
-can be applied to the to a user variables file. The hmac key needs to be defined
+can be applied to a user variables file. The hmac key needs to be defined
 consistently throughout the environment.
 
 Full example to initialize the `OSProfiler` modules throughout an
@@ -139,7 +139,7 @@ OpenStack-Ansible deployment.
     trove_config_overrides: *os_profiler
 
 
-If a deployer wishes to use multiple keys they can do so by with comma separated
+If a deployer wishes to use multiple keys they can do so by specifying a comma separated
 list.
 
 .. code-block:: yaml
@@ -150,7 +150,7 @@ list.
 
 
 To add the `OSProfiler` section to an exist set of overrides, the `yaml` section
-can be added or dynamcally appended to a given hash using `yaml` tags.
+can be added or dynamically appended to a given hash using `yaml` tags.
 
 .. code-block:: yaml
 
@@ -175,9 +175,9 @@ While the `osprofiler` and `Elasticsearch` libraries should be installed
 within all virtual environments by default, it's possible they're missing
 within a given deployment. To install these dependencies throughout the
 cluster without having to invoke a *repo-build* run the following *adhoc*
-Ansible command can by used.
+Ansible command.
 
-  The version of the Elasticsearch python library should match major version of
+  The version of the Elasticsearch python library should match the major version of
   of Elasticsearch being deployed within the environment.
 
 .. code-block:: bash
@@ -308,7 +308,7 @@ Deploying | The environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install master/data Elasticsearch nodes on the elastic-logstash containers,
-deploy logstash, deploy Kibana, and then deploy all of the service beats.
+deploy Logstash, deploy Kibana, and then deploy all of the service beats.
 
 .. code-block:: bash
 
@@ -341,11 +341,11 @@ at anytime.
 Architecture | Data flow
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This diagram outlines the data flow from within an Elastic-Stack deployment.
+This diagram outlines the data flow from within an Elastic Stack deployment.
 
 .. image:: assets/Elastic-dataflow.svg
     :scale: 50 %
-    :alt: Elastic-Stack Data Flow Diagram
+    :alt: Elastic Stack Data Flow Diagram
     :align: center
 
 Optional | Enable uwsgi stats
@@ -468,7 +468,7 @@ nodes have local access to the files.
 Optional | add Grafana visualizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See the grafana directory for more information on how to deploy grafana. Once
+See the grafana directory for more information on how to deploy grafana.
 When deploying grafana, source the variable file from ELK in order to
 automatically connect grafana to the Elasticsearch datastore and import
 dashboards. Including the variable file is as simple as adding
@@ -493,7 +493,7 @@ Optional | add kibana custom dashboard
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you want to use a custom dashboard directly on your kibana,
-you can run the playbook bellow. The dashboard uses filebeat to
+you can run the playbook below. The dashboard uses filebeat to
 collect the logs of your deployment.
 
 .. code-block:: bash
@@ -586,8 +586,8 @@ execution.
     ansible-playbook site.yml $USER_VARS -e 'elastic_retention_refresh="yes"'
 
 
-Trouble shooting
-----------------
+Troubleshooting
+---------------
 
 If everything goes bad, you can clean up with the following command
 
@@ -605,7 +605,7 @@ with at leasts 8GiB of RAM and 40GiB of storage on root. Running an `m1.medium`
 (openstack) flavor size is generally enough to get an environment online.
 
 To run the local functional tests execute the `run-tests.sh` script out of the
-tests directory. This will create a 4 node elasaticsearch cluster, 1 kibana node
+tests directory. This will create a 4 node elasticsearch cluster, 1 kibana node
 with an elasticsearch coordination process, and 1 APM node. The beats will be
 deployed to the environment as if this was a production installation.
 
@@ -622,7 +622,7 @@ To rerun the playbooks after a test build, source the `tests/manual-test.rc`
 file and follow the onscreen instructions.
 
 To clean-up a test environment and start from a bare server slate the
-`run-cleanup.sh` script can be used. This script is distructive and will purge
+`run-cleanup.sh` script can be used. This script is destructive and will purge
 all `elk_metrics_6x` related services within the local test environment.
 
 .. code-block:: bash
