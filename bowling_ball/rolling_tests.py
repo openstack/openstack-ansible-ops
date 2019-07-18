@@ -60,13 +60,13 @@ class ServiceTest(object):
     def configure_logger(self, logger, console_logging=False):
         """Configure a stream and file log for a given service
 
-        :param: service - name of service for log file.
-                generates `/var/log/{service_name}_query.log`
-        :param: logger - logger to be configure for the test.
-                Filename will be based on the test's `service_name`
-                property
-        :param: console_logging - flag controlling whether or not a console
-                logger is used
+        :param service: name of service for log file.
+                        generates `/var/log/{service_name}_query.log`
+        :param logger: logger to be configure for the test.
+                       Filename will be based on the test's `service_name`
+                       property
+        :param console_logging: flag controlling whether or not a console
+                                logger is used
         """
         logger.setLevel(logging.INFO)
         filename = '/var/log/{}_rolling.log'.format(self.service_name)
@@ -103,10 +103,10 @@ class ServiceTest(object):
         This applies to high level concepts like 'flavors', 'networks',
         'subnets', etc.
 
-        :params: service - an openstack service corresponding to the OpenStack
-            SDK module used, such as 'compute', 'network', etc.
-        :param: name - name of a type of object, such as a 'network',
-            'server', 'volume', etc owned by an OpenStack service
+        :params service: an openstack service corresponding to the OpenStack
+                         SDK module used, such as 'compute', 'network', etc.
+        :param name: name of a type of object, such as a 'network',
+                     'server', 'volume', etc owned by an OpenStack service
         """
 
         objs = [obj for obj in getattr(getattr(self.conn, service), name)()]
@@ -253,8 +253,8 @@ class TestRunner(object):
         Execution can be ended by sending SIGINT or SIGTERM and the running
         test will finish.
 
-        :param: test - on object that performs some action
-                against an OpenStack service API.
+        :param test: on object that performs some action
+                     against an OpenStack service API.
         """
         disconnected = None
         while True:
