@@ -1,0 +1,112 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Ensure beat is installed
+  package:
+    name: "{{ filebeat_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  when:
+    - ansible_architecture == 'x86_64'
+  notify:
+    - Enable and restart filebeat
+  tags:
+    - package_install
+
+- name: Ensure beat is installed (aarch64)
+  apt:
+    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/filebeat-6.5.0-arm64.deb'
+  when:
+    - ansible_pkg_mgr == 'apt'
+    - ansible_architecture == 'aarch64'
+  notify:
+    - Enable and restart filebeat
+  tags:
+    - package_install
+
+- name: Create filebeat systemd service config dir
+  file:
+    path: "/etc/systemd/system/filebeat.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "/etc/systemd/system/filebeat.service.d/{{ item.dest }}"
+    mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "filebeat-overrides.conf"
+  notify:
+    - Enable and restart filebeat
+
+- name: Drop Filebeat conf file
+  template:
+    src: "filebeat.yml.j2"
+    dest: "/etc/filebeat/filebeat.yml"
+  notify:
+    - Enable and restart filebeat
+
+- name: Run the beat setup role
+  include_role:
+    name: elastic_beat_setup
+  when:
+    - (groups['kibana'] | length) > 0
+  vars:
+    elastic_beat_name: "filebeat"
+
+- name: Force beat handlers
+  meta: flush_handlers
+
+- name: set filebeat service state (upstart)
+  service:
+    name: "filebeat"
+    state: "{{ filebeat_service_state }}"
+    enabled: "{{ filebeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - filebeat_service_state in ['started', 'stopped']
+
+- name: set filebeat service state (systemd)
+  systemd:
+    name: "filebeat"
+    state: "{{ filebeat_service_state }}"
+    enabled: "{{ filebeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - filebeat_service_state in ['started', 'stopped']

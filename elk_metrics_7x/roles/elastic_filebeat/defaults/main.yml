@@ -1,0 +1,284 @@
+---
+# Copyright 2018, Vexxhost, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+filebeat_service_state: restarted
+filebeat_oslo_log_multiline_config:
+  pattern: '^[0-9-]{10} +[0-9:\.]+ +[0-9]+ +[A-Z]+ +[A-Za-z0-9\._]+ \[|Traceback'
+  negate: true
+  match: after
+filebeat_prospectors:
+  - type: log
+    enabled: "{{ filebeat_repo_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*repo_container*/apt-cacher-ng/apt-cacher.*
+      - /openstack/log/*repo_container*/pypiserver/*.log
+      - /openstack/log/*repo_container*/rsyncd.log
+    tags:
+      - infrastructure
+      - repo-server
+  - type: log
+    enabled: "{{ filebeat_haproxy_enabled | default(true) }}"
+    paths:
+      - /var/log/haproxy/*.log
+    tags:
+      - infrastructure
+      - haproxy
+  - type: log
+    enabled: "{{ filebeat_rabbitmq_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*rabbit*/rabbitmq/*.log
+      - /openstack/log/*rabbit*/rabbitmq/log/*.log
+      - /var/log/rabbitmq/*.log
+      - /var/log/rabbitmq/log/*.log
+    multiline:
+      pattern: '^='
+      negate: true
+      match: after
+    tags:
+      - infrastructure
+      - rabbitmq
+  - type: log
+    enabled: "{{ filebeat_ceph_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*ceph*/ceph/ceph-mon.*.log
+      - /var/log/ceph/ceph-mon.*.log
+    tags:
+      - infrastructure
+      - ceph
+      - ceph-mon
+  - type: log
+    enabled: "{{ filebeat_ceph_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*ceph*/ceph/ceph-mgr.*.log
+      - /var/log/ceph/ceph-mgr.*.log
+    tags:
+      - infrastructure
+      - ceph
+      - ceph-mgr
+  - type: log
+    enabled: "{{ filebeat_ceph_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*ceph*/ceph/ceph-osd.*.log
+      - /var/log/ceph-osd.*.log
+    tags:
+      - infrastructure
+      - ceph
+      - ceph-osd
+  - type: log
+    enabled: "{{ filebeat_keystone_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*keystone*/keystone/keystone.log
+      - /var/log/keystone/keystone.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - keystone
+  # NOTE(mnaser): Barbican ships to Journal
+  - type: log
+    enabled: "{{ filebeat_glance_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*glance*/glance/*.log
+      - /var/log/glance/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - glance
+  # NOTE(mnaser): Cinder ships to journal
+  - type: log
+    enabled: "{{ filebeat_nova_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*nova*/nova/*.log
+      - /var/log/nova/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - nova
+  - type: log
+    enabled: "{{ filebeat_neutron_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*neutron*/neutron/*.log
+      - /var/log/neutron/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - neutron
+  - type: log
+    enabled: "{{ filebeat_heat_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*heat*/heat/*.log
+      - /var/log/heat/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - heat
+  - type: log
+    enabled: "{{ filebeat_designate_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*designate*/designate/*.log
+      - /var/log/designate/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - designate
+  - type: log
+    enabled: "{{ filebeat_swift_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*swift*/account*.log
+      - /var/log/swift/account*.log
+    multiline:
+      pattern: '^[A-Za-z]+[[:space:]]* +[0-9]{1,2} +[0-9:\.]+ +[A-Za-z0-9-]+ container-replicator: +[A-Za-z0-9-\ ]+'
+      negate: false
+      match: after
+    tags:
+      - openstack
+      - swift
+      - swift-account
+  - type: log
+    enabled: "{{ filebeat_swift_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*swift*/container*.log
+      - /var/log/swift/container*.log
+    multiline:
+      pattern: '^[A-Za-z]+[[:space:]]* +[0-9]{1,2} +[0-9:\.]+ +[A-Za-z0-9-]+ account-replicator: +[A-Za-z0-9-\ ]+'
+      negate: false
+      match: after
+    tags:
+      - openstack
+      - swift
+      - swift-container
+  - type: log
+    enabled: "{{ filebeat_swift_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*swift*/object*.log
+      - /var/log/swift/object*.log
+    multiline:
+      pattern: '^[A-Za-z]+[[:space:]]* +[0-9]{1,2} +[0-9:\.]+ +[A-Za-z0-9-]+ object-replicator: +[A-Za-z0-9-\ ]+'
+      negate: false
+      match: after
+    tags:
+      - openstack
+      - swift
+      - swift-object
+  - type: log
+    enabled: "{{ filebeat_swift_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*swift*/proxy*.log
+      - /var/log/swift/proxy*.log
+    tags:
+      - openstack
+      - swift
+      - swift-proxy
+  - type: log
+    enabled: "{{ filebeat_gnocchi_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*gnocchi*/gnocchi/*.log
+      - /var/log/gnocchi/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - gnocchi
+  - type: log
+    enabled: "{{ filebeat_ceilometer_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*ceilometer*/ceilometer/*.log
+      - /var/log/ceilometer/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - ceilometer
+  - type: log
+    enabled: "{{ filebeat_aodh_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*aodh*/aodh/*.log
+      - /var/log/aodh/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - aodh
+  - type: log
+    enabled: "{{ filebeat_ironic_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*ironic*/ironic/*.log
+      - /var/log/ironic/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - ironic
+  - type: log
+    enabled: "{{ filebeat_magnum_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*magnum*/magnum/*.log
+      - /var/log/magnum/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - magnum
+  - type: log
+    enabled: "{{ filebeat_trove_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*trove*/trove/*.log
+      - /var/log/trove/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - trove
+  - type: log
+    enabled: "{{ filebeat_sahara_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*sahara*/sahara/*.log
+      - /var/log/sahara/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - sahara
+  - type: log
+    enabled: "{{ filebeat_octavia_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*octavia*/octavia/*.log
+      - /var/log/octavia/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - octavia
+  - type: log
+    enabled: "{{ filebeat_tacker_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*tacker*/tacker/*.log
+      - /var/log/tacker/*.log
+    multiline: "{{ filebeat_oslo_log_multiline_config }}"
+    tags:
+      - openstack
+      - tacker
+  - type: log
+    enabled: "{{ filebeat_system_enabled | default(true) }}"
+    paths:
+      - /openstack/log/ansible-logging/*.log
+      - /var/log/*.log
+      - /var/log/libvirt/*.log
+      - /var/log/libvirt/*/*.log
+      - /var/log/lxc/*.log
+    tags:
+      - system
+  - type: log
+    enabled: "{{ filebeat_logging_enabled | default(true) }}"
+    paths:
+      - /openstack/log/*/beats/*.log
+      - /openstack/log/*/curator/curator
+      - /openstack/log/*/elasticsearch/*.log
+      - /var/log/beats/*.log
+      - /var/log/curator/curator
+      - /var/log/elasticsearch/*.log
+    tags:
+      - beats

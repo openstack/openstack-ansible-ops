@@ -1,0 +1,101 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Refresh kibana index-pattern
+  hosts: "kibana[0]"
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  tasks:
+    - name: Get index fields
+      uri:
+        url: "http://127.0.0.1:{{ kibana_port }}/api/saved_objects/_bulk_get"
+        method: POST
+        body:
+          - id: "{{ index_pattern }}"
+            type: "index-pattern"
+        status_code: 200,404
+        body_format: json
+        return_content: true
+        headers:
+          Content-Type: "application/json"
+          kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+      register: index_fields_return
+      until: index_fields_return is success
+      retries: 6
+      delay: 30
+      run_once: true
+
+    - name: Get index fields format
+      uri:
+        url: >-
+          http://127.0.0.1:{{ kibana_port }}/api/index_patterns/_fields_for_wildcard?pattern={{ index_pattern }}&meta_fields=["_source","_id","_type","_index","_score"]
+        method: GET
+        status_code: 200,404
+        return_content: true
+        headers:
+          Content-Type: "application/json"
+          kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+      register: index_fields_format_return
+      until: index_fields_format_return is success
+      retries: 6
+      delay: 30
+      run_once: true
+
+    - name: Refresh fields block
+      block:
+        - name: Set index-pattern refresh fact attributes
+          set_fact:
+            attributes: "{{ index_fields_return['json']['saved_objects'][0]['attributes'] }}"
+
+        - name: Set index-refresh fact
+          set_fact:
+            index_refresh_fact:
+              attributes:
+                fieldFormatMap: "{{ attributes['fieldFormatMap'] | string }}"
+                timeFieldName: "{{ attributes['timeFieldName'] }}"
+                title: "{{ attributes['title'] }}"
+                fields: "{{ index_fields_format_return['content'] | string }}"
+
+        - name: Put index fields
+          uri:
+            url: "http://127.0.0.1:{{ kibana_port }}/api/saved_objects/index-pattern/{{ index_pattern }}"
+            method: PUT
+            body: "{{ index_refresh_fact }}"
+            status_code: 200
+            body_format: json
+            timeout: 120
+            headers:
+              Content-Type: "application/json"
+              kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+          register: index_fields_return
+          until: index_fields_return is success
+          retries: 6
+          delay: 30
+          run_once: true
+      rescue:
+        - name: Notify deployer
+          debug:
+            msg: >-
+              Index pattern refresh was not possible at this time. Either there are no dashboards
+              loaded or the index being refreshed does not exist. While the task failed, this is
+              not a fatal error, so the play has been rescued.
+          run_once: true
+      when:
+        - index_fields_return.status == 200
+        - index_fields_format_return.status == 200

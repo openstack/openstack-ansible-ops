@@ -1,0 +1,86 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Install Kibana Dashboards
+  hosts: "elastic-logstash"
+  become: true
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  vars:
+    distro_packages:
+      zypper:
+        - nodejs6
+      apt:
+        - nodejs
+
+  tasks:
+    - name: Add nodejs 6.x source
+      shell: "curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -"
+      when:
+        - ansible_pkg_mgr == 'apt'
+        - ossec_nodejs_repo is not defined
+
+    - name: Manual nodejs installation
+      block:
+        - name: Add nodejs apt key
+          apt_key:
+            url: "{{ ossec_nodejs_repo.key_url }}"
+            state: "present"
+          register: _apt_task
+          until: _apt_task is success
+          retries: 3
+          delay: 2
+
+        - name: add nodejs repo to apt sources list
+          apt_repository:
+            repo: "{{ ossec_nodejs_repo.repo }}"
+            state: "{{ ossec_nodejs_repo.state }}"
+            filename: "{{ ossec_nodejs_repo.filename | default(omit) }}"
+          register: _apt_task
+          until: _apt_task is success
+          retries: 3
+          delay: 2
+      when:
+        - ansible_pkg_mgr == 'apt'
+        - ossec_nodejs_repo is defined
+
+    - name: Install nodejs
+      package:
+        name: "{{ distro_packages[ansible_pkg_mgr] }}"
+        state: "{{ elk_package_state | default('present') }}"
+        update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+      register: _pkg_task
+      until: _pkg_task is success
+      retries: 3
+      delay: 2
+
+    - name: Install elasticdump
+      npm:
+        name: elasticdump
+        path: /opt/elasticdump
+        state: "present"
+
+    - name: Copy openstack dashboard json template to /tmp dir
+      template:
+        src: templates/openstack-log-dashboard.json
+        dest: /tmp/openstack-log-dashboard.json
+      run_once: yes
+
+    - name: Upload Custom Openstack Log Dashboard
+      shell: "/opt/elasticdump/node_modules/elasticdump/bin/elasticdump --input=/tmp/openstack-log-dashboard.json --output={{ kibana_index_on_elasticsearch }} --type=data"
+      environment:
+        no_proxy: "{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }}"
+      run_once: yes

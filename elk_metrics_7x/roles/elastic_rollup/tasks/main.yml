@@ -1,0 +1,106 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Get rollup job
+  uri:
+    url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}"
+    method: GET
+  register: check_rollup
+  environment:
+    no_proxy: "{{ coordination_nodes[0].split(':')[0] }}"
+  until: check_rollup is success
+  retries: 3
+  delay: 5
+  run_once: true
+
+- name: Check for existing rollup job
+  debug:
+    msg: >-
+      An existing rollup job was found for {{ index_name }}. In order to
+      re-create this rollup job the old job will need to be purged. If you're
+      OK with the old rollup job being purged, add the following option
+      `elastic_allow_rollup_purge=yes` to the command line and rerun the
+      playbook.
+  run_once: true
+  when:
+    - check_rollup['json']['jobs'] | length > 0
+    - not elastic_allow_rollup_purge | bool
+
+- name: Create rollup block
+  block:
+    - name: Set min retention days fact
+      set_fact:
+        min_days_until_rollup: |-
+          {% set index_retention = [] %}
+          {% for item in ansible_play_hosts %}
+          {%   set _ = index_retention.append(ansible_local['elastic']['retention']['elastic_' + index_name + '_retention'] | int) %}
+          {% endfor %}
+          {{ index_retention | min }}
+      run_once: true
+
+    - name: Set retention days fact
+      set_fact:
+        days_until_rollup: "{{ ((min_days_until_rollup | int) > 1) | ternary(((min_days_until_rollup | int) - 1), min_days_until_rollup) }}"
+      run_once: true
+
+    - name: Create rollup job
+      uri:
+        url: "{{ item.url }}"
+        method: "{{ item.method }}"
+        body: "{{ item.index_options | to_json }}"
+        status_code: "{{ item.status_code }}"
+        body_format: json
+      register: elk_indexes
+      environment:
+        no_proxy: "{{ coordination_nodes[0].split(':')[0] }}"
+      until: elk_indexes is success
+      retries: 5
+      delay: 5
+      when:
+        - (days_until_rollup | int) > 0
+      with_items:
+        - url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}/_stop"
+          method: POST
+          status_code: 200,404
+          index_options: {}
+        - url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}"
+          method: DELETE
+          status_code: 200,404
+          index_options: {}
+        - url: "http://{{ coordination_nodes[0] }}/rollup_{{ index_name }}"
+          method: DELETE
+          status_code: 200,404
+          index_options: {}
+        - url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}"
+          method: PUT
+          status_code: 200,400
+          index_options:
+            index_pattern: "{{ index_name }}-*"
+            rollup_index: "rollup_{{ index_name }}"
+            cron: "*/30 * * * * ?"
+            page_size: 1000
+            groups:
+              date_histogram:
+                field: "@timestamp"
+                interval: "1h"
+                delay: "{{ days_until_rollup }}d"
+        - url: "http://{{ coordination_nodes[0] }}/_xpack/rollup/job/rollup_{{ index_name }}/_start"
+          method: POST
+          status_code: 200,404
+          index_options: {}
+      run_once: true
+  when:
+    - check_rollup['json']['jobs'] | length < 1 or
+      elastic_allow_rollup_purge | bool

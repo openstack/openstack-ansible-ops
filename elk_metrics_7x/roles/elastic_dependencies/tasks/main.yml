@@ -1,0 +1,238 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Check for service_name var
+  fail:
+    msg: >-
+      The required variable [ service_name ] is undefined.
+  when:
+    - service_name is undefined
+
+- name: Check for service_owner var
+  fail:
+    msg: >-
+      The required variable [ service_owner ] is undefined.
+  when:
+    - service_owner is undefined
+
+- name: Check for service_group var
+  fail:
+    msg: >-
+      The required variable [ service_group ] is undefined.
+  when:
+    - service_group is undefined
+
+- name: Load service variables
+  include_vars: "vars_{{ service_name }}.yml"
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Set elastic log rotate path
+  set_fact:
+    elastic_log_rotate_path: "/var/log/{{ service_name }}"
+
+- name: Configure systcl vm.max_map_count=524288 on elastic hosts
+  sysctl:
+    name: "vm.max_map_count"
+    value: "524288"
+    state: "present"
+    reload: "yes"
+    sysctl_file: /etc/sysctl.d/99-elasticsearch.conf
+  delegate_to: "{{ physical_host }}"
+  tags:
+    - sysctl
+
+- name: Configure systcl fs.inotify.max_user_watches=1048576 on elastic hosts
+  sysctl:
+    name: "fs.inotify.max_user_watches"
+    value: "1048576"
+    state: "present"
+    reload: "yes"
+    sysctl_file: /etc/sysctl.d/99-elasticsearch.conf
+  delegate_to: "{{ physical_host }}"
+  tags:
+    - sysctl
+
+- name: Create the system group
+  group:
+    name: "{{ service_group }}"
+    gid: "{{ service_group_gid | default(omit) }}"
+    state: "present"
+    system: "yes"
+
+- name: Create the system user
+  block:
+    - name: Create the system user
+      user:
+        name: "{{ service_owner }}"
+        uid: "{{ service_owner_uid | default(omit) }}"
+        group: "{{ service_group }}"
+        shell: "/bin/false"
+        system: "yes"
+        createhome: "no"
+        home: "/var/lib/{{ service_name }}"
+  rescue:
+    - name: Check for system user
+      debug:
+        msg: >-
+          The general user creation task failed. This typically means that the
+          user already exists and something in the user configuration provided
+          is changing the system user in way that is simply not possible at this
+          time. The playbooks will now simply ensure the user exists and before
+          carrying on to the next task. While it's not required, it may be
+          benificial to schedule a maintenance where the elastic services are
+          stopped.
+
+    - name: Ensure the system user exists
+      user:
+        name: "{{ service_owner }}"
+        group: "{{ service_group }}"
+
+- name: Physical host block
+  block:
+    - name: Check for directory
+      stat:
+        path: "/var/lib/{{ service_name }}"
+      register: service_dir
+
+    - name: Check for data directory
+      debug:
+        msg: >-
+          The service data directory [ /var/lib/{{ service_name }} ] already
+          exists. To ensure no data is lost, the linked directory path to
+          [ /openstack/{{ inventory_hostname }}/{{ service_name }} ] will not be
+          created for this host.
+      when:
+        - service_dir.stat.isdir is defined and
+          service_dir.stat.isdir
+
+    - name: Ensure service directories data-path exists
+      file:
+        path: "/openstack/{{ inventory_hostname }}/{{ service_name }}"
+        state: "directory"
+        owner: "{{ service_owner }}"
+        group: "{{ service_group }}"
+      when:
+        - not (service_dir.stat.exists | bool)
+
+    - name: Ensure data link exists
+      file:
+        src: "/openstack/{{ inventory_hostname }}/{{ service_name }}"
+        dest: "/var/lib/{{ service_name }}"
+        owner: "{{ service_owner }}"
+        group: "{{ service_group }}"
+        state: link
+      when:
+        - not (service_dir.stat.exists | bool)
+  when:
+    - physical_host == inventory_hostname
+
+- name: Container block
+  block:
+    - name: Ensure service directories data-path exists
+      file:
+        path: "/openstack/{{ inventory_hostname }}/{{ service_name }}"
+        state: "directory"
+      delegate_to: "{{ physical_host }}"
+
+    - name: Pull lxc version
+      command: "lxc-ls --version"
+      delegate_to: "{{ physical_host }}"
+      changed_when: false
+      register: lxc_version
+      tags:
+        - skip_ansible_lint
+
+    - name: Enable or Disable lxc three syntax
+      set_fact:
+        lxc_major_version: "{{ lxc_version.stdout.split('.')[0] }}"
+
+    - name: elasticsearch datapath bind mount
+      lxc_container:
+        name: "{{ inventory_hostname }}"
+        container_command: |
+          [[ ! -d "/var/lib/{{ service_name }}" ]] && mkdir -p "/var/lib/{{ service_name }}"
+        container_config:
+          - "{{ elastic_lxc_template_config[(lxc_major_version | int)]['mount'] }}=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
+          - "{{ elastic_lxc_template_config[(lxc_major_version | int)]['aa_profile'] }}=unconfined"
+      delegate_to: "{{ physical_host }}"
+  when:
+    - container_tech | default('lxc') == 'lxc'
+    - physical_host != inventory_hostname
+
+- name: Ensure Java is installed
+  package:
+    name: "{{ elastic_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    install_recommends: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  tags:
+    - package_install
+
+- name: Set java alternatives
+  block:
+    - name: Get java version alternantive
+      shell: >-
+        update-alternatives --query java | awk -F':' '/{{ elastic_java_version }}/ && /Alternative/ {print $2}'
+      register: java_alternatives
+      changed_when: false
+
+    - name: Set java version alternantive
+      alternatives:
+        name: java
+        path: "{{ java_alternatives.stdout.strip() }}"
+  when:
+    - (ansible_os_family | lower) == 'debian'
+
+- name: Ensure service directories exists
+  file:
+    path: "/etc/{{ service_name }}"
+    state: "directory"
+    owner: "{{ service_owner }}"
+    group: "{{ service_group }}"
+
+- name: Drop logrotate conf file(s)
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "templates/logrotate.j2"
+      dest: "/etc/logrotate.d/{{ service_name }}"
+
+- name: Ensure host can resolve itself
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^{{ item }}'
+    line: '{{ item }} {{ ansible_hostname }} {{ ansible_fqdn }}'
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - "127.0.2.1"
+    - "{{ ansible_host }}"

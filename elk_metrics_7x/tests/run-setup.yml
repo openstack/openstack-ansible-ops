@@ -1,0 +1,53 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Zuul facts
+  hosts: "all"
+  tasks:
+    - name: Set zuul fact
+      set_fact:
+        zuul:
+          project:
+            canonical_name: "openstack-ansible-ops"
+            short_name: "ops"
+          executor:
+            log_root: "{{ ansible_env.HOME }}/elk-test-logs"
+      when:
+        - zuul is not defined
+
+    - name: Print zuul fact
+      debug: var=zuul
+
+    - name: Set current test repo (cross-repo)
+      set_fact:
+        current_test_repo: "git.openstack.org/{{ osa_test_repo }}"
+      when:
+        - osa_test_repo is defined
+
+    - name: Set current test repo (non-cross-repo)
+      set_fact:
+        current_test_repo: "{{ zuul.project.canonical_name }}"
+      when:
+        - osa_test_repo is not defined
+
+    - name: Set inventory for test
+      set_fact:
+        container_inventory: "{{ test_clustered_elk | default(false) | bool }}"
+
+  post_tasks:
+    - name: Ensure the log directory exists
+      file:
+        path: "/tmp/elk-metrics-6x-logs"
+        state: directory

@@ -1,0 +1,10 @@
+APACHE_ERROR_TIMESTAMP %{DAY} %{MONTH} %{MONTHDAY} %{TIME} %{YEAR}
+NGINX_ERROR_TIMESTAMP %{YEAR}/%{MONTHNUM}/%{MONTHDAY} %{TIME}
+NGINX_TIMESTAMP %{YEAR}/%{MONTHNUM}/%{MONTHDAY}:%{TIME}
+
+SWIFTPROXY_DATE %{MONTHDAY}/%{MONTH}/%{YEAR}/%{HOUR}/%{MINUTE}/%{SECOND}
+
+SWIFTPROXY_ACCESS %{DATA:clientip} %{DATA:serverip} %{SWIFTPROXY_DATE:timestamp} %{WORD:verb} %{NOTSPACE:request} HTTP/%{NUMBER:httpversion} %{NUMBER:response} %{DATA:referrer} %{DATA:agent} %{DATA:swift_auth_token} %{DATA:swift_request_bytes} %{DATA:swift_response_bytes} %{DATA:swift_etag} %{DATA:swift_txn} %{DATA:swift_logged_headers} %{BASE10NUM:swift_trans_time}
+
+KEYSTONE_SUBSECOND_TIMESTAMP %{YEAR}-%{MONTHNUM}-%{MONTHDAY} %{TIME}
+STANDARD_TIMESTAMP %{YEAR}-%{MONTHNUM}-%{MONTHDAY} %{TIME}

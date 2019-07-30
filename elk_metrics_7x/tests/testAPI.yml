@@ -1,0 +1,123 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Test apm api
+  hosts: apm-server
+  gather_facts: false
+  become: true
+
+  environment:
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+
+  tasks:
+    - name: Check for open TCP
+      wait_for:
+        port: "{{ item.port }}"
+        host: "{{ item.host }}"
+        timeout: 120
+      with_items:
+        - port: 8200
+          host: 127.0.0.1
+
+
+- name: Test elasticsearch api
+  hosts: elastic-logstash
+  gather_facts: false
+  become: true
+
+  environment:
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+
+  tasks:
+    - name: Check http
+      uri:
+        url: http://127.0.0.1:{{ item.port }}{{ item.path }}
+        method: "{{ item.method }}"
+        status_code: 200
+      register: elk_test
+      until: elk_test is success
+      retries: 3
+      delay: 10
+      with_items:
+        - port: 9200
+          path: "/_nodes/stats"
+          method: "GET"
+
+    - name: Check for open TCP
+      wait_for:
+        port: "{{ item.port }}"
+        host: "{{ item.host }}"
+        timeout: 120
+      with_items:
+        - port: 9300
+          host: 127.0.0.1
+
+
+- name: Test kibana api
+  hosts: elastic-logstash
+  gather_facts: false
+  become: true
+
+  environment:
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+
+  tasks:
+    - name: Check http
+      uri:
+        url: http://127.0.0.1:{{ item.port }}{{ item.path }}
+        method: "{{ item.method }}"
+        status_code: 200
+      register: elk_test
+      until: elk_test is success
+      retries: 3
+      delay: 10
+      with_items:
+        - port: 5601
+          path: "/status"
+          method: "HEAD"
+        - port: 81
+          path: "/status"
+          method: "HEAD"
+
+
+- name: Test logstash api
+  hosts: elastic-logstash
+  gather_facts: false
+  become: true
+
+  environment:
+    ANSIBLE_LOG_PATH: "/tmp/elk-metrics-6x-logs/ansible-elk-test.log"
+
+  tasks:
+    - name: Check http
+      uri:
+        url: http://127.0.0.1:{{ item.port }}{{ item.path }}
+        method: "{{ item.method }}"
+        status_code: 200
+      register: elk_test
+      until: elk_test is success
+      retries: 3
+      delay: 10
+      with_items:
+        - port: 9600
+          path: "/_node"
+          method: "HEAD"
+
+    - name: Check for open TCP
+      wait_for:
+        port: "{{ item.port }}"
+        host: "{{ item.host }}"
+        timeout: 120
+      with_items:
+        - port: 5044
+          host: 127.0.0.1

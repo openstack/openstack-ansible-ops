@@ -1,0 +1,46 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Run the systemd service role
+  include_role:
+    name: systemd_service
+  vars:
+    systemd_service_enabled: "{{ ((elk_package_state | default('present')) != 'absent') | ternary(true, false) }}"
+    systemd_service_restart_changed: false
+    systemd_user_name: curator
+    systemd_group_name: curator
+    systemd_services:
+      - service_name: "curator"
+        execstarts:
+          - /opt/elasticsearch-curator/bin/curator
+            --config /var/lib/curator/curator.yml
+            /var/lib/curator/actions-age.yml
+        timer:
+          state: "started"
+          options:
+            OnBootSec: 30min
+            OnUnitActiveSec: 12h
+            Persistent: true
+      - service_name: "curator-size"
+        execstarts:
+          - /opt/elasticsearch-curator/bin/curator
+            --config /var/lib/curator/curator.yml
+            /var/lib/curator/actions-size.yml
+        timer:
+          state: "started"
+          options:
+            OnBootSec: 30min
+            OnUnitActiveSec: 1h
+            Persistent: true

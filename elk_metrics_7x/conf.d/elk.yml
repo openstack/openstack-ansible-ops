@@ -1,0 +1,27 @@
+# For the puposes of this example, the kibana nodes have been added to
+# different host machines that the logging nodes. The intention here
+# is to show that the different components can scale independently of
+# one another.
+kibana_hosts:
+  infra01:
+    ip: 172.22.8.24
+  infra02:
+    ip: 172.22.8.25
+  infra03:
+    ip: 172.22.8.26
+
+elastic-logstash_hosts:
+  logging01:
+    ip: 172.22.8.27
+  logging02:
+    ip: 172.22.8.28
+  logging03:
+    ip: 172.22.8.29
+
+apm-server_hosts:
+  logging01:
+    ip: 172.22.8.27
+  logging02:
+    ip: 172.22.8.28
+  logging03:
+    ip: 172.22.8.29

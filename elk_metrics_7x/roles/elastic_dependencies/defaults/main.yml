@@ -1,0 +1,46 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+## Adds option to set the UID/GID of a given service user.
+# service_group_gid: 5000
+# service_owner_uid: 5000
+
+#define this in host/group vars as needed to mount remote filesystems
+#set the client address as appropriate, eth1 assumes osa container mgmt network
+#mountpoints and server paths are just examples
+#elastic_shared_fs_repos:
+#  - fstype: nfs4
+#    src: "<nfs-server-ip>:/esbackup"
+#    opts: clientaddr="{{ ansible_eth1['ipv4']['address'] }}"
+#    path: "/elastic-backup"
+#    state: mounted
+
+# NOTE(cloudnull) - When the heap size for a given elastic node is graeter than
+#                   6GiB the G1 garbage collector can be enabled.
+elastic_g1gc_enabled: true
+
+elastic_lxc_template_config:
+  3:
+    aa_profile: lxc.apparmor.profile
+    mount: lxc.mount.entry
+  2:
+    aa_profile: lxc.aa_profile
+    mount: lxc.mount.entry
+
+# Set the elastic search heap size. If this option is undefined the value will
+# be derived automatically using 1/4 of the available RAM for logstash and 1/2
+# of the available RAM for elasticsearch. The value is expected to be in MiB.
+# elastic_heap_size_default: 10240  # type `int`
+
+# Set the friendly name of the version of java that will be used as the default.
+elastic_java_version: java-8

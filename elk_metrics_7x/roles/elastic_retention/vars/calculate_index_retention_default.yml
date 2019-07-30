@@ -1,0 +1,58 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Set available storage fact. This tasks the total amount of storage found
+# within the data nodes of the elasticsearch cluster and converts bytes to
+# megabytes.
+es_total_available_storage: "{{ ((es_storage_json['nodes'].values() | list) | map(attribute='fs.total.total_in_bytes') | list | sum) // 1024 // 1024 }}"
+
+# Set assumed buffer storage fact. This will result in 25% of the total
+# available storage.
+es_assumed_buffer_storage: "{{ ((es_total_available_storage | int) * 0.25) | round | int }}"
+
+# Set usable buffer storage fact(s). This is the toal storage minus the buffer.
+es_usable_buffer_storage: "{{ (es_total_available_storage | int) - (es_assumed_buffer_storage | int) }}"
+
+# This function will take the sum total of all hosts in the retention policy
+# after weighting. Once the policy is set the sum total will be carved up into
+# individual percentages of the total amount of usable storage after the buffer
+# is calculated.
+es_storage_per_index: |-
+  {%- set es_hash = {} %}
+  {%- set total_weight = (elastic_beat_retention_policy_hosts.values() | list | map(attribute='weight') | list | sum) %}
+  {%- set host_count = (elastic_beat_retention_policy_hosts.values() | list | map(attribute='hosts') | list | map('flatten') | list | length) %}
+  {%- set total_values = (total_weight | int) * (host_count | int) %}
+  {%- for key, value in elastic_beat_retention_policy_hosts.items() %}
+  {%-   set value_pct = (((value.weight | int) * (value.hosts | length)) / (total_values | int)) %}
+  {%-   set value_total = ((value_pct | float) * (es_usable_buffer_storage | int)) %}
+  {%-   set _ = es_hash.__setitem__(key, value_total | int) %}
+  {%- endfor %}
+  {{ es_hash }}
+
+# The assumed number of days an index will be retained is based on the size of
+# the given index. With the sizes all figured out in the function above this
+# function will divide each retention size be a constant of 1024 and the number
+# of hosts within a given collector segment.
+es_days_per_index: |-
+  {%- set es_hash = {} %}
+  {%- for key, value in elastic_beat_retention_policy_hosts.items() %}
+  {%-   if (es_storage_per_index[key] | int) > 0 %}
+  {%-     set value_days = ((es_storage_per_index[key] | int) // ((value.hosts | length) * 1024)) %}
+  {%-     set _ = es_hash.__setitem__(key, ((value_days | int) > 0) | ternary(value_days, 1) ) %}
+  {%-   else %}
+  {%-     set _ = es_hash.__setitem__(key, 1) %}
+  {%-   endif %}
+  {%- endfor %}
+  {{ es_hash }}

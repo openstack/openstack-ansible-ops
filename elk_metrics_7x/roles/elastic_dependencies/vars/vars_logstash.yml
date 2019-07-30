@@ -1,0 +1,17 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# The heap size is set using the a quarter of the total memory available with
+# a cap of 32GiB. If the total available memory is less than 32GiB a buffer of
+# 10% will be used to ensure the underlying system is not starved of memory.
+_elastic_heap_size_default: "{{ ((elastic_memory_lower_limit | int) > 30720) | ternary(30720, ((elastic_memory_lower_limit | int) - ((elastic_memory_lower_limit | int) * 0.1))) }}"

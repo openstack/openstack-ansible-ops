@@ -1,0 +1,63 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{% set action_items = [] -%}
+{# Delete index loop #}
+{% for key in (ansible_local['elastic']['retention']['elastic_beat_retention_policy_keys'] | from_yaml) -%}
+{%   set delete_indices = {} -%}
+{# Total retention size in gigabytes #}
+{%   set _index_size = ((ansible_local['elastic']['retention']['elastic_' + key + '_size'] | int) // 1024) -%}
+{%   set index_size = ((_index_size | int) > 0) | ternary(_index_size, 1) | int %}
+{%   set _ = delete_indices.update(
+   {
+    'action': 'delete_indices',
+    'description': 'Prune indices for ' + key + ' after index is > ' ~ index_size ~ 'gb',
+    'options': {
+      'ignore_empty_list': true,
+      'disable_action': false
+    }
+   }
+  )
+-%}
+{%   set filters = [] -%}
+{%   set _ = filters.append(
+   {
+    'filtertype': 'pattern',
+    'kind': 'prefix',
+    'value': key
+   }
+  )
+-%}
+{%   set _ = filters.append(
+   {
+    'filtertype': 'space',
+    'disk_space': index_size,
+    'use_age': true,
+    'source': 'creation_date'
+   }
+  )
+-%}
+{%   set _ = delete_indices.update({'filters': filters}) -%}
+{%   set _ = action_items.append(delete_indices) -%}
+{% endfor -%}
+
+{% set actions = {} -%}
+{% for action_item in action_items -%}
+{%   set _ = actions.update({loop.index: action_item}) -%}
+{% endfor -%}
+
+{# Render all actions #}
+{% set curator_actions = {'actions': actions} -%}
+{{ curator_actions | to_nice_yaml(indent=2) }}

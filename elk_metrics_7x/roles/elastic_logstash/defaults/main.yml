@@ -1,0 +1,102 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+temp_dir: /var/lib/logstash/tmp
+logstash_pipelines: "{{lookup('template', 'logstash-pipelines.yml.j2') }}"
+
+# Set processor cores fact
+q_storage: 1
+
+# Set logstash facts
+logstash_queue_size: "{{ ((((q_storage | int) >= 2) | ternary(q_storage, 2) | int) * 1024) // ((logstash_pipelines | from_yaml) | length) }}"
+elastic_log_rotate_path: "/var/log/logstash"
+
+# Enable direct syslog input into logstash. When this is enabled syslog messages
+# can be sent directly to logstash via TCP or UDP.
+logstash_syslog_input_enabled: false
+
+# The typical syslog port is 514 however that is not available to logstash
+# because it's a "privledged" port. For this reason 5140 is used as the default.
+# Changing this port to 514 will require overrides to the service files making
+# logstash run as root (not recommended).
+logstash_syslog_input_port: 5140
+
+# Protocol used when the syslog input is enabled. Modes are "tcp" or "udp".
+logstash_syslog_input_mode: udp
+
+logstash_beat_input_port: 5044
+logstash_deploy_filters: true
+
+## Logstash config showing a complete kafka setup using SSL for authentication.
+# logstash_kafka_options:
+#   codec: json
+#   topic_id: "elk_kafka"
+#   ssl_key_password: "{{ logstash_kafka_ssl_key_password }}"
+#   ssl_keystore_password: "{{ logstash_kafka_ssl_keystore_password }}"
+#   ssl_keystore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_keystore_location | basename }}"
+#   ssl_truststore_location: "/var/lib/logstash/{{ logstash_kafka_ssl_truststore_location | basename }}"
+#   ssl_truststore_password: "{{ logstash_kafka_ssl_truststore_password }}"
+#   bootstrap_servers:
+#     - server1.local:9092
+#     - server2.local:9092
+#     - server3.local:9092
+#   client_id: "elk_metrics_6x"
+#   compression_type: "gzip"
+#   security_protocol: "SSL"
+
+## The following variables are options that correspond to the
+## `logstash_kafka_options` variable.
+# logstash_kafka_ssl_key_password: "secrete"
+# logstash_kafka_ssl_keystore_password: "secrete"
+# logstash_kafka_ssl_truststore_password: "secrete"
+# logstash_kafka_ssl_keystore_location: "/root/kafka/keystore.jks"
+# logstash_kafka_ssl_truststore_location: "/root/kafka/truststore.jks"
+
+## Setup servers that read events from the Smart Connector directly. This
+## supports multiple entries in list format using the "host" and "port" for the
+## smart connector.
+# logstash_arcsight_smart_connectors:
+#   - host: 127.0.0.1
+#     port: 5000
+logstash_arcsight_smart_connectors: []
+
+## Setup servers to read events from the Eevnt Broker Stream. This
+## multiple entries in list format using the "host" and "port" for the
+## for the event brokers.
+# logstash_arcsight_event_brokers:
+#   - host: 127.0.0.1
+#     port: 5000
+logstash_arcsight_event_brokers: []
+
+## The logstash queue type can be set to "memory" or "persisted". If the queue
+## type is set to memory a ramdisk will be created limiting the in memory queue
+## to 50% of the JVM heap size. When this option is undefined the playbook will
+## detect the media type where the queue will exist. If the media type is
+## "rotational" in memory queues will be used.
+# logstash_queue_type:
+
+# Set the logstash search heap size. If this option is undefined the value will
+# be derived automatically using 1/4 of the available RAM for logstash and 1/2
+# of the available RAM for elasticsearch. The value is expected to be in MiB.
+# logstash_heap_size: 10240  # type `int`
+
+# Collectd ingestion options
+logstash_collectd_input_enabled: false
+logstash_collectd_port: 25826
+logstash_collectd_buffer_size: 1452
+# Security level can be ["Sign", "Encrypt"].
+logstash_collectd_security_level: Sign
+# To enable security the auth file is required.
+#logstash_collectd_authfile: /etc/collectd/passwd

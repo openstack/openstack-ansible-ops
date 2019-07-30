@@ -1,0 +1,378 @@
+---
+elastic_memory_lower_limit: "{{ (((ansible_memtotal_mb | int) * 0.15) // 1) | int }}"
+elastic_memory_upper_limit: "{{ (((ansible_memtotal_mb | int) * 0.35) // 1) | int }}"
+
+# Option to set persistent queue storage in gigabytes
+q_storage: "{{ (ansible_processor_count | int) * (ansible_processor_threads_per_core | int) * 2 }}"
+
+apm_port: 8200
+elastic_port: 9200
+elastic_hap_port: 9201
+elastic_create_rollup: false
+logstash_beat_input_port: 5044
+logstash_syslog_input_port: 5140
+logstash_syslog_input_mode: udp
+logstash_collectd_input_enabled: false
+logstash_collectd_port: 25826
+logstash_collectd_buffer_size: 1452
+# Security level can be ["Sign", "Encrypt"].
+logstash_collectd_security_level: Sign
+# To enable security the auth file is required.
+#logstash_collectd_authfile: /etc/collectd/passwd
+kibana_port: 5601
+kibana_nginx_port: 81
+
+# This is the URL external services can use to communicate with the
+# elasticsearch cluster.
+elastic_vip_url: "http://127.0.0.1:19200"
+
+# Elasticsearch can query the itself and loadbalance requests across the cluster.
+# This function is automatically enabled on non-data nodes however this setting
+# can be used to override the default behaviour.
+#elastic_sniffing_enabled: true
+
+# Beat options
+heartbeat_services:
+  - group: "{{ groups['galera_all'] | default([]) }}"
+    name: galera
+    ports:
+      - 9200
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['galera_all'] | default([]) }}"
+    name: galera
+    ports:
+      - 3306
+    type: tcp
+  - group: "{{ groups['repo_all'] | default([]) }}"
+    name: repo-git
+    ports:
+      - 9418
+    type: tcp
+  - group: "{{ groups['repo_all'] | default([]) }}"
+    name: repo-server
+    ports:
+      - 8181
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['repo_all'] | default([]) }}"
+    name: repo-acng
+    ports:
+      - 3142
+    type: http
+    method: HEAD
+    path: "/acng-report.html"
+  - group: "{{ groups['glance_api'] | default([]) }}"
+    name: glance-api
+    ports:
+      - 9292
+    type: http
+    method: HEAD
+    path: "/healthcheck"
+  - group: "{{ groups['glance_api'] | default([]) }}"
+    name: glance-registry
+    ports:
+      - 9191
+    type: http
+    method: HEAD
+    path: "/healthcheck"
+  - group: "{{ groups['gnocchi_all'] | default([]) }}"
+    name: gnocchi-api
+    ports:
+      - 8041
+    type: http
+    method: HEAD
+    path: "/healthcheck"
+  - group: "{{ groups['heat_api_cfn'] | default([]) }}"
+    name: heat-cfn-api
+    ports:
+      - 8000
+    type: http
+    method: HEAD
+    path: "/"
+    check_response:
+      status: 300
+  - group: "{{ groups['heat_api'] | default([]) }}"
+    name: heat-api
+    ports:
+      - 8004
+    type: http
+    method: HEAD
+    path: "/"
+    check_response:
+      status: 300
+  - group: "{{ groups['keystone_all'] | default([]) }}"
+    name: keystone-api
+    ports:
+      - 5000
+    type: http
+    method: HEAD
+    path: "/"
+    check_response:
+      status: 300
+  - group: "{{ groups['neutron_server'] | default([]) }}"
+    name: neutron-server
+    ports:
+      - 9696
+    type: http
+    method: GET
+    path: "/"
+  - group: "{{ groups['nova_api_metadata'] | default([]) }}"
+    name: nova-api-metadata
+    ports:
+      - 8775
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['nova_api_os_compute'] | default([]) }}"
+    name: nova-api-compute
+    ports:
+      - 8774
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['nova_api_placement'] | default([]) }}"
+    name: nova-api-placement
+    ports:
+      - 8780
+    type: http
+    method: GET
+    path: "/"
+  - group: "{{ groups['nova_console'] | default([]) }}"
+    name: nova-console
+    ports:
+      - 6080
+      - 6082
+      - 6083
+    type: tcp
+  - group: "{{ groups['cinder_api'] | default([]) }}"
+    name: cinder-api
+    ports:
+      - 8776
+    type: http
+    method: HEAD
+    path: "/"
+    check_response:
+      status: 300
+  - group: "{{ groups['horizon_all'] | default([]) }}"
+    name: horizon
+    ports:
+      - 80
+      - 443
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['sahara_api'] | default([]) }}"
+    name: sahara-api
+    ports:
+      - 8386
+    type: http
+    method: HEAD
+    path: "/healthcheck"
+  - group: "{{ groups['swift_proxy'] | default([]) }}"
+    name: swift-proxy
+    ports:
+      - 8080
+    type: http
+    method: HEAD
+    path: "/healthcheck"
+  - group: "{{ groups['aodh_api'] | default([]) }}"
+    name: aodh-api
+    ports:
+      - 8042
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['ironic_api'] | default([]) }}"
+    name: ironic-api
+    ports:
+      - 6385
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['rabbitmq_all'] | default([]) }}"
+    name: rabbitmq-management
+    ports:
+      - 15672
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['rabbitmq_all'] | default([]) }}"
+    name: rabbitmq-access
+    ports:
+      - 5672
+      - 5671
+    type: tcp
+  - group: "{{ groups['magnum_all'] | default([]) }}"
+    name: magnum-api
+    ports:
+      - 9511
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['trove_api'] | default([]) }}"
+    name: trove-api
+    ports:
+      - 8779
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['barbican_api'] | default([]) }}"
+    name: barbican-api
+    ports:
+      - 9311
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['designate_api'] | default([]) }}"
+    name: designate-api
+    ports:
+      - 9001
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['octavia_all'] | default([]) }}"
+    name: octavia-api
+    ports:
+      - 9876
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['tacker_all'] | default([]) }}"
+    name: tacker-api
+    ports:
+      - 9890
+    type: http
+    method: HEAD
+    path: "/"
+  - group: "{{ groups['neutron_server'] | default([]) }}"
+    name: opendaylight
+    ports:
+      - 8180
+      - 8185
+    type: tcp
+  - group: "{{ groups['neutron_server'] | default([]) }}"
+    name: ceph-rgw
+    ports:
+      - 7980
+    type: http
+    method: HEAD
+    path: "/"
+
+# Grafana
+grafana_dashboards:
+  - dashboard_id: 5566
+    revision_id: 5
+    datasource: "metricbeat-Elasticsearch"
+  - dashboard_id: 5569
+    revision_id: 3
+    datasource: "filebeat-Elasticsearch"
+
+grafana_datasources:
+  - name: "all-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "{{ elastic_vip_url }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: true
+    database: "*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "auditbeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "{{ elastic_vip_url }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "auditbeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "filebeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "{{ elastic_vip_url }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "filebeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "heartbeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "{{ elastic_vip_url }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "heartbeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "metricbeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "{{ elastic_vip_url }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "metricbeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "packetbeat-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "{{ elastic_vip_url }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "packetbeat-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">10s"
+  - name: "monitorstack-Elasticsearch"
+    type: "elasticsearch"
+    access: "proxy"
+    url: "{{ elastic_vip_url }}"
+    basicAuth: false
+    basicAuthUser: ""
+    basicAuthPassword: ""
+    isDefault: false
+    database: "monitorstack-*"
+    jsonData:
+      esVersion: 56
+      keepCookies: []
+      maxConcurrentShardRequests: 256
+      timeField: "@timestamp"
+      timeInterval: ">60s"

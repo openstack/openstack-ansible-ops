@@ -1,0 +1,54 @@
+---
+# The hosts group is used to target physical host machines. Enter all physical
+# host machines here.
+hosts:
+  children:
+    physical_hosts:
+      hosts:
+        localhost:
+          ansible_host: 127.0.0.1
+          ansible_user: root
+      vars:
+        physical_host: localhost
+        management_cidr: "172.29.236.0/24"
+        container_networks:
+          management_address:
+            address: "172.29.236.1"
+            netmask: "255.255.255.0"
+            bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
+
+
+all_containers:
+  vars:
+    physical_host: localhost
+    container_tech: nspawn
+    container_networks:
+      management_address:
+        address: "{{ ansible_host }}"
+        netmask: "255.255.255.0"
+        bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
+    # CI nodes havee limited resources, locking the memory is impossible.
+    elastic_memory_lock: false
+
+  children:
+    elastic-logstash:
+      children:
+        kibana:
+          hosts:
+            elastic0:
+              ansible_host: 172.29.236.100
+              ansible_user: root
+
+            elastic1:
+              ansible_host: 172.29.236.101
+              ansible_user: root
+
+            elastic2:
+              ansible_host: 172.29.236.102
+              ansible_user: root
+
+    apm-server:
+      hosts:
+        apm0:
+          ansible_host: 172.29.236.120
+          ansible_user: root

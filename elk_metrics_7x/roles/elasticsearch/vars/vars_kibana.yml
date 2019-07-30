@@ -1,0 +1,26 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Set kibana as elasticsearch coordinators
+elasticsearch_node_master: false
+elasticsearch_node_data: false
+elasticsearch_node_ingest: false
+elastic_coordination_node: true
+
+# This variable is redefined because kibana runs elasticsearch but only in a
+# load balancer capacity.
+elastic_processors_half: "{{ ((ansible_processor_count | int) // 2) }}"
+elastic_processors_half_set: "{{ ((elastic_processors_half | int) > 0) | ternary(elastic_processors_half, 1) }}"
+elastic_thread_pool_size: "{{ ((elastic_processors_half_set | int) > 4) | ternary(4, elastic_processors_half_set) }}"

@@ -1,0 +1,14 @@
+{% include 'templates/systemd.general-overrides.conf.j2' %}
+
+# This first line clears the source ExecStart
+ExecStart=
+# This runs our ExecStart as an override.
+ExecStart=/usr/share/elasticsearch/bin/elasticsearch -p ${PID_DIR}/elasticsearch.pid
+
+{% if elastic_memory_lock | bool %}
+# Limit memory usage
+LimitMEMLOCK=infinity
+{% endif %}
+
+# Number of File Descriptors
+LimitNOFILE=65536

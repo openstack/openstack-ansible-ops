@@ -1,0 +1,9 @@
+server {
+    listen 127.0.1.1:18182;
+    location /server-status {
+        stub_status on;
+        access_log off;
+        allow 127.0.0.0/8;
+        deny all;
+    }
+}

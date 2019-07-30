@@ -1,0 +1,24 @@
+---
+# The hosts group is used to target physical host machines. Enter all physical
+# host machines here.
+hosts:
+  children:
+    physical_hosts:
+      hosts:
+        localhost:
+          ansible_host: 127.0.0.1
+          ansible_user: root
+      vars:
+        physical_host: localhost
+
+    elastic-logstash:
+      hosts:
+        localhost: {}
+
+    kibana:
+      hosts:
+        localhost: {}
+
+    apm-server:
+      hosts:
+        localhost: {}

@@ -1,0 +1,118 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Uninstall legacy journalbeat
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/systemd/system/journalbeat.service
+    - /usr/local/bin/journalbeat
+
+- name: Ensure beat is installed
+  package:
+    name: "{{ journalbeat_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  notify:
+    - Enable and restart journalbeat
+  tags:
+    - package_install
+
+- name: Ensure beat is installed (aarch64)
+  apt:
+    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/journalbeat-6.5.0-arm64.deb'
+  when:
+    - ansible_pkg_mgr == 'apt'
+    - ansible_architecture == 'aarch64'
+  notify:
+    - Enable and restart heartbeat
+  tags:
+    - package_install
+
+- name: Create journalbeat systemd service config dir
+  file:
+    path: "/etc/systemd/system/journalbeat.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "/etc/systemd/system/journalbeat.service.d/journalbeat-overrides.conf"
+  notify:
+    - Enable and restart journalbeat
+
+- name: Drop journalbeat configs
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  with_items:
+    - src: "journalbeat.yml.j2"
+      dest: "/etc/journalbeat/journalbeat.yml"
+  notify:
+    - Enable and restart journalbeat
+
+- name: Run the beat setup role
+  include_role:
+    name: elastic_beat_setup
+  when:
+    - (groups['kibana'] | length) > 0
+  vars:
+    elastic_beat_name: "journalbeat"
+
+- name: Force beat handlers
+  meta: flush_handlers
+
+- name: set journalbeat service state (upstart)
+  service:
+    name: "journalbeat"
+    state: "{{ journalbeat_service_state }}"
+    enabled: "{{ journalbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - journalbeat_service_state in ['started', 'stopped']
+
+- name: set journalbeat service state (systemd)
+  systemd:
+    name: "journalbeat"
+    state: "{{ journalbeat_service_state }}"
+    enabled: "{{ journalbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - journalbeat_service_state in ['started', 'stopped']

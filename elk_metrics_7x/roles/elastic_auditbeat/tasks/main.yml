@@ -1,0 +1,112 @@
+---
+# Copyright 2018, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+  tags:
+    - always
+
+- name: Ensure beat is installed (x86_64)
+  package:
+    name: "{{ auditbeat_distro_packages }}"
+    state: "{{ elk_package_state | default('present') }}"
+    update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+  register: _package_task
+  until: _package_task is success
+  retries: 3
+  delay: 2
+  when:
+    - ansible_architecture == 'x86_64'
+  notify:
+    - Enable and restart auditbeat
+  tags:
+    - package_install
+
+- name: Ensure beat is installed (aarch64)
+  apt:
+    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/auditbeat-6.5.0-arm64.deb'
+  when:
+    - ansible_pkg_mgr == 'apt'
+    - ansible_architecture == 'aarch64'
+  notify:
+    - Enable and restart auditbeat
+  tags:
+    - package_install
+
+- name: Create auditbeat systemd service config dir
+  file:
+    path: "/etc/systemd/system/auditbeat.service.d"
+    state: "directory"
+    group: "root"
+    owner: "root"
+    mode: "0755"
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Apply systemd options
+  template:
+    src: "{{ item.src }}"
+    dest: "/etc/systemd/system/auditbeat.service.d/{{ item.dest }}"
+    mode: "0644"
+  when:
+    - ansible_service_mgr == 'systemd'
+  with_items:
+    - src: "systemd.general-overrides.conf.j2"
+      dest: "auditbeat-overrides.conf"
+  notify:
+    - Enable and restart auditbeat
+
+- name: Drop auditbeat conf file
+  template:
+    src: templates/auditbeat.yml.j2
+    dest: /etc/auditbeat/auditbeat.yml
+  notify:
+    - Enable and restart auditbeat
+
+- name: Run the beat setup role
+  include_role:
+    name: elastic_beat_setup
+  when:
+    - (groups['kibana'] | length) > 0
+  vars:
+    elastic_beat_name: "auditbeat"
+
+- name: Force beat handlers
+  meta: flush_handlers
+
+- name: set auditbeat service state (upstart)
+  service:
+    name: "auditbeat"
+    state: "{{ auditbeat_service_state }}"
+    enabled: "{{ auditbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'upstart'
+    - auditbeat_service_state in ['started', 'stopped']
+
+- name: set auditbeat service state (systemd)
+  systemd:
+    name: "auditbeat"
+    state: "{{ auditbeat_service_state }}"
+    enabled: "{{ auditbeat_service_state in ['running', 'started', 'restarted'] }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - auditbeat_service_state in ['started', 'stopped']

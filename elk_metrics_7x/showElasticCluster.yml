@@ -1,0 +1,64 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Dump cluster node info
+  hosts: elastic-logstash:kibana
+  become: true
+
+  vars_files:
+    - vars/variables.yml
+
+  environment: "{{ deployment_environment_variables | default({}) }}"
+
+  roles:
+    - role: elastic_data_hosts
+
+  # display overall cluster setup
+  post_tasks:
+    - block:
+      - name: "Report number of storage nodes"
+        debug:
+          msg: "Storage node count: {{ storage_node_count }}"
+
+      - name: "Report number of master nodes"
+        debug:
+          msg: "Master node count: {{ master_node_count }}"
+
+      - name: "Report data nodes"
+        debug:
+          msg: "Data nodes: {{ data_nodes }}"
+
+      - name: "Report coordination nodes"
+        debug:
+          msg: "Coordination nodes: {{ coordination_nodes }}"
+
+      - name: "Report Zen nodes"
+        debug:
+          msg: "Zen nodes: {{ zen_nodes }}"
+
+      delegate_to: elastic_logstash[0]
+      run_once: true
+
+    # show per node cluster setup
+
+    - name: "Dump elasticsearch node roles"
+      debug:
+        msg: "Elastic Node config:    master: {{ master_node }}    data: {{ data_node }}"
+
+    - name: "Dump per-host elasticsearch data hosts"
+      debug:
+        msg: "Elastic data hosts:    {{ elasticsearch_data_hosts }}"
+
+    - name: "Dump per-host logstash hosts"
+      debug:
+        msg: "Logstash_data_hosts:   {{ logstash_data_hosts }}"
