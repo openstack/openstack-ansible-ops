@@ -33,7 +33,7 @@ auditbeat.modules:
 # The auditd module collects events from the audit framework in the Linux
 # kernel. You need to specify audit rules for the events that you want to audit.
 - module: auditd
-{% if ansible_kernel is version_compare('4.4', '>=') %}
+{% if ansible_kernel is version('4.4', '>=') %}
   socket_type: {{ (apply_security_hardening | default(true) | bool) | ternary('multicast', 'unicast') }}
 {% endif %}
   resolve_ids: true
