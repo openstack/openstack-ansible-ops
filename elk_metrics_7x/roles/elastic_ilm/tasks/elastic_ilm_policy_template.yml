@@ -1,0 +1,8 @@
+---
+- name: Template out policy to hosts for initial set up situations
+  template:
+    src: "ilm-policy.json.j2"
+    dest: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}"
+    mode: 0750
+    owner: root
+    group: root

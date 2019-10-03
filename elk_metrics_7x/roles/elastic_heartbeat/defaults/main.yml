@@ -14,3 +14,14 @@
 # limitations under the License.
 
 heartbeat_service_state: restarted
+
+heartbeat_ilm_policy_name: "heartbeat-{{ beat_version }}"
+heartbeat_ilm_policy_template: "heartbeat-{{ beat_version}}"
+heartbeat_ilm_policy_filename: "heartbeat-ilm-policy.json"
+heartbeat_ilm_policy_file_location: "/etc/heartbeat"
+
+ilm_policy_name: "{{ heartbeat_ilm_policy_name | default('') }}"
+ilm_policy: "{{ (heartbeat_ilm_policy | default(default_ilm_policy)) | default({}) }}"
+ilm_policy_template: "{{ heartbeat_ilm_policy_template | default('') }}"
+ilm_policy_filename: "{{ (heartbeat_ilm_policy_filename | default(heartbeat_ilm_policy_filename)) | default('') }}"
+ilm_policy_file_location: "{{ (heartbeat_ilm_policy_file_location | default(default_ilm_policy_file_location)) | default('') }}"

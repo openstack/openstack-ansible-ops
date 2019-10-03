@@ -1204,7 +1204,12 @@ processors:
 
 # Configure rollover index pattern.
 #setup.ilm.pattern: "{now/d}-000001"
-
+{% if ilm_policy_name is defined %}
+setup.ilm.policy_name: "{{ ilm_policy_name }}"
+{% endif %}
+{% if ilm_policy_file_location is defined %}
+setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}"
+{% endif %}
 
 #============================== Kibana =====================================
 {% if (groups['kibana'] | length) > 0 %}

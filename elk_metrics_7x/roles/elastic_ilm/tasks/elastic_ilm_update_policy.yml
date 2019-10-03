@@ -1,0 +1,43 @@
+---
+- name: Check if policy exists
+  uri:
+    url: "http://127.0.0.1:{{ elastic_port }}/_ilm/policy/{{ ilm_policy_name }}"
+    method: GET
+    status_code: 200,404
+    body_format: json
+  register: check_policy
+  when: ilm_policy_name is defined and ilm_policy is defined
+
+- name: Update ILM policy when not installing beat for first time
+  uri:
+    url: "http://127.0.0.1:{{ elastic_port }}/_ilm/policy/{{ ilm_policy_name }}"
+    method: PUT
+    body: "{{ ilm_policy }}"
+    status_code: 200
+    body_format: json
+  when: check_policy.status == 200 and ilm_policy_name is defined and ilm_policy is defined and (elk_package_state | default('present')) != "latest"
+
+- name: Get template
+  uri:
+    url: "http://127.0.0.1:{{ elastic_port }}/_template/{{ ilm_policy_template }}/"
+    method: GET
+    status_code: 200,404
+    body_format: json
+  register: template
+  when: ilm_policy_template is defined and ilm_policy_name is defined
+
+- set_fact:
+    updated_template: "{{ template.json | combine({template.json.keys()[0]|string:{'settings': {'index': {'lifecycle': {'name': 'ilm_policy_name' }}}}}, recursive=True) }}"
+  when: template.status == 200 and ilm_policy_template is defined and ilm_policy_name is defined
+
+- name: Update template
+  uri:
+    url: "http://127.0.0.1:{{ elastic_port }}/_template/{{ ilm_policy_template }}/"
+    body: "{{ updated_template[template.json.keys()[0]|string] }}"
+    method: PUT
+    body_format: json
+    status_code: 200
+    headers:
+      Content-Type: "application/json"
+      kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+  when: template.status == 200 and ilm_policy_template is defined and ilm_policy_name is defined

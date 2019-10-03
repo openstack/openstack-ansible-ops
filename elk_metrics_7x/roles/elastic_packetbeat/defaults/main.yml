@@ -14,3 +14,14 @@
 # limitations under the License.
 
 packetbeat_service_state: restarted
+
+packetbeat_ilm_policy_name: "packetbeat-{{ beat_version }}"
+packetbeat_ilm_policy_template: "packetbeat-{{ beat_version }}"
+packetbeat_ilm_policy_filename: "packetbeat-ilm-policy.json"
+packetbeat_ilm_policy_file_location: "/etc/packetbeat"
+
+ilm_policy_name: "{{ packetbeat_ilm_policy_name | default('') }}"
+ilm_policy: "{{ (packetbeat_ilm_policy | default(default_ilm_policy)) | default({}) }}"
+ilm_policy_template: "{{ packetbeat_ilm_policy_template | default('') }}"
+ilm_policy_filename: "{{ (packetbeat_ilm_policy_filename | default(default_ilm_policy_filename)) | default('') }}"
+ilm_policy_file_location: "{{ (packetbeat_ilm_policy_file_location | default(default_ilm_policy_file_location)) | default('') }}"
