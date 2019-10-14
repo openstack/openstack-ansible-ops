@@ -42,21 +42,6 @@
       test_clustered_elk: true
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_6x-opensuse-423"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
-    nodeset: opensuse-423
-    voting: true
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-opensuse-423-clustered"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
-    nodeset: opensuse-423
-    voting: false
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_elk: true
-
-- job:
     name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-trusty"
     parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
     nodeset: ubuntu-trusty
@@ -137,11 +122,6 @@
     name: "openstack-ansible-ops:skydive-centos-7"
     parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
     nodeset: centos-7
-
-- job:
-    name: "openstack-ansible-ops:skydive-opensuse-423"
-    parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
-    nodeset: opensuse-423
 
 # - job:
 #     name: "openstack-ansible-ops:skydive-opensuse-15"
