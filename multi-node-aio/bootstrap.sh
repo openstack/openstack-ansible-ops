@@ -39,21 +39,21 @@ case "${ID,,}" in
         sudo yum install -y python-devel redhat-lsb-core
         ;;
     ubuntu|debian)
-        sudo apt-get update && sudo apt-get install -y python-dev lsb-release
+        sudo apt-get update && sudo apt-get install -y python3-dev lsb-release
         ;;
     *)
         echo "Unsupported distribution: ${ID,,}"
         exit 1
 esac
 
-# Install pip
-if ! which pip &>/dev/null; then
+# Install pip3
+if ! which pip3 &>/dev/null; then
     curl --silent --show-error --retry 5 \
-        https://bootstrap.pypa.io/3.2/get-pip.py | sudo python2.7
+        https://bootstrap.pypa.io/3.4/get-pip.py | sudo python3
 fi
 
 # Install bindep and tox
-sudo pip install 'bindep>=2.4.0' tox
+sudo pip3 install 'bindep>=2.4.0' tox
 
 # CentOS 7 requires two additional packages:
 #   redhat-lsb-core - for bindep profile support
@@ -65,7 +65,7 @@ if [[ ${ID,,} == "centos" ]]; then
     sudo yum-config-manager --enable epel || true
 # openSUSE 42.1 does not have python-ndg-httpsclient
 elif [[ ${ID,,} == *suse* ]] && [[ ${VERSION} == "42.1" ]]; then
-    sudo pip install ndg-httpsclient
+    sudo pip3 install ndg-httpsclient
 fi
 
 # Get a list of packages to install with bindep. If packages need to be
@@ -92,7 +92,7 @@ if [[ ${#BINDEP_PKGS} > 0 ]]; then
 fi
 
 # Install latest OSA supported Ansible version
-sudo pip install -r https://opendev.org/openstack/openstack-ansible-tests/raw/branch/${OSA_DEPS_BRANCH}/test-ansible-deps.txt
+sudo pip3 install -r https://opendev.org/openstack/openstack-ansible-tests/raw/branch/${OSA_DEPS_BRANCH}/test-ansible-deps.txt
 
 # Get the latest OSA plugins
 # This is used to allow access from the MNAIO host to
