@@ -411,3 +411,22 @@ elastic_beats:
     hosts: "{{ (groups['nova_compute'] | default([])) | union((groups['utility_all'] | default([]))) | union((groups['memcached_all'] | default([]))) }}"
   skydive:
     hosts: "{{ (((groups['skydive_analyzers'] | default([])) | length) > 0) | ternary((groups['hosts'] | default([])), []) }}"
+
+beat_version: "7.3.2"
+default_ilm_rollover_max_size: "30G"
+default_ilm_rollover_max_age: "15d"
+default_ilm_delete_min_age: "30d"
+default_ilm_policy:
+  policy:
+    phases:
+      hot:
+        actions:
+          rollover:
+            max_size: "{{ default_ilm_rollover_max_size }}"
+            max_age: "{{ default_ilm_rollover_max_age }}"
+      delete:
+        min_age: "{{ default_ilm_delete_min_age }}"
+        actions:
+          delete: {}
+default_ilm_policy_filename: "default-ilm-policy.json"
+default_ilm_policy_file_location: "/tmp"

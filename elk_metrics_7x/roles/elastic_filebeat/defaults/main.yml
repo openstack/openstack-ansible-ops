@@ -282,3 +282,14 @@ filebeat_prospectors:
       - /var/log/elasticsearch/*.log
     tags:
       - beats
+
+filebeat_ilm_policy_name: "filebeat-{{ beat_version }}"
+filebeat_ilm_policy_template: "filebeat-{{ beat_version }}"
+filebeat_ilm_policy_filename: "filebeat-ilm-policy.json"
+filebeat_ilm_policy_file_location: "/etc/filebeat"
+
+ilm_policy_name: "{{ filebeat_ilm_policy_name | default('') }}"
+ilm_policy: "{{ (filebeat_ilm_policy | default(default_ilm_policy)) | default({}) }}"
+ilm_policy_template: "{{ filebeat_ilm_policy_template | default('') }}"
+ilm_policy_filename: "{{ (filebeat_ilm_policy_filename | default(default_ilm_policy_filename)) | default('') }}"
+ilm_policy_file_location: "{{ (filebeat_ilm_policy_file_location | default(default_ilm_policy_file_location)) | default('') }}"

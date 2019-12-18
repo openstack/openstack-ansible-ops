@@ -82,6 +82,10 @@
   notify:
     - Enable and restart filebeat
 
+- include_role:
+    name: elastic_ilm
+  when: ilm_policy.keys() | length > 0
+
 - name: Run the beat setup role
   include_role:
     name: elastic_beat_setup

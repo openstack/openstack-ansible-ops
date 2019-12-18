@@ -22,3 +22,14 @@ metricbeat_service_state: restarted
 # Inventory group to configure metricbeat ceph monitoring
 # via either ceph-restapi or mgr prometheus module
 ceph_metricbeat_group: cinder_volume
+
+metricbeat_ilm_policy_name: "metricbeat-{{ beat_version }}"
+metricbeat_ilm_policy_template: "metricbeat-{{ beat_version }}"
+metricbeat_ilm_policy_filename: "metricbeat-ilm-policy.json"
+metricbeat_ilm_policy_file_location: "/etc/metricbeat"
+
+ilm_policy_name: "{{ metricbeat_ilm_policy_name | default('') }}"
+ilm_policy: "{{ (metricbeat_ilm_policy | default(default_ilm_policy)) | default({}) }}"
+ilm_policy_template: "{{ metricbeat_ilm_policy_template | default('') }}"
+ilm_policy_filename: "{{ (metricbeat_ilm_policy_filename | default(default_ilm_policy_filename)) | default('') }}"
+ilm_policy_file_location: "{{ (metricbeat_ilm_policy_file_location | default(default_ilm_policy_file_location)) | default('') }}"
