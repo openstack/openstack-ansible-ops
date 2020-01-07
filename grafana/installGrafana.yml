@@ -138,6 +138,7 @@
 
   roles:
     - role: traefik_common
+      environment: "{{ deployment_environment_variables | default({}) }}"
       traffic_dashboard_bind: "{{ hostvars[inventory_hostname]['ansible_' ~ (ansible_default_ipv4['interface'] | replace('-', '_') | string)]['ipv4']['address'] }}"
       traefik_dashboard_enabled: true
       traefik_destinations:
