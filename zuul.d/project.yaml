@@ -23,7 +23,6 @@
         # - openstack-ansible-ops:elk_metrics_6x-centos-7-clustered
         - openstack-ansible-ops:elk_metrics_6x-opensuse-15
         # - openstack-ansible-ops:elk_metrics_6x-opensuse-15-clustered
-        - openstack-ansible-ops:elk_metrics_6x-ubuntu-trusty
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic
