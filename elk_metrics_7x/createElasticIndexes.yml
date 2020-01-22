@@ -19,7 +19,7 @@
     - role: elastic_data_hosts
 
   vars:
-    _elastic_refresh_interval: "{{ (elasticsearch_number_of_replicas | int) * 5 }}"
+    _elastic_refresh_interval: "{{ (elasticsearch_beat_settings.number_of_replicas | int) * 5 }}"
     elastic_refresh_interval: "{{ (_elastic_refresh_interval > 0) | ternary(30, _elastic_refresh_interval) }}"
 
   vars_files:
@@ -83,7 +83,7 @@
             indices.queries.cache.size: "5%"
         - name: "_all/_settings"
           index_options:
-            index.number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            index.number_of_replicas: "{{ elasticsearch_beat_settings.number_of_replicas | int }}"
             index.translog.durability: "async"
             index.refresh_interval: "{{ ((elastic_refresh_interval | int) > 30) | ternary(30, elastic_refresh_interval) }}s"
 
@@ -129,7 +129,7 @@
                 | list
             }}
           settings:
-            number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            number_of_replicas: "{{ elasticsearch_beat_settings.number_of_replicas | int }}"
             index:
               mapping:
                 total_fields:
@@ -151,7 +151,7 @@
           template: ".monitoring*"
           order: 1
           settings:
-            number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            number_of_replicas: "{{ elasticsearch_beat_settings.number_of_replicas | int }}"
             number_of_shards: 1
 
     - name: Create custom skydive index template
@@ -170,7 +170,7 @@
           template: "skydive*"
           order: 1
           settings:
-            number_of_replicas: "{{ elasticsearch_number_of_replicas | int }}"
+            number_of_replicas: "{{ elasticsearch_beat_settings.number_of_replicas | int }}"
             number_of_shards: 1
 
 

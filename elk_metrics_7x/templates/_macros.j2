@@ -249,7 +249,7 @@ setup.dashboards.enabled: false
 #setup.dashboards.retry.maximum: 0
 {%- endmacro %}
 
-{% macro setup_template(beat_name, host, data_nodes, elasticsearch_replicas) -%}
+{% macro setup_template(beat_name, host, data_nodes, elasticsearch_beat_settings={}) -%}
 # A template is used to set the mapping in Elasticsearch
 # By default template loading is enabled and the template is loaded.
 # These settings can be adjusted to load your own template or overwrite existing ones.
@@ -296,7 +296,11 @@ setup.template.settings:
     number_of_routing_shards: {{ (shards | int) * 2 }}
     # The default number of replicas will be based on the number of data nodes
     # within the environment with a limit of 2 replicas.
-    number_of_replicas: {{ elasticsearch_replicas | int }}
+    number_of_replicas: {{ elasticsearch_beat_settings.number_of_replicas | int }}
+    # Maximum doc values allowed for default kibana search
+{% if 'max_docvalue_fields_search' in elasticsearch_beat_settings %}
+    max_docvalue_fields_search: {{ elasticsearch_beat_settings.max_docvalue_fields_search | int }}
+{% endif %}
 
   # A dictionary of settings for the _source field. For more details, please check
   # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html

@@ -1349,7 +1349,7 @@ processors:
 {{ elk_macros.setup_dashboards('filebeat') }}
 
 #============================== Template ======================================
-{{ elk_macros.setup_template('filebeat', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
+{{ elk_macros.setup_template('filebeat', inventory_hostname, data_nodes, elasticsearch_beat_settings) }}
 
 #============================== Setup ILM =====================================
 

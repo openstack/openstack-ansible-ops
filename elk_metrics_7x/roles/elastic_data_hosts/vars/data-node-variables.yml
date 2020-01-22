@@ -205,12 +205,20 @@ elastic_thread_pool_size: "{{ ((ansible_processor_count | int) >= 24) | ternary(
 # Set a data node facts. The data nodes, in the case of elasticsearch are also
 # ingest nodes.
 elasticsearch_number_of_replicas: "{{ ((data_nodes | length) > 2) | ternary('2', ((data_nodes | length) > 1) | ternary('1', '0')) }}"
+
+# Input data for the beat config templates
+elasticsearch_beat_settings:
+  number_of_replicas: "{{ elasticsearch_number_of_replicas }}"
+  max_docvalue_fields_search: "{{ elastic_max_docvalue_fields_search | default('100') }}"
+
+
 elasticsearch_data_hosts: |-
   {% set data_hosts = elasticsearch_data_node_details | shuffle(seed=inventory_hostname) %}
   {% if inventory_hostname in data_nodes %}
   {%   set _ = data_hosts.insert(0, '127.0.0.1:' ~ elastic_port) %}
   {% endif %}
   {{ data_hosts }}
+
 logstash_data_hosts: |-
   {% set data_hosts = logstash_data_node_details | shuffle(seed=inventory_hostname) %}
   {% if inventory_hostname in data_nodes %}

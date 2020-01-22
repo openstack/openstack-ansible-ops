@@ -134,7 +134,7 @@ apm-server:
 {{ elk_macros.setup_dashboards('apm') }}
 
 #=============================== Template ======================================
-{{ elk_macros.setup_template('apm', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
+{{ elk_macros.setup_template('apm', inventory_hostname, data_nodes, elasticsearch_beat_settings) }}
 
 #============================== Kibana =====================================
 {% if (groups['kibana'] | length) > 0 %}

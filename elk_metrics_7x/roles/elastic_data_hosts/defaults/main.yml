@@ -30,3 +30,7 @@ elastic_data_interface: "{{ ansible_default_ipv4['alias'] }}"
 # to override the default of ansible_host:logstash_beat_input_port
 # for each node, or to provide different coordinators when necessary
 # elasticsearch_coordination_node_socket_addresses: []
+
+## Elasticsearch index template settings
+# Set the default max number of fields used in a query
+# elastic_max_docvalue_fields_search: "100"

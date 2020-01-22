@@ -811,7 +811,7 @@ processors:
 {{ elk_macros.setup_dashboards('auditbeat') }}
 
 #=============================== Template ======================================
-{{ elk_macros.setup_template('auditbeat', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
+{{ elk_macros.setup_template('auditbeat', inventory_hostname, data_nodes, elasticsearch_beat_settings) }}
 
 #============================== Kibana =====================================
 {% if (groups['kibana'] | length) > 0 %}

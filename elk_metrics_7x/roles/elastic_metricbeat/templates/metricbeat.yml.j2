@@ -1460,8 +1460,8 @@ processors:
 {{ elk_macros.setup_dashboards('metricbeat') }}
 
 #============================== Template =====================================
-{{ elk_macros.setup_template('metricbeat', inventory_hostname, data_nodes, elasticsearch_number_of_replicas) }}
- 
+{{ elk_macros.setup_template('metricbeat', inventory_hostname, data_nodes, elasticsearch_beat_settings) }}
+
 #============================== Setup ILM =====================================
 
 # Configure Index Lifecycle Management Index Lifecycle Management creates a
