@@ -202,17 +202,21 @@
       {% endif %}
       {{ ceph_detect }}
 
-
+    # Set to false for now, to be updated with existence checks at a later date
+    couchdb_enabled: false
     docker_enabled: "{{ docker.stat.exists | bool }}"
+    envoyproxy_enabled: false
     etcd_enabled: "{{ etcd.stat.exists | bool }}"
     haproxy_enabled: "{{ haproxy.stat.exists | bool }}"
     kvm_enabled: "{{ kvm.stat.exists | bool }}"
     memcached_enabled: "{{ memcached.stat.exists | bool }}"
     mysql_enabled: "{{ mysql.stat.exists | bool }}"
+    nats_enabled: false
     nginx_enabled: "{{ nginx.stat.exists | bool }}"
     rabbitmq_enabled: "{{ rabbitmq.stat.exists | bool }}"
     uwsgi_enabled: "{{ uwsgi.stat.exists | bool }}"
     uwsgi_sockets: "{{ uwsgi_find_sockets }}"
+    traefik_enabled: false
 
 # Apache 2 stats enablement
 - name: Enable apache2

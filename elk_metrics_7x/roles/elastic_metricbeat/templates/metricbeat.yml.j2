@@ -176,11 +176,12 @@ metricbeat.modules:
 #  enabled: true
 #
 #------------------------------- couchdb Module ------------------------------
+{% if couchdb_enabled | bool %}
 - module: couchdb
   metricsets: ["server"]
   period: 10s
   hosts: ["localhost:5984"]
-
+{% endif %}
 #------------------------------- Docker Module -------------------------------
 {% if docker_enabled | default(false) | bool %}
 - module: docker
@@ -245,10 +246,12 @@ metricbeat.modules:
   #xpack.enabled: false
 {% endif %}
 #----------------------------- envoyproxy Module -----------------------------
+{% if envoyproxy_enabled | bool %}
 - module: envoyproxy
   metricsets: ["server"]
   period: 10s
   hosts: ["localhost:9901"]
+{% endif %}
 
 #-------------------------------- Etcd Module --------------------------------
 {% if etcd_enabled | default(false) | bool %}
@@ -570,6 +573,7 @@ metricbeat.modules:
   #raw: false
 {% endif %}
 #-------------------------------- Nats Module --------------------------------
+{% if nats_enabled | bool %}
 - module: nats
   metricsets: ["connections", "routes", "stats", "subscriptions"]
   period: 10s
@@ -578,7 +582,7 @@ metricbeat.modules:
   #connections.metrics_path: "/connz"
   #routes.metrics_path: "/routez"
   #subscriptions.metrics_path: "/subsz"
-
+{% endif %}
 #-------------------------------- Nginx Module -------------------------------
 {% if nginx_enabled | default(false) | bool %}
 - module: nginx
@@ -707,10 +711,12 @@ metricbeat.modules:
   #password: foobared
 
 #------------------------------- traefik Module ------------------------------
+{% if traefik_enabled | bool %}
 - module: traefik
   metricsets: ["health"]
   period: 10s
   hosts: ["localhost:8080"]
+{% endif %}
 
 #-------------------------------- uwsgi Module -------------------------------
 {% if uwsgi_enabled | default(false) | bool %}
@@ -1457,9 +1463,13 @@ processors:
 #keystore.path: "${path.config}/beats.keystore"
 
 #============================== Dashboards =====================================
+{% if (groups['kibana'] | length) > 0 and (setup_kibana_dashboards | default(true)) %}
 {{ elk_macros.setup_dashboards('metricbeat') }}
+{% endif %}
+
 
 #============================== Template =====================================
+
 {{ elk_macros.setup_template('metricbeat', inventory_hostname, data_nodes, elasticsearch_beat_settings) }}
 
 #============================== Setup ILM =====================================
@@ -1487,7 +1497,7 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 {% endif %}
 
 #============================== Kibana =====================================
-{% if (groups['kibana'] | length) > 0 %}
+{% if (groups['kibana'] | length) > 0 and (setup_kibana_dashboards | default(true)) %}
 {{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ kibana_port) }}
 {% endif %}
 

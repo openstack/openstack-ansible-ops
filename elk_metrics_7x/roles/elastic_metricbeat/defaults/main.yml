@@ -23,6 +23,9 @@ metricbeat_service_state: restarted
 # via either ceph-restapi or mgr prometheus module
 ceph_metricbeat_group: cinder_volume
 
+# Include default kibana dashboards
+setup_kibana_dashboards: true
+
 metricbeat_ilm_policy_name: "metricbeat-{{ beat_version }}"
 metricbeat_ilm_policy_template: "metricbeat-{{ beat_version }}"
 metricbeat_ilm_policy_filename: "metricbeat-ilm-policy.json"
