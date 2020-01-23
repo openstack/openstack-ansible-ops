@@ -128,10 +128,11 @@ coordination_nodes: |-
   {%   set c_nodes = groups['elastic-logstash'] %}
   {% endif %}
   {{
-    (c_nodes | map('extract', hostvars, 'ansible_host') | list)
-      | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port)
-      | list
+    (elasticsearch_coordination_node_socket_addresses
+      | default((c_nodes | map('extract', hostvars, 'ansible_host') | list)
+                 | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port) | list))
   }}
+
 zen_nodes: >-
   {{
     (groups['elastic-logstash'] | union(groups['kibana'])) | map('extract', hostvars, 'ansible_host') | list | shuffle(seed=inventory_hostname)
@@ -170,14 +171,28 @@ elasticserch_interface_speed: |-
   {% endif %}
   {% set interface_speed = ((speeds | min) * 0.20) | int %}
   {{ ((interface_speed | int) > 750) | ternary(750, interface_speed) }}
+
+# IP addresses for the elasticsearch data nodes
+# Override using elasticsearch_data_node_socket_addresses
+# to use a non-default (non-ansible) interface for elasticsearch
 elasticsearch_data_node_details: >-
   {{
-    (data_nodes | map('extract', hostvars, 'ansible_host') | list) | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port) | list
+      elasticsearch_data_node_socket_addresses
+      | default((data_nodes | map('extract', hostvars, 'ansible_host') | list)
+                 | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port) | list)
   }}
+
+# IP addresses for the logstash data nodes
+# Override using logstash_data_node_socket_addresses
+# to use a non-default (non-ansible) interface for logstash
 logstash_data_node_details: >-
   {{
-    (logstash_nodes | map('extract', hostvars, 'ansible_host') | list) | map('regex_replace', '(.*)' ,'\1:' ~ logstash_beat_input_port) | list
+     logstash_data_node_socket_addresses
+     | default((logstash_nodes | map('extract', hostvars, 'ansible_host') | list)
+                | map('regex_replace', '(.*)' ,'\1:' ~ logstash_beat_input_port) | list)
   }}
+
+
 
 # based on the assignment of roles to hosts, set per host booleans
 master_node: "{{ (inventory_hostname in master_nodes) | ternary(true, false) }}"

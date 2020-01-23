@@ -15,3 +15,18 @@
 
 # This interface is used to determine cluster recovery speed.
 elastic_data_interface: "{{ ansible_default_ipv4['alias'] }}"
+
+# A list of interfaces/ports of the elasticsearch data nodes
+# to override the default of ansible_host:elastic_port
+# for each node
+# elasticsearch_data_node_socket_addresses: []
+
+# A list of interfaces/ports of the logstash data nodes
+# to override the default of ansible_host:logstash_beat_input_port
+# for each node
+# logstash_data_node_socket_addresses: []
+
+# A list of interfaces/ports of the elasticsearch coordinator nodes
+# to override the default of ansible_host:logstash_beat_input_port
+# for each node, or to provide different coordinators when necessary
+# elasticsearch_coordination_node_socket_addresses: []

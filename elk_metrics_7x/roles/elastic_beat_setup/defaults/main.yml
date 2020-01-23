@@ -26,5 +26,9 @@ elastic_beat_setup_options: >-
   -E 'setup.template.enabled=true'
   -E 'setup.template.overwrite=true'
 
-# The node defined here will be used with the environment variable, "no_proxy".
 elastic_beat_kibana_host: "{{ hostvars[groups['kibana'][0]]['ansible_host'] }}"
+
+# The variable defined here will be used to set the environment variable, "no_proxy".
+# This is by default set to elastic_beat_kibana_host, but if using a non-standard
+# interface, the no_proxy enivronment may need to be changed.
+elastic_beat_no_proxy: "{{ elastic_beat_kibana_host }}"

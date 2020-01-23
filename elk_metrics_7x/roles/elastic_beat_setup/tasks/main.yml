@@ -51,7 +51,7 @@
   with_items: "{{ elastic_setup_flags }}"
   register: templates
   environment:
-    no_proxy: "{{ elastic_beat_kibana_host }}"
+    no_proxy: "{{ elastic_beat_no_proxy }}"
   until: templates is success
   retries: 5
   delay: 5

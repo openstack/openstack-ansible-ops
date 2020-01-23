@@ -31,3 +31,7 @@ elastic_plugins:
 # be derived automatically using 1/4 of the available RAM for logstash and 1/2
 # of the available RAM for elasticsearch. The value is expected to be in MiB.
 # elastic_heap_size: 10240  # type `int`
+
+# Set the addresses/interfaces for elasticsearch to bind to. If undefined, this binds to
+# localhost and the ansible_host and ansible_hostname addresses.
+elasticsearch_bind_addresses: ["127.0.0.1", "{{ ansible_host }}", "{{ ansible_hostname }}"]

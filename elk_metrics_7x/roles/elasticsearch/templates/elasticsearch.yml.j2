@@ -66,7 +66,7 @@ bootstrap.memory_lock: {{ elastic_memory_lock }}
 #
 # Set the bind address to a specific IP (IPv4 or IPv6):
 #
-network.host: ["127.0.0.1", "{{ ansible_host }}", "{{ ansible_hostname }}"]
+network.host: {{ elasticsearch_bind_addresses | list | to_json }}
 {% if elasticsearch_publish_host is defined %}
 network.publish_host: "{{ elasticsearch_publish_host }}"
 {% endif %}
@@ -163,4 +163,3 @@ xpack.monitoring.collection.enabled: true
 xpack.monitoring.collection.interval: 30s
 # Set to true to enable machine learning on the node.
 xpack.ml.enabled: false
-
