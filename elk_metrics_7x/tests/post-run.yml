@@ -18,6 +18,23 @@
 - name: Run post tasks
   hosts: "all"
   tasks:
+    - name: Run log collection script
+      command: scripts/log-collect.sh
+      become: yes
+      become_user: root
+      args:
+        chdir: "src/opendev.org/openstack/openstack-ansible-ops"
+      environment:
+        # ZUUL_PROJECT is used by the log collection functions to enable
+        # log collection configuration specific to OpenStack CI
+        ZUUL_PROJECT: "{{ zuul.project.short_name }}"
+        TEST_EXIT_CODE: "{{ zuul_success | lower }}"
+        RUN_ARA: "true"
+        # Some Zuul environments (such as OpenStack CI) use html based ara reports
+        ARA_REPORT_TYPE: "{{ ara_report_type | default('database') }}"
+        WORKING_DIR: "{{ ansible_user_dir }}/src/opendev.org/openstack/openstack-ansible-ops/"
+        LOGGING_DIR: "/tmp/elk-metrics-7x-logs"
+
     - name: Copy logs back to the executor
       synchronize:
         src: "/tmp/elk-metrics-7x-logs"
