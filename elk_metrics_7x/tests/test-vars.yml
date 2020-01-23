@@ -18,7 +18,7 @@ physical_host: localhost
 # NOTE(cloudnull): Test configs used to minimize the impact of a
 #                  multi-node install with limited resources.
 q_storage: 1
-elastic_memory_lower_limit: 512
-elastic_memory_upper_limit: 512
+elastic_memory_lower_limit: 1024
+elastic_memory_upper_limit: 1024
 
 osa_test_repo: "openstack/openstack-ansible-ops"
