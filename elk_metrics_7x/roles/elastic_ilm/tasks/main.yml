@@ -5,8 +5,8 @@
 - block:
   - name: Update policy and template when not upgrading
     include_tasks: "elastic_ilm_update_policy.yml"
-  delegate_to: "{{ groups['elastic-logstash'][0] }}"
+  delegate_to: "{{ elasticsearch_data_node_details[0] | regex_replace(':' ~ elastic_port,'') }}"
   environment:
-    no_proxy: "{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }},127.0.0.1"
+    no_proxy: "{{ elastic_beat_no_proxy }},127.0.0.1"
   run_once: True
   when: (elk_package_state | default('present')) != "latest"

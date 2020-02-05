@@ -16,3 +16,5 @@ default_ilm_policy:
           delete: {}
 default_ilm_policy_filename: "default-ilm-policy.json"
 default_ilm_policy_file_location: "/tmp"
+
+elastic_beat_no_proxy: "{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }}"
