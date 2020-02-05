@@ -25,3 +25,6 @@ ilm_policy: "{{ (journalbeat_ilm_policy | default(default_ilm_policy)) | default
 ilm_policy_template: "{{ journalbeat_ilm_policy_template | default('') }}"
 ilm_policy_filename: "{{ (journalbeat_ilm_policy_filename | default(default_ilm_policy_filename)) | default('') }}"
 ilm_policy_file_location: "{{ (journalbeat_ilm_policy_file_location | default(default_ilm_policy_file_location)) | default('') }}"
+
+# beat processors. Empty dictionary sets `add_host_metadata: ~`
+processors: {}

@@ -880,6 +880,7 @@ metricbeat.modules:
 #max_procs:
 
 #================================ Processors ===================================
+{{ elk_macros.beat_processors(processors) }}
 
 # Processors are used to reduce the number of fields in the exported event or to
 # enhance the event with external metadata. This section defines a list of
@@ -989,8 +990,6 @@ metricbeat.modules:
 #    max_depth: 1
 #    target: ""
 #    overwrite_keys: false
-processors:
-- add_host_metadata: ~
 
 #============================= Elastic Cloud ==================================
 

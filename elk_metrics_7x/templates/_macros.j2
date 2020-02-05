@@ -524,3 +524,14 @@ xpack.monitoring.elasticsearch:
   #metrics.period: 10s
   #state.period: 1m
 {%- endmacro %}
+
+{% macro beat_processors(processors) -%}
+# Processors are used to reduce the number of fields in the exported event or to
+# enhance the event with external metadata.
+processors:
+{% if processors is defined and processors is iterable and processors | length > 0 %}
+{{ processors | to_yaml }}
+{% else %}
+- add_host_metadata: ~
+{%- endif %}
+{%- endmacro %}
