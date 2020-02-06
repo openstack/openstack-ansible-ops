@@ -201,7 +201,7 @@ output.logstash:
 
   # The number of seconds to wait for responses from the Logstash server before
   # timing out. The default is 30s.
-  #timeout: 30s
+  timeout: 90s
 {%- endmacro %}
 
 {% macro setup_dashboards(beat_name) -%}
