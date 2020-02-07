@@ -16,29 +16,32 @@
   gather_facts: false
   connection: local
   tasks:
-    - name: Add hosts to dynamic inventory group
-      group_by:
-        key: journalbeat_deployment_containers
-        parents: all_journalbeat_deployments
-      when:
-        - openstack_release is defined and
-          openstack_release is version('18.0.0', 'lt')
-        - physical_host is defined and
-          physical_host != inventory_hostname
+    - name: Configure deployment group when Journalbeat group not specified
+      block:
+        - name: Add hosts to dynamic inventory group
+          group_by:
+            key: journalbeat_deployment_containers
+            parents: all_journalbeat_deployments
+          when:
+            - openstack_release is defined and
+              openstack_release is version('18.0.0', 'lt')
+            - physical_host is defined and
+              physical_host != inventory_hostname
 
-    - name: Add hosts to dynamic inventory group
-      group_by:
-        key: journalbeat_deployment_hosts
-        parents: all_journalbeat_deployments
+        - name: Add hosts to dynamic inventory group
+          group_by:
+            key: journalbeat_deployment_hosts
+            parents: all_journalbeat_deployments
+          when:
+            - physical_host is undefined or
+              physical_host == inventory_hostname
       when:
-        - physical_host is undefined or
-          physical_host == inventory_hostname
-
+        - groups['journalbeat'] is not defined
   tags:
     - always
 
 - name: Install Journalbeat
-  hosts: all_journalbeat_deployments
+  hosts: "{{ groups['journalbeat'] | default(groups['all_journalbeat_deployments']) }}"
   become: true
   vars:
     haproxy_ssl: false

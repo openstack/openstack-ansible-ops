@@ -12,7 +12,7 @@
 # limitations under the License.
 
 - name: Install Auditbeat
-  hosts: hosts
+  hosts: "{{ groups['auditbeat'] | default(groups['hosts']) }}"
   become: true
   vars:
     haproxy_ssl: false

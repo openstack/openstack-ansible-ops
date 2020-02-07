@@ -16,17 +16,20 @@
   gather_facts: false
   connection: local
   tasks:
-    - name: Add hosts to dynamic inventory group
-      group_by:
-        key: heatbeat_deployment_targets
-        parents: kibana
-      when:
-        - inventory_hostname in groups['kibana'][:3]
+    - name: Configure deployment group when Heartbeat group not specified
+      block:
+        - name: Add hosts to dynamic inventory group
+          group_by:
+            key: heartbeat_deployment_targets
+            parents: kibana
+          when:
+            - inventory_hostname in groups['kibana'][:3]
+      when: groups['heartbeat'] is not defined
   tags:
     - always
 
 - name: Install Heartbeat
-  hosts: heatbeat_deployment_targets
+  hosts: "{{ groups['heartbeat'] | default(groups['heartbeat_deployment_targets'] | default([])) }}"
   become: true
   vars:
     haproxy_ssl: false
