@@ -14,3 +14,14 @@
 # limitations under the License.
 
 auditbeat_service_state: restarted
+
+auditbeat_ilm_policy_name: "auditbeat-{{ beat_version }}"
+auditbeat_ilm_policy_template: "auditbeat-{{ beat_version }}"
+auditbeat_ilm_policy_filename: "auditbeat-ilm-policy.json"
+auditbeat_ilm_policy_file_location: "/etc/auditbeat"
+
+ilm_policy_name: "{{ auditbeat_ilm_policy_name | default('') }}"
+ilm_policy: "{{ (auditbeat_ilm_policy | default(default_ilm_policy)) | default({}) }}"
+ilm_policy_template: "{{ auditbeat_ilm_policy_template | default('') }}"
+ilm_policy_filename: "{{ (auditbeat_ilm_policy_filename | default(default_ilm_policy_filename)) | default('') }}"
+ilm_policy_file_location: "{{ (auditbeat_ilm_policy_file_location | default(default_ilm_policy_file_location)) | default('') }}"
