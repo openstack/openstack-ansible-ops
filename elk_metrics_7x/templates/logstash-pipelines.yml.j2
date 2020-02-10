@@ -495,7 +495,7 @@
           elasticsearch {
             id => "elasticsearchDocIDOutputPipeline"
             document_id => "%{[@metadata][fingerprint]}"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "%{[@metadata][beat]}-%{[@metadata][version]}"
@@ -504,7 +504,7 @@
           elasticsearch {
             id => "elasticsearchLegacyDocIDOutputPipeline"
             document_id => "%{[@metadata][fingerprint]}"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
@@ -513,7 +513,7 @@
           elasticsearch {
             id => "elasticsearchSyslogDocIDOutputPipeline"
             document_id => "%{[@metadata][fingerprint]}"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "syslog-%{+YYYY.MM.dd}"
@@ -522,7 +522,7 @@
           elasticsearch {
             id => "elasticsearchCollectdDocIDOutputPipeline"
             document_id => "%{[@metadata][fingerprint]}"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "collectd-%{+YYYY.MM.dd}"
@@ -531,7 +531,7 @@
           elasticsearch {
             id => "elasticsearchUndefinedDocIDOutputPipeline"
             document_id => "%{[@metadata][fingerprint]}"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "undefined-%{+YYYY.MM.dd}"
@@ -541,7 +541,7 @@
         if [@metadata][version] {
           elasticsearch {
             id => "elasticsearchOutputPipeline"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "%{[@metadata][beat]}-%{[@metadata][version]}"
@@ -549,7 +549,7 @@
         } else if [@metadata][beat] {
           elasticsearch {
             id => "elasticsearchLegacyOutputPipeline"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
@@ -557,7 +557,7 @@
         } else if "syslog" in [tags] {
           elasticsearch {
             id => "elasticsearchSyslogOutputPipeline"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "syslog-%{+YYYY.MM.dd}"
@@ -565,7 +565,7 @@
         } else if "collectd" in [tags] {
           elasticsearch {
             id => "elasticsearchCollectdOutputPipeline"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "collectd-%{+YYYY.MM.dd}"
@@ -573,7 +573,7 @@
         } else {
           elasticsearch {
             id => "elasticsearchUndefinedOutputPipeline"
-            hosts => ["{{ '127.0.0.1:' ~ elastic_port }}"]
+            hosts => {{ logstash_elasticsearch_endpoints | to_json }}
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "undefined-%{+YYYY.MM.dd}"
