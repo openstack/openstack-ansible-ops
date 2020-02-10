@@ -24,3 +24,10 @@ kibana_nginx_port: 81
 kibana_server_name: "{{ ansible_hostname }}"
 kibana_index_on_elasticsearch: "http://{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }}:{{ elastic_port}}/.kibana"
 kibana_elastic_request_timeout: 1800000
+
+# The following must be set in order to to allow kibana load balancing
+# otherwise they are set individually per Kibana instance
+# The key used to encrypt Elasticsearch reports
+# kibana_reporting_encryption_key: ""
+# The key used to encrypt kibana session cookies
+# kibana_security_encryption_key: ""
