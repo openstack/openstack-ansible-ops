@@ -15,6 +15,7 @@
 
 cluster_name: openstack_elk
 elastic_log_rotate_path: "/var/log/elasticsearch"
+elastic_data_path: "/var/lib/elasticsearch"
 
 temp_dir: /var/lib/elasticsearch/tmp
 nfs_query: "[?fstype=='nfs' || fstype=='nfs4']"
