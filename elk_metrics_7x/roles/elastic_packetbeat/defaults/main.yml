@@ -28,3 +28,6 @@ ilm_policy_file_location: "{{ (packetbeat_ilm_policy_file_location | default(def
 
 # beat processors. Empty dictionary sets `add_host_metadata: ~`
 processors: {}
+
+# optional list of ports to ignore
+packetbeat_ignored_ports: []
