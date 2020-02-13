@@ -1501,7 +1501,7 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 {% endif %}
 
 #================================ Logging ======================================
-{{ elk_macros.beat_logging('metricbeat') }}
+{{ elk_macros.beat_logging('metricbeat', metricbeat_log_level) }}
 
 #============================== Xpack Monitoring =====================================
 {{ elk_macros.xpack_monitoring_elasticsearch(inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
