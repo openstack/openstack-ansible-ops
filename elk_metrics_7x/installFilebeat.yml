@@ -12,7 +12,7 @@
 # limitations under the License.
 
 - name: Install Filebeat
-  hosts: hosts
+  hosts: "{{ groups['filebeat'] | default(groups['hosts']) }}"
   become: true
   vars:
     haproxy_ssl: false

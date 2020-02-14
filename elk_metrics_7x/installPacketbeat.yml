@@ -12,7 +12,7 @@
 # limitations under the License.
 
 - name: Install Packetbeat
-  hosts: hosts
+  hosts: "{{ groups['packetbeat'] | default(groups['hosts']) }}"
   become: true
   vars:
     haproxy_ssl: false

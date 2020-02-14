@@ -11,8 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Install Metricsbeat
-  hosts: all
+- name: Install Metricbeat
+  # The nested defaults are required as ansible doesn't short-circuit in its default filter
+  hosts: "{{ groups['metricbeat'] | default( (groups['hosts'] | default([])) + (groups['all_containers'] | default([]))) }}"
   become: true
   vars:
     haproxy_ssl: false
