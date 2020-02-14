@@ -167,7 +167,7 @@ packetbeat.protocols:
 {% set ports = [] %}
 {% for item in heartbeat_services %}
 {%   for port in item.ports %}
-{%     if (item.type == 'http') and (not port in used_ports) %}
+{%     if (item.type == 'http') and (not port in used_ports) and (not port in packetbeat_ignored_ports) %}
 {%       set _ = ports.extend([port]) %}
 {%     endif %}
 {%   endfor %}
