@@ -11,7 +11,11 @@ hosts:
       vars:
         physical_host: localhost
 
-    elastic-logstash:
+    elastic:
+      hosts:
+        localhost: {}
+
+    logstash:
       hosts:
         localhost: {}
 

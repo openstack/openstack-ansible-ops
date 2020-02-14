@@ -12,7 +12,7 @@
 # limitations under the License.
 
 - name: Install Kibana Dashboards
-  hosts: "elastic-logstash"
+  hosts: elastic
   become: true
   vars_files:
     - vars/variables.yml
@@ -82,5 +82,5 @@
     - name: Upload Custom Openstack Log Dashboard
       shell: "/opt/elasticdump/node_modules/elasticdump/bin/elasticdump --input=/tmp/openstack-log-dashboard.json --output={{ kibana_index_on_elasticsearch }} --type=data"
       environment:
-        no_proxy: "{{ hostvars[groups['elastic-logstash'][0]]['ansible_host'] }}"
+        no_proxy: "{{ hostvars[groups[elastic[0]]]['ansible_host'] }}"
       run_once: yes

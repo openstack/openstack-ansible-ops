@@ -255,7 +255,7 @@ setup.dashboards.enabled: false
 # These settings can be adjusted to load your own template or overwrite existing ones.
 
 # Set to false to disable template loading.
-setup.template.enabled: {{ host == data_nodes[0] }}
+setup.template.enabled: {{ host == data_nodes[0] | default(false) }}
 
 # Template name. By default the template name is "{{ beat_name }}-%{[beat.version]}"
 # The template name and pattern has to be set in case the elasticsearch index pattern is modified.
@@ -279,7 +279,7 @@ setup.template.fields: "${path.config}/fields.yml"
 #setup.template.json.name: ""
 
 # Overwrite existing template
-setup.template.overwrite: {{ host == data_nodes[0] }}
+setup.template.overwrite: {{ host == data_nodes[0] | default(false)}}
 
 {% set shards = 1 %}
 

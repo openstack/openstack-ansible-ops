@@ -26,7 +26,7 @@
     - always
 
 - name: Set elasticsearch variables
-  include_vars: "vars_{{ ((inventory_hostname in (groups['kibana'] | default([])) and not inventory_hostname in (groups['elastic-logstash']) | default([]))) | ternary('kibana', 'default') }}.yml"
+  include_vars: "vars_{{ ((inventory_hostname in (groups['kibana'] | default([])) and not inventory_hostname in (groups['elastic']) | default([]))) | ternary('kibana', 'default') }}.yml"
   tags:
     - always
 

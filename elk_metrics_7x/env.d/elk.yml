@@ -4,11 +4,13 @@ component_skel:
     belongs_to:
       - elk_all
       - apm_all
-  elastic-logstash:
+  elastic:
     belongs_to:
       - elk_all
       - elasticsearch
       - elasticsearch_all
+  logstash:
+    belongs_to:
       - logstash
       - logstash_all
   kibana:

@@ -380,7 +380,7 @@ grafana_datasources:
 elastic_beats:
   logstash:
     make_index: true
-    hosts: "{{ groups['elastic-logstash'] | default([]) }}"
+    hosts: "{{ logstash | default([]) }}"
   apm:
     make_index: true
     timeFieldName: '@timestamp'

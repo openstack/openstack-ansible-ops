@@ -12,7 +12,7 @@
 # limitations under the License.
 
 - name: Create/Setup known indexes in Elasticsearch
-  hosts: "elastic-logstash[0]"
+  hosts: "elastic[0]"
   become: true
 
   roles:

@@ -72,7 +72,7 @@
     - beat-install
 
 - name: Setup journalbeat rollup
-  hosts: elastic-logstash[0]
+  hosts: elastic[0]
   become: true
   vars:
     haproxy_ssl: false

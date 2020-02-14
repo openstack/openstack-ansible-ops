@@ -12,7 +12,7 @@
 # limitations under the License.
 
 - name: Install Elastic Search
-  hosts: "elastic-logstash:kibana"
+  hosts: elastic:kibana
   become: true
 
   vars_files:

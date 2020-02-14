@@ -512,7 +512,7 @@ Optional | Customize Elasticsearch cluster configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Cluster configuration can be augmented using several variables which will force
-a node to use a given role.
+a node to use a given role. By default all nodes are data and ingest eligible.
 
 Available roles are *data*, *ingest*, and *master*.
 
@@ -529,7 +529,7 @@ Example setting override options within inventory.
 
     hosts:
       children:
-        elastic-logstash:
+        elastic:
           hosts:
             elk1:
               ansible_host: 10.0.0.1
@@ -552,11 +552,15 @@ Example setting override options within inventory.
             elk4:
               ansible_host: 10.0.0.4
               ansible_user: root
+        logstash:
+	  children:
+	    elk3:
+	    elk4:
 
 With the following inventory settings **elk1** would be a master node, **elk2**
-would be a data, **elk3** would be an ingest node, and **elk4** would auto
-select a role.
-
+would be a data, **elk3** would be an ingest node, and **elk4** would be both a
+data and an ingest node. **elk3** and **elk4** would become the nodes hosting
+logstash instances.
 
 Upgrading the cluster
 ---------------------

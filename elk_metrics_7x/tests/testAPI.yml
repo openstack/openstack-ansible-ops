@@ -31,7 +31,7 @@
 
 
 - name: Test elasticsearch api
-  hosts: elastic-logstash
+  hosts: elastic
   gather_facts: false
   become: true
 
@@ -64,7 +64,7 @@
 
 
 - name: Test kibana api
-  hosts: elastic-logstash
+  hosts: elastic
   gather_facts: false
   become: true
 
@@ -91,7 +91,7 @@
 
 
 - name: Test logstash api
-  hosts: elastic-logstash
+  hosts: logstash
   gather_facts: false
   become: true
 

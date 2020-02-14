@@ -224,7 +224,7 @@ metricbeat.modules:
 #  enabled: true
 #
 #---------------------------- Elasticsearch Module ---------------------------
-{% if inventory_hostname in (groups['elastic-logstash'] | union(groups['kibana'])) %}
+{% if inventory_hostname in (groups['elastic'] | union(groups['kibana'])) %}
 - module: elasticsearch
   metricsets:
     - node
@@ -485,7 +485,7 @@ metricbeat.modules:
 {% endif %}
 
 #------------------------------ Logstash Module ------------------------------
-{% if inventory_hostname in groups['elastic-logstash'] | default([]) %}
+{% if inventory_hostname in groups['logstash'] | default([]) %}
 - module: logstash
   metricsets: ["node", "node_stats"]
   enabled: true
