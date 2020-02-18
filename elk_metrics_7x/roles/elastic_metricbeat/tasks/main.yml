@@ -61,6 +61,9 @@
   tags:
     - package_install
 
+- name: Populate service facts
+  service_facts:
+
 - name: Check for apache
   stat:
     path: /etc/apache2/sites-available
@@ -129,11 +132,6 @@
   stat:
     path: /var/run/docker.sock
   register: docker
-
-- name: Check for haproxy
-  stat:
-    path: /etc/haproxy
-  register: haproxy
 
 - name: Check for httpd
   stat:
@@ -207,7 +205,7 @@
     docker_enabled: "{{ docker.stat.exists | bool }}"
     envoyproxy_enabled: false
     etcd_enabled: "{{ etcd.stat.exists | bool }}"
-    haproxy_enabled: "{{ haproxy.stat.exists | bool }}"
+    haproxy_enabled: "{{ ((ansible_facts.services['haproxy.service'] | default({}) )['state'] | default('')) == 'running' }}"
     kvm_enabled: "{{ kvm.stat.exists | bool }}"
     memcached_enabled: "{{ memcached.stat.exists | bool }}"
     mysql_enabled: "{{ mysql.stat.exists | bool }}"
