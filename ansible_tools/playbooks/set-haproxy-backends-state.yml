@@ -1,0 +1,37 @@
+---
+# Copyright 2020, Springer Nature.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This playbook is typically used with the following ansible-playbook
+# arguments:
+# * `-e hostname=<host>`
+# * `-e backend_state=<enabled|disabled>`
+# in order to globally enable/disable a controller at the HAProxy level.
+
+- name: Set HAProxy backends state
+  hosts: haproxy
+  vars:
+    - hostname: ""
+    - backend_state: enabled
+  tasks:
+    - name: List HAProxy backends to process
+      shell: echo show servers state | nc -U /var/run/haproxy.stat | awk '{print $4}' | grep '^{{ hostname }}'
+      register: backends
+      changed_when: false
+    - name: Loop through backends to set state
+      haproxy:
+        host: "{{ item }}"
+        state: "{{ backend_state }}"
+        socket: /var/run/haproxy.stat
+      with_items: "{{ backends.stdout_lines }}"
