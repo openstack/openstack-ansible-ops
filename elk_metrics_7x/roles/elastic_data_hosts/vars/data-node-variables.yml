@@ -91,9 +91,10 @@ coordination_nodes: |-
                  | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port) | list))
   }}
 
-zen_nodes: >-
+_elasticsearch_discovery_seed_hosts: >-
   {{
-    (groups['elastic'] | union(groups['kibana'])) | map('extract', hostvars, 'ansible_host') | list | shuffle(seed=inventory_hostname)
+    elasticsearch_discovery_seed_hosts
+      | default((groups['elastic'] | union(groups['kibana'])) | map('extract', hostvars, 'ansible_host') | list)
   }}
 
 elasticserch_interface_speed: |-

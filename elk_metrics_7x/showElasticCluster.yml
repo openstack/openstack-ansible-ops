@@ -42,9 +42,9 @@
         debug:
           msg: "Coordination nodes: {{ coordination_nodes }}"
 
-      - name: "Report Zen nodes"
+      - name: "Report Elasticsearch discovery nodes"
         debug:
-          msg: "Zen nodes: {{ zen_nodes }}"
+          msg: "Elasticsearch discovery nodes: {{ _elasticsearch_discovery_seed_hosts }}"
 
       delegate_to: elastic[0]
       run_once: true

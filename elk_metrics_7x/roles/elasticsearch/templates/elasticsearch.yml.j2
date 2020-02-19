@@ -82,7 +82,8 @@ http.port: {{ elastic_port }}
 # Pass an initial list of hosts to perform discovery when this node is started:
 # The default list of hosts is ["127.0.0.1", "[::1]"]
 #
-discovery.seed_hosts: {{ zen_nodes | to_json }}
+discovery.seed_hosts: {{ _elasticsearch_discovery_seed_hosts | shuffle(seed=inventory_hostname) | to_json }}
+
 #
 # Bootstrap the cluster using an initial set of master-eligible nodes:
 #
