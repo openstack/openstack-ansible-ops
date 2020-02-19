@@ -215,6 +215,7 @@
     uwsgi_enabled: "{{ uwsgi.stat.exists | bool }}"
     uwsgi_sockets: "{{ uwsgi_find_sockets }}"
     traefik_enabled: false
+    mdmonitor_enabled: "{{ ((ansible_facts.services['mdmonitor.service'] | default({}) )['state'] | default('')) == 'running' }}"
 
 # Apache 2 stats enablement
 - name: Enable apache2

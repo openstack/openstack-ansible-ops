@@ -53,7 +53,10 @@ metricbeat.max_start_delay: 10s
 {%     set _ = metric_sets.extend(['filesystem', 'fsstat']) %}
 {%   endif %}
 {% else %}
-{%   set _ = metric_sets.extend(['cpu', 'load', 'memory', 'core', 'diskio', 'raid', 'socket', 'filesystem', 'fsstat']) %}
+{%   set _ = metric_sets.extend(['cpu', 'load', 'memory', 'core', 'diskio', 'socket', 'filesystem', 'fsstat']) %}
+{%   if mdmonitor_enabled | default(false) | bool %}
+{%     set _ = metric_sets.extend(['raid']) %}
+{%   endif %}
 {% endif %}
 metricbeat.modules:
 
