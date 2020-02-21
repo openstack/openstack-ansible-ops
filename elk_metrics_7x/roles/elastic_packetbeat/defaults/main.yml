@@ -29,5 +29,10 @@ ilm_policy_file_location: "{{ (packetbeat_ilm_policy_file_location | default(def
 # beat processors. Empty dictionary sets `add_host_metadata: ~`
 processors: {}
 
+
 # optional list of ports to ignore
 packetbeat_ignored_ports: []
+
+# Logging level
+# Available log levels are error, warning, info, debug
+packetbeat_log_level: "{{ elastic_beat_log_level | default('info') }}"

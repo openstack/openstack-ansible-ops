@@ -28,3 +28,7 @@ ilm_policy_file_location: "{{ (journalbeat_ilm_policy_file_location | default(de
 
 # beat processors. Empty dictionary sets `add_host_metadata: ~`
 processors: {}
+
+# Logging level
+# Available log levels are error, warning, info, debug
+journalbeat_log_level: "{{ elastic_beat_log_level | default('info') }}"

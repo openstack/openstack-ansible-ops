@@ -1381,7 +1381,7 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 {{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ kibana_port) }}
 {% endif %}
 #================================ Logging ======================================
-{{ elk_macros.beat_logging('filebeat') }}
+{{ elk_macros.beat_logging('filebeat', filebeat_log_level) }}
 #============================== Xpack Monitoring =====================================
 {{ elk_macros.xpack_monitoring_elasticsearch(inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
 
