@@ -43,6 +43,7 @@ libffi-devel      [platform:rpm]
 openssl-devel     [platform:rpm]
 python-devel      [platform:rpm]
 python2-dnf       [platform:fedora]
+python3-devel     [platform:rpm]
 
 # Base requirements for Gentoo
 git               [platform:gentoo]
