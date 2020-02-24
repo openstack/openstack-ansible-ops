@@ -17,7 +17,9 @@ elastic_repo_distro_packages:
   - apt-transport-https
 
 # elk apt repo
-elastic_repo:
+_elastic_repo:
   repo: 'deb https://artifacts.elastic.co/packages/7.x/apt stable main'
   state: "{{ ((elk_package_state | default('present')) == 'absent') | ternary('absent', 'present') }}"
   key_url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+
+elastic_repo: "{{ elastic_apt_repo | default(_elastic_repo) }}"
