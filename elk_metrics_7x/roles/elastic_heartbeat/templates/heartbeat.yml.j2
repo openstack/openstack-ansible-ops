@@ -9,12 +9,13 @@
 # https://www.elastic.co/guide/en/beats/heartbeat/index.html
 
 ############################# Heartbeat ######################################
-{%   set icmp_hosts = [] %}
-{%   for host_item in groups['all'] %}
+{%   set _icmp_hosts = [] %}
+{%   for host_item in (groups['heartbeat'] | default(groups['heartbeat_deployment_targets'])) %}
 {%     if hostvars[host_item]['ansible_host'] is defined %}
-{%       set _ = icmp_hosts.extend([hostvars[host_item]['ansible_host']]) %}
+{%       set _ = _icmp_hosts.extend([hostvars[host_item]['ansible_host']]) %}
 {%     endif %}
 {%   endfor %}
+{%   set icmp_hosts = ( heartbeat_icmp_hosts | default(_icmp_hosts))  %}
 
 # Define a directory to load monitor definitions from. Definitions take the form
 # of individual yaml files.

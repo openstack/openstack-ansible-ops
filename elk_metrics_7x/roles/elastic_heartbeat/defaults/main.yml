@@ -32,3 +32,7 @@ processors: {}
 # Logging level
 # Available log levels are error, warning, info, debug
 heartbeat_log_level: "{{ elastic_beat_log_level | default('info') }}"
+
+# List of interfaces with which heartbeat tests connectivity.
+# Defaults to ansible_host on all hosts in the inventory to which heartbeat is deployed
+# heartbeat_icmp_hosts: "{{ groups['heartbeat'] | default(groups['heartbeat_deployment_targets']) | map('extract', hostvars, ['ansible_host']) | list }}"
