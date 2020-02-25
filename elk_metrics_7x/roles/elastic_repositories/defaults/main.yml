@@ -23,4 +23,9 @@ elastic_repo_distro_packages: []
 # elastic_apt_repo:
 #   repo: 'deb https://artifacts.elastic.co/packages/7.x/apt stable main'
 #   state: "{{ ((elk_package_state | default('present')) == 'absent') | ternary('absent', 'present') }}"
-#   key_url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+
+# This should be a list of dicts, with each dict
+# giving a set of arguments to the applicable
+# package module. Defaults to the remote url
+# https://artifacts.elastic.co/GPG-KEY-elasticsearch
+elastic_gpg_keys: "{{ _elastic_gpg_keys | default([]) }}"
