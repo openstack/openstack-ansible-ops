@@ -300,3 +300,9 @@ processors: {}
 # Logging level
 # Available log levels are error, warning, info, debug
 filebeat_log_level: "{{ elastic_beat_log_level | default('info') }}"
+
+# Enable IPtables logging module
+filebeat_iptables_enabled: false
+# The following allows one to specify log files in non-standard locations,
+# defaulting to log collection in syslog
+filebeat_iptables_log_paths: ["var/log/syslog"]
