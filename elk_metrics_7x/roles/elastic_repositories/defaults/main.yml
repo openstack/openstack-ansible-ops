@@ -18,3 +18,9 @@ elastic_repo_ppas: []
 
 # List of packages to install
 elastic_repo_distro_packages: []
+
+# Elasticsearch apt repo to use for package install. Uncomment to change, e.g. for mirror usage
+# elastic_apt_repo:
+#   repo: 'deb https://artifacts.elastic.co/packages/7.x/apt stable main'
+#   state: "{{ ((elk_package_state | default('present')) == 'absent') | ternary('absent', 'present') }}"
+#   key_url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
