@@ -209,6 +209,16 @@ filebeat.modules:
     # can be added under this section.
     #input:
 
+#------------------------------ IP Tables Module ------------------------------
+{% if (filebeat_iptables_enabled | bool) %}
+- module: iptables
+  # Syslog
+  log:
+    enabled: "true"
+    var.input: "file"
+    var.paths: {{ filebeat_iptables_log_paths | to_json }}
+{% endif %}
+
 #-------------------------------- Kafka Module --------------------------------
 #- module: kafka
   # All logs
