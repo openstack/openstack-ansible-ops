@@ -17,7 +17,7 @@ journalbeat.inputs:
   # Paths that should be crawled and fetched. Possible values files and directories.
   # When setting a directory, all journals under it are merged.
   # When empty starts to read from local journal.
-- paths: ["/var/log/journal"]
+- paths: {{ journal_paths | to_json }}
 
   # The number of seconds to wait before trying to read again from journals.
   backoff: 10s

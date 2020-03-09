@@ -77,6 +77,16 @@
   notify:
     - Enable and restart journalbeat
 
+- name: Gather list of OS container journals
+  find:
+    path: "/var/log/journal/"
+    file_type: directory
+  register: journal_log_dirs
+
+- name: Set container journal paths
+  set_fact:
+    journal_paths: "{{ journal_log_dirs.files | map(attribute='path') | list }}"
+
 - name: Drop journalbeat configs
   template:
     src: "{{ item.src }}"
