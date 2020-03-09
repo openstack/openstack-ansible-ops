@@ -265,7 +265,7 @@ filebeat_prospectors:
     enabled: "{{ filebeat_system_enabled | default(true) }}"
     paths:
       - /openstack/log/ansible-logging/*.log
-      - /var/log/*.log
+      - /var/log/!(auth*).log
       - /var/log/libvirt/*.log
       - /var/log/libvirt/*/*.log
       - /var/log/lxc/*.log
