@@ -278,7 +278,7 @@ filebeat.modules:
     #input:
 
 #-------------------------------- MySQL Module --------------------------------
-#- module: mysql
+- module: mysql
   # Error logs
   error:
     enabled: "{{ filebeat_galera_enabled | default(true) }}"
