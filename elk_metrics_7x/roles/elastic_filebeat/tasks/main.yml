@@ -75,6 +75,13 @@
   notify:
     - Enable and restart filebeat
 
+- name: Populate service facts
+  service_facts:
+
+- name: Set dicovery facts to enable Filebeat modules
+  set_fact:
+    elasticsearch_enabled: "{{ ((ansible_facts.services['elasticsearch.service'] | default({}) )['state'] | default('')) == 'running' }}"
+
 - name: Drop Filebeat conf file
   template:
     src: "filebeat.yml.j2"
