@@ -84,6 +84,7 @@
     logstash_enabled: "{{ ((ansible_facts.services['logstash.service'] | default({}) )['state'] | default('')) == 'running' }}"
     kibana_enabled: "{{ ((ansible_facts.services['kibana.service'] | default({}) )['state'] | default('')) == 'running' }}"
     haproxy_enabled: "{{ ((ansible_facts.services['haproxy.service'] | default({}) )['state'] | default('')) == 'running' }}"
+    nginx_enabled: "{{ ((ansible_facts.services['nginx.service'] | default({}) )['state'] | default('')) == 'running' }}"
 
 - name: Drop Filebeat conf file
   template:

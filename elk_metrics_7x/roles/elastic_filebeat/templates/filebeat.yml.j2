@@ -324,6 +324,10 @@ filebeat.modules:
     var.paths:
       - /openstack/log/*repo_container*/nginx/*access.log
       - /openstack/log/*keystone*/nginx/*access.log
+{% if (nginx_enabled | default(false) | bool ) %}
+      - var/log/nginx/*access.log
+{% endif %}
+
     # Input configuration (advanced). Any input configuration option
     # can be added under this section.
     #input:
@@ -340,6 +344,9 @@ filebeat.modules:
     var.paths:
       - /openstack/log/*repo_container*/nginx/*error.log
       - /openstack/log/*keystone*/nginx/*error.log
+{% if (nginx_enabled | default(false) | bool ) %}
+      - var/log/nginx/*error.log
+{% endif %}
 
     # Input configuration (advanced). Any input configuration option
     # can be added under this section.
