@@ -13,13 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: add Elastic search public GPG key
-  apt_key:
-    url: "{{ elastic_repo.key_url }}"
-    state: "present"
-  register: _apt_task
-  until: _apt_task is success
-  retries: 3
+- name: If a keyfile is provided, copy the gpg keyfile to the key location
+  copy:
+    src: "gpg/{{ item.id }}"
+    dest: "{{ item.file }}"
+    mode: '0644'
+  with_items: "{{ elastic_gpg_keys | selectattr('file','defined') | list }}"
+
+- name: Install Elastic gpg keys
+  apt_key: "{{ key }}"
+  with_items: "{{ elastic_gpg_keys }}"
+  loop_control:
+    loop_var: key
+  register: _add_apt_keys
+  until: _add_apt_keys is success
+  retries: 5
   delay: 2
   tags:
     - package_install
