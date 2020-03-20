@@ -26,7 +26,7 @@
 
   tasks:
 
-    # the elasticserch cluster elects one master from all those which are marked as master-eligible
+    # the elasticsearch cluster elects one master from all those which are marked as master-eligible
     # 1 node cluster can only have one master
     # 2 node clusters have 1 master-eligable nodes to avoid split-brain
     # 3 node clusters have 3 master-eligable nodes

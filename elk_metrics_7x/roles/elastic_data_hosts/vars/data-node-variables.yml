@@ -97,7 +97,7 @@ _elasticsearch_discovery_seed_hosts: >-
       | default((groups['elastic'] | union(groups['kibana'])) | map('extract', hostvars, 'ansible_host') | list)
   }}
 
-elasticserch_interface_speed: |-
+elasticsearch_interface_speed: |-
   {% set default_interface_fact = hostvars[inventory_hostname]['ansible_' + (elastic_data_interface | replace('-', '_'))] %}
   {% set speeds = [] %}
   {% if default_interface_fact['type'] == 'bridge' %}
