@@ -196,7 +196,11 @@ magnum_api_uwsgi_ini_overrides:
     stats: "/tmp/magnum-api-uwsgi-stats.sock"
 {% endif %}
 
-{% if osa_enable_networking_ovn | bool %}
+{% if osa_enable_networking_ovs_dvr | bool %}
+neutron_plugin_type: ml2.ovs.dvr
+neutron_ml2_drivers_type: "vlan,local,flat,vxlan"
+
+{% elif osa_enable_networking_ovn | bool %}
 neutron_plugin_type: ml2.ovn
 
 neutron_plugin_base:
@@ -204,3 +208,4 @@ neutron_plugin_base:
 
 neutron_ml2_drivers_type: "vlan,local,flat,geneve"
 {% endif %}
+
