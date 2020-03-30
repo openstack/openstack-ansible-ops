@@ -32,3 +32,14 @@ processors: {}
 # Logging level
 # Available log levels are error, warning, info, debug
 journalbeat_log_level: "{{ elastic_beat_log_level | default('info') }}"
+
+## Journalbeat event queue configuration
+# Determines conditions under which the journalbeat event queue is flushed to logstash
+# Max # of events the queue can buffer
+journalbeat_queue_flush_max_events: 4096
+
+# Min # of events before queue is flushed
+journalbeat_queue_flush_min_events: 2048
+
+# Max time before queue is flushed (even if queue_min_events is not reached)
+journalbeat_queue_flush_timeout: 1s
