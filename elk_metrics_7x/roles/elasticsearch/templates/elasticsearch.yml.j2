@@ -96,6 +96,9 @@ cluster.initial_master_nodes: {{ master_nodes | to_json }}
 node.master: {{ elasticsearch_node_master | default(master_node) }}
 # Every node in the master list and every other node after will be a data node
 #
+# Set to prevent master-eligible nodes from becoming master
+node.voting_only: {{ elasticsearch_voting_only | default(false) }}
+#
 node.data: {{ elasticsearch_node_data | default(data_node) }}
 #
 # Ingest nodes can execute pre-processing pipelines. To override automatic
