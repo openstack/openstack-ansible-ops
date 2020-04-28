@@ -36,3 +36,7 @@ elastic_plugins:
 # Set the addresses/interfaces for elasticsearch to bind to. If undefined, this binds to
 # localhost and the ansible_host and ansible_hostname addresses.
 elasticsearch_bind_addresses: ["127.0.0.1", "{{ ansible_host }}", "{{ ansible_hostname }}"]
+
+# Set a master-eligible node to be voting only
+# By default this is set to False - all masters can be elected by default
+# elasticsearch_voting_only: true
