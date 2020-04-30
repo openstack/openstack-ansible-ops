@@ -169,6 +169,7 @@ elasticsearch_number_of_replicas: "{{ ((data_nodes | length) > 2) | ternary('2',
 elasticsearch_beat_settings:
   number_of_replicas: "{{ elasticsearch_number_of_replicas }}"
   max_docvalue_fields_search: "{{ elastic_max_docvalue_fields_search | default('100') }}"
+  shard_count: "{{ elastic_primary_shard_count | default(elasticsearch_data_node_details | length) }}"
 
 # Shuffled elasticsearch endpoints (with localhost if relevant) for use in beat config files
 elasticsearch_data_hosts: |-

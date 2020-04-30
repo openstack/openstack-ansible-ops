@@ -34,6 +34,9 @@ elastic_data_interface: "{{ ansible_default_ipv4['alias'] }}"
 ## Elasticsearch index template settings
 # Set the default max number of fields used in a query
 # elastic_max_docvalue_fields_search: "100"
+# Set the number of primary shards for each index
+# (defaults to the number of Elasticsearch data nodes)
+# elastic_primary_shard_count: 1
 
 # The set of nodes used for elasticsearch discovery
 # elasticsearch_discovery_seed_hosts: "{{ (elastic_hosts | union(groups['kibana'])) | map('extract', hostvars, 'ansible_host') | list }}"

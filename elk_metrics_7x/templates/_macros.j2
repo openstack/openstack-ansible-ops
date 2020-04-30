@@ -281,7 +281,7 @@ setup.template.fields: "${path.config}/fields.yml"
 # Overwrite existing template
 setup.template.overwrite: {{ host == data_nodes[0] | default(false)}}
 
-{% set shards = 1 %}
+{% set shards = elasticsearch_beat_settings.shard_count | int %}
 
 # Elasticsearch template settings
 setup.template.settings:
