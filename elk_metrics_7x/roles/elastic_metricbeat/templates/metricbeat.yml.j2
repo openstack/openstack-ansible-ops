@@ -45,7 +45,7 @@ metricbeat.max_start_delay: 10s
 #              period: 30s
 #              hosts: ["${host}:2379"]
 #==========================  Modules configuration ============================
-{% set metric_sets = ['network', 'process', 'process_summary', 'uptime'] %}
+{% set metric_sets = ['network', 'process', 'process_summary', 'uptime', 'service'] %}
 {% if physical_host is defined and physical_host != inventory_hostname %}
 {%   set host_mount_devices = (hostvars[physical_host]['ansible_mounts'] | map(attribute='device') | list) %}
 {%   set container_mount_devices = (ansible_mounts | map(attribute='device') | list) %}
