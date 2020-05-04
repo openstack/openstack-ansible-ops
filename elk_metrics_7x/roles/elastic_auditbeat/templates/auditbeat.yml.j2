@@ -29,7 +29,7 @@ auditbeat.max_start_delay: 10s
 
 #==========================  Modules configuration =============================
 auditbeat.modules:
-
+{% if not (containerised | default(false)) %}
 # The auditd module collects events from the audit framework in the Linux
 # kernel. You need to specify audit rules for the events that you want to audit.
 - module: auditd
@@ -73,6 +73,7 @@ auditbeat.modules:
     -a always,exit -F arch=b64 -S open,truncate,ftruncate,creat,openat,open_by_handle_at -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -F key=access
     -a always,exit -F arch=b64 -S open,truncate,ftruncate,creat,openat,open_by_handle_at -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -F key=access
 
+{% endif %}
 {% endif %}
 
 # The file integrity module sends events when files are changed (created,
@@ -140,7 +141,9 @@ auditbeat.modules:
     - login   # User logins, logouts, and system boots.
     - package # Installed, updated, and removed packages
     - process # Started and stopped processes
+{% if not (containerised | default(false)) %}
     - socket  # Opened and closed sockets
+{% endif  %}
     - user    # User information
 
   # How often datasets send state updates with the

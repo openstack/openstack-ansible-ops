@@ -25,6 +25,14 @@
   tags:
     - always
 
+- name: Update facts if containerised
+  set_fact:
+    auditbeat_distro_packages:
+      - auditbeat
+    containerised: true
+  when:
+    - ansible_virtualization_type in ["systemd-nspawn", "lxc", "lxd", "podman", "docker", "systemd_container", "container"]
+
 - name: Ensure beat is installed (x86_64)
   package:
     name: "{{ auditbeat_distro_packages }}"
