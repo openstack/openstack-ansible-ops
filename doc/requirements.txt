@@ -9,7 +9,7 @@
 # openstack-ansible-tests repository. Once it merges there, the changes will
 # automatically be proposed to all the repositories which use it.
 
-sphinx>=1.8.0,!=2.1.0  # BSD
+sphinx>=2.0.0,!=2.1.0  # BSD
 sphinxcontrib-svg2pdfconverter>=0.1.0 # BSD
 openstackdocstheme>=1.32.1 # Apache-2.0
 reno>=2.5.0 # Apache-2.0
