@@ -467,6 +467,69 @@
               remove_field => [ "event_day", "event_month", "event_year", "event_time", "timestamp" ]
             }
           }
+        } else if [@metadata][source_type] == "syslog" {
+          if [message] == "" {
+            drop { }
+          }
+          mutate {
+            # Handle duplicate messages sent to logstash instances
+            copy => { "message" => "fingerprint_source" }
+          }
+          grok {
+            # Match syslog patterns used by Cisco switches for later handling
+            patterns_dir => [ "/opt/logstash/patterns" ]
+            match => [
+              # RFC5424
+              "message", "%{SYSLOG5424PRI} %{NUMBER:syslog.version} %{TIMESTAMP_ISO8601:logdate} %{HOSTNAME:syslog.host} +%%{CISCO_REASON:syslog.facility_label}-%{INT:syslog.severity}-%{CISCO_REASON:syslog.facility_sub_label}: %{GREEDYDATA:message}",
+              "message", "%{SYSLOG5424PRI} %{NUMBER:syslog.version} %{TIMESTAMP_ISO8601:logdate} %{HOSTNAME:syslog.host} last message repeated %{INT:syslog.repeats} times",
+              # Cisco Default (NXOS/IOSXE)
+              "message", "%{SYSLOG5424PRI}(%{NUMBER:syslog.sequence})?:( %{NUMBER}:)? %{CISCOTIMESTAMP_EXTEND:logdate}: +%%{CISCO_REASON:syslog.facility_label}-%{INT:syslog.severity}-%{CISCO_REASON:syslog.facility_sub_label}: %{GREEDYDATA:message}",
+              "message", "%{SYSLOG5424PRI}(%{NUMBER:syslog.sequence})?:( %{NUMBER}:)? %{CISCOTIMESTAMP_EXTEND:logdate}: last message repeated %{INT:syslog.repeats} times"
+            ]
+            overwrite => [ "message" ]
+            add_tag => [ "cisco" ]
+          }
+          if "cisco" in [tags] {
+            if [syslog.repeats] {
+              mutate {
+                replace => { "message" => "last message repeated %{syslog.repeats} times" }
+              }
+            }
+            date {
+              match => [
+                "logdate",
+                # RFC5424
+                "ISO8601",
+                # Cisco Nexus and IOS variants (space padded dates for joda time)
+                # There are too many options to list them all
+                "yyyy MMM  d HH:mm:ss.SSS ZZZ",
+                "yyyy MMM d HH:mm:ss.SSS ZZZ",
+                "yyyy MMM  d HH:mm:ss ZZZ",
+                "yyyy MMM d HH:mm:ss ZZZ",
+                "MMM  d HH:mm:ss.SSS",
+                "MMM d HH:mm:ss.SSS",
+                "MMM  d HH:mm:ss",
+                "MMM d HH:mm:ss"
+              ]
+              remove_field => [ "logdate" ]
+            }
+            mutate {
+              rename => ["syslog5424_pri", "syslog.priority"]
+              copy => {"syslog.severity" => "syslog.severity_label"}
+            }
+            mutate {
+              gsub => [
+                "syslog.severity_label", "0", "Emergency",
+                "syslog.severity_label", "1", "Alert",
+                "syslog.severity_label", "2", "Critical",
+                "syslog.severity_label", "3", "Error",
+                "syslog.severity_label", "4", "Warning",
+                "syslog.severity_label", "5", "Notification",
+                "syslog.severity_label", "6", "Informational",
+                "syslog.severity_label", "7", "Debug"
+              ]
+            }
+          }
         }
       }
       if [source.ip] {
@@ -480,7 +543,16 @@
           source => "ip"
         }
       }
-      if [message] {
+      if [fingerprint_source] {
+        fingerprint {
+          source => [ "host", "fingerprint_source" ]
+          target => "[@metadata][fingerprint]"
+          method => "SHA1"
+          key => "{{ logstash_elasticsearch_endpoints | to_uuid }}"
+          concatenate_sources => true
+          remove_field => [ "fingerprint_source" ]
+        }
+      } else if [message] {
         fingerprint {
           id => "setSHA1"
           target => "[@metadata][fingerprint]"
