@@ -47,6 +47,3 @@ git               [platform:gentoo]
 # For SELinux
 libselinux-python3  [platform:redhat]
 libsemanage-python3 [platform:redhat]
-
-# Required for compressing collected log files in CI
-gzip

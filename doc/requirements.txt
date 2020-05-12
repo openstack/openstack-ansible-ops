@@ -11,6 +11,6 @@
 
 sphinx>=2.0.0,!=2.1.0  # BSD
 sphinxcontrib-svg2pdfconverter>=0.1.0 # BSD
-openstackdocstheme>=1.32.1 # Apache-2.0
+openstackdocstheme>=2.0.0 # Apache-2.0
 reno>=2.5.0 # Apache-2.0
 doc8>=0.6.0 # Apache-2.0
