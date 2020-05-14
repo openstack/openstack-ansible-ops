@@ -25,8 +25,14 @@ elastic_memory_lock: true
 
 # Elasticsearch plugin list. These plugins will be re-installed whenever the
 # playbooks are executed, which ensures the plugins are always upgraded.
+# To install plugins from a mirror, the remote attribute can be specified
+# with the uri of the plugin zip file.
+# elastic_plugins:
+#   - ingest-attachment:
+#     remote:
+#
 elastic_plugins:
-  - ingest-attachment
+  - name: ingest-attachment
 
 # Set the logstash search heap size. If this option is undefined the value will
 # be derived automatically using 1/4 of the available RAM for logstash and 1/2

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Remove plugins
-  command: "/usr/share/elasticsearch/bin/elasticsearch-plugin remove --verbose {{ item }}"
+  command: "/usr/share/elasticsearch/bin/elasticsearch-plugin remove --verbose {{ item.name }}"
   failed_when: false
   changed_when:
     - remove_plugin.rc == 0
@@ -22,5 +22,5 @@
   with_items: "{{ elastic_plugins }}"
 
 - name: Install plugins
-  command: "/usr/share/elasticsearch/bin/elasticsearch-plugin install --batch --verbose {{ item }}"
+  command: "/usr/share/elasticsearch/bin/elasticsearch-plugin install --batch --verbose {{ item.remote | default(item.name) }}"
   with_items: "{{ elastic_plugins }}"
