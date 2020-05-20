@@ -316,7 +316,7 @@
   include_role:
     name: elastic_beat_setup
   when:
-    - (groups['kibana'] | length) > 0
+    - (groups['kibana'] | length) > 0 or (elk_beat_setup | bool)
   vars:
     elastic_beat_name: "metricbeat"
 

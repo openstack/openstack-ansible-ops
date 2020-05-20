@@ -37,3 +37,8 @@ auditbeat_log_level: "{{ elastic_beat_log_level | default('info') }}"
 # particularly when auditbeat is deployed to a container host, and largely overlaps
 # with Packetbeat data
 auditbeat_ignore_socket_data: false
+
+# Override flag to force Beats to set up index templates. If this is not
+# set, templates are only pushed when the user is either upgrading the
+# beat version or deploying for the first time in the presence of kibana nodes
+elk_beat_setup: false

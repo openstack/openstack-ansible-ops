@@ -306,3 +306,8 @@ filebeat_iptables_enabled: false
 # The following allows one to specify log files in non-standard locations,
 # defaulting to log collection in syslog
 filebeat_iptables_log_paths: ["var/log/syslog"]
+
+# Override flag to force Beats to set up index templates. If this is not
+# set, templates are only pushed when the user is either upgrading the
+# beat version or deploying for the first time in the presence of kibana nodes
+elk_beat_setup: false

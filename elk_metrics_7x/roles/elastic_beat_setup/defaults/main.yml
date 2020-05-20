@@ -32,3 +32,8 @@ elastic_beat_kibana_host: "{{ hostvars[groups['kibana'][0]]['ansible_host'] }}"
 # This is by default set to elastic_beat_kibana_host, but if using a non-standard
 # interface, the no_proxy enivronment may need to be changed.
 elastic_beat_no_proxy: "{{ elastic_beat_kibana_host }}"
+
+# Override flag to force set up index templates. If this is not
+# set, templates are only pushed when the user is either upgrading the
+# beat version or deploying for the first time in the presence of kibana nodes
+elk_beat_setup: false

@@ -43,3 +43,8 @@ journalbeat_queue_flush_min_events: 2048
 
 # Max time before queue is flushed (even if queue_min_events is not reached)
 journalbeat_queue_flush_timeout: 1s
+
+# Override flag to force Beats to set up index templates. If this is not
+# set, templates are only pushed when the user is either upgrading the
+# beat version or deploying for the first time in the presence of kibana nodes
+elk_beat_setup: false
