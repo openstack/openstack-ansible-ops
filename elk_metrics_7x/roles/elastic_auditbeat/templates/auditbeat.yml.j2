@@ -141,7 +141,7 @@ auditbeat.modules:
     - login   # User logins, logouts, and system boots.
     - package # Installed, updated, and removed packages
     - process # Started and stopped processes
-{% if not (containerised | default(false)) %}
+{% if not (containerised | default(false)) and not auditbeat_ignore_socket_data %}
     - socket  # Opened and closed sockets
 {% endif  %}
     - user    # User information

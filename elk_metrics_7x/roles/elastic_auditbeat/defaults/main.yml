@@ -32,3 +32,8 @@ processors: {}
 # Logging level
 # Available log levels are error, warning, info, debug
 auditbeat_log_level: "{{ elastic_beat_log_level | default('info') }}"
+
+# Override flag to ignore the system socket dataset. This can be resource-intensive,
+# particularly when auditbeat is deployed to a container host, and largely overlaps
+# with Packetbeat data
+auditbeat_ignore_socket_data: false
