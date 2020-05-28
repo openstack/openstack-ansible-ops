@@ -64,19 +64,19 @@ master_nodes: |-
   {% set nodes = [] %}
   {% for node in groups['elastic'] %}
   {%   if (nodes | length) <= (elastic_master_node_count | int) %}
-  {%     if (hostvars[node]['elasticsearch_node_master'] is defined) and (hostvars[node]['elasticsearch_node_master'] | bool) %}
+  {%     if (hostvars[node]['elasticsearch_node_master'] is defined) and (hostvars[node]['elasticsearch_node_master'] | bool) and (node not in nodes) %}
   {%       set _ = nodes.append(node) %}
   {%     endif %}
   {%   endif %}
   {% endfor %}
   {% for node in groups['elastic'] %}
   {%   if (nodes | length) <= (elastic_master_node_count | int) %}
-  {%     if (node in _master_nodes) %}
+  {%     if (node in _master_nodes) and (node not in nodes) %}
   {%       set _ = nodes.append(node) %}
   {%     endif %}
   {%   endif %}
   {% endfor %}
-  {{ nodes }}
+  {{ nodes | unique }}
 master_node_count: "{{ master_nodes | length }}"
 
 coordination_nodes: |-
