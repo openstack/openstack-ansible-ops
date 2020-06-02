@@ -16,7 +16,6 @@
 # (c) 2017, Nolan Brubaker <nolan.brubaker@rackspace.com>
 
 # Necessary for accurate failure rate calculation
-from __future__ import division
 import argparse
 import datetime
 import logging
