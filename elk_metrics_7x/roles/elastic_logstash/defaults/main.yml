@@ -102,3 +102,6 @@ logstash_collectd_buffer_size: 1452
 logstash_collectd_security_level: Sign
 # To enable security the auth file is required.
 #logstash_collectd_authfile: /etc/collectd/passwd
+
+# Set the descriptive name by which Logstash is identified
+logstash_node_name: "{{ inventory_hostname }}"
