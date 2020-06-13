@@ -42,7 +42,7 @@ ansible-playbook -vv \
                  -e osa_branch=${OSA_BRANCH:-"master"} \
                  -e os_ops_branch=${OS_OPS_BRANCH:-"master"} \
                  -e default_network=${DEFAULT_NETWORK:-"eth0"} \
-                 -e default_image=${DEFAULT_IMAGE:-"ubuntu-16.04-amd64"} \
+                 -e default_image=${DEFAULT_IMAGE:-"ubuntu-18.04-amd64"} \
                  -e vm_disk_size=${VM_DISK_SIZE:-92160} \
                  -e http_proxy=${http_proxy:-''} \
                  -e run_osa=${RUN_OSA:-"true"} \
