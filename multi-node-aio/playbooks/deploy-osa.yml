@@ -117,7 +117,8 @@
         group: root
       when:
         - pre_config_osa | default(true) | bool
-        - osa_enable_networking_ovn | default(false) | bool
+        - (osa_enable_networking_ovn | default(false) | bool) or
+          (osa_enable_networking_ovs_dvr | default(false) | bool)
 
     - name: Drop NEUTRON OVN env.d config
       template:

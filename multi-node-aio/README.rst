@@ -62,6 +62,7 @@ at this time include:
 
 * ML2/LinuxBridge
 * ML2/Open Virtual Network (OVN)
+* ML2/Open vSwitch w/ DVR (OVS)
 
 To deploy an MNAIO with support for OVN, set the following parameter(s) prior
 to executing the build:
@@ -69,6 +70,14 @@ to executing the build:
 .. code-block:: bash
 
     export MNAIO_ANSIBLE_PARAMETERS="-e osa_enable_networking_ovn=true"
+    ./build.sh
+
+To deploy an MNAIO with support for OVS+DVR, set the following parameter(s) prior
+to executing the build:
+
+.. code-block:: bash
+
+    export MNAIO_ANSIBLE_PARAMETERS="-e osa_enable_networking_ovs_dvr=true"
     ./build.sh
 
 When your ready, run the build script by executing ``bash ./build.sh``. The
