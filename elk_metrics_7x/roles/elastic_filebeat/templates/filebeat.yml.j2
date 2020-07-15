@@ -54,6 +54,8 @@ filebeat.modules:
     # Filebeat will choose the paths depending on your OS.
     var.paths:
       - /openstack/log/*horizon*/horizon/*access.log
+      - /var/log/apache2/ssl_access.log
+      - /var/log/httpd/ssl_access.log
 
     # Input configuration (advanced). Any input configuration option
     # can be added under this section.
@@ -67,6 +69,8 @@ filebeat.modules:
     # Filebeat will choose the paths depending on your OS.
     var.paths:
       - /openstack/log/*horizon*/horizon/horizon-error.log
+      - /var/log/apache2/keystone-apache-error.log
+      - /var/log/httpd/keystone-apache-error.log
 
     # Input configuration (advanced). Any input configuration option
     # can be added under this section.
