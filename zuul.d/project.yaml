@@ -22,24 +22,20 @@
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_6x-centos-7
         # - openstack-ansible-ops:elk_metrics_6x-centos-7-clustered
-        - openstack-ansible-ops:elk_metrics_6x-opensuse-15
-        # - openstack-ansible-ops:elk_metrics_6x-opensuse-15-clustered
-        - openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic
+        - openstack-ansible-ops:elk_metrics_7x-ubuntu-focal
         # - openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial-clustered
         # - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic-clustered
-        - openstack-ansible-ops:osquery-ubuntu-xenial
         # - openstack-ansible-ops:osquery-ubuntu-xenial-clustered
         - openstack-ansible-ops:osquery-ubuntu-bionic
         # - openstack-ansible-ops:osquery-ubuntu-bionic-clustered
-        - openstack-ansible-ops:skydive-ubuntu-xenial
         - openstack-ansible-ops:skydive-ubuntu-bionic
         - openstack-ansible-ops:skydive-centos-7
-        - openstack-ansible-ops:skydive-opensuse-15
     gate:
       jobs:
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
+        - openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic
         - openstack-ansible-ops:osquery-ubuntu-bionic
         - openstack-ansible-ops:skydive-ubuntu-bionic

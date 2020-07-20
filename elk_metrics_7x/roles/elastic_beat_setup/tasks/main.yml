@@ -37,8 +37,8 @@
 - name: Load templates
   shell: >-
     {% if item == '--dashboards' %}
-      sed -i 's@\\\"index\\\": \\\"{{ elastic_beat_name }}-\*\\\"@\\\"index\\\": \\\"{{ elastic_beat_name }}\\\"@g' /usr/share/{{ elastic_beat_name }}/kibana/6/dashboard/*.json
-      sed -i 's@"id": "{{ elastic_beat_name }}\-\*",@"id": "{{ elastic_beat_name }}",@g' /usr/share/{{ elastic_beat_name }}/kibana/6/index-pattern/*.json
+      sed -i 's@\\\"index\\\": \\\"{{ elastic_beat_name }}-\*\\\"@\\\"index\\\": \\\"{{ elastic_beat_name }}\\\"@g' /usr/share/{{ elastic_beat_name }}/kibana/7/dashboard/*.json
+      sed -i 's@"id": "{{ elastic_beat_name }}\-\*",@"id": "{{ elastic_beat_name }}",@g' /usr/share/{{ elastic_beat_name }}/kibana/7/index-pattern/*.json
     {% endif %}
     {{ elastic_beat_name }} setup
     {% if elastic_beat_name == "heartbeat" and item == "--index-management" -%}

@@ -16,3 +16,4 @@
 curator_distro_packages:
   - python-virtualenv
   - virtualenv
+  - libyaml-dev

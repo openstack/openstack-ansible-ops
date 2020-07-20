@@ -47,7 +47,7 @@
 
 - name: Ensure curator is installed
   pip:
-    name: "elasticsearch-curator<6"
+    name: "elasticsearch-curator<=5.7.0"
     state: "{{ elk_package_state | default('present') }}"
     extra_args: --isolated
     virtualenv: /opt/elasticsearch-curator

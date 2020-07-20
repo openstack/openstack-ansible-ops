@@ -17,7 +17,7 @@
 
   vars:
     _elastic_refresh_interval: "{{ (elasticsearch_number_of_replicas | int) * 5 }}"
-    elastic_refresh_interval: "{{ (_elastic_refresh_interval > 0) | ternary(30, _elastic_refresh_interval) }}"
+    elastic_refresh_interval: "{{ (_elastic_refresh_interval | int > 0) | ternary(30, _elastic_refresh_interval) }}"
 
   vars_files:
     - vars/variables.yml
@@ -186,7 +186,7 @@
     - role: elastic_retention
 
   post_tasks:
-    - name: Create kibana indexe patterns
+    - name: Create kibana index patterns
       uri:
         url: "http://127.0.0.1:5601/api/saved_objects/index-pattern/{{ item.name }}"
         method: POST
@@ -227,24 +227,30 @@
       delay: 30
       run_once: true
 
-    - name: Create basic indexes
-      uri:
-        url: "http://127.0.0.1:5601/api/kibana/settings/defaultIndex"
-        method: POST
-        body: "{{ item.index_options | to_json }}"
-        status_code: 200
-        body_format: json
-        headers:
-          Content-Type: "application/json"
-          kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
-      with_items:
-        - name: "default"
-          index_options:
-            value: "default"
-      register: kibana_indexes
-      until: kibana_indexes is success
-      retries: 6
-      delay: 30
+    - block:
+        - name: Set default index
+          uri:
+            url: "http://127.0.0.1:5601/api/kibana/settings/defaultIndex"
+            method: POST
+            body: "{{ item.index_options | to_json }}"
+            status_code: 200
+            body_format: json
+            headers:
+              Content-Type: "application/json"
+              kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+          with_items:
+            - name: "default"
+              index_options:
+                value: "default"
+          register: _kibana_default_index
+      rescue:
+        - debug:
+            msg: "{{ message.split('\n') }}"
+          vars:
+            message: |
+             Failed to set the defaultIndex, most likely due to a timeout.
+             It's not a big deal, and you'll find that it usually gets set
+             at some point whenever elastic gets around to it.
       run_once: true
 
   tags:

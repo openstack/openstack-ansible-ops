@@ -20,7 +20,7 @@
 
   vars:
     _elastic_refresh_interval: "{{ (elasticsearch_beat_settings.number_of_replicas | int) * 5 }}"
-    elastic_refresh_interval: "{{ (_elastic_refresh_interval > 0) | ternary(30, _elastic_refresh_interval) }}"
+    elastic_refresh_interval: "{{ (_elastic_refresh_interval | int > 0) | ternary(30, _elastic_refresh_interval) }}"
 
   vars_files:
     - vars/variables.yml
@@ -227,25 +227,41 @@
       delay: 30
       run_once: true
 
-    - name: Create basic indexes
-      uri:
-        url: "http://127.0.0.1:5601/api/kibana/settings/defaultIndex"
-        method: POST
-        body: "{{ item.index_options | to_json }}"
-        status_code: 200
-        body_format: json
-        headers:
-          Content-Type: "application/json"
-          kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
-      with_items:
-        - name: "default"
-          index_options:
-            value: "default"
-      register: kibana_indexes
-      until: kibana_indexes is success
-      retries: 6
-      delay: 30
-      run_once: true
+    - block:
+        - name: find objects of type config
+          uri:
+            url: "http://127.0.0.1:5601/api/saved_objects/_find?type=config"
+            headers:
+              Content-Type: "application/json"
+              kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+            return_content: true
+          register: _objects
 
+        - name: fail if we're not getting exactly 1 config object back
+          assert:
+            that: _objects.json.saved_objects | length == 1
+
+        - name: set fact for config object
+          set_fact:
+            config: "{{ _objects.json.saved_objects[0] }}"
+
+        - name: Set default index
+          uri:
+            url: "http://127.0.0.1:5601/api/saved_objects/config/{{ config.id }}"
+            method: PUT
+            body:
+              attributes:
+                defaultIndex: "default"
+            headers:
+              Content-Type: "application/json"
+              kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+          register: _kibana_default_index
+          until: _kibana_default_index is success
+          retries: 6
+          delay: 30
+          when:
+            - config.attributes.defaultIndex is defined
+            - config.attributes.defaultIndex != "default"
+      run_once: true
   tags:
     - server-install

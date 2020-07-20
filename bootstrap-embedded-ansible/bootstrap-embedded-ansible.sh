@@ -20,7 +20,7 @@ export OPTS=()
 export CLONE_DIR="$(dirname $(readlink -f ${BASH_SOURCE[0]}))"
 OPTS+=('CLONE_DIR')
 
-export ANSIBLE_VERSION="${ANSIBLE_VERSION:-2.7.5.0}"
+export ANSIBLE_VERSION="${ANSIBLE_VERSION:-2.10.5}"
 OPTS+=('ANSIBLE_VERSION')
 
 export ANSIBLE_EMBED_HOME="${HOME}/ansible_venv"
@@ -38,20 +38,21 @@ export ID="$(echo ${ID} | awk -F'-' '{print $1}')"
 if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
   if [  ${ID} = "ubuntu" ]; then
     apt-get update
-    apt-get -y install python-virtualenv
+    apt-get -y install virtualenv
   elif [  ${ID} = "opensuse" ] || [ ${ID} = "suse" ]; then
+    zypper install -y insserv
     zypper install -y python-virtualenv
   elif [ ${ID} = "centos" ] || [ ${ID} = "redhat" ] || [ ${ID} = "rhel" ]; then
-    yum install -y python-virtualenv
+    yum install -y python3-virtualenv
   else
     echo "Unknown operating system"
     exit 99
   fi
   echo "done installing python-virtualenv"
-  if [[ -f "/usr/bin/python2" ]]; then
-    virtualenv --system-site-packages --python="/usr/bin/python2" "${ANSIBLE_EMBED_HOME}"
-  elif [[ -f "/usr/bin/python3" ]]; then
+  if [[ -f "/usr/bin/python3" ]]; then
     virtualenv --system-site-packages --python="/usr/bin/python3" "${ANSIBLE_EMBED_HOME}"
+  elif [[ -f "/usr/bin/python2" ]]; then
+    virtualenv --system-site-packages --python="/usr/bin/python2" "${ANSIBLE_EMBED_HOME}"
   else
     virtualenv "${ANSIBLE_EMBED_HOME}"
   fi
