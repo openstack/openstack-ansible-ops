@@ -44,6 +44,9 @@ journalbeat_queue_flush_min_events: 2048
 # Max time before queue is flushed (even if queue_min_events is not reached)
 journalbeat_queue_flush_timeout: 1s
 
+# Position to start reading from journal. Valid values: head, tail, cursor
+journalbeat_seek: head
+
 # Override flag to force Beats to set up index templates. If this is not
 # set, templates are only pushed when the user is either upgrading the
 # beat version or deploying for the first time in the presence of kibana nodes

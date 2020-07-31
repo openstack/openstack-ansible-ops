@@ -25,7 +25,7 @@ journalbeat.inputs:
   max_backoff: 60s
 
   # Position to start reading from journal. Valid values: head, tail, cursor
-  seek: head
+  seek: {{ journalbeat_seek }}
   # Fallback position if no cursor data is available.
   #cursor_seek_fallback: head
 
