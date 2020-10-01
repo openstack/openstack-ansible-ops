@@ -40,6 +40,7 @@ def clean_vars():
         f.write(yaml.safe_dump(environment, default_flow_style=False,
                                width=1000))
 
+
 if __name__ == '__main__':
     clean_vars()
     with open('/etc/openstack_deploy.KILO/CEILOMETER_MIGRATED', 'w') as f:

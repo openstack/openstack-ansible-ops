@@ -41,6 +41,7 @@ def add_new_dict_data(original, new):
 
         add_new_dict_data(original[key], new[key])
 
+
 if __name__ == '__main__':
 
     repo_root = sys.argv[1]

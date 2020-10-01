@@ -57,6 +57,7 @@ def main(filename):
     with open(filename, 'w') as f:
         f.write(''.join(new_contents))
 
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         sys.exit("Filename and flag file reference required.")
