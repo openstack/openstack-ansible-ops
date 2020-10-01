@@ -3,7 +3,8 @@
   gather_facts: no
   vars:
     graylog_forwarder_system_packages:
-      - python-systemd
+      - python3-systemd
+      - python3-pip
     graylog_forwarder_pip_packages:
       - gelfclient==0.0.7
       - journal2gelf==2.0.0
@@ -41,4 +42,3 @@
             state: started
             execstarts:
               - "/usr/local/bin/journal2gelf {{ graylog_target }}"
-
