@@ -87,8 +87,8 @@ coordination_nodes: |-
   {% endif %}
   {{
     (elasticsearch_coordination_node_socket_addresses
-      | default((c_nodes | map('extract', hostvars, 'ansible_host') | list)
-                 | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port) | list))
+      | default((c_nodes | map('extract', hostvars, 'ansible_host'))
+                 | map('regex_replace', '^(.*)$' ,'\1:' ~ elastic_port) | list))
   }}
 
 _elasticsearch_discovery_seed_hosts: >-
@@ -138,8 +138,8 @@ elasticsearch_interface_speed: |-
 elasticsearch_data_node_details: >-
   {{
       elasticsearch_data_node_socket_addresses
-      | default((data_nodes | map('extract', hostvars, 'ansible_host') | list)
-                 | map('regex_replace', '(.*)' ,'\1:' ~ elastic_port) | list)
+      | default((data_nodes | map('extract', hostvars, 'ansible_host'))
+                 | map('regex_replace', '^(.*)$' ,'\1:' ~ elastic_port) | list)
   }}
 
 # IP addresses for the logstash data nodes
@@ -148,8 +148,8 @@ elasticsearch_data_node_details: >-
 logstash_data_node_details: >-
   {{
      logstash_data_node_socket_addresses
-     | default((groups['logstash'] | map('extract', hostvars, 'ansible_host') | list)
-                | map('regex_replace', '(.*)' ,'\1:' ~ logstash_beat_input_port) | list)
+     | default((groups['logstash'] | map('extract', hostvars, 'ansible_host'))
+                | map('regex_replace', '^(.*)$' ,'\1:' ~ logstash_beat_input_port) | list)
   }}
 
 
