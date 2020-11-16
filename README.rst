@@ -26,7 +26,7 @@ Release notes for the project can be found at:
   https://docs.openstack.org/releasenotes/openstack-ansible-ops/
 
 The project source code repository is located at:
-  https://opendev.org/openstack/openstack-ansible-os_ops
+  https://opendev.org/openstack/openstack-ansible-ops
 
 The project home is at:
   https://launchpad.net/openstack-ansible
