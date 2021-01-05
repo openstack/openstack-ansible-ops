@@ -7,12 +7,9 @@ component_skel:
   elastic:
     belongs_to:
       - elk_all
-      - elasticsearch
-      - elasticsearch_all
   logstash:
     belongs_to:
-      - logstash
-      - logstash_all
+      - elk_all
   kibana:
     belongs_to:
       - elk_all
@@ -27,7 +24,18 @@ container_skel:
     belongs_to:
       - elastic-logstash_containers
     contains:
-      - elastic-logstash
+      - elastic
+      - logstash
+  elastic_container:
+    belongs_to:
+      - elastic_containers
+    contains:
+      - elastic
+  logstash_container:
+    belongs_to:
+      - logstash_containers
+    contains:
+      - logstash
   kibana_container:
     belongs_to:
       - kibana_containers
@@ -45,6 +53,18 @@ physical_skel:
     belongs_to:
       - all_containers
   elastic-logstash_hosts:
+    belongs_to:
+      - hosts
+  elastic_containers:
+    belongs_to:
+      - all_containers
+  elastic_hosts:
+    belongs_to:
+      - hosts
+  logstash_containers:
+    belongs_to:
+      - all_containers
+  logstash_hosts:
     belongs_to:
       - hosts
   kibana_containers:
