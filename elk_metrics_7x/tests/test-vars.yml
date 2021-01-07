@@ -20,5 +20,6 @@ physical_host: localhost
 q_storage: 1
 elastic_memory_lower_limit: 1024
 elastic_memory_upper_limit: 1024
+elastic_systemd_timeout: 240
 
 osa_test_repo: "openstack/openstack-ansible-ops"
