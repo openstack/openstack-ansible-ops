@@ -111,10 +111,10 @@ node.data: {{ elasticsearch_node_data | default(data_node) }}
 #
 {% if elasticsearch_node_ingest is defined %}
 node.ingest: {{ elasticsearch_node_ingest }}
-cluster.remote.connect: {{ elasticsearch_node_ingest }}
+node.remote_cluster_client: {{ elasticsearch_node_ingest }}
 {% else %}
 node.ingest: {{ data_node }}
-cluster.remote.connect: {{ data_node }}
+node.remote_cluster_client: {{ data_node }}
 {% endif %}
 #
 # ---------------------------------- Gateway -----------------------------------
@@ -146,7 +146,7 @@ thread_pool:
 # override the number of detected processors. This can be done by explicitly
 # setting the processors setting. On Kibana hosts where elasticsearch is running
 # as a coordination node, the processor count is limited.
-processors: {{ processors }}
+node.processors: {{ processors }}
 {% endif %}
 
 
