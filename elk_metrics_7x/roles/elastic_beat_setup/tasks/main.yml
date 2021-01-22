@@ -47,6 +47,9 @@
       {{ item }}
     {%- endif %}
     {{ elastic_beat_setup_options }}
+    {% if elastic_beat_name == "apm-server" -%}
+      --strict.perms=false
+    {%- endif %}
     -e -v
   with_items: "{{ elastic_setup_flags }}"
   register: templates
