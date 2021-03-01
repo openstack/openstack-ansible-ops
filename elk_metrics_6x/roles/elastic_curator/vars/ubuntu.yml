@@ -14,5 +14,6 @@
 # limitations under the License.
 
 curator_distro_packages:
+  - libyaml-dev
   - python-virtualenv
   - virtualenv

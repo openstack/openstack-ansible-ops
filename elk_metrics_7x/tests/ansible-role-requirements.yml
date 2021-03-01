@@ -2,7 +2,7 @@
 - name: apt_package_pinning
   scm: git
   src: https://opendev.org/openstack/openstack-ansible-apt_package_pinning
-  version: master
+  version: stable/victoria
 - name: config_template
   scm: git
   src: https://opendev.org/openstack/ansible-config_template
@@ -10,24 +10,24 @@
 - name: nspawn_container_create
   scm: git
   src: https://opendev.org/openstack/openstack-ansible-nspawn_container_create
-  version: master
+  version: stable/victoria
 - name: nspawn_hosts
   scm: git
   src: https://opendev.org/openstack/openstack-ansible-nspawn_hosts
-  version: master
+  version: stable/victoria
 - name: plugins
   scm: git
   src: https://opendev.org/openstack/openstack-ansible-plugins
-  version: master
+  version: stable/victoria
 - name: systemd_mount
   scm: git
   src: https://opendev.org/openstack/ansible-role-systemd_mount
-  version: master
+  version: stable/victoria
 - name: systemd_networkd
   scm: git
   src: https://opendev.org/openstack/ansible-role-systemd_networkd
-  version: master
+  version: stable/victoria
 - name: systemd_service
   scm: git
   src: https://opendev.org/openstack/ansible-role-systemd_service
-  version: master
+  version: stable/victoria

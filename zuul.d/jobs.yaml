@@ -14,8 +14,9 @@
 # limitations under the License.
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
     parent: base
+    nodeset: ubuntu-bionic
     description: "Runs a gate test on the elk_metrics_6x project."
     run: "elk_metrics_6x/tests/test.yml"
     post-run: "elk_metrics_6x/tests/post-run.yml"
@@ -41,44 +42,21 @@
       test_clustered_elk: false
 
 - job:
+    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-focal"
+    parent: "openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic"
+    nodeset: ubuntu-focal
+    voting: false
+
+- job:
     name: "openstack-ansible-ops:elk_metrics_6x-centos-7"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
     nodeset: centos-7
-    voting: true
+    voting: false
 
 - job:
     name: "openstack-ansible-ops:elk_metrics_6x-centos-7-clustered"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
     nodeset: centos-7
-    voting: false
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_elk: true
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-opensuse-15"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
-    nodeset: opensuse-15
-    voting: false
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-opensuse-15-clustered"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
-    nodeset: opensuse-15
-    voting: false
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_elk: true
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
-    nodeset: ubuntu-bionic
-    voting: true
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial-clustered"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
     voting: false
     vars:
       osa_test_repo: "openstack/openstack-ansible-ops"
@@ -86,7 +64,7 @@
 
 - job:
     name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic-clustered"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-xenial"
+    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
     nodeset: ubuntu-bionic
     voting: false
     vars:
@@ -94,8 +72,9 @@
       test_clustered_elk: true
 
 - job:
-    name: "openstack-ansible-ops:osquery-ubuntu-xenial"
+    name: "openstack-ansible-ops:osquery-ubuntu-bionic"
     parent: base
+    nodeset: ubuntu-bionic
     description: "Runs a gate test on the osquery project."
     run: "osquery/tests/test.yml"
     post-run: "osquery/tests/post-run.yml"
@@ -105,29 +84,17 @@
       - ^bootstrap-embedded-ansible/.*
 
 - job:
-    name: "openstack-ansible-ops:osquery-ubuntu-xenial-clustered"
-    parent: "openstack-ansible-ops:osquery-ubuntu-xenial"
-    nodeset: ubuntu-bionic
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_kolide: true
-
-- job:
-    name: "openstack-ansible-ops:osquery-ubuntu-bionic"
-    parent: "openstack-ansible-ops:osquery-ubuntu-xenial"
-    nodeset: ubuntu-bionic
-
-- job:
     name: "openstack-ansible-ops:osquery-ubuntu-bionic-clustered"
-    parent: "openstack-ansible-ops:osquery-ubuntu-xenial"
+    parent: "openstack-ansible-ops:osquery-ubuntu-bionic"
     nodeset: ubuntu-bionic
     vars:
       osa_test_repo: "openstack/openstack-ansible-ops"
       test_clustered_kolide: true
 
 - job:
-    name: "openstack-ansible-ops:skydive-ubuntu-xenial"
+    name: "openstack-ansible-ops:skydive-ubuntu-bionic"
     parent: base
+    nodeset: ubuntu-bionic
     description: "Runs a gate test on the skydive project."
     run: "skydive/tests/test.yml"
     post-run: "skydive/tests/post-run.yml"
@@ -137,16 +104,6 @@
       - ^bootstrap-embedded-ansible/.*
 
 - job:
-    name: "openstack-ansible-ops:skydive-ubuntu-bionic"
-    parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
-    nodeset: ubuntu-bionic
-
-- job:
     name: "openstack-ansible-ops:skydive-centos-7"
-    parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
+    parent: "openstack-ansible-ops:skydive-ubuntu-bionic"
     nodeset: centos-7
-
-- job:
-    name: "openstack-ansible-ops:skydive-opensuse-15"
-    parent: "openstack-ansible-ops:skydive-ubuntu-xenial"
-    nodeset: opensuse-15

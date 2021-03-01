@@ -6,4 +6,4 @@
 - name: systemd_service
   scm: git
   src: https://opendev.org/openstack/ansible-role-systemd_service
-  version: master
+  version: stable/victoria

@@ -34,6 +34,8 @@
 
   roles:
     - role: galera_server
+      galera_install_client: True
+      galera_install_server: True
       galera_cluster_members: "{{ groups['kolide-db_all'] }}"
       galera_wsrep_node_name: "{{ inventory_hostname }}"
       galera_cluster_name: telemetry_galera_cluster
