@@ -175,8 +175,8 @@
         container_command: |
           [[ ! -d "/var/lib/{{ service_name }}" ]] && mkdir -p "/var/lib/{{ service_name }}"
         container_config:
-          - "{{ elastic_lxc_template_config[(lxc_major_version | int)]['mount'] }}=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
-          - "{{ elastic_lxc_template_config[(lxc_major_version | int)]['aa_profile'] }}=unconfined"
+          - "lxc.mount.entry=/openstack/{{ inventory_hostname }}/{{ service_name }} var/lib/{{ service_name }} none bind 0 0"
+          - "lxc.apparmor.profile=unconfined"
       delegate_to: "{{ physical_host }}"
   when:
     - container_tech | default('lxc') == 'lxc'
