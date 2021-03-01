@@ -1,7 +1,9 @@
 # For the puposes of this example, the kibana nodes have been added to
-# different host machines that the logging nodes. The intention here
-# is to show that the different components can scale independently of
-# one another.
+# different host machines that the logging nodes. You can also split out
+# elastic-logstash into separate containers and put elasticsearch on
+# more suited hosts. The intention here is to show that the different
+# components can scale independently of one another.
+
 kibana_hosts:
   infra01:
     ip: 172.22.8.24
@@ -17,6 +19,22 @@ elastic-logstash_hosts:
     ip: 172.22.8.28
   logging03:
     ip: 172.22.8.29
+
+#elastic_hosts:
+#  elastic01:
+#    ip: 172.22.8.30
+#  elastic02:
+#    ip: 172.22.8.31
+#  elastic03:
+#    ip: 172.22.8.32
+
+#logstash_hosts:
+#  logging01:
+#    ip: 172.22.8.27
+#  logging02:
+#    ip: 172.22.8.28
+#  logging03:
+#    ip: 172.22.8.29
 
 apm-server_hosts:
   logging01:
