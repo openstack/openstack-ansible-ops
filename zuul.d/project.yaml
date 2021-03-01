@@ -37,5 +37,6 @@
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic
+        - openstack-ansible-ops:elk_metrics_7x-ubuntu-focal
         - openstack-ansible-ops:osquery-ubuntu-bionic
         - openstack-ansible-ops:skydive-ubuntu-bionic
