@@ -15,7 +15,7 @@
 metricbeat.config.modules:
 
   # Glob pattern for configuration reloading
-  path: ${path.config}/conf.d/*.yml
+  path: ${path.config}/modules.d/*.yml
 
   # Period on which files under path should be checked for changes
   reload.period: 30s
@@ -44,7 +44,18 @@ metricbeat.max_start_delay: 10s
 #              metricsets: ["leader", "self", "store"]
 #              period: 30s
 #              hosts: ["${host}:2379"]
-#==========================  Modules configuration ============================
+
+#=========================== Timeseries instance ===============================
+
+# Enabling this will add a `timeseries.instance` keyword field to all metric
+# events. For a given metricset, this field will be unique for every single item
+# being monitored.
+# This setting is experimental.
+
+#timeseries.enabled: false
+
+
+#==========================  Modules configuration =============================
 {% set metric_sets = ['network', 'process', 'process_summary', 'uptime', 'service'] %}
 {% if physical_host is defined and physical_host != inventory_hostname %}
 {%   set host_mount_devices = (hostvars[physical_host]['ansible_mounts'] | map(attribute='device') | list) %}
@@ -60,7 +71,7 @@ metricbeat.max_start_delay: 10s
 {% endif %}
 metricbeat.modules:
 
-#------------------------------- System Module -------------------------------
+#-------------------------------- System Module --------------------------------
 - module: system
   metricsets: {{ metric_sets }}
     #- cpu             # CPU usage
@@ -77,6 +88,7 @@ metricbeat.modules:
     #- fsstat         # File system summary metrics
     #- raid           # Raid
     #- socket         # Sockets and connection info (linux only)
+    #- service        # systemd service information
   enabled: true
   period: 60s
   processes: ['.*']
@@ -135,16 +147,22 @@ metricbeat.modules:
   # Diskio configurations
   #diskio.include_devices: []
 
-#------------------------------ Aerospike Module -----------------------------
+  # Filter systemd services by status or sub-status
+  #service.state_filter: ["active"]
+
+  # Filter systemd services based on a name pattern
+  #service.pattern_filter: ["ssh*", "nfs*"]
+
+#------------------------------- ActiveMQ Module -------------------------------
+#------------------------------ Aerospike Module ------------------------------
 #- module: aerospike
 #  metricsets: ["namespace"]
 #  enabled: true
 #  period: 10s
 #  hosts: ["localhost:3000"]
-#
-#------------------------------- Apache Module -------------------------------
-{% if apache_enabled | default(false) | bool %}
 
+#-------------------------------- Apache Module --------------------------------
+{% if apache_enabled | default(false) | bool %}
 - module: apache
   metricsets: ["status"]
   period: 30s
@@ -161,31 +179,55 @@ metricbeat.modules:
 
   # Password of hosts. Empty by default
   #password: password
+
 {% endif %}
-#-------------------------------- Ceph Module --------------------------------
+#------------------------------ App Search Module ------------------------------
+#--------------------------------- AWS Module ---------------------------------
+#----------------------------- AWS Fargate Module -----------------------------
+#-------------------------------- Azure Module --------------------------------
+#--------------------------------- Beat Module ---------------------------------
+#--------------------------------- Ceph Module ---------------------------------
 {% if ceph_restapi_enabled | default(false) | bool %}
+# Metricsets depending on the Ceph REST API (default port: 5000)
 - module: ceph
   metricsets: ["cluster_disk", "cluster_health", "monitor_health", "pool_disk", "osd_tree"]
   period: 30s
   hosts: {{ ceph_stats_hosts | to_json }}
   enabled: true
 
+# Metricsets depending on the Ceph Manager Daemon (default port: 8003)
+#- module: ceph
+  #metricsets:
+    #- mgr_cluster_disk
+    #- mgr_osd_perf
+    #- mgr_pool_disk
+    #- mgr_osd_pool_stats
+    #- mgr_osd_tree
+  #period: 1m
+  #hosts: [ "https://localhost:8003" ]
+  #username: "user"
+  #password: "secret"
+
 {% endif %}
-#------------------------------ Couchbase Module -----------------------------
+#----------------------------- Cloudfoundry Module -----------------------------
+#----------------------------- CockroachDB Module -----------------------------
+#-------------------------------- Consul Module --------------------------------
+#------------------------------- Coredns Module -------------------------------
+#------------------------------ Couchbase Module ------------------------------
 #- module: couchbase
 #  metricsets: ["bucket", "cluster", "node"]
 #  period: 10s
 #  hosts: ["localhost:8091"]
 #  enabled: true
 #
-#------------------------------- couchdb Module ------------------------------
+#------------------------------- CouchDB Module -------------------------------
 {% if couchdb_enabled | bool %}
 - module: couchdb
   metricsets: ["server"]
   period: 10s
   hosts: ["localhost:5984"]
 {% endif %}
-#------------------------------- Docker Module -------------------------------
+#-------------------------------- Docker Module --------------------------------
 {% if docker_enabled | default(false) | bool %}
 - module: docker
   metricsets:
@@ -213,8 +255,9 @@ metricbeat.modules:
     #certificate_authority: "/etc/pki/root/ca.pem"
     #certificate:           "/etc/pki/client/cert.pem"
     #key:                   "/etc/pki/client/cert.key"
+
 {% endif %}
-#----------------------------- Dropwizard Module -----------------------------
+#------------------------------ Dropwizard Module ------------------------------
 #- module: dropwizard
 #  metricsets: ["collector"]
 #  period: 10s
@@ -222,8 +265,8 @@ metricbeat.modules:
 #  metrics_path: /metrics/metrics
 #  namespace: example
 #  enabled: true
-#
-#---------------------------- Elasticsearch Module ---------------------------
+
+#---------------------------- Elasticsearch Module ----------------------------
 {% if inventory_hostname in (groups['elastic'] | union(groups['kibana'])) %}
 - module: elasticsearch
   metricsets:
@@ -234,38 +277,35 @@ metricbeat.modules:
     - index_summary
     - shard
     - ml_job
-  enabled: true
   period: 30s
   hosts: ["localhost:{{ elastic_port }}"]
   #username: "elastic"
   #password: "changeme"
   #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
 
-  # Set to false to fetch all entries
   #index_recovery.active_only: true
-
-  # Set to true to send data collected by module to X-Pack
-  # Monitoring instead of metricbeat-* indices.
   #xpack.enabled: false
+  #scope: node
+
 {% endif %}
-#----------------------------- envoyproxy Module -----------------------------
+#------------------------------ Envoyproxy Module ------------------------------
 {% if envoyproxy_enabled | bool %}
 - module: envoyproxy
   metricsets: ["server"]
   period: 10s
   hosts: ["localhost:9901"]
-{% endif %}
 
-#-------------------------------- Etcd Module --------------------------------
+{% endif %}
+#--------------------------------- Etcd Module ---------------------------------
 {% if etcd_enabled | default(false) | bool %}
 - module: etcd
   metricsets: ["leader", "self", "store"]
-  enabled: true
   period: 30s
   hosts: ["localhost:2379"]
-{% endif %}
 
-#------------------------------- Golang Module -------------------------------
+{% endif %}
+#------------------------ Google Cloud Platform Module ------------------------
+#-------------------------------- Golang Module --------------------------------
 #- module: golang
   #metricsets:
   #  - expvar
@@ -276,8 +316,8 @@ metricbeat.modules:
 #  expvar:
 #    namespace: "example"
 #    path: "/debug/vars"
-#
-#------------------------------ Graphite Module ------------------------------
+
+#------------------------------- Graphite Module -------------------------------
 #- module: graphite
 #  metricsets: ["server"]
 #  enabled: true
@@ -301,16 +341,24 @@ metricbeat.modules:
   #    delimiter: "_"
 
 
-#------------------------------- HAProxy Module ------------------------------
+#------------------------------- HAProxy Module -------------------------------
 {% if haproxy_enabled | default(false) | bool %}
 - module: haproxy
   metricsets: ["info", "stat"]
   period: 30s
+  # TCP socket, UNIX socket, or HTTP address where HAProxy stats are reported
+  # TCP socket
+  #hosts: ["tcp://127.0.0.1:14567"]
+  # UNIX socket
   hosts: [ {{ elastic_metricbeat_haproxy_monitoring_hosts }} ]
+  # Stats page
+  #hosts: ["http://127.0.0.1:14567"]
+  #username : "admin"
+  #password : "admin"
   enabled: true
-{% endif %}
 
-#-------------------------------- HTTP Module --------------------------------
+{% endif %}
+#--------------------------------- HTTP Module ---------------------------------
 #- module: http
   #metricsets:
   #  - json
@@ -339,7 +387,10 @@ metricbeat.modules:
   #    fields: # added to the the response in root. overwrites existing fields
   #      key: "value"
 
-#------------------------------- Jolokia Module ------------------------------
+#-------------------------------- IBM MQ Module --------------------------------
+#--------------------------------- IIS Module ---------------------------------
+#-------------------------------- Istio Module --------------------------------
+#------------------------------- Jolokia Module -------------------------------
 #- module: jolokia
   #metricsets: ["jmx"]
   #period: 10s
@@ -370,12 +421,14 @@ metricbeat.modules:
   #jmx.application:
   #jmx.instance:
 
-#-------------------------------- Kafka Module -------------------------------
+#-------------------------------- Kafka Module --------------------------------
+# Kafka metrics collected using the Kafka protocol
 #- module: kafka
-  #metricsets: ["consumergroup", "partition"]
+  #metricsets:
+  #  - partition
+  #  - consumergroup
   #period: 10s
   #hosts: ["localhost:9092"]
-  #enabled: true
 
   #client_id: metricbeat
   #retries: 3
@@ -394,11 +447,35 @@ metricbeat.modules:
   # Client Certificate Key
   #ssl.key: "/etc/pki/client/cert.key"
 
+  # Client Certificate Passphrase (in case your Client Certificate Key is encrypted)
+  #ssl.key_passphrase: "yourKeyPassphrase"
+
   # SASL authentication
   #username: ""
   #password: ""
 
-#------------------------------- Kibana Module -------------------------------
+# Metrics collected from a Kafka broker using Jolokia
+#- module: kafka
+#  metricsets:
+#    - broker
+#  period: 10s
+#  hosts: ["localhost:8779"]
+
+# Metrics collected from a Java Kafka consumer using Jolokia
+#- module: kafka
+#  metricsets:
+#    - consumer
+#  period: 10s
+#  hosts: ["localhost:8774"]
+
+# Metrics collected from a Java Kafka producer using Jolokia
+#- module: kafka
+#  metricsets:
+#    - producer
+#  period: 10s
+#  hosts: ["localhost:8775"]
+
+#-------------------------------- Kibana Module --------------------------------
 {% if inventory_hostname in groups['kibana'] | default([]) %}
 - module: kibana
   metricsets: ["status"]
@@ -410,8 +487,9 @@ metricbeat.modules:
   # Set to true to send data collected by module to X-Pack
   # Monitoring instead of metricbeat-* indices.
   #xpack.enabled: false
+
 {% endif %}
-#----------------------------- Kubernetes Module -----------------------------
+#------------------------------ Kubernetes Module ------------------------------
 # Node metrics, from kubelet:
 #- module: kubernetes
 #  metricsets:
@@ -421,9 +499,10 @@ metricbeat.modules:
 #    - system
 #    - volume
 #  period: 10s
-#  hosts: ["localhost:10255"]
 #  enabled: true
+#  hosts: ["https://${NODE_NAME}:10250"]
 #  #bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+#  ssl.verification_mode: "none"
 #  #ssl.certificate_authorities:
 #  #  - /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
 #  #ssl.certificate: "/etc/pki/client/cert.pem"
@@ -431,48 +510,84 @@ metricbeat.modules:
 #
 #  # Enriching parameters:
 #  add_metadata: true
-#  in_cluster: true
 #  # When used outside the cluster:
 #  #host: node_name
+  # If kube_config is not set, KUBECONFIG environment variable will be checked
+  # and if not present it will fall back to InCluster
 #  #kube_config: ~/.kube/config
-#
-## State metrics from kube-state-metrics service:
+
+# State metrics from kube-state-metrics service:
 #- module: kubernetes
 #  enabled: true
 #  metricsets:
 #    - state_node
+#    - state_daemonset
 #    - state_deployment
 #    - state_replicaset
 #    - state_statefulset
 #    - state_pod
 #    - state_container
-#  period: 10s
+#    - state_cronjob
+#    - state_resourcequota
+#    - state_service
+#    - state_persistentvolume
+#    - state_persistentvolumeclaim
+#    - state_storageclass
+#     Uncomment this to get k8s events:
+#    - event  period: 10s
 #  hosts: ["kube-state-metrics:8080"]
-#
-#  # Enriching parameters:
+
+  # Enriching parameters:
 #  add_metadata: true
-#  in_cluster: true
-#  # When used outside the cluster:
+  # When used outside the cluster:
 #  #host: node_name
+  # If kube_config is not set, KUBECONFIG environment variable will be checked
+  # and if not present it will fall back to InCluster
 #  #kube_config: ~/.kube/config
-#
-# Kubernetes events
-#- module: kubernetes
-#  enabled: true
-#  metricsets:
-#    - event
-#
+
 # Kubernetes API server
+# (when running metricbeat as a deployment)
 #- module: kubernetes
 #  enabled: true
 #  metricsets:
 #    - apiserver
 #  hosts: ["https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"]
+#  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+#  ssl.certificate_authorities:
+#    - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+#  period: 30s
 
-#--------------------------------- kvm Module --------------------------------
+# Kubernetes proxy server
+# (when running metricbeat locally at hosts or as a daemonset + host network)
+#- module: kubernetes
+#  enabled: true
+#  metricsets:
+#    - proxy
+#  hosts: ["localhost:10249"]
+#  period: 10s
+
+# Kubernetes controller manager
+# (URL and deployment method should be adapted to match the controller manager deployment / service / endpoint)
+#- module: kubernetes
+#  enabled: true
+#  metricsets:
+#    - controllermanager
+#  hosts: ["http://localhost:10252"]
+#  period: 10s
+
+# Kubernetes scheduler
+# (URL and deployment method should be adapted to match scheduler deployment / service / endpoint)
+#- module: kubernetes
+#  enabled: true
+#  metricsets:
+#    - scheduler
+#  hosts: ["localhost:10251"]
+#  period: 10s
+
+#--------------------------------- KVM Module ---------------------------------
 {% if kvm_enabled | default(false) | bool %}
 - module: kvm
-  metricsets: ["dommemstat"]
+  metricsets: ["dommemstat", "status"]
   enabled: true
   period: 10s
   hosts: ["unix:///var/run/libvirt/libvirt-sock"]
@@ -482,61 +597,63 @@ metricbeat.modules:
 
   # Timeout to connect to Libvirt server
   #timeout: 1s
-{% endif %}
 
-#------------------------------ Logstash Module ------------------------------
+{% endif %}
+#-------------------------------- Linux Module --------------------------------
+#------------------------------- Logstash Module -------------------------------
 {% if inventory_hostname in groups['logstash'] | default([]) %}
 - module: logstash
   metricsets: ["node", "node_stats"]
   enabled: true
   period: 10s
   hosts: ["localhost:9600"]
-{% endif %}
 
-#------------------------------ Memcached Module -----------------------------
+{% endif %}
+#------------------------------ Memcached Module ------------------------------
 {% if memcached_enabled | default(false) | bool %}
 - module: memcached
   metricsets: ["stats"]
-  enabled: true
   period: 30s
   hosts: ["{{ ansible_hostname }}:11211"]
-{% endif %}
+  enabled: true
 
-#------------------------------- MongoDB Module ------------------------------
+{% endif %}
+#------------------------------- MongoDB Module -------------------------------
 #- module: mongodb
 #  metricsets: ["dbstats", "status", "collstats", "metrics", "replstatus"]
 #  period: 10s
 #  enabled: true
 
-#  # The hosts must be passed as MongoDB URLs in the format:
-#  # [mongodb://][user:pass@]host[:port].
-#  # The username and password can also be set using the respective configuration
-#  # options. The credentials in the URL take precedence over the username and
-#  # password configuration options.
+  # The hosts must be passed as MongoDB URLs in the format:
+  # [mongodb://][user:pass@]host[:port].
+  # The username and password can also be set using the respective configuration
+  # options. The credentials in the URL take precedence over the username and
+  # password configuration options.
 #  hosts: ["localhost:27017"]
-#
-#  # Optional SSL. By default is off.
+
+  # Optional SSL. By default is off.
 #  #ssl.enabled: true
-#
-#  # Mode of verification of server certificate ('none' or 'full')
+
+  # Mode of verification of server certificate ('none' or 'full')
 #  #ssl.verification_mode: 'full'
-#
-#  # List of root certificates for TLS server verifications
+
+  # List of root certificates for TLS server verifications
 #  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
-#
-#  # Certificate for SSL client authentication
+
+  # Certificate for SSL client authentication
 #  #ssl.certificate: "/etc/pki/client/cert.pem"
-#
-#  # Client Certificate Key
+
+  # Client Certificate Key
 #  #ssl.key: "/etc/pki/client/cert.key"
-#
-#  # Username to use when connecting to MongoDB. Empty by default.
+
+  # Username to use when connecting to MongoDB. Empty by default.
 #  #username: user
-#
-#  # Password to use when connecting to MongoDB. Empty by default.
+
+  # Password to use when connecting to MongoDB. Empty by default.
 #  #password: pass
-#
-#-------------------------------- Munin Module -------------------------------
+
+#-------------------------------- MSSQL Module --------------------------------
+#-------------------------------- Munin Module --------------------------------
 #- module: munin
 #  metricsets: ["node"]
 #  enabled: true
@@ -552,16 +669,19 @@ metricbeat.modules:
   # are replaced by underscores).
   #munin.sanitize: false
 
-#-------------------------------- MySQL Module -------------------------------
+#-------------------------------- MySQL Module --------------------------------
 {% if (mysql_enabled | default(false) | bool) and galera_root_user is defined and galera_root_password is defined %}
 - module: mysql
   metricsets:
-    - "status"
-  #  - "galera_status"
-  enabled: true
+    - status
+  #  - galera_status
+  #  - performance
+  #  - query
   period: 30s
 
   # Host DSN should be defined as "user:pass@tcp(127.0.0.1:3306)/"
+  # or "unix(/var/lib/mysql/mysql.sock)/",
+  # or another DSN format supported by <https://github.com/Go-SQL-Driver/MySQL/>.
   # The username and password can either be set in the DSN or using the username
   # and password config options. Those specified in the DSN take precedence.
   hosts: ["{{ galera_root_user }}:{{ galera_root_password }}@tcp({{ ansible_hostname }}:3306)/"]
@@ -574,19 +694,29 @@ metricbeat.modules:
 
   # By setting raw to true, all raw fields from the status metricset will be added to the event.
   #raw: false
+
 {% endif %}
-#-------------------------------- Nats Module --------------------------------
+#--------------------------------- NATS Module ---------------------------------
 {% if nats_enabled | bool %}
 - module: nats
-  metricsets: ["connections", "routes", "stats", "subscriptions"]
+  metricsets:
+    - "connections"
+    - "routes"
+    - "stats"
+    - "subscriptions"
+    #- "connection"
+    #- "route"
   period: 10s
   hosts: ["localhost:8222"]
   #stats.metrics_path: "/varz"
   #connections.metrics_path: "/connz"
   #routes.metrics_path: "/routez"
   #subscriptions.metrics_path: "/subsz"
+  #connection.metrics_path: "/connz"
+  #route.metrics_path: "/routez"
+
 {% endif %}
-#-------------------------------- Nginx Module -------------------------------
+#-------------------------------- Nginx Module --------------------------------
 {% if nginx_enabled | default(false) | bool %}
 - module: nginx
   metricsets: ["stubstatus"]
@@ -596,10 +726,13 @@ metricbeat.modules:
   # Nginx hosts
   hosts: ["http://127.0.1.1:18182"]
 
-  # Path to server status. Default server-status
-  server_status_path: "server-status"
+  # Path to server status. Default nginx_status
+  server_status_path: "nginx_status"
+
 {% endif %}
-#------------------------------- PHP_FPM Module ------------------------------
+#----------------------------- Openmetrics Module -----------------------------
+#-------------------------------- Oracle Module --------------------------------
+#------------------------------- PHP_FPM Module -------------------------------
 #- module: php_fpm
 #  metricsets:
 #  - pool
@@ -608,104 +741,145 @@ metricbeat.modules:
 #  period: 10s
 #  status_path: "/status"
 #  hosts: ["localhost:8080"]
-
-#----------------------------- PostgreSQL Module -----------------------------
+#------------------------------ PostgreSQL Module ------------------------------
 #- module: postgresql
 #  enabled: true
 #  metricsets:
-#    # Stats about every PostgreSQL database
+    # Stats about every PostgreSQL database
 #    - database
-#
-#    # Stats about the background writer process's activity
+
+    # Stats about the background writer process's activity
 #    - bgwriter
-#
-#    # Stats about every PostgreSQL process
+
+    # Stats about every PostgreSQL process
 #    - activity
-#
+
 #  period: 30s
-#
-#  # The host must be passed as PostgreSQL URL. Example:
-#  # postgres://localhost:5432?sslmode=disable
-#  # The available parameters are documented here:
-#  # https://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters
+
+  # The host must be passed as PostgreSQL URL. Example:
+  # postgres://localhost:5432?sslmode=disable
+  # The available parameters are documented here:
+  # https://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters
 #  hosts: ["postgres://localhost:5432"]
-#
-#  # Username to use when connecting to PostgreSQL. Empty by default.
+
+  # Username to use when connecting to PostgreSQL. Empty by default.
 #  #username: user
-#
-#  # Password to use when connecting to PostgreSQL. Empty by default.
+
+  # Password to use when connecting to PostgreSQL. Empty by default.
 #  #password: pass
 
-#----------------------------- Prometheus Module -----------------------------
+#----------------------- Prometheus Typed Metrics Module -----------------------
+#------------------------------ Prometheus Module ------------------------------
 {% if (prometheus_enabled | default(false) | bool) and (prometheus_config is defined) %}
 {%   for prometheus in prometheus_config %}
+# Metrics collected from a Prometheus endpoint
 - module: prometheus
-  metricsets: [{% for mset in prometheus.metricsets|default(["collector"]) %}"{{ mset }}"{% if not loop.last %},{% endif %}{% endfor %}]
-  enabled: {{ prometheus.enabled | default('true') }}
   period: {{ prometheus.period | default("10s") }}
+  metricsets: [{% for mset in prometheus.metricsets|default(["collector"]) %}"{{ mset }}"{% if not loop.last %},{% endif %}{% endfor %}]
   hosts: [{% for phost in prometheus.hosts %}"{{ phost }}"{% if not loop.last %},{% endif %}{% endfor %}]
   metrics_path: {{ prometheus.metrics_path | default("/metrics") }}
+  #metrics_filters:
+  #  include: []
+  #  exclude: []
+  #username: "user"
+  #password: "secret"
   namespace: {{ prometheus.namespace }}
+  enabled: {{ prometheus.enabled | default('true') }}
 #
 {%   endfor %}
+
 {% endif %}
 {% if (ceph_prometheus_enabled | default(false) | bool) %}
 - module: prometheus
-  metricsets: ["collector"]
-  enabled: 'true'
   period: "10s"
+  metricsets: ["collector"]
   hosts: [{% for phost in ceph_stats_hosts %}"{{ phost | regex_replace(':\\d+$', '') }}:9283"{% if not loop.last %},{% endif %}{% endfor %}]
   metrics_path: "/metrics"
   namespace: ceph
-{% endif %}
 
   # This can be used for service account based authorization:
-  #  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  #bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
   #ssl.certificate_authorities:
   #  - /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
 
-#------------------------------ RabbitMQ Module ------------------------------
+{% endif %}
+# Metrics sent by a Prometheus server using remote_write option
+#- module: prometheus
+#  metricsets: ["remote_write"]
+#  host: "localhost"
+#  port: "9201"
+
+  # Secure settings for the server using TLS/SSL:
+  #ssl.certificate: "/etc/pki/server/cert.pem"
+  #ssl.key: "/etc/pki/server/cert.key"
+
+# Metrics that will be collected using a PromQL
+#- module: prometheus
+#  metricsets: ["query"]
+#  hosts: ["localhost:9090"]
+#  period: 10s
+#  queries:
+#  - name: "instant_vector"
+#    path: "/api/v1/query"
+#    params:
+#      query: "sum(rate(prometheus_http_requests_total[1m]))"
+#  - name: "range_vector"
+#    path: "/api/v1/query_range"
+#    params:
+#      query: "up"
+#      start: "2019-12-20T00:00:00.000Z"
+#      end:  "2019-12-21T00:00:00.000Z"
+#      step: 1h
+#  - name: "scalar"
+#    path: "/api/v1/query"
+#    params:
+#      query: "100"
+#  - name: "string"
+#    path: "/api/v1/query"
+#    params:
+#      query: "some_value"
+
+#------------------------------- RabbitMQ Module -------------------------------
 {% if (rabbitmq_enabled | default(false) | bool) and (rabbitmq_monitoring_password is defined) %}
 - module: rabbitmq
   metricsets: ["node", "queue", "connection"]
   enabled: true
   period: 30s
   hosts: [ {{ elastic_metricbeat_rabbitmq_monitoring_hosts }} ]
-  username: {{ rabbitmq_monitoring_userid | default('monitoring') }}
-  password: {{ rabbitmq_monitoring_password  }}
-{% endif %}
+
   # Management path prefix, if `management.path_prefix` is set in RabbitMQ
   # configuration, it has to be set to the same value.
   #management_path_prefix: ""
 
-  #username: guest
-  #password: guest
+  username: {{ rabbitmq_monitoring_userid | default('monitoring') }}
+  password: {{ rabbitmq_monitoring_password  }}
 
-#-------------------------------- Redis Module -------------------------------
+{% endif %}
+#-------------------------------- Redis Module --------------------------------
 #- module: redis
 #  metricsets: ["info", "keyspace"]
 #  enabled: true
 #  period: 10s
-#
-#  # Redis hosts
-#  hosts: ["127.0.0.1:6379"]
-#
-#  # Timeout after which time a metricset should return an error
-#  # Timeout is by default defined as period, as a fetch of a metricset
-#  # should never take longer then period, as otherwise calls can pile up.
-#  #timeout: 1s
-#
-#  # Optional fields to be added to each event
-#  #fields:
-#  #  datacenter: west
-#
-#  # Network type to be used for redis connection. Default: tcp
-#  #network: tcp
-#
-#  # Max number of concurrent connections. Default: 10
-#  #maxconn: 10
-#
-#  # Filters can be used to reduce the number of fields sent.
+
+  # Redis hosts
+  #hosts: ["127.0.0.1:6379"]
+
+  # Timeout after which time a metricset should return an error
+  # Timeout is by default defined as period, as a fetch of a metricset
+  # should never take longer then period, as otherwise calls can pile up.
+  #timeout: 1s
+
+  # Optional fields to be added to each event
+  #fields:
+  #  datacenter: west
+
+  # Network type to be used for redis connection. Default: tcp
+  #network: tcp
+
+  # Max number of concurrent connections. Default: 10
+  #maxconn: 10
+
+  # Filters can be used to reduce the number of fields sent.
   #processors:
   #  - include_fields:
   #      fields: ["beat", "metricset", "redis.info.stats"]
@@ -713,15 +887,21 @@ metricbeat.modules:
   # Redis AUTH password. Empty by default.
   #password: foobared
 
-#------------------------------- traefik Module ------------------------------
+#--------------------------- Redis Enterprise Module ---------------------------
+#--------------------------------- SQL Module ---------------------------------
+#--------------------------------- Stan Module ---------------------------------
+
+#-------------------------------- Statsd Module --------------------------------
+#-------------------------------- Tomcat Module --------------------------------
+#------------------------------- Traefik Module -------------------------------
 {% if traefik_enabled | bool %}
 - module: traefik
   metricsets: ["health"]
   period: 10s
   hosts: ["localhost:8080"]
-{% endif %}
 
-#-------------------------------- uwsgi Module -------------------------------
+{% endif %}
+#-------------------------------- UWSGI Module --------------------------------
 {% if uwsgi_enabled | default(false) | bool %}
 - module: uwsgi
   metricsets: ["status"]
@@ -732,49 +912,51 @@ metricbeat.modules:
 {%   else %}
   hosts: ["tcp://127.0.0.1:9191"]
 {%   endif %}
+
 {% endif %}
-
-#------------------------------- vSphere Module ------------------------------
+#------------------------------- VSphere Module -------------------------------
 #- module: vsphere
-#  enabled: true
-#  metricsets: ["datastore", "host", "virtualmachine"]
-#  period: 10s
-#  hosts: ["https://localhost/sdk"]
-#
-#  username: "user"
-#  password: "password"
-#  # If insecure is true, don't verify the server's certificate chain
-#  insecure: false
-#  # Get custom fields when using virtualmachine metric set. Default false.
-#  # get_custom_fields: false
+  #enabled: true
+  #metricsets: ["datastore", "host", "virtualmachine"]
+  #period: 10s
+  #hosts: ["https://localhost/sdk"]
 
-#------------------------------- Windows Module ------------------------------
+  #username: "user"
+  #password: "password"
+  # If insecure is true, don't verify the server's certificate chain
+  #insecure: false
+  # Get custom fields when using virtualmachine metric set. Default false.
+  # get_custom_fields: false
+
+#------------------------------- Windows Module -------------------------------
 #- module: windows
 #  metricsets: ["perfmon"]
 #  enabled: true
 #  period: 10s
-#  perfmon.ignore_non_existent_counters: true
-#  perfmon.counters:
-#  #  - instance_label: processor.name
-#  #    instance_name: total
-#  #    measurement_label: processor.time.total.pct
-#  #    query: '\Processor Information(_Total)\% Processor Time'
-#
+#  perfmon.ignore_non_existent_counters: false
+#  perfmon.group_measurements_by_instance: false
+#  perfmon.queries:
+#  - object: 'Process'
+#    instance: ["*"]
+#    counters:
+#    - name: '% Processor Time'
+#      field: cpu_usage
+#      format: "float"
+#    - name: "Thread Count"
+
 #- module: windows
 #  metricsets: ["service"]
 #  enabled: true
 #  period: 60s
-#
-#------------------------------ ZooKeeper Module -----------------------------
+
+#------------------------------ ZooKeeper Module ------------------------------
 #- module: zookeeper
 #  enabled: true
 #  metricsets: ["mntr", "server"]
 #  period: 10s
 #  hosts: ["localhost:2181"]
 
-
-
-#================================ General ======================================
+# ================================== General ===================================
 
 # The name of the shipper that publishes the network data. It can be used to group
 # all the transactions sent by a single shipper in the web interface.
@@ -815,8 +997,43 @@ metricbeat.modules:
     #flush.min_events: 2048
 
     # Maximum duration after which events are available to the outputs,
-    # if the number of events stored in the queue is < min_flush_events.
+    # if the number of events stored in the queue is < `flush.min_events`.
     #flush.timeout: 1s
+
+  # The disk queue stores incoming events on disk until the output is
+  # ready for them. This allows a higher event limit than the memory-only
+  # queue and lets pending events persist through a restart.
+  #disk:
+    # The directory path to store the queue's data.
+    #path: "${path.data}/diskqueue"
+
+    # The maximum space the queue should occupy on disk. Depending on
+    # input settings, events that exceed this limit are delayed or discarded.
+    #max_size: 10GB
+
+    # The maximum size of a single queue data file. Data in the queue is
+    # stored in smaller segments that are deleted after all their events
+    # have been processed.
+    #segment_size: 1GB
+
+    # The number of events to read from disk to memory while waiting for
+    # the output to request them.
+    #read_ahead: 512
+
+    # The number of events to accept from inputs while waiting for them
+    # to be written to disk. If event data arrives faster than it
+    # can be written to disk, this setting prevents it from overflowing
+    # main memory.
+    #write_ahead: 2048
+
+    # The duration to wait before retrying when the queue encounters a disk
+    # write error.
+    #retry_interval: 1s
+
+    # The maximum length of time to wait before retrying on a disk write
+    # error. If the queue encounters repeated errors, it will double the
+    # length of its retry interval each time, up to this maximum.
+    #max_retry_interval: 30s
 
   # The spool queue will store events in a local spool file, before
   # forwarding the events to the outputs.
@@ -882,7 +1099,7 @@ metricbeat.modules:
 # default is the number of logical CPUs available in the system.
 #max_procs:
 
-#================================ Processors ===================================
+# ================================= Processors =================================
 {{ elk_macros.beat_processors(processors) }}
 
 # Processors are used to reduce the number of fields in the exported event or to
@@ -900,103 +1117,155 @@ metricbeat.modules:
 # values:
 #
 #processors:
-#- include_fields:
-#    fields: ["cpu"]
-#- drop_fields:
-#    fields: ["cpu.user", "cpu.system"]
+#  - include_fields:
+#      fields: ["cpu"]
+#  - drop_fields:
+#      fields: ["cpu.user", "cpu.system"]
 #
 # The following example drops the events that have the HTTP response code 200:
 #
 #processors:
-#- drop_event:
-#    when:
-#       equals:
-#           http.code: 200
+#  - drop_event:
+#      when:
+#        equals:
+#          http.code: 200
 #
 # The following example renames the field a to b:
 #
 #processors:
-#- rename:
-#    fields:
-#       - from: "a"
-#         to: "b"
+#  - rename:
+#      fields:
+#        - from: "a"
+#          to: "b"
 #
 # The following example tokenizes the string into fields:
 #
 #processors:
-#- dissect:
-#    tokenizer: "%{key1} - %{key2}"
-#    field: "message"
-#    target_prefix: "dissect"
+#  - dissect:
+#      tokenizer: "%{key1} - %{key2}"
+#      field: "message"
+#      target_prefix: "dissect"
 #
 # The following example enriches each event with metadata from the cloud
 # provider about the host machine. It works on EC2, GCE, DigitalOcean,
 # Tencent Cloud, and Alibaba Cloud.
 #
 #processors:
-#- add_cloud_metadata: ~
+#  - add_cloud_metadata: ~
 #
 # The following example enriches each event with the machine's local time zone
 # offset from UTC.
 #
 #processors:
-#- add_locale:
-#    format: offset
+#  - add_locale:
+#      format: offset
 #
 # The following example enriches each event with docker metadata, it matches
 # given fields to an existing container id and adds info from that container:
 #
 #processors:
-#- add_docker_metadata:
-#    host: "unix:///var/run/docker.sock"
-#    match_fields: ["system.process.cgroup.id"]
-#    match_pids: ["process.pid", "process.ppid"]
-#    match_source: true
-#    match_source_index: 4
-#    match_short_id: false
-#    cleanup_timeout: 60
-#    labels.dedot: false
-#    # To connect to Docker over TLS you must specify a client and CA certificate.
-#    #ssl:
-#    #  certificate_authority: "/etc/pki/root/ca.pem"
-#    #  certificate:           "/etc/pki/client/cert.pem"
-#    #  key:                   "/etc/pki/client/cert.key"
+#  - add_docker_metadata:
+#      host: "unix:///var/run/docker.sock"
+#      match_fields: ["system.process.cgroup.id"]
+#      match_pids: ["process.pid", "process.ppid"]
+#      match_source: true
+#      match_source_index: 4
+#      match_short_id: false
+#      cleanup_timeout: 60
+#      labels.dedot: false
+#      # To connect to Docker over TLS you must specify a client and CA certificate.
+#      #ssl:
+#      #  certificate_authority: "/etc/pki/root/ca.pem"
+#      #  certificate:           "/etc/pki/client/cert.pem"
+#      #  key:                   "/etc/pki/client/cert.key"
 #
 # The following example enriches each event with docker metadata, it matches
 # container id from log path available in `source` field (by default it expects
 # it to be /var/lib/docker/containers/*/*.log).
 #
 #processors:
-#- add_docker_metadata: ~
+#  - add_docker_metadata: ~
 #
 # The following example enriches each event with host metadata.
 #
 #processors:
-#- add_host_metadata:
-#   netinfo.enabled: false
+#  - add_host_metadata: ~
 #
 # The following example enriches each event with process metadata using
 # process IDs included in the event.
 #
 #processors:
-#- add_process_metadata:
-#    match_pids: ["system.process.ppid"]
-#    target: system.process.parent
+#  - add_process_metadata:
+#      match_pids: ["system.process.ppid"]
+#      target: system.process.parent
 #
 # The following example decodes fields containing JSON strings
 # and replaces the strings with valid JSON objects.
 #
 #processors:
-#- decode_json_fields:
-#    fields: ["field1", "field2", ...]
-#    process_array: false
-#    max_depth: 1
-#    target: ""
-#    overwrite_keys: false
+#  - decode_json_fields:
+#      fields: ["field1", "field2", ...]
+#      process_array: false
+#      max_depth: 1
+#      target: ""
+#      overwrite_keys: false
+#
+#processors:
+#  - decompress_gzip_field:
+#      from: "field1"
+#      to: "field2"
+#      ignore_missing: false
+#      fail_on_error: true
+#
+# The following example copies the value of message to message_copied
+#
+#processors:
+#  - copy_fields:
+#      fields:
+#        - from: message
+#          to: message_copied
+#      fail_on_error: true
+#      ignore_missing: false
+#
+# The following example truncates the value of message to 1024 bytes
+#
+#processors:
+#  - truncate_fields:
+#      fields:
+#        - message
+#      max_bytes: 1024
+#      fail_on_error: false
+#      ignore_missing: true
+#
+# The following example preserves the raw message under event.original
+#
+#processors:
+#  - copy_fields:
+#      fields:
+#        - from: message
+#          to: event.original
+#      fail_on_error: false
+#      ignore_missing: true
+#  - truncate_fields:
+#      fields:
+#        - event.original
+#      max_bytes: 1024
+#      fail_on_error: false
+#      ignore_missing: true
+#
+# The following example URL-decodes the value of field1 to field2
+#
+#processors:
+#  - urldecode:
+#      fields:
+#        - from: "field1"
+#          to: "field2"
+#      ignore_missing: false
+#      fail_on_error: true
 
-#============================= Elastic Cloud ==================================
+# =============================== Elastic Cloud ================================
 
-# These settings simplify using metricbeat with the Elastic Cloud (https://cloud.elastic.co/).
+# These settings simplify using Metricbeat with the Elastic Cloud (https://cloud.elastic.co/).
 
 # The cloud.id setting overwrites the `output.elasticsearch.hosts` and
 # `setup.kibana.host` options.
@@ -1007,120 +1276,162 @@ metricbeat.modules:
 # `output.elasticsearch.password` settings. The format is `<user>:<pass>`.
 #cloud.auth:
 
-#================================ Outputs ======================================
+# ================================== Outputs ===================================
 
 # Configure what output to use when sending the data collected by the beat.
 
-#-------------------------- Elasticsearch output -------------------------------
+# ---------------------------- Elasticsearch Output ----------------------------
 #output.elasticsearch:
-#  # Boolean flag to enable or disable the output module.
-#  #enabled: true
-#
-#  # Array of hosts to connect to.
-#  # Scheme and port can be left out and will be set to the default (http and 9200)
-#  # In case you specify and additional path, the scheme is required: http://localhost:9200/path
-#  # IPv6 addresses should always be defined as: https://[2001:db8::1]:9200
-#  hosts: ["localhost:9200"]
-#
-#  # Set gzip compression level.
-#  #compression_level: 0
-#
-#  # Configure escaping HTML symbols in strings.
-#  #escape_html: false
-#
-#  # Optional protocol and basic auth credentials.
-#  #protocol: "https"
-#  #username: "elastic"
-#  #password: "changeme"
-#
-#  # Dictionary of HTTP parameters to pass within the URL with index operations.
-#  #parameters:
-#    #param1: value1
-#    #param2: value2
-#
-#  # Number of workers per Elasticsearch host.
-#  #worker: 1
-#
-#  # Optional index name. The default is "metricbeat" plus date
-#  # and generates [metricbeat-]YYYY.MM.DD keys.
-#  # In case you modify this pattern you must update setup.template.name and setup.template.pattern accordingly.
-#  #index: "metricbeat-%{[agent.version]}-%{+yyyy.MM.dd}"
-#
-#  # Optional ingest node pipeline. By default no pipeline will be used.
-#  #pipeline: ""
-#
-#  # Optional HTTP path
-#  #path: "/elasticsearch"
-#
-#  # Custom HTTP headers to add to each request
-#  #headers:
-#  #  X-My-Header: Contents of the header
-#
-#  # Proxy server URL
-#  #proxy_url: http://proxy:3128
-#
-#  # The number of times a particular Elasticsearch index operation is attempted. If
-#  # the indexing operation doesn't succeed after this many retries, the events are
-#  # dropped. The default is 3.
-#  #max_retries: 3
-#
-#  # The maximum number of events to bulk in a single Elasticsearch bulk API index request.
-#  # The default is 50.
-#  #bulk_max_size: 50
-#
-#  # The number of seconds to wait before trying to reconnect to Elasticsearch
-#  # after a network error. After waiting backoff.init seconds, the Beat
-#  # tries to reconnect. If the attempt fails, the backoff timer is increased
-#  # exponentially up to backoff.max. After a successful connection, the backoff
-#  # timer is reset. The default is 1s.
-#  #backoff.init: 1s
-#
-#  # The maximum number of seconds to wait before attempting to connect to
-#  # Elasticsearch after a network error. The default is 60s.
-#  #backoff.max: 60s
-#
-#  # Configure HTTP request timeout before failing a request to Elasticsearch.
-#  #timeout: 90
-#
-#  # Use SSL settings for HTTPS.
-#  #ssl.enabled: true
-#
-#  # Configure SSL verification mode. If `none` is configured, all server hosts
-#  # and certificates will be accepted. In this mode, SSL-based connections are
-#  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
-#  # `full`.
-#  #ssl.verification_mode: full
-#
-#  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
-#  # 1.2 are enabled.
-#  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
-#
-#  # List of root certificates for HTTPS server verifications
-#  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
-#
-#  # Certificate for SSL client authentication
-#  #ssl.certificate: "/etc/pki/client/cert.pem"
-#
-#  # Client certificate key
-#  #ssl.key: "/etc/pki/client/cert.key"
-#
-#  # Optional passphrase for decrypting the certificate key.
-#  #ssl.key_passphrase: ''
-#
-#  # Configure cipher suites to be used for SSL connections
-#  #ssl.cipher_suites: []
-#
-#  # Configure curve types for ECDHE-based cipher suites
-#  #ssl.curve_types: []
-#
-#  # Configure what types of renegotiation are supported. Valid options are
-#  # never, once, and freely. Default is never.
-#  #ssl.renegotiation: never
+  # Boolean flag to enable or disable the output module.
+  #enabled: true
 
+  # Array of hosts to connect to.
+  # Scheme and port can be left out and will be set to the default (http and 9200)
+  # In case you specify and additional path, the scheme is required: http://localhost:9200/path
+  # IPv6 addresses should always be defined as: https://[2001:db8::1]:9200
+  #hosts: ["localhost:9200"]
 
-#----------------------------- Logstash output ---------------------------------
+  # Set gzip compression level.
+  #compression_level: 0
+
+  # Configure escaping HTML symbols in strings.
+  #escape_html: false
+
+  # Protocol - either `http` (default) or `https`.
+  #protocol: "https"
+
+  # Authentication credentials - either API key or username/password.
+  #api_key: "id:api_key"
+  #username: "elastic"
+  #password: "changeme"
+
+  # Dictionary of HTTP parameters to pass within the URL with index operations.
+  #parameters:
+    #param1: value1
+    #param2: value2
+
+  # Number of workers per Elasticsearch host.
+  #worker: 1
+
+  # Optional index name. The default is "metricbeat" plus date
+  # and generates [metricbeat-]YYYY.MM.DD keys.
+  # In case you modify this pattern you must update setup.template.name and setup.template.pattern accordingly.
+  #index: "metricbeat-%{[agent.version]}-%{+yyyy.MM.dd}"
+
+  # Optional ingest node pipeline. By default no pipeline will be used.
+  #pipeline: ""
+
+  # Optional HTTP path
+  #path: "/elasticsearch"
+
+  # Custom HTTP headers to add to each request
+  #headers:
+  #  X-My-Header: Contents of the header
+
+  # Proxy server URL
+  #proxy_url: http://proxy:3128
+
+  # Whether to disable proxy settings for outgoing connections. If true, this
+  # takes precedence over both the proxy_url field and any environment settings
+  # (HTTP_PROXY, HTTPS_PROXY). The default is false.
+  #proxy_disable: false
+
+  # The number of times a particular Elasticsearch index operation is attempted. If
+  # the indexing operation doesn't succeed after this many retries, the events are
+  # dropped. The default is 3.
+  #max_retries: 3
+
+  # The maximum number of events to bulk in a single Elasticsearch bulk API index request.
+  # The default is 50.
+  #bulk_max_size: 50
+
+  # The number of seconds to wait before trying to reconnect to Elasticsearch
+  # after a network error. After waiting backoff.init seconds, the Beat
+  # tries to reconnect. If the attempt fails, the backoff timer is increased
+  # exponentially up to backoff.max. After a successful connection, the backoff
+  # timer is reset. The default is 1s.
+  #backoff.init: 1s
+
+  # The maximum number of seconds to wait before attempting to connect to
+  # Elasticsearch after a network error. The default is 60s.
+  #backoff.max: 60s
+
+  # Configure HTTP request timeout before failing a request to Elasticsearch.
+  #timeout: 90
+
+  # Use SSL settings for HTTPS.
+  #ssl.enabled: true
+
+  # Controls the verification of certificates. Valid values are:
+  # * full, which verifies that the provided certificate is signed by a trusted
+  # authority (CA) and also verifies that the server's hostname (or IP address)
+  # matches the names identified within the certificate.
+  # * certificate, which verifies that the provided certificate is signed by a
+  # trusted authority (CA), but does not perform any hostname verification.
+  #  * none, which performs no verification of the server's certificate. This
+  # mode disables many of the security benefits of SSL/TLS and should only be used
+  # after very careful consideration. It is primarily intended as a temporary
+  # diagnostic mechanism when attempting to resolve TLS errors; its use in
+  # production environments is strongly discouraged.
+  # The default value is full.
+  #ssl.verification_mode: full
+
+  # List of supported/valid TLS versions. By default all TLS versions from 1.1
+  # up to 1.3 are enabled.
+  #ssl.supported_protocols: [TLSv1.1, TLSv1.2, TLSv1.3]
+
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client certificate key
+  #ssl.key: "/etc/pki/client/cert.key"
+
+  # Optional passphrase for decrypting the certificate key.
+  #ssl.key_passphrase: ''
+
+  # Configure cipher suites to be used for SSL connections
+  #ssl.cipher_suites: []
+
+  # Configure curve types for ECDHE-based cipher suites
+  #ssl.curve_types: []
+
+  # Configure what types of renegotiation are supported. Valid options are
+  # never, once, and freely. Default is never.
+  #ssl.renegotiation: never
+
+  # Configure a pin that can be used to do extra validation of the verified certificate chain,
+  # this allow you to ensure that a specific certificate is used to validate the chain of trust.
+  #
+  # The pin is a base64 encoded string of the SHA-256 fingerprint.
+  #ssl.ca_sha256: ""
+
+  # Enable Kerberos support. Kerberos is automatically enabled if any Kerberos setting is set.
+  #kerberos.enabled: true
+
+  # Authentication type to use with Kerberos. Available options: keytab, password.
+  #kerberos.auth_type: password
+
+  # Path to the keytab file. It is used when auth_type is set to keytab.
+  #kerberos.keytab: /etc/elastic.keytab
+
+  # Path to the Kerberos configuration.
+  #kerberos.config_path: /etc/krb5.conf
+
+  # Name of the Kerberos user.
+  #kerberos.username: elastic
+
+  # Password of the Kerberos user. It is used when auth_type is set to password.
+  #kerberos.password: changeme
+
+  # Kerberos realm.
+  #kerberos.realm: ELASTIC
+
+# ------------------------------ Logstash Output -------------------------------
 {{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_processor_count) }}
-#------------------------------- Kafka output ----------------------------------
+# -------------------------------- Kafka Output --------------------------------
 #output.kafka:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -1155,7 +1466,11 @@ metricbeat.modules:
   #username: ''
   #password: ''
 
-  # Kafka version metricbeat is assumed to run against. Defaults to the "1.0.0".
+  # SASL authentication mechanism used. Can be one of PLAIN, SCRAM-SHA-256 or SCRAM-SHA-512.
+  # Defaults to PLAIN when `username` and `password` are configured.
+  #sasl.mechanism: ''
+
+  # Kafka version Metricbeat is assumed to run against. Defaults to the "1.0.0".
   #version: '1.0.0'
 
   # Configure JSON encoding
@@ -1179,8 +1494,8 @@ metricbeat.modules:
     # Refresh metadata interval. Defaults to every 10 minutes.
     #refresh_frequency: 10m
 
-    # Strategy for fetching the topics metadata from the broker. Default is true.
-    #full: true
+    # Strategy for fetching the topics metadata from the broker. Default is false.
+    #full: false
 
   # The number of concurrent load-balanced Kafka output workers.
   #worker: 1
@@ -1192,9 +1507,24 @@ metricbeat.modules:
   # until all events are published. The default is 3.
   #max_retries: 3
 
+  # The number of seconds to wait before trying to republish to Kafka
+  # after a network error. After waiting backoff.init seconds, the Beat
+  # tries to republish. If the attempt fails, the backoff timer is increased
+  # exponentially up to backoff.max. After a successful publish, the backoff
+  # timer is reset. The default is 1s.
+  #backoff.init: 1s
+
+  # The maximum number of seconds to wait before attempting to republish to
+  # Kafka after a network error. The default is 60s.
+  #backoff.max: 60s
+
   # The maximum number of events to bulk in a single Kafka request. The default
   # is 2048.
   #bulk_max_size: 2048
+
+  # Duration to wait before sending bulk Kafka request. 0 is no delay. The default
+  # is 0.
+  #bulk_flush_frequency: 0s
 
   # The number of seconds to wait for responses from the Kafka brokers before
   # timing out. The default is 30s.
@@ -1234,30 +1564,37 @@ metricbeat.modules:
   # purposes.  The default is "beats".
   #client_id: beats
 
-  # Enable SSL support. SSL is automatically enabled if any SSL setting is set.
+  # Use SSL settings for HTTPS.
   #ssl.enabled: true
 
-  # Optional SSL configuration options. SSL is off by default.
-  # List of root certificates for HTTPS server verifications
-  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
-
-  # Configure SSL verification mode. If `none` is configured, all server hosts
-  # and certificates will be accepted. In this mode, SSL based connections are
-  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
-  # `full`.
+  # Controls the verification of certificates. Valid values are:
+  # * full, which verifies that the provided certificate is signed by a trusted
+  # authority (CA) and also verifies that the server's hostname (or IP address)
+  # matches the names identified within the certificate.
+  # * certificate, which verifies that the provided certificate is signed by a
+  # trusted authority (CA), but does not perform any hostname verification.
+  #  * none, which performs no verification of the server's certificate. This
+  # mode disables many of the security benefits of SSL/TLS and should only be used
+  # after very careful consideration. It is primarily intended as a temporary
+  # diagnostic mechanism when attempting to resolve TLS errors; its use in
+  # production environments is strongly discouraged.
+  # The default value is full.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
-  # 1.2 are enabled.
-  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
+  # List of supported/valid TLS versions. By default all TLS versions from 1.1
+  # up to 1.3 are enabled.
+  #ssl.supported_protocols: [TLSv1.1, TLSv1.2, TLSv1.3]
+
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
 
   # Certificate for SSL client authentication
   #ssl.certificate: "/etc/pki/client/cert.pem"
 
-  # Client Certificate Key
+  # Client certificate key
   #ssl.key: "/etc/pki/client/cert.key"
 
-  # Optional passphrase for decrypting the Certificate Key.
+  # Optional passphrase for decrypting the certificate key.
   #ssl.key_passphrase: ''
 
   # Configure cipher suites to be used for SSL connections
@@ -1270,7 +1607,38 @@ metricbeat.modules:
   # never, once, and freely. Default is never.
   #ssl.renegotiation: never
 
-#------------------------------- Redis output ----------------------------------
+  # Configure a pin that can be used to do extra validation of the verified certificate chain,
+  # this allow you to ensure that a specific certificate is used to validate the chain of trust.
+  #
+  # The pin is a base64 encoded string of the SHA-256 fingerprint.
+  #ssl.ca_sha256: ""
+
+  # Enable Kerberos support. Kerberos is automatically enabled if any Kerberos setting is set.
+  #kerberos.enabled: true
+
+  # Authentication type to use with Kerberos. Available options: keytab, password.
+  #kerberos.auth_type: password
+
+  # Path to the keytab file. It is used when auth_type is set to keytab.
+  #kerberos.keytab: /etc/security/keytabs/kafka.keytab
+
+  # Path to the Kerberos configuration.
+  #kerberos.config_path: /etc/krb5.conf
+
+  # The service name. Service principal name is contructed from
+  # service_name/hostname@realm.
+  #kerberos.service_name: kafka
+
+  # Name of the Kerberos user.
+  #kerberos.username: elastic
+
+  # Password of the Kerberos user. It is used when auth_type is set to password.
+  #kerberos.password: changeme
+
+  # Kerberos realm.
+  #kerberos.realm: ELASTIC
+
+# -------------------------------- Redis Output --------------------------------
 #output.redis:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -1286,6 +1654,8 @@ metricbeat.modules:
   # The list of Redis servers to connect to. If load-balancing is enabled, the
   # events are distributed to the servers in the list. If one server becomes
   # unreachable, the events are distributed to the reachable servers only.
+  # The hosts setting supports redis and rediss urls with custom password like
+  # redis://:password@localhost:6379.
   #hosts: ["localhost:6379"]
 
   # The name of the Redis list or channel the events are published to. The
@@ -1350,43 +1720,57 @@ metricbeat.modules:
   # occurs on the proxy server.
   #proxy_use_local_resolver: false
 
-  # Enable SSL support. SSL is automatically enabled, if any SSL setting is set.
+  # Use SSL settings for HTTPS.
   #ssl.enabled: true
 
-  # Configure SSL verification mode. If `none` is configured, all server hosts
-  # and certificates will be accepted. In this mode, SSL based connections are
-  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
-  # `full`.
+  # Controls the verification of certificates. Valid values are:
+  # * full, which verifies that the provided certificate is signed by a trusted
+  # authority (CA) and also verifies that the server's hostname (or IP address)
+  # matches the names identified within the certificate.
+  # * certificate, which verifies that the provided certificate is signed by a
+  # trusted authority (CA), but does not perform any hostname verification.
+  #  * none, which performs no verification of the server's certificate. This
+  # mode disables many of the security benefits of SSL/TLS and should only be used
+  # after very careful consideration. It is primarily intended as a temporary
+  # diagnostic mechanism when attempting to resolve TLS errors; its use in
+  # production environments is strongly discouraged.
+  # The default value is full.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
-  # 1.2 are enabled.
-  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
+  # List of supported/valid TLS versions. By default all TLS versions from 1.1
+  # up to 1.3 are enabled.
+  #ssl.supported_protocols: [TLSv1.1, TLSv1.2, TLSv1.3]
 
-  # Optional SSL configuration options. SSL is off by default.
   # List of root certificates for HTTPS server verifications
   #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
 
   # Certificate for SSL client authentication
   #ssl.certificate: "/etc/pki/client/cert.pem"
 
-  # Client Certificate Key
+  # Client certificate key
   #ssl.key: "/etc/pki/client/cert.key"
 
-  # Optional passphrase for decrypting the Certificate Key.
+  # Optional passphrase for decrypting the certificate key.
   #ssl.key_passphrase: ''
 
   # Configure cipher suites to be used for SSL connections
   #ssl.cipher_suites: []
 
-  # Configure curve types for ECDHE based cipher suites
+  # Configure curve types for ECDHE-based cipher suites
   #ssl.curve_types: []
 
   # Configure what types of renegotiation are supported. Valid options are
   # never, once, and freely. Default is never.
   #ssl.renegotiation: never
 
-#------------------------------- File output -----------------------------------
+  # Configure a pin that can be used to do extra validation of the verified certificate chain,
+  # this allow you to ensure that a specific certificate is used to validate the chain of trust.
+  #
+  # The pin is a base64 encoded string of the SHA-256 fingerprint.
+  #ssl.ca_sha256: ""
+
+
+# -------------------------------- File Output ---------------------------------
 #output.file:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -1408,7 +1792,7 @@ metricbeat.modules:
   #filename: metricbeat
 
   # Maximum size in kilobytes of each file. When this size is reached, and on
-  # every metricbeat restart, the files are rotated. The default value is 10240
+  # every Metricbeat restart, the files are rotated. The default value is 10240
   # kB.
   #rotate_every_kb: 10000
 
@@ -1420,8 +1804,7 @@ metricbeat.modules:
   # Permissions to use for file creation. The default is 0600.
   #permissions: 0600
 
-
-#----------------------------- Console output ---------------------------------
+# ------------------------------- Console Output -------------------------------
 #output.console:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -1434,82 +1817,101 @@ metricbeat.modules:
     # Configure escaping HTML symbols in strings.
     #escape_html: false
 
-#================================= Paths ======================================
+# =================================== Paths ====================================
 
-# The home path for the metricbeat installation. This is the default base path
+# The home path for the Metricbeat installation. This is the default base path
 # for all other path settings and for miscellaneous files that come with the
 # distribution (for example, the sample dashboards).
 # If not set by a CLI flag or in the configuration file, the default for the
 # home path is the location of the binary.
 #path.home:
 
-# The configuration path for the metricbeat installation. This is the default
+# The configuration path for the Metricbeat installation. This is the default
 # base path for configuration files, including the main YAML configuration file
 # and the Elasticsearch template file. If not set by a CLI flag or in the
 # configuration file, the default for the configuration path is the home path.
 #path.config: ${path.home}
 
-# The data path for the metricbeat installation. This is the default base path
-# for all the files in which metricbeat needs to store its data. If not set by a
+# The data path for the Metricbeat installation. This is the default base path
+# for all the files in which Metricbeat needs to store its data. If not set by a
 # CLI flag or in the configuration file, the default for the data path is a data
 # subdirectory inside the home path.
 #path.data: ${path.home}/data
 
-# The logs path for a metricbeat installation. This is the default location for
+# The logs path for a Metricbeat installation. This is the default location for
 # the Beat's log files. If not set by a CLI flag or in the configuration file,
 # the default for the logs path is a logs subdirectory inside the home path.
 #path.logs: ${path.home}/logs
 
-#================================ Keystore ==========================================
+# ================================== Keystore ==================================
+
 # Location of the Keystore containing the keys and their sensitive values.
 #keystore.path: "${path.config}/beats.keystore"
 
-#============================== Dashboards =====================================
+# ================================= Dashboards =================================
+
 {% if (groups['kibana'] | length) > 0 and (setup_kibana_dashboards | default(true)) %}
 {{ elk_macros.setup_dashboards('metricbeat') }}
 {% endif %}
 
-
-#============================== Template =====================================
+# ================================== Template ==================================
 
 {{ elk_macros.setup_template('metricbeat', inventory_hostname, data_nodes, elasticsearch_beat_settings) }}
 
-#============================== Setup ILM =====================================
+# ====================== Index Lifecycle Management (ILM) ======================
 
-# Configure Index Lifecycle Management Index Lifecycle Management creates a
-# write alias and adds additional settings to the template.
-# The elasticsearch.output.index setting will be replaced with the write alias
-# if ILM is enabled.
+# Configure index lifecycle management (ILM). These settings create a write
+# alias and add additional settings to the index template. When ILM is enabled,
+# output.elasticsearch.index is ignored, and the write alias is used to set the
+# index name.
 
-# Enabled ILM support. Valid values are true, false, and auto. The beat will
-# detect availabilty of Index Lifecycle Management in Elasticsearch and enable
-# or disable ILM support.
+# Enable ILM support. Valid values are true, false, and auto. When set to auto
+# (the default), the Beat uses index lifecycle management when it connects to a
+# cluster that supports ILM; otherwise, it creates daily indices.
 #setup.ilm.enabled: auto
 
-# Configure the ILM write alias name.
-#setup.ilm.rollover_alias: "metricbeat"
+# Set the prefix used in the index lifecycle write alias name. The default alias
+# name is 'metricbeat-%{[agent.version]}'.
+#setup.ilm.rollover_alias: 'metricbeat'
 
-# Configure rollover index pattern.
+# Set the rollover index pattern. The default is "%{now/d}-000001".
 #setup.ilm.pattern: "{now/d}-000001"
+
 {% if ilm_policy_name is defined %}
+# Set the lifecycle policy name. The default policy name is
+# 'beatname'.
 setup.ilm.policy_name: "{{ ilm_policy_name }}"
+
 {% endif %}
 {% if ilm_policy_file_location is defined %}
+# The path to a JSON file that contains a lifecycle policy configuration. Used
+# to load your own lifecycle policy.
 setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}"
-{% endif %}
 
-#============================== Kibana =====================================
+{% endif %}
+# Disable the check for an existing lifecycle policy. The default is true. If
+# you disable this check, set setup.ilm.overwrite: true so the lifecycle policy
+# can be installed.
+#setup.ilm.check_exists: true
+
+# Overwrite the lifecycle policy at startup. The default is false.
+#setup.ilm.overwrite: false
+
+# =================================== Kibana ===================================
+
 {% if (groups['kibana'] | length) > 0 and (setup_kibana_dashboards | default(true)) %}
 {{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ kibana_port) }}
 {% endif %}
 
-#================================ Logging ======================================
+# ================================== Logging ===================================
+
 {{ elk_macros.beat_logging('metricbeat', metricbeat_log_level) }}
 
-#============================== Xpack Monitoring =====================================
-{{ elk_macros.xpack_monitoring_elasticsearch(inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
+# ============================= X-Pack Monitoring ==============================
+{{ elk_macros.xpack_monitoring_elasticsearch('metricbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
 
-#================================ HTTP Endpoint ======================================
+# =============================== HTTP Endpoint ================================
+
 # Each beat can expose internal metrics through a HTTP endpoint. For security
 # reasons the endpoint is disabled by default. This feature is currently experimental.
 # Stats can be access through http://localhost:5066/stats . For pretty JSON output
@@ -1518,18 +1920,62 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 # Defines if the HTTP endpoint is enabled.
 #http.enabled: false
 
-# The HTTP endpoint will bind to this hostname or IP address. It is recommended to use only localhost.
+# The HTTP endpoint will bind to this hostname, IP address, unix socket or named pipe.
+# When using IP addresses, it is recommended to only use localhost.
 #http.host: localhost
 
 # Port on which the HTTP endpoint will bind. Default is 5066.
 #http.port: 5066
 
-#============================= Process Security ================================
+# Define which user should be owning the named pipe.
+#http.named_pipe.user:
+
+# Define which the permissions that should be applied to the named pipe, use the Security
+# Descriptor Definition Language (SDDL) to define the permission. This option cannot be used with
+# `http.user`.
+#http.named_pipe.security_descriptor:
+
+# ============================== Process Security ==============================
 
 # Enable or disable seccomp system call filtering on Linux. Default is enabled.
 #seccomp.enabled: true
 
-#================================= Migration ==================================
+# ============================== Instrumentation ===============================
+
+# Instrumentation support for the metricbeat.
+#instrumentation:
+    # Set to true to enable instrumentation of metricbeat.
+    #enabled: false
+
+    # Environment in which metricbeat is running on (eg: staging, production, etc.)
+    #environment: ""
+
+    # APM Server hosts to report instrumentation results to.
+    #hosts:
+    #  - http://localhost:8200
+
+    # API Key for the APM Server(s).
+    # If api_key is set then secret_token will be ignored.
+    #api_key:
+
+    # Secret token for the APM Server(s).
+    #secret_token:
+
+    # Enable profiling of the server, recording profile samples as events.
+    #
+    # This feature is experimental.
+    #profiling:
+        #cpu:
+            # Set to true to enable CPU profiling.
+            #enabled: false
+            #interval: 60s
+            #duration: 10s
+        #heap:
+            # Set to true to enable heap profiling.
+            #enabled: false
+            #interval: 60s
+
+# ================================= Migration ==================================
 
 # This allows to enable 6.7 migration aliases
 #migration.6_to_7.enabled: false
