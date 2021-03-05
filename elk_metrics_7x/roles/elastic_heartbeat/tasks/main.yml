@@ -34,19 +34,6 @@
   until: _package_task is success
   retries: 3
   delay: 2
-  when:
-    - ansible_architecture == 'x86_64'
-  notify:
-    - Enable and restart heartbeat
-  tags:
-    - package_install
-
-- name: Ensure beat is installed (aarch64)
-  apt:
-    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/heartbeat-6.5.0-arm64.deb'
-  when:
-    - ansible_pkg_mgr == 'apt'
-    - ansible_architecture == 'aarch64'
   notify:
     - Enable and restart heartbeat
   tags:
