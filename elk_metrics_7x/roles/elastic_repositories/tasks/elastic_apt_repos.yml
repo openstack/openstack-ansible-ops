@@ -21,7 +21,15 @@
   with_items: "{{ elastic_gpg_keys | selectattr('file','defined') | list }}"
 
 - name: Install Elastic gpg keys
-  apt_key: "{{ key }}"
+  apt_key:
+    data: "{{ key.data | default(omit) }}"
+    file: "{{ key.file | default(omit) }}"
+    id: "{{ key.id | default(omit) }}"
+    keyring: "{{ key.keyring | default(omit) }}"
+    keyserver: "{{ key.keyserver | default(omit) }}"
+    state: "{{ key.state | default('present') }}"
+    url: "{{ key.url | default(omit) }}"
+    validate_certs: "{{ key.validate_certs | default('yes') }}"
   with_items: "{{ elastic_gpg_keys }}"
   loop_control:
     loop_var: key
