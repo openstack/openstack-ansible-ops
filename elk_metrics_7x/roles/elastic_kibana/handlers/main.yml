@@ -13,27 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Enable and restart services (systemd)
+- name: Enable and restart kibana services
   systemd:
     name: "{{ item }}"
     enabled: true
     state: restarted
     daemon_reload: true
-  when:
-    - ansible_service_mgr == 'systemd'
   with_items:
     - nginx
     - kibana
-  listen: Enable and restart services
-
-- name: Enable and restart services (upstart)
-  service:
-    name: "{{ item }}"
-    state: restarted
-    enabled: yes
-  when:
-    - ansible_service_mgr == 'upstart'
-  with_items:
-    - nginx
-    - kibana
-  listen: Enable and restart services

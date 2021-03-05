@@ -46,16 +46,12 @@
     group: "root"
     owner: "root"
     mode: "0755"
-  when:
-    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "0644"
-  when:
-    - ansible_service_mgr == 'systemd'
   with_items:
     - src: "systemd.general-overrides.conf.j2"
       dest: "/etc/systemd/system/packetbeat.service.d/packetbeat-overrides.conf"
@@ -88,20 +84,10 @@
 - name: Force beat handlers
   meta: flush_handlers
 
-- name: set packetbeat service state (upstart)
-  service:
-    name: "packetbeat"
-    state: "{{ packetbeat_service_state }}"
-    enabled: "{{ packetbeat_service_state in ['running', 'started', 'restarted'] }}"
-  when:
-    - ansible_service_mgr == 'upstart'
-    - packetbeat_service_state in ['started', 'stopped']
-
-- name: set packetbeat service state (systemd)
+- name: set packetbeat service state
   systemd:
     name: "packetbeat"
     state: "{{ packetbeat_service_state }}"
     enabled: "{{ packetbeat_service_state in ['running', 'started', 'restarted'] }}"
   when:
-    - ansible_service_mgr == 'systemd'
     - packetbeat_service_state in ['started', 'stopped']

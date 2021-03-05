@@ -65,16 +65,12 @@
     group: "root"
     owner: "root"
     mode: "0755"
-  when:
-    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "0644"
-  when:
-    - ansible_service_mgr == 'systemd'
   with_items:
     - src: "systemd.general-overrides.conf.j2"
       dest: "/etc/systemd/system/logstash.service.d/logstash-overrides.conf"
@@ -137,15 +133,11 @@
       command: id -u logstash
       register: logstash_uid
       changed_when: false
-      when:
-        - ansible_service_mgr == 'systemd'
 
     - name: Get logstash GID
       command: id -g logstash
       register: logstash_gid
       changed_when: false
-      when:
-        - ansible_service_mgr == 'systemd'
 
     - name: Read logstash queue path
       command: "readlink -f /var/lib/logstash/queue"
@@ -166,18 +158,6 @@
                 - logstash.service
             state: 'started'
             enabled: true
-      when:
-        - ansible_service_mgr == 'systemd'
-
-    - name: Apply fstab options for memory queues
-      mount:
-        path: "{{ logstash_queue_path.stdout.strip() }}"
-        src: tmpfs
-        fstype: tmpfs
-        opts: size={{ (elastic_memory_lower_limit | int) // 2 }}m
-        state: mounted
-      when:
-        - ansible_service_mgr != 'systemd'
   when:
     - logstash_queue_type == 'memory'
 

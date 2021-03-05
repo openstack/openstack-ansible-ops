@@ -54,16 +54,12 @@
     group: "root"
     owner: "root"
     mode: "0755"
-  when:
-    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "/etc/systemd/system/auditbeat.service.d/{{ item.dest }}"
     mode: "0644"
-  when:
-    - ansible_service_mgr == 'systemd'
   with_items:
     - src: "systemd.general-overrides.conf.j2"
       dest: "auditbeat-overrides.conf"
@@ -92,20 +88,10 @@
 - name: Force beat handlers
   meta: flush_handlers
 
-- name: set auditbeat service state (upstart)
-  service:
-    name: "auditbeat"
-    state: "{{ auditbeat_service_state }}"
-    enabled: "{{ auditbeat_service_state in ['running', 'started', 'restarted'] }}"
-  when:
-    - ansible_service_mgr == 'upstart'
-    - auditbeat_service_state in ['started', 'stopped']
-
-- name: set auditbeat service state (systemd)
+- name: set auditbeat service state
   systemd:
     name: "auditbeat"
     state: "{{ auditbeat_service_state }}"
     enabled: "{{ auditbeat_service_state in ['running', 'started', 'restarted'] }}"
   when:
-    - ansible_service_mgr == 'systemd'
     - auditbeat_service_state in ['started', 'stopped']

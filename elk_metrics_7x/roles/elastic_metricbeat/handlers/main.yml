@@ -13,21 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Enable and restart metricbeat (systemd)
+- name: Enable and restart metricbeat
   systemd:
     name: "metricbeat"
     enabled: true
     state: "{{ metricbeat_service_state }}"
     daemon_reload: true
-  when:
-    - ansible_service_mgr == 'systemd'
-  listen: Enable and restart metricbeat
-
-- name: Enable and restart metricbeat (upstart)
-  service:
-    name: "metricbeat"
-    state: "{{ metricbeat_service_state }}"
-    enabled: yes
-  when:
-    - ansible_service_mgr == 'upstart'
-  listen: Enable and restart metricbeat

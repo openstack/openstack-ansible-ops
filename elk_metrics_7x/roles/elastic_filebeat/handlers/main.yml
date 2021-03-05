@@ -13,21 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Enable and restart filebeat (systemd)
+- name: Enable and restart filebeat
   systemd:
     name: "filebeat"
     enabled: true
     state: "{{ filebeat_service_state }}"
     daemon_reload: true
-  when:
-    - ansible_service_mgr == 'systemd'
-  listen: Enable and restart filebeat
-
-- name: Enable and restart filebeat (upstart)
-  service:
-    name: "filebeat"
-    state: "{{ filebeat_service_state }}"
-    enabled: yes
-  when:
-    - ansible_service_mgr == 'upstart'
-  listen: Enable and restart filebeat
