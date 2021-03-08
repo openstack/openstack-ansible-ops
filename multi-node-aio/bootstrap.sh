@@ -49,7 +49,7 @@ esac
 # Install pip3
 if ! which pip3 &>/dev/null; then
     curl --silent --show-error --retry 5 \
-        https://bootstrap.pypa.io/3.4/get-pip.py | sudo python3
+        https://bootstrap.pypa.io/pip/3.4/get-pip.py | sudo python3
 fi
 
 # Install bindep and tox
