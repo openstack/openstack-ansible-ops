@@ -33,7 +33,7 @@
   when:
     - ansible_virtualization_type in ["systemd-nspawn", "lxc", "lxd", "podman", "docker", "systemd_container", "container"]
 
-- name: Ensure beat is installed (x86_64)
+- name: Ensure beat is installed
   package:
     name: "{{ auditbeat_distro_packages }}"
     state: "{{ elk_package_state | default('present') }}"
@@ -42,19 +42,6 @@
   until: _package_task is success
   retries: 3
   delay: 2
-  when:
-    - ansible_architecture == 'x86_64'
-  notify:
-    - Enable and restart auditbeat
-  tags:
-    - package_install
-
-- name: Ensure beat is installed (aarch64)
-  apt:
-    deb: 'https://object-storage-ca-ymq-1.vexxhost.net/swift/v1/8709ca2640344a4ba85cba0a1d6eea69/aarch64/auditbeat-6.5.0-arm64.deb'
-  when:
-    - ansible_pkg_mgr == 'apt'
-    - ansible_architecture == 'aarch64'
   notify:
     - Enable and restart auditbeat
   tags:
