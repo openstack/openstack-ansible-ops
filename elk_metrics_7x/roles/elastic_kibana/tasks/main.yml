@@ -35,7 +35,7 @@
   retries: 3
   delay: 2
   notify:
-    - Enable and restart services
+    - Enable and restart kibana services
   tags:
     - package_install
 
@@ -54,7 +54,7 @@
     src: "nginx_default.j2"
     dest: "{{ kibana_nginx_vhost_path }}/default"
   notify:
-    - Enable and restart services
+    - Enable and restart kibana services
 
 - name: Create kibana systemd service config dir
   file:
@@ -63,21 +63,17 @@
     group: "root"
     owner: "root"
     mode: "0755"
-  when:
-    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "0644"
-  when:
-    - ansible_service_mgr == 'systemd'
   with_items:
     - src: "systemd.general-overrides.conf.j2"
       dest: "/etc/systemd/system/kibana.service.d/kibana-overrides.conf"
   notify:
-    - Enable and restart services
+    - Enable and restart kibana services
 
 - name: Drop kibana conf file
   template:
@@ -85,4 +81,4 @@
     dest: "/etc/kibana/kibana.yml"
     mode: "0666"
   notify:
-    - Enable and restart services
+    - Enable and restart kibana services

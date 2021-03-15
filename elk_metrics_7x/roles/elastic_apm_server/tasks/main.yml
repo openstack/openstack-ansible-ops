@@ -35,7 +35,7 @@
   retries: 3
   delay: 2
   notify:
-    - Enable and restart apm server
+    - Enable and restart apm-server
   tags:
     - package_install
 
@@ -46,28 +46,24 @@
     group: "root"
     owner: "root"
     mode: "0755"
-  when:
-    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "/etc/systemd/system/apm-server.service.d/{{ item.dest }}"
     mode: "0644"
-  when:
-    - ansible_service_mgr == 'systemd'
   with_items:
     - src: "systemd.general-overrides.conf.j2"
       dest: "apm-server-overrides.conf"
   notify:
-    - Enable and restart apm server
+    - Enable and restart apm-server
 
 - name: Drop apm-server conf file
   template:
     src: "apm-server.yml.j2"
     dest: "/etc/apm-server/apm-server.yml"
   notify:
-    - Enable and restart apm server
+    - Enable and restart apm-server
 
 - name: Run the beat setup role
   include_role:

@@ -40,7 +40,7 @@
   retries: 3
   delay: 2
   notify:
-    - Enable and restart elastic
+    - Enable and restart elasticsearch
   tags:
     - package_install
 
@@ -51,20 +51,16 @@
     group: "root"
     owner: "root"
     mode: "0755"
-  when:
-    - ansible_service_mgr == 'systemd'
 
 - name: Apply systemd options
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-  when:
-    - ansible_service_mgr == 'systemd'
   with_items:
     - src: "systemd.elasticsearch-overrides.conf.j2"
       dest: "/etc/systemd/system/elasticsearch.service.d/elasticsearch-overrides.conf"
   notify:
-    - Enable and restart elastic
+    - Enable and restart elasticsearch
   tags:
     - config
 
@@ -95,7 +91,7 @@
     - src: "jvm.options.j2"
       dest: "/etc/elasticsearch/jvm.options"
   notify:
-    - Enable and restart elastic
+    - Enable and restart elasticsearch
 
 - name: Drop elasticsearch conf file
   template:
@@ -107,7 +103,7 @@
     - src: "es-log4j2.properties.j2"
       dest: "/etc/elasticsearch/log4j2.properties"
   notify:
-    - Enable and restart elastic
+    - Enable and restart elasticsearch
   tags:
     - config
 
