@@ -28,19 +28,3 @@
       path: "{{ item.path }}"
       state: absent
     with_items: "{{ result.files }}"
-
-- name: Remove older venv tgz
-  hosts: all
-  tasks:
-  - name: List venv tgz
-    find:
-      paths: /var/cache
-      file_type: file
-      patterns: '.*(?<!{{ venv_tag }})-{{ ansible_architecture | lower }}\.tgz$'
-      use_regex: yes
-    register: result
-  - name: Delete older tgz
-    file:
-      path: "{{ item.path }}"
-      state: absent
-    with_items: "{{ result.files }}"
