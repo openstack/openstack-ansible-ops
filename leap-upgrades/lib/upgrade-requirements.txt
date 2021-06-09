@@ -3,7 +3,7 @@
 ###
 cryptography==1.7.2
 packaging==16.8
-pip==9.0.1
+pip==19.2
 setuptools==33.1.1
 virtualenv==15.1.0
 wheel==0.29.0
