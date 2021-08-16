@@ -1,0 +1,13 @@
+---
+- hosts: "{{ machine }}"
+  gather_facts: yes
+  tasks:
+    - name: network sorted
+      set_fact:
+        interfaces: "{{ ansible_interfaces | select('match', '^(e)[a-zA-Z]*[0-9]+') | sort | list }}"
+
+    - name: running pre-deploy role 
+      import_role:
+        name: create_instance
+  
+ 

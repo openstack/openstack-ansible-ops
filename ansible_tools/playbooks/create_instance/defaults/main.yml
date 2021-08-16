@@ -1,0 +1,16 @@
+---
+# defaults file for create_instance
+auth_url:  "https://cloud.iranserver.com:5000/v3"
+username: "rezabojnordi"
+password: "123456"
+project_name: "reza"
+image: "image id"
+##count: "1"
+key_name: "rb"
+flavor: "flavor id"
+net_id: "flavor id"
+net_name: ""
+
+  
+ 
+

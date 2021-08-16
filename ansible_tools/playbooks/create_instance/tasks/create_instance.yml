@@ -1,0 +1,43 @@
+---
+- name: Create a new instance and attaches to a network and passes metadata to the instance
+  openstack.cloud.server:
+    state: present
+    auth:
+      auth_url: "{{ auth_url }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      project_name: "{{ project_name }}"
+    verify: no 
+    name: vm1
+    image: "{{ image }}"
+    #count: "{{ count }}"
+    # key_name: "{{ key_name }}"
+    timeout: 200
+    flavor: "{{ flavor }}"
+    nics:
+      - net-id: "{{ net_id }}"
+        #- net-name: "{{ net-name }}"
+  register: output
+  tags:
+    - instance_lunch
+#  tags:
+#    - lunch_instance
+- name: information
+  debug:
+          msg: 
+          - "Host: {{ output['openstack']['OS-EXT-SRV-ATTR:host'] }}"
+          - "Ip: {{ output.openstack.accessIPv4 }}"
+          - "Instance_name: {{ output['openstack']['OS-EXT-SRV-ATTR:hostname'] }}"
+          - "Status: {{ output['openstack']['OS-EXT-STS:vm_state'] }}"
+          - "Flavor: {{ output['openstack']['flavor'] }}"
+          - "Image: {{ output['openstack']['image']['name'] }}"
+  tags:
+    - instance_lunch
+# - name: add_host hostname={{ output.openstack.accessIPV4 }} groupname=new_instances
+#   hosts: output.openstack.accessIPV4
+#   tasks:
+#    - name: Install 
+#      copy:
+#         content: hello world
+#         dest: /tmp/testfile.txt    
+
