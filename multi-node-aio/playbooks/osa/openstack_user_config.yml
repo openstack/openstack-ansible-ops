@@ -16,6 +16,9 @@ used_ips:
 global_overrides:
   internal_lb_vip_address: "{{ internal_lb_vip_address | default(hostvars[groups['loadbalancer_hosts'][0]]['server_networks']['mgmt']['address'].split('/')[0]) }}"
   external_lb_vip_address: "{{ external_lb_vip_address | default(hostvars[groups['loadbalancer_hosts'][0]]['server_vm_fixed_addr']) }}"
+{% if osa_no_containers | bool %}
+  no_containers: True
+{% endif %}
   tunnel_bridge: "br-vxlan"
   management_bridge: "br-mgmt"
   provider_networks:

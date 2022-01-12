@@ -22,9 +22,7 @@ PassThroughPattern: .*
 {% if http_proxy is defined and http_proxy %}
 Proxy: {{ http_proxy }}
 {% endif %}
-{% if ansible_distribution_release | lower != 'trusty' %}
 VfilePatternEx: ^/\?release=[0-9]+&arch=
-{% endif %}
 # NOTE(mhayden): Caching the CentOS mirror list causes yum to throw
 # 503 errors intermittently since the remote file is dynamic. Also,
 # yum has issues with retrieving the mariadb.org repodata bz2 and

@@ -26,8 +26,8 @@ for flavor in micro tiny mini small medium large xlarge heavy; do
   VCPU="${VCPU:-1}"
   SWAP="${SWAP:-0}"
   EPHEMERAL="${EPHEMERAL:-0}"
-  nova flavor-delete "$ID" > /dev/null || echo "No Flavor with ID: [ $ID ] found to clean up"
-  nova flavor-create "$NAME" "$ID" "$RAM" "$DISK" "$VCPU" --swap "$SWAP" --is-public true --ephemeral "$EPHEMERAL" --rxtx-factor 1
+  openstack flavor delete "$ID" > /dev/null || echo "No Flavor with ID: [ $ID ] found to clean up"
+  openstack flavor create "$NAME" --id "$ID" --ram "$RAM" --disk "$DISK" --vcpu "$VCPU" --swap "$SWAP" --public --ephemeral "$EPHEMERAL" --rxtx-factor 1
   let ID=ID+1
   let RAM=RAM*2
   if [ "$ID" -gt 5 ];then

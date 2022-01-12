@@ -12,13 +12,13 @@
 # limitations under the License.
 
 default_interface: "{{ default_network | default('eth0') }}"
-default_vm_image: "{{ default_image | default('ubuntu-16.04-amd64') }}"
+default_vm_image: "{{ default_image | default('ubuntu-20.04-amd64') }}"
 default_vm_storage: "{{ vm_disk_size | default(92160) }}"
-default_vm_root_disk_size: 8192
+default_vm_root_disk_size: 12288
 default_acng_bind_address: 0.0.0.0
 default_os_families:
-  ubuntu-16.04-amd64: debian
-  ubuntu-14.04-amd64: debian
+  ubuntu-20.04-amd64: debian
+  ubuntu-18.04-amd64: debian
 
 default_ubuntu_kernel: linux-generic
 default_ubuntu_mirror_proxy: 'http://10.0.2.1:3142/'
@@ -44,6 +44,21 @@ tftp_port: 69
 
 # Default ISO images
 images:
+  ubuntu-20.04-amd64:
+    image_type: "debian"
+    network_setup: "systemd-networkd"
+    image_os: "ubuntu"
+    image-version: "focal"
+    image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
+    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/focal-updates/main/installer-amd64/current/legacy-images/netboot/ubuntu-installer/amd64/linux"
+    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/focal-updates/main/installer-amd64/current/legacy-images/netboot/ubuntu-installer/amd64/initrd.gz"
+    image_configs:
+      vm:
+        url: "http://{{ tftp_server }}/configs/vm.config"
+        template_name: "vm.config"
+      vm-compute:
+        url: "http://{{ tftp_server }}/configs/vm-compute.config"
+        template_name: "vm-compute.config"
   ubuntu-18.04-amd64:
     image_type: "debian"
     network_setup: "systemd-networkd"
@@ -52,51 +67,6 @@ images:
     image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
     image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/bionic-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
     image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/bionic-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
-    image_configs:
-      vm:
-        url: "http://{{ tftp_server }}/configs/vm.config"
-        template_name: "vm.config"
-      vm-compute:
-        url: "http://{{ tftp_server }}/configs/vm-compute.config"
-        template_name: "vm-compute.config"
-  ubuntu-16.04-amd64:
-    image_type: "debian"
-    network_setup: "eni"
-    image_os: "ubuntu"
-    image-version: "xenial"
-    image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical"
-    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
-    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
-    image_configs:
-      vm:
-        url: "http://{{ tftp_server }}/configs/vm.config"
-        template_name: "vm.config"
-      vm-compute:
-        url: "http://{{ tftp_server }}/configs/vm-compute.config"
-        template_name: "vm-compute.config"
-  ubuntu-14.04-amd64:
-    image_type: "debian"
-    network_setup: "eni"
-    image_os: "ubuntu"
-    image_version: "trusty"
-    image_kernel_options: "biosdevname=0 net.ifnames=0 auto=true priority=critical quiet splash"
-    image_netboot_kernel_url: "http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux"
-    image_netboot_initrd_url: "http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz"
-    image_configs:
-      vm:
-        url: "http://{{ tftp_server }}/configs/vm.config"
-        template_name: "vm.config"
-      vm-compute:
-        url: "http://{{ tftp_server }}/configs/vm-compute.config"
-        template_name: "vm-compute.config"
-  centos-7-amd64:
-    image_type: "redhat"
-    network_setup: "systemd-networkd"
-    image_version: 7
-    image_netboot_kernel_url: "http://mirrors.edge.kernel.org/centos/7/os/x86_64/images/pxeboot/vmlinuz"
-    image_netboot_initrd_url: "http://mirrors.edge.kernel.org/centos/7/os/x86_64/images/pxeboot/initrd.img"
-    image_repo_base_url: "http://mirrors.edge.kernel.org/centos/7"
-    image_kernel_options: ""
     image_configs:
       vm:
         url: "http://{{ tftp_server }}/configs/vm.config"

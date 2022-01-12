@@ -29,12 +29,12 @@ function image_upload {
     echo "file found ${IMAGE_FILE}"
   fi
   if [[ "$?" == 0 ]]; then
-    glance image-create --name "${IMAGE_NAME}" \
-                        --container-format bare \
-                        --disk-format qcow2 \
-                        --visibility public \
-                        --progress \
-                        --file "${IMAGE_FILE}" && rm "${IMAGE_FILE}"
+    openstack image create "${IMAGE_NAME}" \
+                           --container-format bare \
+                           --disk-format qcow2 \
+                           --public \
+                           --progress \
+                           --file "${IMAGE_FILE}" && rm "${IMAGE_FILE}"
   fi
 }
 
@@ -42,10 +42,9 @@ function image_upload {
 
 # Create some default images
 #  USAGE: image_upload $URL $NAME
-image_upload http://uec-images.ubuntu.com/releases/14.04/release/ubuntu-14.04-server-cloudimg-amd64-disk1.img ubuntu-14.04-amd64
-image_upload http://uec-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img ubuntu-16.04-amd64
-image_upload http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2 centos-7-amd64
-image_upload http://cdimage.debian.org/cdimage/openstack/current/debian-9.2.0-openstack-amd64.qcow2 debian-9.2.0-amd64
-image_upload http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img cirros-0.3.4-amd64
-image_upload http://dfw.mirror.rackspace.com/fedora/releases/26/CloudImages/x86_64/images/Fedora-Cloud-Base-26-1.5.x86_64.qcow2 fedora-26-amd64
-image_upload http://download.opensuse.org/repositories/Cloud:/Images:/Leap_42.3/images/openSUSE-Leap-42.3-OpenStack.x86_64.qcow2 opensuse-leap-42.3-amd64
+image_upload https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img ubuntu-18.04-amd64
+image_upload https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img ubuntu-20.04-amd64
+image_upload https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img ubuntu-22.04-amd64
+image_upload https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20220216.0.x86_64.qcow2 centos-9-stream-20220216-x86_64
+image_upload https://cloud.debian.org/images/cloud/OpenStack/current-10/debian-10-openstack-amd64.qcow2 debian-10-openstack-amd64
+image_upload https://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img cirros-0.5.2-x86_64

@@ -1,6 +1,6 @@
 OpenStack-Ansible Multi-Node AIO
 ################################
-:date: 2016-03-09
+:date: 2022-01-12
 :tags: rackspace, openstack, ansible
 :category: \*openstack, \*nix
 
@@ -20,7 +20,7 @@ Process
 -------
 
 Create at least one physical host that has public network access and is running
-an Ubuntu 14.04/16.04/18.04 LTS Operating system. System assumes that you have an
+an Ubuntu 20.04 LTS Operating system. System assumes that you have an
 unpartitioned device with at least 1TB of storage, however you can customize the
 size of each VM volume by setting the option ``${VM_DISK_SIZE}``. If you're
 using the Rackspace OnMetal servers the drive partitioning will be done for you
@@ -55,8 +55,6 @@ Physical Host Specs known to work well
     20           124GB       1.3TB
 ===========    ========   ============
 
-These specs are covered by the Rackspace OnMetal-IO v1/2 Servers.
-
 Deployments default to the ML2/LinuxBridge network plugin. Available options
 at this time include:
 
@@ -78,6 +76,14 @@ to executing the build:
 .. code-block:: bash
 
     export MNAIO_ANSIBLE_PARAMETERS="-e osa_enable_networking_ovs_dvr=true"
+    ./build.sh
+
+To deploy an MNAIO without LXC, set the following parameter(s) prior
+to executing the build:
+
+.. code-block:: bash
+
+    export MNAIO_ANSIBLE_PARAMETERS="-e osa_no_containers=true"
     ./build.sh
 
 When your ready, run the build script by executing ``bash ./build.sh``. The
@@ -157,8 +163,8 @@ Instruct the system do all of the required DHCPD setup:
 Instruct the system to Kick all of the VMs:
   ``DEPLOY_VMS=${DEPLOY_VMS:-true}``
 
-Instruct the VM to use the selected image, eg. ubuntu-16.04-amd64:
-  ``DEFAULT_IMAGE=${DEFAULT_IMAGE:-ubuntu-16.04-amd64}``
+Instruct the VM to use the selected image, eg. ubuntu-18.04-amd64:
+  ``DEFAULT_IMAGE=${DEFAULT_IMAGE:-ubuntu-18.04-amd64}``
 
 Instruct the VM to use the selected kernel meta package, eg. linux-generic:
   ``DEFAULT_KERNEL=${DEFAULT_KERNEL:-linux-image-generic}``

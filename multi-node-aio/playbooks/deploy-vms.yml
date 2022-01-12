@@ -249,25 +249,6 @@
         key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
 
 
-# In vm-post-install-script.sh.j2 we chattr +i the interfaces file to prevent
-# the preseed system from overwriting the file after we've modified it.  The
-# task below simply removes the immutable attribute.
-- name: Remove immutable attr from /etc/network/interfaces
-  hosts: vm_servers
-  gather_facts: true
-  environment: "{{ deployment_environment_variables | default({}) }}"
-  tags:
-    - deploy-vms
-  tasks:
-    - name: Remove immutable attr from /etc/network/interfaces
-      file:
-        path: /etc/network/interfaces
-        attr: ""
-      when:
-        - ansible_distribution | lower == "ubuntu"
-        - ansible_distribution_release | lower == "trusty"
-
-
 - name: Set MaxSessions and MaxStartups to reduce connection failures
   hosts: vm_servers
   gather_facts: "{{ gather_facts | default(true) }}"
@@ -362,6 +343,12 @@
         lv: cinder-volumes00
         size: "100%FREE"
         shrink: false
+
+    - name: Modify scan_lvs for nested vg
+      replace:
+        path: /etc/lvm/lvm.conf
+        regexp: "scan_lvs = 0"
+        replace: "scan_lvs = 1"
 
     - name: Create data cinder-volumes VG
       lvg:

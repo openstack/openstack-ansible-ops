@@ -23,12 +23,10 @@
     - name: Check for a supported Operating System
       assert:
         that:
-          - (ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'xenial') or
-            (ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'bionic')
+          - (ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'focal')
         msg: >-
-          The only supported host platforms for this tooling are Ubuntu 16.04 LTS (Xenial)
-          and Ubuntu 18.04 LTS (Bionic). Patches to add support for other distributions are
-          most welcome.
+          The only supported host platforms for this tooling are Ubuntu 20.04 LTS (Focal).
+          Patches to add support for other distributions are most welcome.
 
     - name: Gather variables for each operating system
       include_vars: "{{ item }}"
@@ -367,6 +365,7 @@
             fstype: ext4
             dev: "/dev/{{ mnaio_data_disk }}{{ mnaio_data_disk_suffix | default('1') }}"
             force: yes
+            resizefs: yes
           when:
             - _add_partition is changed
 

@@ -114,32 +114,6 @@
       set_fact:
         network_setup: "{{ images[default_vm_image]['network_setup'] }}"
 
-# ENI Block
-    - name: Generate guest networking scripts for /e/n/i family
-      template:
-        src: "pxe/configs/eni/vm-bridges.cfg.j2"
-        dest: /var/www/pxe/networking/{{ hostvars[item]['server_hostname'] }}-bridges.cfg
-        mode: "0644"
-        owner: root
-        group: root
-      with_items: "{{ groups['pxe_servers'] }}"
-      when: network_setup | lower == "eni"
-
-    - name: Generate post-install network scripts for /e/n/i family
-      template:
-        src: "pxe/configs/eni/{{ item.src }}"
-        dest: /var/www/pxe/{{ item.dir }}/{{ item.dest }}
-        mode: "0644"
-        owner: root
-        group: root
-      with_items:
-        - src: basic-interface.cfg
-          dest: basic-debian-interface.cfg
-          dir: networking
-        - src: eni-post-network-script.sh.j2
-          dest: vm-post-network-script.sh
-          dir: scripts
-      when: network_setup | lower == "eni"
 
 # Systemd-networkd Block
     - name: Generate vm network scripts for systemd-network family

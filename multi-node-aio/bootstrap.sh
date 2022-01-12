@@ -20,11 +20,7 @@ BINDEP_FILE=${BINDEP_FILE:-bindep.txt}
 
 # We use the OSA branch variable to pin both the plugins
 # and the ansible version used to work together.
-# TODO(odyssey4me):
-# Switch this to use the master branch once the following
-# bug is fixed.
-# https://github.com/ansible/ansible/issues/47301
-export OSA_DEPS_BRANCH=${OSA_DEPS_BRANCH:-stable/rocky}
+export OSA_DEPS_BRANCH=${OSA_DEPS_BRANCH:-master}
 
 source /etc/os-release || source /usr/lib/os-release
 

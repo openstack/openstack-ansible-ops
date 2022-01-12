@@ -129,27 +129,18 @@ security_group_rules:
 
 # Create some default images
 images:
-  - name: Ubuntu 14.04 LTS
+  - name: Ubuntu 18.04 LTS
     format: qcow2
-    url: http://uec-images.ubuntu.com/releases/14.04/release/ubuntu-14.04-server-cloudimg-amd64-disk1.img
-  - name: Ubuntu 16.04
+    url: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
+  - name: Ubuntu 20.04 LTS
     format: qcow2
-    url: http://uec-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
-  - name: Fedora 27
+    url: https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
+  - name: CentOS 9 Stream
     format: qcow2
-    url: http://dfw.mirror.rackspace.com/fedora/releases/27/CloudImages/x86_64/images/Fedora-Cloud-Base-27-1.6.x86_64.qcow2
-  - name: CentOS 7
+    url: https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20220112.1.x86_64.qcow2
+  - name: Debian 10 Latest
     format: qcow2
-    url: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
-  - name: OpenSuse Leap 42.3
+    url: https://cdimage.debian.org/cdimage/openstack/current-10/debian-10-openstack-amd64.qcow2
+  - name: Cirros-0.5.2
     format: qcow2
-    url: http://download.opensuse.org/repositories/Cloud:/Images:/Leap_42.3/images/openSUSE-Leap-42.3-OpenStack.x86_64.qcow2
-  - name: Debian 9 Latest
-    format: qcow2
-    url: http://cdimage.debian.org/cdimage/openstack/current-9/debian-9-openstack-amd64.qcow2
-  - name: Debian TESTING
-    format: qcow2
-    url: http://cdimage.debian.org/cdimage/openstack/testing/debian-testing-openstack-amd64.qcow2
-  - name: Cirros-0.3.5
-    format: qcow2
-    url: http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img
+    url: http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
