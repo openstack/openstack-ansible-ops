@@ -412,7 +412,7 @@ elastic_beats:
   skydive:
     hosts: "{{ (((groups['skydive_analyzers'] | default([])) | length) > 0) | ternary((groups['hosts'] | default([])), []) }}"
 
-beat_version: "7.3.2"
+beat_version: "7.15.2"
 default_ilm_rollover_max_size: "30G"
 default_ilm_rollover_max_age: "15d"
 default_ilm_delete_min_age: "30d"
@@ -430,3 +430,32 @@ default_ilm_policy:
           delete: {}
 default_ilm_policy_filename: "default-ilm-policy.json"
 default_ilm_policy_file_location: "/tmp"
+
+# elastic_apt_pin_file_name: "elasticsearch.pref"
+# elastic_apt_pin_version: "{{ beat_version }}"
+# elastic_apt_pin_packages: []
+
+_elastic_apt_pin_packages:
+  - version: "{{ elastic_apt_pin_version_journalbeat | default(elastic_apt_pin_version | default(beat_version)) }}"
+    package: "journalbeat"
+  - version: "{{ elastic_apt_pin_version | default(beat_version) }}"
+    package: "packetbeat"
+  - version: "{{ elastic_apt_pin_version | default(beat_version) }}"
+    package: "apm-server"
+  - version: "{{ elastic_apt_pin_version | default(beat_version) }}"
+    package: "metricbeat"
+  - version: "{{ elastic_apt_pin_version | default(beat_version) }}"
+    package: "auditbeat"
+  - version: "{{ elastic_apt_pin_version | default(beat_version) }}"
+    package: "filebeat"
+  - version: "1:{{ elastic_apt_pin_version | default(beat_version) }}-1"
+    package: "logstash"
+  - version: "{{ elastic_apt_pin_version | default(beat_version) }}"
+    package: "elasticsearch"
+  - version: "{{ elastic_apt_pin_version | default(beat_version) }}"
+    package: "kibana"
+  - version: "{{ elastic_apt_pin_version | default(beat_version) }}"
+    package: "heartbeat-elastic"
+
+apt_package_pinning_file_name: "{{ elastic_apt_pin_file_name | default('elasticsearch.pref') }}"
+apt_pinned_packages: "{{ elastic_apt_pin_packages | default(_elastic_apt_pin_packages) }}"

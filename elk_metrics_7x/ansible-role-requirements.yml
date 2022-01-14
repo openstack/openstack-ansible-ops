@@ -11,3 +11,7 @@
   scm: git
   src: https://opendev.org/openstack/ansible-config_template
   version: master
+- name: apt_package_pinning
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-apt_package_pinning
+  version: master
