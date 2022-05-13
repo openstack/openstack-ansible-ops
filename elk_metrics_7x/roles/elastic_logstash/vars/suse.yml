@@ -16,5 +16,6 @@
 logstash_distro_packages:
   - logrotate
   - logstash
+  - python3-pexpect
 
 logstash_sysconfig_path: /etc/default/logstash

@@ -128,6 +128,38 @@
     group: "elasticsearch"
     mode: "0750"
 
+- name: Copy elasticsearch certificate bundle
+  copy:
+    content: "{{ elastic_security_cert_bundle }}"
+    dest: "/etc/elasticsearch/elastic-certificates.p12"
+    owner: root
+    group: elasticsearch
+    mode: 0660
+  when:
+    - elastic_security_enabled
+    - elastic_security_cert_bundle is defined
+
+- name: Set certificate bundle password
+  shell: "echo '{{ elastic_security_cert_password }}' | /usr/share/elasticsearch/bin/elasticsearch-keystore add {{ item }} --stdin --force"
+  no_log: True
+  changed_when: False
+  with_items:
+    - "xpack.security.transport.ssl.keystore.secure_password"
+    - "xpack.security.transport.ssl.truststore.secure_password"
+  when:
+    - elastic_security_enabled
+    - elastic_security_cert_password is defined
+
+- name: Set permissions on keystore
+  file:
+    path: "/etc/elasticsearch/elasticsearch.keystore"
+    group: "elasticsearch"
+    owner: "root"
+    mode: "0660"
+  when:
+    - elastic_security_enabled
+    - elastic_security_cert_password is defined
+
 - include_tasks: "elasticsearch_nfs_setup.yml"
   when:
     - elastic_shared_fs_repos is defined

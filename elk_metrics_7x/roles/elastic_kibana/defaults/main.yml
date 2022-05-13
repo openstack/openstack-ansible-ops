@@ -39,3 +39,9 @@ kibana_elastic_endpoints:
 
 # The URL which users access Kibana from
 # kibana_base_url: ""
+
+# The following are required to grant Kibana access to Elasticsearch
+# when security is enabled. The preferred method for setting the
+# password is to use the Kibana keystore.
+# kibana_system_username: ""
+# kibana_system_password: ""

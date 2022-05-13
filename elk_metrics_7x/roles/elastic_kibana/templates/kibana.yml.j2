@@ -49,7 +49,9 @@ elasticsearch.hosts: {{ kibana_elastic_endpoints  | to_json }}
 # the username and password that the Kibana server uses to perform maintenance on the Kibana
 # index at startup. Your Kibana users still need to authenticate with Elasticsearch, which
 # is proxied through the Kibana server.
-#elasticsearch.username: "user"
+{% if kibana_system_username is defined %}
+elasticsearch.username: "{{ kibana_system_username }}"
+{% endif %}
 #elasticsearch.password: "pass"
 
 # Enables SSL and paths to the PEM-format SSL certificate and SSL key files, respectively.
@@ -134,4 +136,7 @@ xpack.security.encryptionKey: {{ kibana_security_encryption_key }}
 {% endif %}
 {% if kibana_reporting_encryption_key is defined %}
 xpack.reporting.encryptionKey: {{ kibana_reporting_encryption_key }}
+{% endif %}
+{% if kibana_object_encryption_key is defined %}
+xpack.encryptedSavedObjects.encryptionKey: {{ kibana_object_encryption_key }}
 {% endif %}

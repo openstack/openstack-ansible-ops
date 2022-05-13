@@ -571,6 +571,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "%{[@metadata][beat]}-%{[@metadata][version]}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         } else if [@metadata][beat] {
           elasticsearch {
@@ -580,6 +584,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         } else if "syslog" in [tags] {
           elasticsearch {
@@ -589,6 +597,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "syslog-%{+YYYY.MM.dd}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         } else if "collectd" in [tags] {
           elasticsearch {
@@ -598,6 +610,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "collectd-%{+YYYY.MM.dd}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         } else {
           elasticsearch {
@@ -607,6 +623,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "undefined-%{+YYYY.MM.dd}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         }
       } else {
@@ -617,6 +637,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "%{[@metadata][beat]}-%{[@metadata][version]}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         } else if [@metadata][beat] {
           elasticsearch {
@@ -625,6 +649,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         } else if "syslog" in [tags] {
           elasticsearch {
@@ -633,6 +661,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "syslog-%{+YYYY.MM.dd}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         } else if "collectd" in [tags] {
           elasticsearch {
@@ -641,6 +673,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "collectd-%{+YYYY.MM.dd}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         } else {
           elasticsearch {
@@ -649,6 +685,10 @@
             sniffing => {{ (elastic_sniffing_enabled | default(not data_node)) | bool | string | lower }}
             manage_template => {{ (data_node | bool) | lower }}
             index => "undefined-%{+YYYY.MM.dd}"
+{% if logstash_internal_username is defined %}
+            user => {{ logstash_internal_username }}
+            password => "${% raw %}{{% endraw %}{{ logstash_internal_username }}{% raw %}}{% endraw %}"
+{% endif %}
           }
         }
       }

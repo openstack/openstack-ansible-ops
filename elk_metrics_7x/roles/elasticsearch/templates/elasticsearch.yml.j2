@@ -159,3 +159,13 @@ indices.recovery.max_bytes_per_sec: {{ elasticsearch_interface_speed }}mb
 xpack.monitoring.collection.enabled: true
 # Set to true to enable machine learning on the node.
 xpack.ml.enabled: false
+# Elastic security
+xpack.security.enabled: {{ elastic_security_enabled | bool | lower }}
+xpack.security.transport.ssl.enabled: {{ elastic_security_enabled | bool | lower }}
+{% if elastic_security_enabled %}
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.client_authentication: required
+xpack.security.transport.ssl.keystore.path: elastic-certificates.p12
+xpack.security.transport.ssl.truststore.path: elastic-certificates.p12
+xpack.security.authc.api_key.enabled: true
+{% endif %}

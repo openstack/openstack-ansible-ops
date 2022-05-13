@@ -532,7 +532,7 @@ logging.files:
 #logging.ecs: false
 {%- endmacro %}
 
-{% macro xpack_monitoring_elasticsearch(beat_name, host, data_hosts, processors) -%}
+{% macro xpack_monitoring_elasticsearch(beat_name, host, data_hosts, processors, username) -%}
 # {{ beat_name | capitalize }} can export internal metrics to a central Elasticsearch monitoring
 # cluster.  This requires xpack monitoring to be enabled in Elasticsearch.  The
 # reporting is disabled by default.
@@ -568,8 +568,10 @@ monitoring.elasticsearch:
 
   # Authentication credentials - either API key or username/password.
   #api_key: "id:api_key"
-  #username: "beats_system"
-  #password: "changeme"
+{% if username is defined %}
+  username: "{{ username }}"
+  password: "${% raw %}{{% endraw %}{{ username }}{% raw %}}{% endraw %}"
+{% endif %}
 
   # Dictionary of HTTP parameters to pass within the URL with index operations.
   #parameters:

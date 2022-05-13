@@ -279,8 +279,10 @@ metricbeat.modules:
     - ml_job
   period: 30s
   hosts: ["localhost:{{ elastic_port }}"]
-  #username: "elastic"
-  #password: "changeme"
+{% if beats_system_username is defined %}
+  username: "{{ beats_system_username }}"
+  password: "${% raw %}{{% endraw %}{{ beats_system_username }}{% raw %}}{% endraw %}"
+{% endif %}
   #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
 
   #index_recovery.active_only: true
@@ -483,6 +485,10 @@ metricbeat.modules:
   hosts: ["localhost:5601"]
   basepath: ""
   enabled: true
+{% if beats_system_username is defined %}
+  username: "{{ beats_system_username }}"
+  password: "${% raw %}{{% endraw %}{{ beats_system_username }}{% raw %}}{% endraw %}"
+{% endif %}
 
   # Set to true to send data collected by module to X-Pack
   # Monitoring instead of metricbeat-* indices.
@@ -1910,7 +1916,7 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 {{ elk_macros.beat_logging('metricbeat', metricbeat_log_level) }}
 
 # ============================= X-Pack Monitoring ==============================
-{{ elk_macros.xpack_monitoring_elasticsearch('metricbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
+{{ elk_macros.xpack_monitoring_elasticsearch('metricbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count, beats_system_username) }}
 
 # =============================== HTTP Endpoint ================================
 

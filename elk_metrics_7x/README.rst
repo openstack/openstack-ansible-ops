@@ -635,3 +635,84 @@ all `elk_metrics_7x` related services within the local test environment.
 .. code-block:: bash
 
    tests/run-cleanup.sh
+
+
+Enabling ELK security
+---------------------
+
+By default, ELK 7 is deployed without security enabled. This means that all
+service and user interactions are unauthenticated, and communication is
+unencrypted.
+
+If you wish to enable security features, it is recommended to start with a
+deployed cluster with security disabled, before following these steps. Note
+that this is a multi-stage process and requires unavoidable downtime.
+
+https://www.elastic.co/guide/en/elasticsearch/reference/7.17/security-basic-setup.html#generate-certificates
+
+* Generate a certificate authority which is unique to the Elastic cluster.
+  Ensure you set a password against the certificate bundle.
+
+* Generate a key and certificate for ElasticSearch instances. You may use a
+  single bundle for all hosts, or unique bundles if preferred. Again, set a
+  password against these.
+
+* Store the CA bundle securely, and configure the following elasticsearch
+  Ansible role variables. Note that it may be useful to base64 encode and
+  decode the binary certificate bundle files.
+  elastic_security_enabled: True
+  elastic_security_cert_bundle: "cert-bundle-contents"
+  elastic_security_cert_password: "cert-bundle-password"
+
+* Stop all Elasticsearch services.
+
+* Run the 'installElastic.yml' playbook against all cluster nodes. This will
+  enable security features, but will halt log ingest and monitoring tasks
+  due to missing authentication credentials.
+
+https://www.elastic.co/guide/en/elasticsearch/reference/7.17/security-minimal-setup.html#security-create-builtin-users
+
+* Generate usernames and passwords for key ELK services. Store the output
+  securely and set up the following Ansible variables. Note that the
+  credentials for system users are generated for you.
+
+  For Kibana hosts, set the following variables:
+  kibana_system_username
+  kibana_system_password
+  kibana_setup_username (*)
+  kibana_setup_password (*)
+
+  For Logstash hosts, set the following variables:
+  logstash_system_username
+  logstash_system_password
+  logstash_internal_username (*)
+  logstash_internal_password (*)
+
+  For Beats hosts, set the following variables:
+  beats_system_username
+  beats_system_password
+  beats_setup_username (*)
+  beats_setup_password (*)
+
+  (*) Users marked with a star are not generated automatically. These must be
+  set up manually via the Kibana interface once it has been configured. In
+  order for the Kibana playbook to run successfully, the 'elastic' superuser
+  can be used initially as the 'kibana_setup_username/password'.
+
+  kibana_setup - any user which is assigned the built in kibana_admin role
+  logstash_internal - see https://www.elastic.co/guide/en/logstash/7.17/ls-security.html#ls-http-auth-basic
+  beats_setup - see setup role at https://www.elastic.co/guide/en/beats/filebeat/7.17/feature-roles.html
+              - this user must also be assigned the built in ingest_admin role
+
+* Set 'kibana_object_encryption_key' to a string with a minimum length of 32
+  bytes.
+
+* Run the 'installKibana.yml' playbook against Kibana hosts. This will complete
+  their configuration and should allow you to log in to the web interface using
+  the 'elastic' user generated earlier.
+
+* Set up any additional users required by Logstash, Beats or others via the
+  Kibana interface and set their variables as noted above.
+
+* Complete deployment by running the 'installLogstash.yml' and Beat install
+  playbooks.

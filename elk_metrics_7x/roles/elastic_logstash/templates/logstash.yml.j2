@@ -229,8 +229,10 @@ path.logs: /var/log/logstash
 # X-Pack Monitoring
 # https://www.elastic.co/guide/en/logstash/current/monitoring-logstash.html
 xpack.monitoring.enabled: true
-#xpack.monitoring.elasticsearch.username: logstash_system
-#xpack.monitoring.elasticsearch.password: password
+{% if logstash_system_username is defined %}
+xpack.monitoring.elasticsearch.username: {{ logstash_system_username }}
+xpack.monitoring.elasticsearch.password: ${% raw %}{{% endraw %}{{ logstash_system_username }}{% raw %}}{% endraw +%}
+{% endif %}
 xpack.monitoring.elasticsearch.hosts: {{ logstash_elasticsearch_endpoints | to_json }}
 #xpack.monitoring.elasticsearch.ssl.certificate_authority: [ "/path/to/ca.crt" ]
 #xpack.monitoring.elasticsearch.ssl.truststore.path: path/to/file

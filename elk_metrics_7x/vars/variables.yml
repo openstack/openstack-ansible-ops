@@ -459,3 +459,6 @@ _elastic_apt_pin_packages:
 
 apt_package_pinning_file_name: "{{ elastic_apt_pin_file_name | default('elasticsearch.pref') }}"
 apt_pinned_packages: "{{ elastic_apt_pin_packages | default(_elastic_apt_pin_packages) }}"
+
+# kibana_setup_username: ""
+# kibana_setup_password: ""

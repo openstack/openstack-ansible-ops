@@ -35,6 +35,9 @@
         headers:
           Content-Type: "application/json"
           kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+        url_username: "{{ kibana_setup_username | default(omit) }}"
+        url_password: "{{ kibana_setup_password | default(omit) }}"
+        force_basic_auth: "{{ kibana_setup_username is defined }}"
       register: index_fields_return
       until: index_fields_return is success
       retries: 6
@@ -51,6 +54,9 @@
         headers:
           Content-Type: "application/json"
           kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+        url_username: "{{ kibana_setup_username | default(omit) }}"
+        url_password: "{{ kibana_setup_password | default(omit) }}"
+        force_basic_auth: "{{ kibana_setup_username is defined }}"
       register: index_fields_format_return
       until: index_fields_format_return is success
       retries: 6
@@ -83,6 +89,9 @@
             headers:
               Content-Type: "application/json"
               kbn-xsrf: "{{ inventory_hostname | to_uuid }}"
+            url_username: "{{ kibana_setup_username | default(omit) }}"
+            url_password: "{{ kibana_setup_password | default(omit) }}"
+            force_basic_auth: "{{ kibana_setup_username is defined }}"
           register: index_fields_return
           until: index_fields_return is success
           retries: 6

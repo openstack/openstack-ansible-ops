@@ -50,3 +50,9 @@ elasticsearch_bind_addresses: ["127.0.0.1", "{{ ansible_host }}", "{{ ansible_ho
 # Allow a slow startup before the systemd notifier module kicks in to extend
 # the timeout.
 #elastic_systemd_timeout: 75
+
+# Enable Elastic security, including TLS communication between Elasticsearch
+# nodes
+elastic_security_enabled: False
+# elastic_security_cert_bundle: ""
+# elastic_security_cert_password: ""

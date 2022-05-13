@@ -51,3 +51,7 @@ journalbeat_seek: head
 # set, templates are only pushed when the user is either upgrading the
 # beat version or deploying for the first time in the presence of kibana nodes
 elk_beat_setup: false
+
+# Authentication credentials for monitoring when using ELK security features
+# beats_system_username: ""
+# beats_system_password: ""

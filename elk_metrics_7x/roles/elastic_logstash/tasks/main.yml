@@ -223,6 +223,35 @@
     group: "logstash"
     mode: "0750"
 
+- name: Check whether Logstash keystore exists
+  shell: "/usr/share/logstash/bin/logstash-keystore list --path.settings /etc/logstash"
+  changed_when: False
+  failed_when: False
+  register: logstash_keystore
+
+- name: Create Logstash keystore if required
+  expect:
+    command: "/usr/share/logstash/bin/logstash-keystore create --path.settings /etc/logstash"
+    responses:
+      WARNING: y
+  when: logstash_keystore.rc == 1
+
+- name: Set xpack authentication password
+  shell: "echo '{{ logstash_system_password }}' | /usr/share/logstash/bin/logstash-keystore add {{ logstash_system_username }} --stdin --force --path.settings /etc/logstash"
+  no_log: True
+  changed_when: False
+  when:
+    - logstash_system_username is defined
+    - logstash_system_password is defined
+
+- name: Set pipeline authentication password
+  shell: "echo '{{ logstash_internal_password }}' | /usr/share/logstash/bin/logstash-keystore add {{ logstash_internal_username }} --stdin --force  --path.settings /etc/logstash"
+  no_log: True
+  changed_when: False
+  when:
+    - logstash_internal_username is defined
+    - logstash_internal_password is defined
+
 - name: Deploy arcsight collector
   include_tasks: logstash_arcsight.yml
   when:

@@ -105,3 +105,13 @@ logstash_collectd_security_level: Sign
 
 # Set the descriptive name by which Logstash is identified
 logstash_node_name: "{{ inventory_hostname }}"
+
+# Username and password for XPack monitoring when security
+# is enabled
+# logstash_system_username: ""
+# logstash_system_password: ""
+
+# Username and password for Elasticsearch writes when security
+# is enabled
+# logstash_internal_username: ""
+# logstash_internal_password: ""

@@ -18,3 +18,6 @@ default_ilm_policy_filename: "default-ilm-policy.json"
 default_ilm_policy_file_location: "/tmp"
 
 elastic_beat_no_proxy: "{{ hostvars[groups['elastic'][0]]['ansible_host'] }}"
+
+# beats_setup_username: ""
+# beats_setup_password: ""

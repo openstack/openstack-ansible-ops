@@ -1578,7 +1578,7 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 {{ elk_macros.beat_logging('packetbeat', packetbeat_log_level) }}
 
 # ============================= X-Pack Monitoring ==============================
-{{ elk_macros.xpack_monitoring_elasticsearch('packetbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
+{{ elk_macros.xpack_monitoring_elasticsearch('packetbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count, beats_system_username) }}
 
 # =============================== HTTP Endpoint ================================
 

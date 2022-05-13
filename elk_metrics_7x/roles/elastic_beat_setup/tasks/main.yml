@@ -58,6 +58,7 @@
   until: templates is success
   retries: 5
   delay: 5
+  no_log: True
   when:
     - (((ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] is undefined) or
        (not (ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] | bool))) or
@@ -74,5 +75,15 @@
     value: true
   when:
     - templates is changed
+  tags:
+    - setup
+
+- name: Set xpack authentication password
+  shell: "echo '{{ beats_system_password }}' | {{ elastic_beat_name }} keystore add {{ beats_system_username }} --stdin --force"
+  no_log: True
+  changed_when: False
+  when:
+    - beats_system_username is defined
+    - beats_system_password is defined
   tags:
     - setup

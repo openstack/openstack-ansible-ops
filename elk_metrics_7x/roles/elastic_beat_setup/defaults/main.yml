@@ -23,6 +23,8 @@ elastic_setup_flags:
 elastic_beat_setup_options: >-
   -E 'output.logstash.enabled=false'
   -E 'output.elasticsearch.hosts={{ coordination_nodes | to_json }}'
+  {{ (beats_setup_username is defined) | ternary("-E 'output.elasticsearch.username=" ~ beats_setup_username | default("") ~ "'", "") }}
+  {{ (beats_setup_password is defined) | ternary("-E 'output.elasticsearch.password=" ~ beats_setup_password | default("") ~ "'", "") }}
   -E 'setup.template.enabled=true'
   -E 'setup.template.overwrite=true'
 
@@ -37,3 +39,11 @@ elastic_beat_no_proxy: "{{ elastic_beat_kibana_host }}"
 # set, templates are only pushed when the user is either upgrading the
 # beat version or deploying for the first time in the presence of kibana nodes
 elk_beat_setup: false
+
+# Username and password for beat setup when using ELK security
+# beats_setup_username: ""
+# beats_setup_password: ""
+
+# Authentication credentials for monitoring when using ELK security features
+# beats_system_username: ""
+# beats_system_password: ""

@@ -82,3 +82,21 @@
     mode: "0666"
   notify:
     - Enable and restart kibana services
+
+- name: Set authentication password
+  shell: "echo '{{ kibana_system_password }}' | /usr/share/kibana/bin/kibana-keystore add elasticsearch.password --stdin --force"
+  no_log: True
+  changed_when: False
+  when:
+    - kibana_system_username is defined
+    - kibana_system_password is defined
+
+- name: Set permissions on keystore
+  file:
+    path: "/etc/kibana/kibana.keystore"
+    group: "kibana"
+    owner: "root"
+    mode: "0660"
+  when:
+    - kibana_system_username is defined
+    - kibana_system_password is defined
