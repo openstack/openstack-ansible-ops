@@ -14,7 +14,7 @@
 - name: Install Elastic Search
   hosts: elastic:kibana
   become: true
-
+  serial: 1
   vars_files:
     - vars/variables.yml
 

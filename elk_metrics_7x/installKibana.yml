@@ -14,6 +14,7 @@
 - name: Install Kibana
   hosts: kibana
   become: true
+  serial: [1, '100%']
   vars_files:
     - vars/variables.yml
 
