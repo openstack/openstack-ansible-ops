@@ -124,9 +124,9 @@ xpack.monitoring.ui.enabled: true
 xpack.monitoring.ui.container.elasticsearch.enabled: true
 
 # Load balancer settings
-{% if security_encryption_key is defined %}
+{% if kibana_security_encryption_key is defined %}
 xpack.security.encryptionKey: {{ kibana_security_encryption_key }}
 {% endif %}
-{% if reporting_encryption_key is defined %}
+{% if kibana_reporting_encryption_key is defined %}
 xpack.reporting.encryptionKey: {{ kibana_reporting_encryption_key }}
 {% endif %}
