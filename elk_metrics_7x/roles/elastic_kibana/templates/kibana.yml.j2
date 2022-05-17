@@ -121,13 +121,12 @@ logging.dest: stdout
 # ---------------------------------- X-Pack ------------------------------------
 # X-Pack Monitoring
 # https://www.elastic.co/guide/en/kibana/7.0/monitoring-settings-kb.html
-xpack.monitoring.enabled: true
-xpack.xpack_main.telemetry.enabled: false
-xpack.monitoring.kibana.collection.enabled: true
-xpack.monitoring.kibana.collection.interval: 30000
-xpack.monitoring.min_interval_seconds: 30
-xpack.monitoring.ui.enabled: true
-xpack.monitoring.ui.container.elasticsearch.enabled: true
+telemetry.enabled: false
+monitoring.kibana.collection.enabled: true
+monitoring.kibana.collection.interval: 30000
+monitoring.ui.min_interval_seconds: 30
+monitoring.ui.enabled: true
+monitoring.ui.container.elasticsearch.enabled: true
 
 # Load balancer settings
 {% if kibana_security_encryption_key is defined %}
