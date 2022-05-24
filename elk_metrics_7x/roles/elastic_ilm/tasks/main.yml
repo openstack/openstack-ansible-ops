@@ -7,5 +7,4 @@
     include_tasks: "elastic_ilm_update_policy.yml"
   environment:
     no_proxy: "{{ elastic_beat_no_proxy }},127.0.0.1"
-  run_once: True
   when: (elk_package_state | default('present')) != "latest"
