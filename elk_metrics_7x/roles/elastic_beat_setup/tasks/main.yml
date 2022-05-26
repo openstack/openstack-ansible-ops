@@ -58,7 +58,6 @@
   until: templates is success
   retries: 5
   delay: 5
-  run_once: true
   when:
     - (((ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] is undefined) or
        (not (ansible_local['elastic']['setup'][elastic_beat_name + '_loaded_templates'] | bool))) or
