@@ -282,6 +282,13 @@ filebeat_prospectors:
       - /var/log/elasticsearch/*.log
     tags:
       - beats
+  # Journald supported from filebeat >= 7.16.0
+  - type: journald
+    enabled: "{{ filebeat_journald_enabled | default(false) }}"
+    paths:
+      - /var/log/journal
+    tags:
+      - journal
 
 filebeat_ilm_policy_name: "filebeat-{{ beat_version }}"
 filebeat_ilm_policy_template: "filebeat-{{ beat_version }}"
