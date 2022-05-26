@@ -36,3 +36,6 @@ kibana_elastic_endpoints:
 # kibana_reporting_encryption_key: ""
 # The key used to encrypt kibana session cookies
 # kibana_security_encryption_key: ""
+
+# The URL which users access Kibana from
+# kibana_base_url: ""
