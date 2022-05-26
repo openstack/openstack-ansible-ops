@@ -33,7 +33,8 @@ deactivate
 
 ${HOME}/ansible_venv/bin/ansible-galaxy install --force \
                                              --roles-path="${HOME}/ansible_venv/repositories/roles" \
-                                             --role-file="${TEST_DIR}/elk_metrics_7x/tests/ansible-role-requirements.yml"
+                                             --role-file="${TEST_DIR}/elk_metrics_7x/tests/ansible-role-requirements.yml" \
+                                             -r "${TEST_DIR}/elk_metrics_7x/tests/ansible-collection-requirements.yml"
 
 if [[ ! -e "${TEST_DIR}/elk_metrics_7x/tests/src" ]]; then
   ln -s ${TEST_DIR}/../ ${TEST_DIR}/elk_metrics_7x/tests/src

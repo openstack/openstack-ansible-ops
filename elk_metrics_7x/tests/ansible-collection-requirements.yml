@@ -1,0 +1,6 @@
+---
+
+collections:
+- name: https://opendev.org/openstack/ansible-config_template
+  version: master
+  type: git
