@@ -11,13 +11,21 @@
 # For more available modules and options, please see the journalbeat.reference.yml sample
 # configuration file.
 
-#=========================== Journalbeat inputs =============================
+# ============================= Journalbeat inputs =============================
 
 journalbeat.inputs:
   # Paths that should be crawled and fetched. Possible values files and directories.
   # When setting a directory, all journals under it are merged.
   # When empty starts to read from local journal.
-- paths: {{ journal_paths | to_json }}
+- paths:
+{% for jp in journal_paths %}
+    - {{ jp }}
+{% endfor %}
+
+  # An optional unique identifier for the input. By providing a unique `id` you
+  # can operate multiple inputs on the same journal. This allows each input's
+  # cursor to be persisted independently in the registry file.
+  #id: ""
 
   # The number of seconds to wait before trying to read again from journals.
   backoff: 10s
@@ -33,6 +41,11 @@ journalbeat.inputs:
   # Matching for nginx entries: "systemd.unit=nginx"
   #include_matches: []
 
+  # Set the option to preserve the remote hostname in entries from a remote journal.
+  # It is only needed when used with add_host_metadata, so the original host name
+  # does not get overwritten by the processor.
+  #save_remote_hostname: false
+
   # Optional fields that you can specify to add additional information to the
   # output. Fields can be scalar values, arrays, dictionaries, or any nested
   # combination of these.
@@ -40,19 +53,19 @@ journalbeat.inputs:
   #  env: staging
 
 
-#========================= Journalbeat global options ============================
+# ========================= Journalbeat global options =========================
 journalbeat:
   # Name of the registry file. If a relative path is used, it is considered relative to the
   # data path.
   registry_file: registry
 
-#==================== Elasticsearch template setting ==========================
+# ======================= Elasticsearch template setting =======================
 setup.template.settings:
   index.number_of_shards: 1
   #index.codec: best_compression
   #_source.enabled: false
 
-#================================ General ======================================
+# ================================== General ===================================
 
 # The name of the shipper that publishes the network data. It can be used to group
 # all the transactions sent by a single shipper in the web interface.
@@ -94,8 +107,43 @@ queue:
     flush.min_events: {{ journalbeat_queue_flush_min_events }}
 
     # Maximum duration after which events are available to the outputs,
-    # if the number of events stored in the queue is < min_flush_events.
+    # if the number of events stored in the queue is < `flush.min_events`.
     flush.timeout: {{ journalbeat_queue_flush_timeout }}
+
+  # The disk queue stores incoming events on disk until the output is
+  # ready for them. This allows a higher event limit than the memory-only
+  # queue and lets pending events persist through a restart.
+  #disk:
+    # The directory path to store the queue's data.
+    #path: "${path.data}/diskqueue"
+
+    # The maximum space the queue should occupy on disk. Depending on
+    # input settings, events that exceed this limit are delayed or discarded.
+    #max_size: 10GB
+
+    # The maximum size of a single queue data file. Data in the queue is
+    # stored in smaller segments that are deleted after all their events
+    # have been processed.
+    #segment_size: 1GB
+
+    # The number of events to read from disk to memory while waiting for
+    # the output to request them.
+    #read_ahead: 512
+
+    # The number of events to accept from inputs while waiting for them
+    # to be written to disk. If event data arrives faster than it
+    # can be written to disk, this setting prevents it from overflowing
+    # main memory.
+    #write_ahead: 2048
+
+    # The duration to wait before retrying when the queue encounters a disk
+    # write error.
+    #retry_interval: 1s
+
+    # The maximum length of time to wait before retrying on a disk write
+    # error. If the queue encounters repeated errors, it will double the
+    # length of its retry interval each time, up to this maximum.
+    #max_retry_interval: 30s
 
   # The spool queue will store events in a local spool file, before
   # forwarding the events to the outputs.
@@ -161,7 +209,7 @@ queue:
 # default is the number of logical CPUs available in the system.
 #max_procs:
 
-#================================ Processors ===================================
+# ================================= Processors =================================
 {{ elk_macros.beat_processors(processors) }}
 
 # Processors are used to reduce the number of fields in the exported event or to
@@ -179,103 +227,155 @@ queue:
 # values:
 #
 #processors:
-#- include_fields:
-#    fields: ["cpu"]
-#- drop_fields:
-#    fields: ["cpu.user", "cpu.system"]
+#  - include_fields:
+#      fields: ["cpu"]
+#  - drop_fields:
+#      fields: ["cpu.user", "cpu.system"]
 #
 # The following example drops the events that have the HTTP response code 200:
 #
 #processors:
-#- drop_event:
-#    when:
-#       equals:
-#           http.code: 200
+#  - drop_event:
+#      when:
+#        equals:
+#          http.code: 200
 #
 # The following example renames the field a to b:
 #
 #processors:
-#- rename:
-#    fields:
-#       - from: "a"
-#         to: "b"
+#  - rename:
+#      fields:
+#        - from: "a"
+#          to: "b"
 #
 # The following example tokenizes the string into fields:
 #
 #processors:
-#- dissect:
-#    tokenizer: "%{key1} - %{key2}"
-#    field: "message"
-#    target_prefix: "dissect"
+#  - dissect:
+#      tokenizer: "%{key1} - %{key2}"
+#      field: "message"
+#      target_prefix: "dissect"
 #
 # The following example enriches each event with metadata from the cloud
 # provider about the host machine. It works on EC2, GCE, DigitalOcean,
 # Tencent Cloud, and Alibaba Cloud.
 #
 #processors:
-#- add_cloud_metadata: ~
+#  - add_cloud_metadata: ~
 #
 # The following example enriches each event with the machine's local time zone
 # offset from UTC.
 #
 #processors:
-#- add_locale:
-#    format: offset
+#  - add_locale:
+#      format: offset
 #
 # The following example enriches each event with docker metadata, it matches
 # given fields to an existing container id and adds info from that container:
 #
 #processors:
-#- add_docker_metadata:
-#    host: "unix:///var/run/docker.sock"
-#    match_fields: ["system.process.cgroup.id"]
-#    match_pids: ["process.pid", "process.ppid"]
-#    match_source: true
-#    match_source_index: 4
-#    match_short_id: false
-#    cleanup_timeout: 60
-#    labels.dedot: false
-#    # To connect to Docker over TLS you must specify a client and CA certificate.
-#    #ssl:
-#    #  certificate_authority: "/etc/pki/root/ca.pem"
-#    #  certificate:           "/etc/pki/client/cert.pem"
-#    #  key:                   "/etc/pki/client/cert.key"
+#  - add_docker_metadata:
+#      host: "unix:///var/run/docker.sock"
+#      match_fields: ["system.process.cgroup.id"]
+#      match_pids: ["process.pid", "process.ppid"]
+#      match_source: true
+#      match_source_index: 4
+#      match_short_id: false
+#      cleanup_timeout: 60
+#      labels.dedot: false
+#      # To connect to Docker over TLS you must specify a client and CA certificate.
+#      #ssl:
+#      #  certificate_authority: "/etc/pki/root/ca.pem"
+#      #  certificate:           "/etc/pki/client/cert.pem"
+#      #  key:                   "/etc/pki/client/cert.key"
 #
 # The following example enriches each event with docker metadata, it matches
 # container id from log path available in `source` field (by default it expects
 # it to be /var/lib/docker/containers/*/*.log).
 #
 #processors:
-#- add_docker_metadata: ~
+#  - add_docker_metadata: ~
 #
 # The following example enriches each event with host metadata.
 #
 #processors:
-#- add_host_metadata:
-#   netinfo.enabled: false
+#  - add_host_metadata: ~
 #
 # The following example enriches each event with process metadata using
 # process IDs included in the event.
 #
 #processors:
-#- add_process_metadata:
-#    match_pids: ["system.process.ppid"]
-#    target: system.process.parent
+#  - add_process_metadata:
+#      match_pids: ["system.process.ppid"]
+#      target: system.process.parent
 #
 # The following example decodes fields containing JSON strings
 # and replaces the strings with valid JSON objects.
 #
 #processors:
-#- decode_json_fields:
-#    fields: ["field1", "field2", ...]
-#    process_array: false
-#    max_depth: 1
-#    target: ""
-#    overwrite_keys: false
+#  - decode_json_fields:
+#      fields: ["field1", "field2", ...]
+#      process_array: false
+#      max_depth: 1
+#      target: ""
+#      overwrite_keys: false
+#
+#processors:
+#  - decompress_gzip_field:
+#      from: "field1"
+#      to: "field2"
+#      ignore_missing: false
+#      fail_on_error: true
+#
+# The following example copies the value of message to message_copied
+#
+#processors:
+#  - copy_fields:
+#      fields:
+#        - from: message
+#          to: message_copied
+#      fail_on_error: true
+#      ignore_missing: false
+#
+# The following example truncates the value of message to 1024 bytes
+#
+#processors:
+#  - truncate_fields:
+#      fields:
+#        - message
+#      max_bytes: 1024
+#      fail_on_error: false
+#      ignore_missing: true
+#
+# The following example preserves the raw message under event.original
+#
+#processors:
+#  - copy_fields:
+#      fields:
+#        - from: message
+#          to: event.original
+#      fail_on_error: false
+#      ignore_missing: true
+#  - truncate_fields:
+#      fields:
+#        - event.original
+#      max_bytes: 1024
+#      fail_on_error: false
+#      ignore_missing: true
+#
+# The following example URL-decodes the value of field1 to field2
+#
+#processors:
+#  - urldecode:
+#      fields:
+#        - from: "field1"
+#          to: "field2"
+#      ignore_missing: false
+#      fail_on_error: true
 
-#============================= Elastic Cloud ==================================
+# =============================== Elastic Cloud ================================
 
-# These settings simplify using journalbeat with the Elastic Cloud (https://cloud.elastic.co/).
+# These settings simplify using Journalbeat with the Elastic Cloud (https://cloud.elastic.co/).
 
 # The cloud.id setting overwrites the `output.elasticsearch.hosts` and
 # `setup.kibana.host` options.
@@ -286,11 +386,11 @@ queue:
 # `output.elasticsearch.password` settings. The format is `<user>:<pass>`.
 #cloud.auth:
 
-#================================ Outputs ======================================
+# ================================== Outputs ===================================
 
 # Configure what output to use when sending the data collected by the beat.
 
-#-------------------------- Elasticsearch output -------------------------------
+# ---------------------------- Elasticsearch Output ----------------------------
 #output.elasticsearch:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -307,8 +407,11 @@ queue:
   # Configure escaping HTML symbols in strings.
   #escape_html: false
 
-  # Optional protocol and basic auth credentials.
+  # Protocol - either `http` (default) or `https`.
   #protocol: "https"
+
+  # Authentication credentials - either API key or username/password.
+  #api_key: "id:api_key"
   #username: "elastic"
   #password: "changeme"
 
@@ -338,6 +441,11 @@ queue:
   # Proxy server URL
   #proxy_url: http://proxy:3128
 
+  # Whether to disable proxy settings for outgoing connections. If true, this
+  # takes precedence over both the proxy_url field and any environment settings
+  # (HTTP_PROXY, HTTPS_PROXY). The default is false.
+  #proxy_disable: false
+
   # The number of times a particular Elasticsearch index operation is attempted. If
   # the indexing operation doesn't succeed after this many retries, the events are
   # dropped. The default is 3.
@@ -364,15 +472,23 @@ queue:
   # Use SSL settings for HTTPS.
   #ssl.enabled: true
 
-  # Configure SSL verification mode. If `none` is configured, all server hosts
-  # and certificates will be accepted. In this mode, SSL-based connections are
-  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
-  # `full`.
+  # Controls the verification of certificates. Valid values are:
+  # * full, which verifies that the provided certificate is signed by a trusted
+  # authority (CA) and also verifies that the server's hostname (or IP address)
+  # matches the names identified within the certificate.
+  # * certificate, which verifies that the provided certificate is signed by a
+  # trusted authority (CA), but does not perform any hostname verification.
+  #  * none, which performs no verification of the server's certificate. This
+  # mode disables many of the security benefits of SSL/TLS and should only be used
+  # after very careful consideration. It is primarily intended as a temporary
+  # diagnostic mechanism when attempting to resolve TLS errors; its use in
+  # production environments is strongly discouraged.
+  # The default value is full.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
-  # 1.2 are enabled.
-  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
+  # List of supported/valid TLS versions. By default all TLS versions from 1.1
+  # up to 1.3 are enabled.
+  #ssl.supported_protocols: [TLSv1.1, TLSv1.2, TLSv1.3]
 
   # List of root certificates for HTTPS server verifications
   #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
@@ -396,11 +512,37 @@ queue:
   # never, once, and freely. Default is never.
   #ssl.renegotiation: never
 
+  # Configure a pin that can be used to do extra validation of the verified certificate chain,
+  # this allow you to ensure that a specific certificate is used to validate the chain of trust.
+  #
+  # The pin is a base64 encoded string of the SHA-256 fingerprint.
+  #ssl.ca_sha256: ""
 
-#----------------------------- Logstash output ---------------------------------
+  # Enable Kerberos support. Kerberos is automatically enabled if any Kerberos setting is set.
+  #kerberos.enabled: true
+
+  # Authentication type to use with Kerberos. Available options: keytab, password.
+  #kerberos.auth_type: password
+
+  # Path to the keytab file. It is used when auth_type is set to keytab.
+  #kerberos.keytab: /etc/elastic.keytab
+
+  # Path to the Kerberos configuration.
+  #kerberos.config_path: /etc/krb5.conf
+
+  # Name of the Kerberos user.
+  #kerberos.username: elastic
+
+  # Password of the Kerberos user. It is used when auth_type is set to password.
+  #kerberos.password: changeme
+
+  # Kerberos realm.
+  #kerberos.realm: ELASTIC
+
+# ------------------------------ Logstash Output -------------------------------
 {{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_processor_count, 'journalbeat') }}
 
-#------------------------------- Kafka output ----------------------------------
+# -------------------------------- Kafka Output --------------------------------
 #output.kafka:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -435,7 +577,11 @@ queue:
   #username: ''
   #password: ''
 
-  # Kafka version journalbeat is assumed to run against. Defaults to the "1.0.0".
+  # SASL authentication mechanism used. Can be one of PLAIN, SCRAM-SHA-256 or SCRAM-SHA-512.
+  # Defaults to PLAIN when `username` and `password` are configured.
+  #sasl.mechanism: ''
+
+  # Kafka version Journalbeat is assumed to run against. Defaults to the "1.0.0".
   #version: '1.0.0'
 
   # Configure JSON encoding
@@ -459,8 +605,8 @@ queue:
     # Refresh metadata interval. Defaults to every 10 minutes.
     #refresh_frequency: 10m
 
-    # Strategy for fetching the topics metadata from the broker. Default is true.
-    #full: true
+    # Strategy for fetching the topics metadata from the broker. Default is false.
+    #full: false
 
   # The number of concurrent load-balanced Kafka output workers.
   #worker: 1
@@ -472,9 +618,24 @@ queue:
   # until all events are published. The default is 3.
   #max_retries: 3
 
+  # The number of seconds to wait before trying to republish to Kafka
+  # after a network error. After waiting backoff.init seconds, the Beat
+  # tries to republish. If the attempt fails, the backoff timer is increased
+  # exponentially up to backoff.max. After a successful publish, the backoff
+  # timer is reset. The default is 1s.
+  #backoff.init: 1s
+
+  # The maximum number of seconds to wait before attempting to republish to
+  # Kafka after a network error. The default is 60s.
+  #backoff.max: 60s
+
   # The maximum number of events to bulk in a single Kafka request. The default
   # is 2048.
   #bulk_max_size: 2048
+
+  # Duration to wait before sending bulk Kafka request. 0 is no delay. The default
+  # is 0.
+  #bulk_flush_frequency: 0s
 
   # The number of seconds to wait for responses from the Kafka brokers before
   # timing out. The default is 30s.
@@ -514,30 +675,37 @@ queue:
   # purposes.  The default is "beats".
   #client_id: beats
 
-  # Enable SSL support. SSL is automatically enabled if any SSL setting is set.
+  # Use SSL settings for HTTPS.
   #ssl.enabled: true
 
-  # Optional SSL configuration options. SSL is off by default.
-  # List of root certificates for HTTPS server verifications
-  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
-
-  # Configure SSL verification mode. If `none` is configured, all server hosts
-  # and certificates will be accepted. In this mode, SSL based connections are
-  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
-  # `full`.
+  # Controls the verification of certificates. Valid values are:
+  # * full, which verifies that the provided certificate is signed by a trusted
+  # authority (CA) and also verifies that the server's hostname (or IP address)
+  # matches the names identified within the certificate.
+  # * certificate, which verifies that the provided certificate is signed by a
+  # trusted authority (CA), but does not perform any hostname verification.
+  #  * none, which performs no verification of the server's certificate. This
+  # mode disables many of the security benefits of SSL/TLS and should only be used
+  # after very careful consideration. It is primarily intended as a temporary
+  # diagnostic mechanism when attempting to resolve TLS errors; its use in
+  # production environments is strongly discouraged.
+  # The default value is full.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions from 1.0 up to
-  # 1.2 are enabled.
-  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
+  # List of supported/valid TLS versions. By default all TLS versions from 1.1
+  # up to 1.3 are enabled.
+  #ssl.supported_protocols: [TLSv1.1, TLSv1.2, TLSv1.3]
+
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
 
   # Certificate for SSL client authentication
   #ssl.certificate: "/etc/pki/client/cert.pem"
 
-  # Client Certificate Key
+  # Client certificate key
   #ssl.key: "/etc/pki/client/cert.key"
 
-  # Optional passphrase for decrypting the Certificate Key.
+  # Optional passphrase for decrypting the certificate key.
   #ssl.key_passphrase: ''
 
   # Configure cipher suites to be used for SSL connections
@@ -550,7 +718,38 @@ queue:
   # never, once, and freely. Default is never.
   #ssl.renegotiation: never
 
-#------------------------------- Redis output ----------------------------------
+  # Configure a pin that can be used to do extra validation of the verified certificate chain,
+  # this allow you to ensure that a specific certificate is used to validate the chain of trust.
+  #
+  # The pin is a base64 encoded string of the SHA-256 fingerprint.
+  #ssl.ca_sha256: ""
+
+  # Enable Kerberos support. Kerberos is automatically enabled if any Kerberos setting is set.
+  #kerberos.enabled: true
+
+  # Authentication type to use with Kerberos. Available options: keytab, password.
+  #kerberos.auth_type: password
+
+  # Path to the keytab file. It is used when auth_type is set to keytab.
+  #kerberos.keytab: /etc/security/keytabs/kafka.keytab
+
+  # Path to the Kerberos configuration.
+  #kerberos.config_path: /etc/krb5.conf
+
+  # The service name. Service principal name is contructed from
+  # service_name/hostname@realm.
+  #kerberos.service_name: kafka
+
+  # Name of the Kerberos user.
+  #kerberos.username: elastic
+
+  # Password of the Kerberos user. It is used when auth_type is set to password.
+  #kerberos.password: changeme
+
+  # Kerberos realm.
+  #kerberos.realm: ELASTIC
+
+# -------------------------------- Redis Output --------------------------------
 #output.redis:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -566,6 +765,8 @@ queue:
   # The list of Redis servers to connect to. If load-balancing is enabled, the
   # events are distributed to the servers in the list. If one server becomes
   # unreachable, the events are distributed to the reachable servers only.
+  # The hosts setting supports redis and rediss urls with custom password like
+  # redis://:password@localhost:6379.
   #hosts: ["localhost:6379"]
 
   # The name of the Redis list or channel the events are published to. The
@@ -630,43 +831,57 @@ queue:
   # occurs on the proxy server.
   #proxy_use_local_resolver: false
 
-  # Enable SSL support. SSL is automatically enabled, if any SSL setting is set.
+  # Use SSL settings for HTTPS.
   #ssl.enabled: true
 
-  # Configure SSL verification mode. If `none` is configured, all server hosts
-  # and certificates will be accepted. In this mode, SSL based connections are
-  # susceptible to man-in-the-middle attacks. Use only for testing. Default is
-  # `full`.
+  # Controls the verification of certificates. Valid values are:
+  # * full, which verifies that the provided certificate is signed by a trusted
+  # authority (CA) and also verifies that the server's hostname (or IP address)
+  # matches the names identified within the certificate.
+  # * certificate, which verifies that the provided certificate is signed by a
+  # trusted authority (CA), but does not perform any hostname verification.
+  #  * none, which performs no verification of the server's certificate. This
+  # mode disables many of the security benefits of SSL/TLS and should only be used
+  # after very careful consideration. It is primarily intended as a temporary
+  # diagnostic mechanism when attempting to resolve TLS errors; its use in
+  # production environments is strongly discouraged.
+  # The default value is full.
   #ssl.verification_mode: full
 
-  # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
-  # 1.2 are enabled.
-  #ssl.supported_protocols: [TLSv1.0, TLSv1.1, TLSv1.2]
+  # List of supported/valid TLS versions. By default all TLS versions from 1.1
+  # up to 1.3 are enabled.
+  #ssl.supported_protocols: [TLSv1.1, TLSv1.2, TLSv1.3]
 
-  # Optional SSL configuration options. SSL is off by default.
   # List of root certificates for HTTPS server verifications
   #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
 
   # Certificate for SSL client authentication
   #ssl.certificate: "/etc/pki/client/cert.pem"
 
-  # Client Certificate Key
+  # Client certificate key
   #ssl.key: "/etc/pki/client/cert.key"
 
-  # Optional passphrase for decrypting the Certificate Key.
+  # Optional passphrase for decrypting the certificate key.
   #ssl.key_passphrase: ''
 
   # Configure cipher suites to be used for SSL connections
   #ssl.cipher_suites: []
 
-  # Configure curve types for ECDHE based cipher suites
+  # Configure curve types for ECDHE-based cipher suites
   #ssl.curve_types: []
 
   # Configure what types of renegotiation are supported. Valid options are
   # never, once, and freely. Default is never.
   #ssl.renegotiation: never
 
-#------------------------------- File output -----------------------------------
+  # Configure a pin that can be used to do extra validation of the verified certificate chain,
+  # this allow you to ensure that a specific certificate is used to validate the chain of trust.
+  #
+  # The pin is a base64 encoded string of the SHA-256 fingerprint.
+  #ssl.ca_sha256: ""
+
+
+# -------------------------------- File Output ---------------------------------
 #output.file:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -688,7 +903,7 @@ queue:
   #filename: journalbeat
 
   # Maximum size in kilobytes of each file. When this size is reached, and on
-  # every journalbeat restart, the files are rotated. The default value is 10240
+  # every Journalbeat restart, the files are rotated. The default value is 10240
   # kB.
   #rotate_every_kb: 10000
 
@@ -700,8 +915,7 @@ queue:
   # Permissions to use for file creation. The default is 0600.
   #permissions: 0600
 
-
-#----------------------------- Console output ---------------------------------
+# ------------------------------- Console Output -------------------------------
 #output.console:
   # Boolean flag to enable or disable the output module.
   #enabled: true
@@ -714,78 +928,99 @@ queue:
     # Configure escaping HTML symbols in strings.
     #escape_html: false
 
-#================================= Paths ======================================
+# =================================== Paths ====================================
 
-# The home path for the journalbeat installation. This is the default base path
+# The home path for the Journalbeat installation. This is the default base path
 # for all other path settings and for miscellaneous files that come with the
 # distribution (for example, the sample dashboards).
 # If not set by a CLI flag or in the configuration file, the default for the
 # home path is the location of the binary.
 #path.home:
 
-# The configuration path for the journalbeat installation. This is the default
+# The configuration path for the Journalbeat installation. This is the default
 # base path for configuration files, including the main YAML configuration file
 # and the Elasticsearch template file. If not set by a CLI flag or in the
 # configuration file, the default for the configuration path is the home path.
 #path.config: ${path.home}
 
-# The data path for the journalbeat installation. This is the default base path
-# for all the files in which journalbeat needs to store its data. If not set by a
+# The data path for the Journalbeat installation. This is the default base path
+# for all the files in which Journalbeat needs to store its data. If not set by a
 # CLI flag or in the configuration file, the default for the data path is a data
 # subdirectory inside the home path.
 #path.data: ${path.home}/data
 
-# The logs path for a journalbeat installation. This is the default location for
+# The logs path for a Journalbeat installation. This is the default location for
 # the Beat's log files. If not set by a CLI flag or in the configuration file,
 # the default for the logs path is a logs subdirectory inside the home path.
 #path.logs: ${path.home}/logs
 
-#================================ Keystore ==========================================
+# ================================== Keystore ==================================
+
 # Location of the Keystore containing the keys and their sensitive values.
 #keystore.path: "${path.config}/beats.keystore"
 
-#============================== Dashboards =====================================
+# ================================= Dashboards =================================
+
 {{ elk_macros.setup_dashboards('journalbeat') }}
 
-#============================== Template =====================================
+# ================================== Template ==================================
+
 {{ elk_macros.setup_template('journalbeat', inventory_hostname, data_nodes, elasticsearch_beat_settings) }}
 
-#============================== Setup ILM =====================================
+# ====================== Index Lifecycle Management (ILM) ======================
 
-# Configure Index Lifecycle Management Index Lifecycle Management creates a
-# write alias and adds additional settings to the template.
-# The elasticsearch.output.index setting will be replaced with the write alias
-# if ILM is enabled.
+# Configure index lifecycle management (ILM). These settings create a write
+# alias and add additional settings to the index template. When ILM is enabled,
+# output.elasticsearch.index is ignored, and the write alias is used to set the
+# index name.
 
-# Enabled ILM support. Valid values are true, false, and auto. The beat will
-# detect availabilty of Index Lifecycle Management in Elasticsearch and enable
-# or disable ILM support.
+# Enable ILM support. Valid values are true, false, and auto. When set to auto
+# (the default), the Beat uses index lifecycle management when it connects to a
+# cluster that supports ILM; otherwise, it creates daily indices.
 #setup.ilm.enabled: auto
 
-# Configure the ILM write alias name.
-#setup.ilm.rollover_alias: "journalbeat"
+# Set the prefix used in the index lifecycle write alias name. The default alias
+# name is 'journalbeat-%{[agent.version]}'.
+#setup.ilm.rollover_alias: 'journalbeat'
 
-# Configure rollover index pattern.
+# Set the rollover index pattern. The default is "%{now/d}-000001".
 #setup.ilm.pattern: "{now/d}-000001"
+
 {% if ilm_policy_name is defined %}
+# Set the lifecycle policy name. The default policy name is
+# 'beatname'.
 setup.ilm.policy_name: "{{ ilm_policy_name }}"
+
 {% endif %}
 {% if ilm_policy_file_location is defined %}
+# The path to a JSON file that contains a lifecycle policy configuration. Used
+# to load your own lifecycle policy.
 setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}"
-{% endif %}
 
-#============================== Kibana =====================================
+{% endif %}
+# Disable the check for an existing lifecycle policy. The default is true. If
+# you disable this check, set setup.ilm.overwrite: true so the lifecycle policy
+# can be installed.
+#setup.ilm.check_exists: true
+
+# Overwrite the lifecycle policy at startup. The default is false.
+#setup.ilm.overwrite: false
+
+# =================================== Kibana ===================================
+
 {% if (groups['kibana'] | length) > 0 %}
 {{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ kibana_port) }}
 {% endif %}
 
-#================================ Logging ======================================
+# ================================== Logging ===================================
+
 {{ elk_macros.beat_logging('journalbeat', journalbeat_log_level) }}
 
-#============================== Xpack Monitoring =====================================
-{{ elk_macros.xpack_monitoring_elasticsearch(inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
+# ============================= X-Pack Monitoring ==============================
+{{ elk_macros.xpack_monitoring_elasticsearch('journalbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count) }}
 
-#================================ HTTP Endpoint ======================================
+# =============================== HTTP Endpoint ================================
+
 # Each beat can expose internal metrics through a HTTP endpoint. For security
 # reasons the endpoint is disabled by default. This feature is currently experimental.
 # Stats can be access through http://localhost:5066/stats . For pretty JSON output
@@ -794,18 +1029,62 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 # Defines if the HTTP endpoint is enabled.
 #http.enabled: false
 
-# The HTTP endpoint will bind to this hostname or IP address. It is recommended to use only localhost.
+# The HTTP endpoint will bind to this hostname, IP address, unix socket or named pipe.
+# When using IP addresses, it is recommended to only use localhost.
 #http.host: localhost
 
 # Port on which the HTTP endpoint will bind. Default is 5066.
 #http.port: 5066
 
-#============================= Process Security ================================
+# Define which user should be owning the named pipe.
+#http.named_pipe.user:
+
+# Define which the permissions that should be applied to the named pipe, use the Security
+# Descriptor Definition Language (SDDL) to define the permission. This option cannot be used with
+# `http.user`.
+#http.named_pipe.security_descriptor:
+
+# ============================== Process Security ==============================
 
 # Enable or disable seccomp system call filtering on Linux. Default is enabled.
 #seccomp.enabled: true
 
-#================================= Migration ==================================
+# ============================== Instrumentation ===============================
+
+# Instrumentation support for the journalbeat.
+#instrumentation:
+    # Set to true to enable instrumentation of journalbeat.
+    #enabled: false
+
+    # Environment in which journalbeat is running on (eg: staging, production, etc.)
+    #environment: ""
+
+    # APM Server hosts to report instrumentation results to.
+    #hosts:
+    #  - http://localhost:8200
+
+    # API Key for the APM Server(s).
+    # If api_key is set then secret_token will be ignored.
+    #api_key:
+
+    # Secret token for the APM Server(s).
+    #secret_token:
+
+    # Enable profiling of the server, recording profile samples as events.
+    #
+    # This feature is experimental.
+    #profiling:
+        #cpu:
+            # Set to true to enable CPU profiling.
+            #enabled: false
+            #interval: 60s
+            #duration: 10s
+        #heap:
+            # Set to true to enable heap profiling.
+            #enabled: false
+            #interval: 60s
+
+# ================================= Migration ==================================
 
 # This allows to enable 6.7 migration aliases
 #migration.6_to_7.enabled: false
