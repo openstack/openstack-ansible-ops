@@ -532,7 +532,7 @@ logging.files:
 #logging.ecs: false
 {%- endmacro %}
 
-{% macro xpack_monitoring_elasticsearch(beat_name, host, data_hosts, processors, username) -%}
+{% macro xpack_monitoring_elasticsearch(beat_name, host, data_hosts, processors, username, uuid) -%}
 # {{ beat_name | capitalize }} can export internal metrics to a central Elasticsearch monitoring
 # cluster.  This requires xpack monitoring to be enabled in Elasticsearch.  The
 # reporting is disabled by default.
@@ -543,7 +543,9 @@ monitoring.enabled: true
 # Sets the UUID of the Elasticsearch cluster under which monitoring data for this
 # {{ beat_name | capitalize }} instance will appear in the Stack Monitoring UI. If output.elasticsearch
 # is enabled, the UUID is derived from the Elasticsearch cluster referenced by output.elasticsearch.
-#monitoring.cluster_uuid:
+{% if uuid is defined %}
+monitoring.cluster_uuid: {{ uuid }}
+{% endif %}
 
 # Uncomment to send the metrics to Elasticsearch. Most settings from the
 # Elasticsearch output are accepted here as well.
