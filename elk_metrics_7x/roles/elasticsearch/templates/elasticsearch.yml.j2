@@ -24,10 +24,6 @@ cluster.name: {{ cluster_name }}
 # If you're having issues with bootstrap skipping, check this.
 node.name: {{ inventory_hostname }}
 #
-# Add custom attributes to the node:
-# Set to true to enable machine learning on the node.
-node.ml: false
-#
 # ----------------------------------- Paths ------------------------------------
 #
 # Path to directory where to store the data (separate multiple locations by comma):
@@ -91,37 +87,34 @@ cluster.initial_master_nodes: {{ master_nodes | to_json }}
 #
 # For more information, consult the discovery and cluster formation module documentation.
 #
-# The first set of nodes in the master_node_count are marked as such
-#
-node.master: {{ elasticsearch_node_master | default(master_node) }}
-# Every node in the master list and every other node after will be a data node
-#
-# Set to prevent master-eligible nodes from becoming master
-node.voting_only: {{ elasticsearch_voting_only | default(false) }}
-#
-node.data: {{ elasticsearch_node_data | default(data_node) }}
-#
-# Ingest nodes can execute pre-processing pipelines. To override automatic
-# determination, the option `elasticsearch_node_ingest` can be defined as a
-# Boolean which will enable or disable ingest nodes. When using automatic
-# determination, ingest nodes will follow data nodes.
-#
-# NOTE(cloudnull): The use of "search remote connect" will follow the enablement
-#                  of an ingest nodes.
-#
-{% if elasticsearch_node_ingest is defined %}
-node.ingest: {{ elasticsearch_node_ingest }}
-node.remote_cluster_client: {{ elasticsearch_node_ingest }}
-{% else %}
-node.ingest: {{ data_node }}
-node.remote_cluster_client: {{ data_node }}
+{% set node_roles = [] %}
+{% if elasticsearch_node_master | default(master_node) %}
+{%   set _ = node_roles.append('master') %}
 {% endif %}
+{% if elasticsearch_voting_only | default(false) %}
+{%   set _ = node_roles.append('voting_only') %}
+{% endif %}
+{% if elasticsearch_node_data | default(data_node) %}
+{%   set _ = node_roles.append('data') %}
+{% endif %}
+{% if (elasticsearch_node_ingest is defined and elasticsearch_node_ingest) or data_node %}
+{%   set _ = node_roles.append('ingest') %}
+{% endif %}
+{% if (elasticsearch_node_ingest is defined and elasticsearch_node_ingest) or data_node %}
+{%   set _ = node_roles.append('remote_cluster_client') %}
+{% endif %}
+node.roles: {{ node_roles }}
+
 #
 # ---------------------------------- Gateway -----------------------------------
 #
 # Block initial recovery after a full cluster restart until N nodes are started:
 #
-gateway.recover_after_nodes: {{ elasticsearch_master_node_count | default(((master_node_count | int) // 2) + 1) }}
+{% if data_node_count is defined %}
+gateway.expected_data_nodes: {{ data_node_count }}
+gateway.recover_after_data_nodes: {{ (((data_node_count | int) // 2) + 1) }}
+{% endif %}
+
 #
 # For more information, consult the gateway module documentation.
 #
@@ -164,6 +157,5 @@ indices.recovery.max_bytes_per_sec: {{ elasticsearch_interface_speed }}mb
 # X-Pack Monitoring
 #
 xpack.monitoring.collection.enabled: true
-xpack.monitoring.collection.interval: 30s
 # Set to true to enable machine learning on the node.
 xpack.ml.enabled: false

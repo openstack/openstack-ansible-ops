@@ -45,6 +45,7 @@ data_nodes: |-
   {%   endif %}
   {% endfor %}
   {{ nodes }}
+data_node_count: "{{ data_nodes | length }}"
 
 # By default, let all elastic cluster nodes be ingest unless overridden using elasticsearch_node_ingest: false
 ingest_nodes: |-
