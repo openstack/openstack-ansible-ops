@@ -26,6 +26,9 @@ ansible vm_hosts \
 
 export MNAIO_ANSIBLE_PARAMETERS=${MNAIO_ANSIBLE_PARAMETERS:-""}
 
+# Install Ansible Collections
+ansible-galaxy install -r requirements.yml
+
 # TODO(odyssey4me):
 # Replace this build override mechanism to just respect the
 # group_vars instead of duplicating defaults here.

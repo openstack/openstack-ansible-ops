@@ -17,15 +17,15 @@
 
   tasks:
 
-  - name: Ensure python-shade library is present to run ansible os_xxx modules
-    apt:
-      name: python-shade
-      state: present
-    tags:
-      - always
+#  - name: Ensure python-shade library is present to run ansible os_xxx modules
+#    apt:
+#      name: python-shade
+#      state: present
+#    tags:
+#      - always
 
   - name: Create flavors of nova VMs
-    os_nova_flavor:
+    openstack.cloud.os_nova_flavor:
       endpoint_type: internal
       cloud: default
       state: present
@@ -40,7 +40,7 @@
       - create_flavors
 
   - name: Create networks
-    os_network:
+    openstack.cloud.os_network:
       endpoint_type: internal
       cloud: default
       state: present
@@ -55,7 +55,7 @@
       - create_networks
 
   - name: Create networks (OVN)
-    os_network:
+    openstack.cloud.os_network:
       endpoint_type: internal
       cloud: default
       state: present
@@ -68,7 +68,7 @@
     when: osa_enable_networking_ovn | default(false) | bool
 
   - name: Create subnets on networks
-    os_subnet:
+    openstack.cloud.os_subnet:
       endpoint_type: internal
       cloud: default
       state: present
@@ -86,7 +86,7 @@
       - create_networks
 
   - name: Create a router on both public and private networks
-    os_router:
+    openstack.cloud.os_router:
       endpoint_type: internal
       cloud: default
       state: present
@@ -109,7 +109,7 @@
       - create_networks
 
   - name: Setup rules on all security groups
-    os_security_group_rule:
+    openstack.cloud.os_security_group_rule:
       endpoint_type: internal
       cloud: default
       security_group: "{{ item[1] }}"

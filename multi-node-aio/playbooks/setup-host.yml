@@ -183,7 +183,7 @@
         root_public_key: "{{ public_key_get.stdout }}"
 
     - name: Ensure root can ssh to localhost
-      authorized_key:
+      ansible.posix.authorized_key:
         user: "root"
         key: "{{ root_public_key }}"
 
@@ -303,30 +303,30 @@
         - mnaio_bridges is changed
 
     - name: Disable default virt network
-      virt_net:
+      community.libvirt.virt_net:
         name: "default"
         state: inactive
 
     - name: Prevent default virt network autostart
-      virt_net:
+      community.libvirt.virt_net:
         name: "default"
         autostart: no
 
     - name: Define virt network(s)
-      virt_net:
+      community.libvirt.virt_net:
         name: "{{ item.value.iface }}"
         state: present
         xml: "{{ lookup('template', 'kvm/libvirt-network-template.xml.j2') }}"
       with_dict: "{{ mnaio_host_networks }}"
 
     - name: Set virt network(s) to active
-      virt_net:
+      community.libvirt.virt_net:
         name: "{{ item.value.iface }}"
         state: active
       with_dict: "{{ mnaio_host_networks }}"
 
     - name: Set virt network(s) to autostart
-      virt_net:
+      community.libvirt.virt_net:
         name: "{{ item.value.iface }}"
         autostart: yes
       with_dict: "{{ mnaio_host_networks }}"
@@ -352,7 +352,7 @@
         - mnaio_data_disk is defined
       block:
         - name: Setup the data disk partition
-          parted:
+          community.general.parted:
             device: "/dev/{{ mnaio_data_disk }}"
             label: gpt
             number: 1
@@ -361,7 +361,7 @@
           register: _add_partition
 
         - name: Prepare the data disk file system
-          filesystem:
+          community.general.filesystem:
             fstype: ext4
             dev: "/dev/{{ mnaio_data_disk }}{{ mnaio_data_disk_suffix | default('1') }}"
             force: yes
@@ -370,7 +370,7 @@
             - _add_partition is changed
 
         - name: Mount the data disk
-          mount:
+          ansible.posix.mount:
             src: "/dev/{{ mnaio_data_disk }}{{ mnaio_data_disk_suffix | default('1') }}"
             path: /data
             state: mounted
@@ -385,7 +385,7 @@
         state: directory
 
     - name: Define the default virt storage pool
-      virt_pool:
+      community.libvirt.virt_pool:
         name: default
         state: present
         xml: |
@@ -402,12 +402,12 @@
           </pool>
 
     - name: Set default virt storage pool to active
-      virt_pool:
+      community.libvirt.virt_pool:
         name: default
         state: active
 
     - name: Set default virt storage pool to autostart
-      virt_pool:
+      community.libvirt.virt_pool:
         name: default
         autostart: yes
 

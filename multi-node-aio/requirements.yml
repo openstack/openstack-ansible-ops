@@ -1,0 +1,7 @@
+---
+collections:
+- ansible.netcommon
+- ansible.posix
+- community.general
+- community.libvirt
+- openstack.cloud

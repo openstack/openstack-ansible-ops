@@ -19,7 +19,7 @@
   gather_facts: false
   tasks:
     - name: Create vm_servers group
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: vm_servers
       when:
@@ -39,21 +39,21 @@
             timeout: "{{ vm_ssh_timeout }}"
       rescue:
         - name: Gather VM info (rescue)
-          virt:
+          community.libvirt.virt:
             command: status
             name: "{{ inventory_hostname }}"
           connection: local
           register: vm_info
 
         - name: Stop VM (rescue)
-          virt:
+          community.libvirt.virt:
             command: destroy
             name: "{{ inventory_hostname }}"
           connection: local
           when: vm_info.status == 'running'
 
         - name: Start VM (rescue)
-          virt:
+          community.libvirt.virt:
             command: start
             name: "{{ inventory_hostname }}"
           connection: local
@@ -67,7 +67,7 @@
           ignore_errors: true
 
         - name: Gather VM info 2nd pass (rescue)
-          virt:
+          community.libvirt.virt:
             command: status
             name: "{{ inventory_hostname }}"
           connection: local
@@ -89,7 +89,7 @@
       meta: refresh_inventory
 
     - name: Create vm_servers group
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: vm_servers
       when:
