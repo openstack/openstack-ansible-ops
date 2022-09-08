@@ -204,7 +204,7 @@ neutron_ml2_drivers_type: "vlan,local,flat,vxlan"
 neutron_plugin_type: ml2.ovn
 
 neutron_plugin_base:
-  - networking_ovn.l3.l3_ovn.OVNL3RouterPlugin
+  - neutron.services.ovn_l3.plugin.OVNL3RouterPlugin
 
 neutron_ml2_drivers_type: "vlan,local,flat,geneve"
 {% endif %}
