@@ -21,7 +21,7 @@
         key: monitorstack_deployment
         parents: monitorstack_all
       when:
-        - inventory_hostanme in (
+        - inventory_hostname in (
             (groups['nova_compute'] | default([])) |
             union(groups['utility_all'] | default([])) |
             union(groups['memcached_all'] | default([])) |
