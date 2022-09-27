@@ -320,6 +320,9 @@ deploy logstash, deploy Kibana, and then deploy all of the service beats.
   system is greater than **2.5**. This will automatically pick up the necessary
   group_vars for hosts in an OSA deployment.
 
+* You may need to gather facts before running, ``openstack -m setup elk_all``
+  will gather the facts you will need.
+
 * If required add ``-e@/opt/openstack-ansible/inventory/group_vars/all/all.yml``
   to import sufficient OSA group variables to define the OpenStack release.
   Journalbeat will then deploy onto all hosts/containers for releases prior to
