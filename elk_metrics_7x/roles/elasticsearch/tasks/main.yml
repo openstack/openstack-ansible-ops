@@ -128,6 +128,15 @@
     group: "elasticsearch"
     mode: "0750"
 
+- name: Ensure elasticsearch data dir
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "elasticsearch"
+    group: "elasticsearch"
+    mode: "0755"
+  with_items: "{{ elastic_data_path.split(',') }}"
+
 - name: Copy elasticsearch certificate bundle
   copy:
     content: "{{ elastic_security_cert_bundle }}"
