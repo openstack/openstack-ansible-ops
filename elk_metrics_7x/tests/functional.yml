@@ -98,17 +98,31 @@
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_7x"
 
-    - name: Run ansible-galaxy (tests)
+    - name: Run ansible-galaxy (tests roles)
       become: yes
       become_user: root
-      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-role-requirements.yml -r ansible-collection-requirements.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-role-requirements.yml"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_7x/tests"
 
-    - name: Run ansible-galaxy (elk_metrics_7x)
+    - name: Run ansible-galaxy (tests collections)
       become: yes
       become_user: root
-      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-role-requirements.yml -r ansible-collection-requirements.yml"
+      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-collection-requirements.yml"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_7x/tests"
+
+    - name: Run ansible-galaxy (elk_metrics_7x roles)
+      become: yes
+      become_user: root
+      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-role-requirements.yml"
+      args:
+        chdir: "src/{{ current_test_repo }}/elk_metrics_7x"
+
+    - name: Run ansible-galaxy (elk_metrics_7x collections)
+      become: yes
+      become_user: root
+      command: "${HOME}/ansible_venv/bin/ansible-galaxy install --force --ignore-errors --roles-path=${HOME}/ansible_venv/repositories/roles -r ansible-collection-requirements.yml"
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_7x"
 
