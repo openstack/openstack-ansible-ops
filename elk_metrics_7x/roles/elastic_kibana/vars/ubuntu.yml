@@ -18,4 +18,4 @@ kibana_distro_packages:
   - apache2-utils
   - kibana
   - nginx
-  - python-passlib
+  - python3-passlib
