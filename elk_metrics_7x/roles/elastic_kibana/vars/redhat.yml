@@ -17,4 +17,4 @@ kibana_nginx_vhost_path: /etc/nginx/conf.d/
 kibana_distro_packages:
   - kibana
   - nginx
-  - python-passlib
+  - python3-passlib
