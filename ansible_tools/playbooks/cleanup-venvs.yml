@@ -20,7 +20,7 @@
     find:
       paths: /openstack/venvs
       file_type: directory
-      patterns: '^.*-(\d+(\.\d+){2})(?<!{{ venv_tag }})(-python[23])?$'
+      patterns: '^.*-(\d+(\.\d+){2}(.dev\d+)?)(?<!{{ venv_tag }})(-python[23])?$'
       use_regex: yes
     register: result
   - name: Delete older directories
