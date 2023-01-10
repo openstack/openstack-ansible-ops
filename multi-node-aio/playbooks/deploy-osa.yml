@@ -73,7 +73,6 @@
       args:
         executable: /bin/bash
         chdir: /opt/openstack-ansible
-        warn: no
       when:
         - pre_config_osa | default(true) | bool
 
