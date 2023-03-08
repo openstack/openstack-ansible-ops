@@ -412,7 +412,7 @@ elastic_beats:
   skydive:
     hosts: "{{ (((groups['skydive_analyzers'] | default([])) | length) > 0) | ternary((groups['hosts'] | default([])), []) }}"
 
-beat_version: "7.15.2"
+beat_version: "7.17.9"
 default_ilm_rollover_max_size: "30G"
 default_ilm_rollover_max_age: "15d"
 default_ilm_delete_min_age: "30d"
