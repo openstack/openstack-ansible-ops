@@ -15,7 +15,7 @@
 
 - name: Refresh minimal facts
   setup:
-    gather_subset: '!all,!any,network,virtual'
+    gather_subset: '!all,!any,network,virtual,hardware'
   tags:
     - always
 
