@@ -47,6 +47,11 @@
     nodeset: ubuntu-focal
 
 - job:
+    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-jammy"
+    parent: "openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic"
+    nodeset: ubuntu-jammy
+
+- job:
     name: "openstack-ansible-ops:elk_metrics_6x-centos-7"
     parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
     nodeset: centos-7
