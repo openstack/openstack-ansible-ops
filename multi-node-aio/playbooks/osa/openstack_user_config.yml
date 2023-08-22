@@ -16,7 +16,7 @@ used_ips:
 global_overrides:
   internal_lb_vip_address: "{{ internal_lb_vip_address | default(hostvars[groups['loadbalancer_hosts'][0]]['server_networks']['mgmt']['address'].split('/')[0]) }}"
   external_lb_vip_address: "{{ external_lb_vip_address | default(hostvars[groups['loadbalancer_hosts'][0]]['server_vm_fixed_addr']) }}"
-{% if osa_no_containers | bool %}
+{% if osa_no_containers | default(false) | bool %}
   no_containers: True
 {% endif %}
   tunnel_bridge: "br-vxlan"
@@ -306,6 +306,9 @@ storage-infra_hosts: *infra_block
 {% if not (enable_ceph_storage | bool) %}
 # cinder storage host (LVM-backed)
 storage_hosts: *cinder_block
+{% else %}
+# cinder volume on infra hosts (ceph)
+storage_hosts: *infra_block
 {% endif %}
 {% endif %}
 
