@@ -40,8 +40,8 @@ Clone the grafana role
 
 .. code-block:: bash
 
-    cd /opt
-    git clone https://github.com/cloudalchemy/ansible-grafana /etc/ansible/roles/grafana
+    cd /opt/openstack-ansible-ops/grafana
+    ansible-galaxy install -r requirements.yml
 
 Copy the env.d file into place
 
@@ -55,8 +55,6 @@ Copy the conf.d file into place
 .. code-block:: bash
 
     cp conf.d/grafana.yml /etc/openstack_deploy/conf.d/
-
-    Create the containers
 
 Create the containers
 

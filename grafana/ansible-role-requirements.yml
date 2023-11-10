@@ -1,5 +1,0 @@
----
-- name: grafana
-  scm: git
-  src: https://github.com/cloudalchemy/ansible-grafana
-  version: master

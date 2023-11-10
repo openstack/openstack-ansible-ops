@@ -28,6 +28,8 @@
       delegate_to: "{{ traefik_staging_node }}"
       become: false
   tasks:
+    - name: Refresh local facts
+      setup:
     - name: Built traefik installation
       block:
         - name: Find traefik binaries
@@ -94,7 +96,7 @@
 
         - name: Install PyMySQL
           package:
-            name: python-pymysql
+            name: python3-pymysql
 
         - name: Create DB for service
           mysql_db:
@@ -157,4 +159,4 @@
             {%   set _ = nodes.append(node) %}
             {% endfor %}
             {{ nodes }}
-    - role: grafana
+    - role: grafana.grafana.grafana
