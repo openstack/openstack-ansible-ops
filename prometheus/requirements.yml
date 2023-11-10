@@ -1,0 +1,6 @@
+---
+
+collections:
+- name: prometheus.prometheus
+  version: 0.8.0
+  type: galaxy

@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Refresh local facts
+  hosts: hosts
+  tasks:
+    - name: Refresh local facts
+      setup:
+
 - name: node_exporter
   hosts: hosts
   vars_files:
     - vars/variables.yml
   roles:
-    - role: node-exporter
+    - role: prometheus.prometheus.node_exporter

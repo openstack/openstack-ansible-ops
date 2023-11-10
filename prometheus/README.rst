@@ -25,7 +25,7 @@ Downloading role dependencies
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/prometheus
-    ansible-galaxy install -r ansible-role-requirements.yml
+    ansible-galaxy install -r requirements.yml
 
 
 Install node_exporter
