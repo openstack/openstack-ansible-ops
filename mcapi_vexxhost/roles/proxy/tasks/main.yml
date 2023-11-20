@@ -1,0 +1,101 @@
+---
+# Copyright 2023, BBC R&D
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# create virtualenv
+- name: Install the python venv
+  import_role:
+    name: "python_venv_build"
+  vars:
+    _upper_constraints_url: "{{ requirements_git_url | default('https://releases.openstack.org/constraints/upper/' ~ requirements_git_install_branch | default('master')) }}"
+    _git_constraints:
+      - "--constraint {{ _upper_constraints_url }}"
+    venv_python_executable: "{{ openstack_venv_python_executable | default('python3') }}"
+    venv_build_constraints: "{{ _git_constraints }}"
+    venv_install_destination_path: "{{ _bin | dirname }}"
+    #venv_install_distro_package_list:
+    #  - haproxy  # this will be there for free on the host in an AIO
+    venv_pip_install_args: "{{ pip_install_options | default('') }}"
+    venv_pip_packages:
+      - git+https://github.com/vexxhost/magnum-cluster-api@main#egg=magnum-cluster-api
+
+# create user and group
+- name: Create the magnum_cluster_api_proxy system group
+  group:
+   name: "{{ magnum_cluster_api_proxy_system_group_name }}"
+   state: "present"
+   system: "yes"
+
+- name: Create the magnum_cluster_api_proxy system user
+  user:
+    name: "{{ magnum_cluster_api_proxy_system_user_name }}"
+    group: "{{ magnum_cluster_api_proxy_system_group_name }}"
+    comment: "{{ magnum_cluster_api_proxy_system_user_comment }}"
+    shell: "{{ magnum_cluster_api_proxy_system_user_shell }}"
+    system: "yes"
+    createhome: "yes"
+    home: "{{ magnum_cluster_api_proxy_system_user_home }}"
+
+- name: Create magnum_cluster_api_proxy directories
+  file:
+    path: "{{ item.path }}"
+    state: "directory"
+    owner: "{{ item.owner | default(magnum_cluster_api_proxy_system_user_name) }}"
+    group: "{{ item.group | default(magnum_cluster_api_proxy_system_group_name) }}"
+    mode: "{{ item.mode | default('0750') }}"
+  with_items:
+    - path: "{{ magnum_cluster_api_proxy_etc_directory }}"
+    - path: "{{ magnum_cluster_api_proxy_system_user_home }}"
+    - path: "{{ magnum_cluster_api_proxy_system_user_home }}/.kube"
+
+- name: Collect admin config from k8s cluster
+  slurp:
+    src: "{{ k8s_admin_conf_src }}"
+  register: k8s_admin_conf_slurp
+  delegate_to: "{{ groups['k8s_all'][0] }}"
+  run_once: true
+
+- name: Write k8s admin config to capi_proxy home dir
+  copy:
+    content: "{{ k8s_admin_conf_slurp.content | b64decode }}"
+    dest: "{{ k8s_admin_conf_dest }}"
+    owner: "{{ magnum_cluster_api_proxy_system_user_name }}"
+    group: "{{ magnum_cluster_api_proxy_system_group_name }}"
+    mode: '0600'
+
+- name: Write capi_proxy sudoers config
+  template:
+    src: capi_sudoers.j2
+    dest: /etc/sudoers.d/capi_proxy_sudoers
+
+# create service
+- name: Run the systemd service role
+  import_role:
+    name: systemd_service
+  vars:
+    systemd_user_name: "{{ magnum_cluster_api_proxy_system_user_name }}"
+    systemd_group_name: "{{ magnum_cluster_api_proxy_system_group_name }}"
+    systemd_service_restart_changed: true
+    systemd_tempd_prefix: openstack
+    systemd_slice_name: magnum-cluster-api-proxy
+    systemd_lock_path: /var/lock/magnum-cluster-api-proxy
+    systemd_service_cpu_accounting: true
+    systemd_service_block_io_accounting: true
+    systemd_service_memory_accounting: true
+    systemd_service_tasks_accounting: true
+    systemd_services:
+      - service_name: magnum-cluster-api-proxy
+        execstarts:
+          - "{{ _bin ~ '/magnum-cluster-api-proxy' }}"
+        start_order: 1
