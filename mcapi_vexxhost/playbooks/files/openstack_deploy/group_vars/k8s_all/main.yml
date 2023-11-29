@@ -1,0 +1,6 @@
+lxc_container_config_list:
+  - "lxc.apparmor.profile=unconfined"
+
+lxc_container_mount_auto:
+  - "proc:rw"
+  - "sys:rw"

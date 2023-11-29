@@ -1,0 +1,16 @@
+# wire OSA group, host and network addresses into k8s deployment
+kubernetes_control_plane_group: k8s_container
+kubelet_hostname: "{{ ansible_facts['hostname'] }}"
+kubelet_node_ip: "{{ management_address }}"
+kubernetes_hostname: "{{ internal_lb_vip_address }}"
+kubernetes_non_init_namespace: true
+
+# Pick a range of addresses for cilium that do not collide with anything else
+cilium_ipv4_cidr: 172.29.200.0/22
+
+# Set this manually, or kube-proxy will try to do this - not possible
+# in a non-init namespace and will fail in LXC
+openstack_host_nf_conntrack_max: 1572864
+
+# OSA containers dont run ssh by default so cannot use synchronize
+upload_helm_chart_method: copy
