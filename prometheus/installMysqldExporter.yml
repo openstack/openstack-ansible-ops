@@ -1,0 +1,17 @@
+---
+
+
+- name: Refresh local facts
+  hosts: galera_all
+  tasks:
+    - name: refresh local facts
+      setup:
+
+- name: mysqld_exporter
+  hosts: galera_all
+  roles:
+    - role: prometheus.prometheus.mysqld_exporter
+      vars:
+        mysqld_exporter_host: "{{ ansible_host }}"
+        mysqld_exporter_password: "{{ prometheus_mysqld_exporter_galera_password }}"
+        mysqld_exporter_web_listen_address: "{{ ansible_host }}:9104"

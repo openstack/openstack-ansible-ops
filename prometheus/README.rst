@@ -34,3 +34,26 @@ Install node_exporter
 
     cd /opt/openstack-ansible-ops/prometheus
     openstack-ansible installNodeExporter.yml
+
+
+If you want to deploy the mysqld_exporter, you need to create the Galera user for it first
+
+.. code-block:: yaml
+
+    galera_additional_users:
+      - name: "exporter"
+        host: '%'
+        password: "{{ prometheus_mysqld_exporter_galera_password }}"
+        priv: '*.*:PROCESS,REPLICATION CLIENT,SELECT,SLAVE MONITOR'
+        resource_limits:
+          MAX_USER_CONNECTIONS: 3
+        check_hostname: false
+        state: present
+
+
+Then install the mysqld_exporter
+
+.. code-block:: bash
+
+    cd /opt/openstack-ansible-ops/prometheus
+    openstack-ansible installMysqldExporter.yml
