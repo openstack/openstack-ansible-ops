@@ -31,6 +31,19 @@
     functional_test_master_count: 1
     functional_test_node_count: 1
 
+    functional_test_resources_network:
+      networks:
+        - name: 'public'
+          network_type: 'flat'
+          physical_network: 'physnet1'
+          external: True
+          project: 'admin'
+          subnets:
+            - name: 'public-subnet'
+              cidr: '172.29.248.0/22'
+              allocation_start: '172.29.249.110'
+              allocation_end: '172.29.249.200'
+
     functional_test_resources_compute:
       flavors:
        - specs:
@@ -83,6 +96,12 @@
     - name: Setup installation variables
       import_role:
         name: openstack.osa.install_defaults
+
+    - name: Create public network and subnet
+      include_role:
+        name: openstack.osa.openstack_resources
+      vars:
+        openstack_resources_network: "{{ functional_test_resources_network }}"
 
     - name: Create image and flavors
       include_role:

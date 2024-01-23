@@ -1,0 +1,1 @@
+post_setup_openstack_hook: osa_ops.mcapi_vexxhost.install_and_test
