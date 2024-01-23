@@ -34,4 +34,9 @@
         host: "{{ item }}"
         state: "{{ backend_state }}"
         socket: /var/run/haproxy.stat
+        drain: "{{ haproxy_drain | default(False) }}"
+        shutdown_sessions: "False"
+        wait: "True"
+        wait_interval: "{{ haproxy_wait_interval | default(5) }}"
+        wait_retries: "{{ haproxy_wait_retries | default(24) }}"
       with_items: "{{ backends.stdout_lines }}"
