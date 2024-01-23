@@ -26,11 +26,11 @@
     - backend_state: enabled
   tasks:
     - name: List HAProxy backends to process
-      shell: echo show servers state | nc -U /var/run/haproxy.stat | awk '{print $4}' | grep '^{{ hostname }}'
+      ansible.builtin.shell: echo show servers state | nc -U /var/run/haproxy.stat | awk '{print $4}' | grep '^{{ hostname }}' | sort | uniq
       register: backends
       changed_when: false
     - name: Loop through backends to set state
-      haproxy:
+      community.general.haproxy:
         host: "{{ item }}"
         state: "{{ backend_state }}"
         socket: /var/run/haproxy.stat
