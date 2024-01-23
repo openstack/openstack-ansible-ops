@@ -1,0 +1,130 @@
+---
+# Copyright 2024, BBC R&D.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Functional test for vexxhost magnum cluster api driver
+  hosts: utility_all[0]
+  gather_facts: false
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  vars:
+    ansible_python_interpreter: "{{ openstack_service_setup_host_python_interpreter }}"
+
+    functional_test_k8s_version: 'v1.23.17'
+    functional_test_image_name: "{{ 'ubuntu-2204-kube-' ~ functional_test_k8s_version }}"
+    functional_test_image_url_base: 'https://object-storage.public.mtl1.vexxhost.net/swift/v1/a91f106f55e64246babde7402c21b87a/magnum-capi/'
+    functional_test_image_url: "{{ functional_test_image_url_base ~ functional_test_image_name ~ '.qcow2' }}"
+
+    functional_test_cluster_template_name: "{{ 'functional-test-k8s-' ~ functional_test_k8s_version }}"
+
+    functional_test_cluster_name: 'functional-test-cluster'
+    functional_test_master_count: 1
+    functional_test_node_count: 1
+
+    functional_test_resources_compute:
+      flavors:
+       - specs:
+           - name: m1.medium
+             vcpus: 2
+             ram: 4096
+             disk: 40
+      keypairs:
+       - name: magnum_test_key
+         path: /root/.ssh/magnum_test_rsa
+         key_format: ssh
+         size: 4096
+         state: present
+         type: rsa
+         comment: "magnum cluster api test ssh key"
+
+    functional_test_resources_image:
+      images:
+        - name: "{{ functional_test_image_name }}"
+          url: "{{ functional_test_image_url }}"
+          disk_format: qcow2
+          visibility: public
+          properties:
+            os_distro: ubuntu
+
+    functional_test_resources_coe:
+      templates:
+        - state: present
+          coe: kubernetes
+          dns_nameserver: '8.8.8.8'
+          docker_volume_size: '10'
+          external_network_id: 'public'
+          flavor_id: "m1.medium"
+          image_id: "{{ _get_image_info.images[0].id }}"
+          keypair: 'magnum_test_key'
+          labels:
+            kube_tag: "{{ functional_test_k8s_version }}"
+          master_flavor_id: "m1.medium"
+          master_lb_enabled: "True"
+          name: "{{ functional_test_cluster_template_name }}"
+          network_driver: "calico"
+          clusters:
+            - name: "{{ functional_test_cluster_name }}"
+              keypair: 'magnum_test_key'
+              master_count: "{{ functional_test_master_count }}"
+              node_count: "{{ functional_test_node_count }}"
+
+  tasks:
+
+    - name: Setup installation variables
+      import_role:
+        name: openstack.osa.install_defaults
+
+    - name: Create image and flavors
+      include_role:
+        name: openstack.osa.openstack_resources
+      vars:
+        openstack_resources_compute: "{{ functional_test_resources_compute }}"
+        openstack_resources_image: "{{ functional_test_resources_image }}"
+      when: functional_test_create_compute_image | default(True) | bool
+
+    - name: Get image id
+      openstack.cloud.image_info:
+        cloud: 'default'
+        interface: 'admin'
+        region_name: "{{ service_region }}"
+        image: "{{ functional_test_image_name }}"
+      register: _get_image_info
+
+    - name: Create cluster template and instantiate test cluster
+      include_role:
+        name: openstack.osa.openstack_resources
+      vars:
+        openstack_resources_coe: "{{ functional_test_resources_coe }}"
+
+    - name: Check cluster status
+      ansible.builtin.command:
+        cmd: openstack coe cluster show "{{ functional_test_cluster_name }}"
+      register: _cluster_status
+      retries: 120
+      delay: 5
+      until: "'CREATE_COMPLETE' in _cluster_status.stdout"
+      environment:
+        OS_CLOUD: default
+
+    - name: Run sonobuoy test
+      include_role:
+        name: osa_ops.mcapi_vexxhost.sonobuoy
+      vars:
+        sonobuoy_coe_cluster: "{{ functional_test_cluster_name }}"
+
+    # Delete cluster
+    - name: Delete coe cluster
+      ansible.builtin.command:
+        cmd: openstack coe cluster delete "{{ functional_test_cluster_name }}"
+      environment:
+        OS_CLOUD: default
