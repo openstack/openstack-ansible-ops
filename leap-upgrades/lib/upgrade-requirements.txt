@@ -1,7 +1,7 @@
 ###
 ### These are pinned to ensure upgrades happen from a known good place ###
 ###
-cryptography==1.7.2
+cryptography==42.0.0
 packaging==16.8
 pip==9.0.1
 setuptools==33.1.1
