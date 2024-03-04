@@ -14,23 +14,9 @@
 # limitations under the License.
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
+    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-focal"
     parent: base
-    description: "Runs a gate test on the elk_metrics_6x project."
-    run: "elk_metrics_6x/tests/test.yml"
-    post-run: "elk_metrics_6x/tests/post-run.yml"
-    nodeset: ubuntu-bionic
-    files:
-      - ^elk_metrics_6x/.*
-      - ^bootstrap-embedded-ansible/.*
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_elk: false
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic"
-    parent: base
-    nodeset: ubuntu-bionic
+    nodeset: ubuntu-focal
     description: "Runs a gate test on the elk_metrics_7x project."
     run: "elk_metrics_7x/tests/test.yml"
     post-run: "elk_metrics_7x/tests/post-run.yml"
@@ -42,43 +28,14 @@
       test_clustered_elk: false
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-focal"
-    parent: "openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic"
+    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-jammy"
+    parent: "openstack-ansible-ops:elk_metrics_7x-ubuntu-focal"
     nodeset: ubuntu-focal
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-jammy"
-    parent: "openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic"
-    nodeset: ubuntu-jammy
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-centos-7"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
-    nodeset: centos-7
-    voting: false
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-centos-7-clustered"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
-    nodeset: centos-7
-    voting: false
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_elk: true
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic-clustered"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
-    nodeset: ubuntu-bionic
-    voting: false
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_elk: true
-
-- job:
-    name: "openstack-ansible-ops:osquery-ubuntu-bionic"
+    name: "openstack-ansible-ops:osquery-ubuntu-jammy"
     parent: base
-    nodeset: ubuntu-bionic
+    nodeset: ubuntu-jammy
     description: "Runs a gate test on the osquery project."
     run: "osquery/tests/test.yml"
     post-run: "osquery/tests/post-run.yml"
@@ -88,17 +45,9 @@
       - ^bootstrap-embedded-ansible/.*
 
 - job:
-    name: "openstack-ansible-ops:osquery-ubuntu-bionic-clustered"
-    parent: "openstack-ansible-ops:osquery-ubuntu-bionic"
-    nodeset: ubuntu-bionic
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_kolide: true
-
-- job:
-    name: "openstack-ansible-ops:skydive-ubuntu-bionic"
+    name: "openstack-ansible-ops:skydive-ubuntu-jammy"
     parent: base
-    nodeset: ubuntu-bionic
+    nodeset: ubuntu-jammy
     description: "Runs a gate test on the skydive project."
     run: "skydive/tests/test.yml"
     post-run: "skydive/tests/post-run.yml"
@@ -106,8 +55,3 @@
     files:
       - ^skydive/.*
       - ^bootstrap-embedded-ansible/.*
-
-- job:
-    name: "openstack-ansible-ops:skydive-centos-7"
-    parent: "openstack-ansible-ops:skydive-ubuntu-bionic"
-    nodeset: centos-7
