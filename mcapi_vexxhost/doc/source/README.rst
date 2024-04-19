@@ -37,7 +37,7 @@ The ansible collection used to deploy the controlplane k8s cluster is here https
 
 The ansible collection used to deploy the container runtime for the controlplane k8s cluster is here https://github.com/vexxhost/ansible-collection-containers
 
-**These playbooks require Openstack-Ansible Antelope or later.**
+**These playbooks require Openstack-Ansible Caracal or later.**
 
 Highlevel overview of the Magnum infrastructure these playbooks will
 build and operate against.
