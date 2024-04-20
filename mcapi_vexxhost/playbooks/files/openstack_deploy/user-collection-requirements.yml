@@ -1,8 +1,8 @@
 collections:
   - name: vexxhost.kubernetes
-    source: https://github.com/jrosser/ansible-collection-kubernetes
+    source: https://github.com/vexxhost/ansible-collection-kubernetes
     type: git
-    version: synchronize
+    version: main
   - name: osa_ops.mcapi_vexxhost
     type: git
     version: master
