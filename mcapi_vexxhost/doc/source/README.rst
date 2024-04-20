@@ -81,7 +81,15 @@ The collections can then be installed with the following command:
 
       cd /opt/openstack-ansible
       openstack-ansible scripts/get-ansible-collection-requirements.yml
- 
+
+The modules in the kubernetes collection require an additional python module
+to be present in the ansible-runtime python virtual environment. Specify this
+in /etc/openstack_deploy/user-ansible-venv-requirements.txt
+
+  .. code-block:: bash
+
+     docker-image-py
+
 OpenStack-Ansible configuration for magnum-cluster-api driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -265,6 +273,18 @@ Run the magnum-cluster-api deployment
 
 For an existing deployment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Ensure that the python modules required for ansible are present:
+
+  .. code-block: bash
+
+     ./scripts/bootstrap-ansible.sh
+
+Alternatively, without re-running the bootstrap script:
+
+  .. code-block bash
+
+     /opt/ansible-runtime/bin/pip install docker-image-py
 
 Add the magnum-cluser-api driver to the magnum service
 
