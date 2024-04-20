@@ -266,24 +266,50 @@ Run the magnum-cluster-api deployment
 For an existing deployment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Add the magnum-cluser-api driver to the magnum service
+
+  .. code-block: bash
+
+     openstack-ansible playbooks/os-magnum-install.yml
+
 Create the k8s control plane containers
 
-openstack-ansible playbooks/lxc-containers-create.yml --limit k8s_all
+  .. code-block: bash
+
+     openstack-ansible playbooks/lxc-containers-create.yml --limit k8s_all
 
 Run the magnum-cluster-api deployment
 
-.. code-block:: bash
+  .. code-block:: bash
 
-   openstack-ansible osa_ops.mcapi_vexxhost.k8s_install
+     openstack-ansible osa_ops.mcapi_vexxhost.k8s_install
+
+Optionally run a functional test of magnum-cluster-api
+-----------------------------------------------------
+
+This can be done quickly using the following playbook
+
+  .. code-block:: bash
+
+     openstack-ansible osa_ops.mcapi_vexxhost.functional_test
+
+This playbook will create a neutron public network, download a prebuilt
+k8s glance image, create a nova flavor and a magnum cluster template.
+
+It will then deploy the workload k8s cluster using magnum, and
+run a sonobouy "quick mode" test of the workload cluster.
+
+This playbook is intended to be used on an openstack-ansible
+all-in-one deployment.
 
 Use Magnum to create a workload cluster
 ---------------------------------------
 
-Magnum cluster-api should now be ready to use
-
 Upload Images
 
 Create a cluster template
+
+Create a workload cluster
 
 Optional Components
 -------------------
