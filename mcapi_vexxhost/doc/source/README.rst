@@ -137,7 +137,7 @@ in `/etc/openstack-deploy/group_vars/k8s_all/haproxy_service.yml`
         haproxy_balance_type: tcp
         haproxy_balance_alg: leastconn
         haproxy_interval: '15000'
-        haproxy_backend_port: 16443
+        haproxy_backend_port: 6443
         haproxy_backend_rise: 2
         haproxy_backend_fall: 2
         haproxy_timeout_server: '15m'
@@ -146,9 +146,8 @@ in `/etc/openstack-deploy/group_vars/k8s_all/haproxy_service.yml`
           - tcplog
           - ssl-hello-chk
           - log-health-checks
-          - httpchk GET /healthz
         haproxy_backend_httpcheck_options:
-          - 'expect status 200'
+          - 'send hdr User-Agent "osa-haproxy-healthcheck" meth GET uri /healthz'
         haproxy_backend_server_options:
           - check-ssl
           - verify none
