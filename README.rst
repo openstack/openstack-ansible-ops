@@ -33,13 +33,3 @@ The project home is at:
 
 The project bug tracker is located at:
   https://bugs.launchpad.net/openstack-ansible
-
-Galaxy roles
-~~~~~~~~~~~~
-
-`OpenStack Ansible backup <https://galaxy.ansible.com/winggundamth/openstack-ansible-backup/>`_
------------------------------------------------------------------------------------------------
-
- This role will perform backups for OpenStack-Ansible deployments and it needs
- to run on the deploy node. It will backup data on container and then
- synchronize backup files to the deploy node.
