@@ -2,7 +2,6 @@ Install ELK with beats to gather metrics
 ########################################
 :tags: openstack, ansible
 
-..
 About this repository
 ---------------------
 
@@ -16,7 +15,6 @@ Highlevel overview of the Elastic-Stack infrastructure these playbooks will
 build and operate against.
 
 .. image:: assets/Elastic-Stack-Diagram.svg
-    :scale: 50 %
     :alt: Elasticsearch Architecture Diagram
     :align: center
 
@@ -347,7 +345,6 @@ Architecture | Data flow
 This diagram outlines the data flow from within an Elastic-Stack deployment.
 
 .. image:: assets/Elastic-dataflow.svg
-    :scale: 50 %
     :alt: Elastic-Stack Data Flow Diagram
     :align: center
 
@@ -355,7 +352,8 @@ Optional | Enable uwsgi stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Config overrides can be used to make uwsgi stats available on unix
-domain sockets. Any /tmp/*uwsgi-stats.sock will be picked up by Metricsbeat.
+domain sockets. Any /tmp/<service>-uwsgi-stats.sock will be picked up by
+Metricsbeat.
 
 .. code-block:: yaml
 
@@ -702,7 +700,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/7.17/security-minimal-se
   kibana_setup - any user which is assigned the built in kibana_admin role
   logstash_internal - see https://www.elastic.co/guide/en/logstash/7.17/ls-security.html#ls-http-auth-basic
   beats_setup - see setup role at https://www.elastic.co/guide/en/beats/filebeat/7.17/feature-roles.html
-              - this user must also be assigned the built in ingest_admin role
+  - this user must also be assigned the built in ingest_admin role
 
 * Set 'kibana_object_encryption_key' to a string with a minimum length of 32
   bytes.

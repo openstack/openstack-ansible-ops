@@ -6,6 +6,7 @@ OpenStack-Ansible Operator Tooling
    :maxdepth: 2
 
    swift_storage_mount_drives
+   elk_metrics
 
 OpenStack-Ansible Diff Generator
 --------------------------------
