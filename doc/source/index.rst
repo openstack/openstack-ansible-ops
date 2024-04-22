@@ -7,8 +7,6 @@ OpenStack-Ansible Operator Tooling
 
    swift_storage_mount_drives
 
-.. include:: ../../README.rst
-
 OpenStack-Ansible Diff Generator
 --------------------------------
 
