@@ -57,6 +57,11 @@ Pre-requisites
 OpenStack-Ansible Integration
 -----------------------------
 
+.. note:
+   The example configuration files shown below are suitable for use with an
+   openstack-ansible All-In-One (AIO) build and can be found at
+   openstack-ansible-ops/mcapi_vexxhost/playbooks/files/openstack_deploy/
+
 The playbooks are distributed as an ansible collection, and integrate with
 Openstack-Ansible by adding the collection to the deployment host by
 adding the following to  `/etc/openstack_deploy/user-collection-requirements.yml`
@@ -97,18 +102,18 @@ deployment with multiple hosts if high availability is required.
    :language: yaml
 
 Integrate the control plane k8s cluster with the haproxy loadbalancer
-in `/etc/openstack-deploy/group_vars/k8s_all/haproxy_service.yml`
+in `/etc/openstack_deploy/group_vars/k8s_all/haproxy_service.yml`
 
 .. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/group_vars/k8s_all/haproxy_service.yml
    :language: yaml
 
 Configure the LXC container that will host the control plane k8s cluster to
-be suitable for running nested containers in `/etc/openstack-deploy/group_vars/k8s_all/main.yml`
+be suitable for running nested containers in `/etc/openstack_deploy/group_vars/k8s_all/main.yml`
 
 .. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/group_vars/k8s_all/main.yml
    :language: yaml
 
-Set up config-overrides for the magnum service in `/etc/openstack-deploy/user_variables_magnum.yml`.
+Set up config-overrides for the magnum service in `/etc/openstack_deploy/user_variables_magnum.yml`.
 Adjust the images and flavors here as necessary, these are just for demonstration. Upload as many
 images as you need for the different workload cluster kubernetes versions.
 
@@ -121,7 +126,7 @@ these may be derived from different certificate authorities.
 .. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/user_variables_z_magnum.yml
    :language: yaml
 
-Set up config-overrides for the control plane k8s cluster in /etc/openstack-deploy/user_variables_k8s.yml`
+Set up config-overrides for the control plane k8s cluster in /etc/openstack_deploy/user_variables_k8s.yml`
 These variables integrate the control plane k8s deployment with the rest of the
 openstack-ansible deployment.
 
