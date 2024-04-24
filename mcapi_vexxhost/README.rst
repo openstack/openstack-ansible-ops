@@ -62,18 +62,8 @@ Openstack-Ansible by adding the collection to the deployment host by
 adding the following to  `/etc/openstack_deploy/user-collection-requirements.yml`
 under the collections key.
 
-  .. code-block:: yaml
-
-     collections:
-        - name: vexxhost.kubernetes
-          source: https://github.com/vexxhost/ansible-collection-kubernetes
-          type: git
-          version: main
-        - name: osa_ops.mcapi_vexxhost
-          type: git
-          version: master
-          source: https://opendev.org/openstack/openstack-ansible-ops#/mcapi_vexxhost
-
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/user-collection-requirements.yml
+   :language: yaml
 
 The collections can then be installed with the following command:
 
@@ -86,9 +76,8 @@ The modules in the kubernetes collection require an additional python module
 to be present in the ansible-runtime python virtual environment. Specify this
 in /etc/openstack_deploy/user-ansible-venv-requirements.txt
 
-  .. code-block:: bash
-
-     docker-image-py
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/user-ansible-venv-requirements.txt
+   :language: yaml
 
 OpenStack-Ansible configuration for magnum-cluster-api driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -96,165 +85,48 @@ OpenStack-Ansible configuration for magnum-cluster-api driver
 Specify the deployment of the control plane k8s cluster in
 `/etc/openstack_deploy/env.d/k8s.yml`
 
-  .. code-block:: yaml
-
-    ---
-    component_skel:
-      k8s_capi:
-        belongs_to:
-          - k8s_all
-
-    container_skel:
-      k8s_container:
-        belongs_to:
-          - cluster-api_containers
-        contains:
-          - k8s_capi
-
-    physical_skel:
-      cluster-api_containers:
-        belongs_to:
-          - all_containers
-      cluster-api_hosts:
-        belongs_to:
-          - hosts
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/env.d/k8s.yml
+   :language: yaml
 
 Define the physical hosts that will host the controlplane k8s
-cluster, this example is for an all-in-one deployment and should
-be adjusted to match a real deployment with multiple hosts if
-high availability is required.
+cluster in /etc/openstack_deploy/conf.d/k8s.yml. This example is
+for an all-in-one deployment and should be adjusted to match a real
+deployment with multiple hosts if high availability is required.
 
-  .. code-block:: yaml
-
-    cluster-api_hosts:
-      aio1:
-        ip: 172.29.236.100
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/conf.d/k8s.yml
+   :language: yaml
 
 Integrate the control plane k8s cluster with the haproxy loadbalancer
 in `/etc/openstack-deploy/group_vars/k8s_all/haproxy_service.yml`
 
-  .. code-block:: yaml
-
-      ---
-      haproxy_k8s_service:
-        haproxy_service_name: k8s
-        haproxy_backend_nodes: "{{ groups['k8s_all'] | default([]) }}"
-        haproxy_ssl: false
-        haproxy_ssl_all_vips: false
-        haproxy_port: 6443
-        haproxy_balance_type: tcp
-        haproxy_balance_alg: leastconn
-        haproxy_interval: '15000'
-        haproxy_backend_port: 6443
-        haproxy_backend_rise: 2
-        haproxy_backend_fall: 2
-        haproxy_timeout_server: '15m'
-        haproxy_timeout_client: '5m'
-        haproxy_backend_options:
-          - tcplog
-          - ssl-hello-chk
-          - log-health-checks
-        haproxy_backend_httpcheck_options:
-          - 'send hdr User-Agent "osa-haproxy-healthcheck" meth GET uri /healthz'
-        haproxy_backend_server_options:
-          - check-ssl
-          - verify none
-        haproxy_accept_both_protocols: "{{ k8s_accept_both_protocols | default(openstack_service_accept_both_protocols) }}"
-        haproxy_service_enabled: "{{ groups['k8s_all'] is defined and groups['k8s_all'] | length > 0 }}"
-
-      k8s_haproxy_services:
-        - "{{ haproxy_k8s_service | combine(haproxy_k8s_service_overrides | default({})) }}"
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/group_vars/k8s_all/haproxy_service.yml
+   :language: yaml
 
 Configure the LXC container that will host the control plane k8s cluster to
 be suitable for running nested containers in `/etc/openstack-deploy/group_vars/k8s_all/main.yml`
 
-  .. code-block:: yaml
-
-      ---
-      lxc_container_config_list:
-        - "lxc.apparmor.profile=unconfined"
-
-      lxc_container_mount_auto:
-        - "proc:rw"
-        - "sys:rw"
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/group_vars/k8s_all/main.yml
+   :language: yaml
 
 Set up config-overrides for the magnum service in `/etc/openstack-deploy/user_variables_magnum.yml`.
 Adjust the images and flavors here as necessary, these are just for demonstration. Upload as many
 images as you need for the different workload cluster kubernetes versions.
 
-  .. code-block:: yaml
+Attention must be given to the SSL configuration. Users and workload clusters will
+interact with the external endpoint and must trust the SSL certificate. The magnum
+service and cluster-api can be configured to interact with either the external or
+internal endpoint and must trust the SSL certificiate. Depending on the environment,
+these may be derived from different certificate authorities.
 
-      #list the images to upload to glance here, or set to an empty list
-      #to handle image uploading by some other means
-      magnum_glance_images:
-        - disk_format: qcow2
-          distro: ubuntu
-          file: https://object-storage.public.mtl1.vexxhost.net/swift/v1/a91f106f55e64246babde7402c21b87a/magnum-capi/ubuntu-2204-kube-v1.23.17.qcow2
-          image_format: bare
-          name: ubuntu-2204-kube-v1.23.17
-          public: true
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/user_variables_z_magnum.yml
+   :language: yaml
 
-      #the cluster templates cannot be created during the magnum installation
-      #as the control plane k8s credentials must be in place first
-      magnum_cluster_templates: []
+Set up config-overrides for the control plane k8s cluster in /etc/openstack-deploy/user_variables_k8s.yml`
+These variables integrate the control plane k8s deployment with the rest of the
+openstack-ansible deployment.
 
-      #any flavors specified in the cluster template must already exist
-      #the magnum playbook can create flavors, or set to an empty list
-      #to handle flavor creation by some other means
-      magnum_flavors:
-        - cloud: default
-          disk: 40
-          name: m1.medium
-          ram: 4096
-          vcpus: 2
-
-  Set up config-overrides for the control plane k8s cluster in /etc/openstack-deploy/user_variables_k8s.yml`
-  Attention must be given to the SSL configuration. Users and workload clusters will
-  interact with the external endpoint and must trust the SSL certificate. The magnum
-  service and cluster-api can be configured to interact with either the external or
-  internal endpoint and must trust the SSL certificiate. Depending on the environment,
-  these may be derived from different certificate authorities.
-
-  .. code-block:: yaml
-
-      # connect ansible group, host and network addresses into control plane k8s deployment
-      kubernetes_control_plane_group: k8s_all
-      kubelet_hostname: "{{ ansible_facts['hostname'] }}"
-      kubelet_node_ip: "{{ management_address }}"
-      kubernetes_hostname: "{{ internal_lb_vip_address }}"
-      kubernetes_non_init_namespace: true
-
-      # install the vexxhost magnum-cluster-api plugin into the magnum venv
-      magnum_user_pip_packages:
-        - git+https://github.com/vexxhost/magnum-cluster-api@main#egg=magnum-cluster-api
-
-      # make the required settings in magnum.conf
-      magnum_config_overrides:
-        drivers:
-          # ensure that the external VIP CA is trusted by the workload cluster
-          openstack_ca_file: '/usr/local/share/ca-certificates/ExampleCorpRoot.crt'
-        capi_client:
-          # ensure that the internal VIP CA is trusted by the CAPI driver
-          ca_file: '/usr/local/share/ca-certificates/ExampleCorpRoot.crt'
-          endpoint: 'internalURL'
-        cluster_template:
-          # the only permitted workload network driver is calico
-          kubernetes_allowed_network_drivers: 'calico'
-          kubernetes_default_network_driver: 'calico'
-        certificates:
-          # store certificates in the magnum database instead of barbican
-          cert_manager_type: x509keypair
-
-      # Pick a range of addresses for the control plane k8s cluster cilium
-      # network that do not collide with anything else in the deployment
-      cilium_ipv4_cidr: 172.29.200.0/22
-
-      # Set this manually, or kube-proxy will try to do this - not possible
-      # in a non-init namespace and will fail in LXC
-      openstack_host_nf_conntrack_max: 1572864
-
-      # OSA containers do not run ssh so cannot use the ansible synchronize module
-      upload_helm_chart_method: copy
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/user_variables_k8s.yml
+   :language: yaml
 
 Run the deployment
 ------------------
@@ -276,25 +148,25 @@ For an existing deployment
 
 Ensure that the python modules required for ansible are present:
 
-  .. code-block: bash
+  .. code-block:: bash
 
      ./scripts/bootstrap-ansible.sh
 
 Alternatively, without re-running the bootstrap script:
 
-  .. code-block bash
+  .. code-block:: bash
 
      /opt/ansible-runtime/bin/pip install docker-image-py
 
 Add the magnum-cluser-api driver to the magnum service
 
-  .. code-block: bash
+  .. code-block:: bash
 
      openstack-ansible playbooks/os-magnum-install.yml
 
 Create the k8s control plane containers
 
-  .. code-block: bash
+  .. code-block:: bash
 
      openstack-ansible playbooks/lxc-containers-create.yml --limit k8s_all
 
