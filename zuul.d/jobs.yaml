@@ -57,6 +57,36 @@
       - ^bootstrap-embedded-ansible/.*
 
 - job:
+    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.29.6
+    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
+    vars:
+      mcapi_vexxhost_extra_user_variables:
+        - path: /etc/openstack_deploy/user_variables_z_magnum.yml
+          block: |
+            functional_test_k8s_version: 'v1.29.6'
+            functional_test_image_url: https://static.atmosphere.dev/artifacts/magnum-cluster-api/ubuntu-jammy-kubernetes-1-29-6-1720107687.qcow2
+
+- job:
+    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.30.2
+    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
+    vars:
+      mcapi_vexxhost_extra_user_variables:
+        - path: /etc/openstack_deploy/user_variables_z_magnum.yml
+          block: |
+            functional_test_k8s_version: 'v1.30.2'
+            functional_test_image_url: https://static.atmosphere.dev/artifacts/magnum-cluster-api/ubuntu-jammy-kubernetes-1-30-2-1720107688.qcow2
+
+- job:
+    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.31.1
+    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
+    vars:
+      mcapi_vexxhost_extra_user_variables:
+        - path: /etc/openstack_deploy/user_variables_z_magnum.yml
+          block: |
+            functional_test_k8s_version: 'v1.31.1'
+            functional_test_image_url: https://static.atmosphere.dev/artifacts/magnum-cluster-api/ubuntu-jammy-kubernetes-1-31-1-1728920853.qcow2
+
+- job:
     name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
     parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm-ubuntu-jammy
     files:
