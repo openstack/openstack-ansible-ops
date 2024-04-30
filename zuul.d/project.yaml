@@ -22,7 +22,9 @@
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-focal
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-jammy
+        - openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
     gate:
       jobs:
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-focal
+        - openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy

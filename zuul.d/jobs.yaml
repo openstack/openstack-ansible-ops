@@ -55,3 +55,9 @@
     files:
       - ^skydive/.*
       - ^bootstrap-embedded-ansible/.*
+
+- job:
+    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
+    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm-ubuntu-jammy
+    files:
+      - ^mcapi_vexxhost/.*
