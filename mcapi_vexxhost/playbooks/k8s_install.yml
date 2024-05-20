@@ -97,12 +97,23 @@
   gather_facts: true
   serial: "{{ k8s_serial | default('20%') }}"
   user: root
+  vars:
+    k8s_node_labels:
+      openstack-control-plane: enabled
   roles:
       - role: "vexxhost.containers.containerd"
       - role: "vexxhost.kubernetes.kubernetes"
       - role: "vexxhost.kubernetes.helm"
       - role: "vexxhost.kubernetes.cilium"
         environment: "{{ deployment_environment_variables | default({}) }}"
+  tasks:
+      - kubernetes.core.k8s:
+          definition:
+            apiVersion: v1
+            kind: Node
+            metadata:
+              name: "{{ inventory_hostname }}"
+              labels: "{{ k8s_node_labels }}"
   tags:
     - k8s
     - k8s-install
