@@ -2,7 +2,7 @@ collections:
   - name: vexxhost.kubernetes
     source: https://github.com/vexxhost/ansible-collection-kubernetes
     type: git
-    version: 896d67092706d01b6fb9d7f4856750819f8898cf
+    version: v1.14.1
   - name: osa_ops.mcapi_vexxhost
     type: git
     version: master
