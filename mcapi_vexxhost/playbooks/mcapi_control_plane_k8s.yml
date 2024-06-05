@@ -95,11 +95,6 @@
           execstarts: /usr/bin/bash -c 'mkdir -p /run/cilium/cgroupv2 && /usr/bin/mount -t cgroup2 none /run/cilium/cgroupv2 && /usr/bin/mount --make-shared /run/cilium/cgroupv2'
 
           #  environment: "{{ deployment_environment_variables | default({}) }}"
-
-  tasks:
-    #NOTE (jrosser) this task can be removed when https://github.com/vexxhost/ansible-collection-kubernetes/pull/118/ is merged and released
-    - ansible.builtin.package:
-        name: python3-cryptography
   tags:
     - k8s-container
     - k8s
