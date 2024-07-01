@@ -1,0 +1,57 @@
+---
+# Copyright 2023, BBC R&D
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# deploy the proxy service to communicate directly between magnum coe
+# clusters and the capi control plane without going via a public floating
+# IP
+# For OVS/Linuxbridge this can be installed to compute nodes, but for
+# OVN it must be installed to all computes. Override the target hosts
+# for this play as required
+- name: Install magnum-cluster-api-proxy
+  hosts: "{{ magnum_cluster_api_proxy_hosts | default('network_hosts') }}"
+  vars:
+    _venv_tag: "{{ venv_tag | default('untagged') }}"
+    _bin: "/openstack/venvs/magnum-cluster-api-proxy-{{ _venv_tag }}/bin"
+    magnum_cluster_api_proxy_system_group_name: 'capi_proxy'
+    magnum_cluster_api_proxy_system_user_name: 'capi_proxy'
+    magnum_cluster_api_proxy_system_user_comment: 'Magnum Cluster API Proxy System User'
+    magnum_cluster_api_proxy_system_user_home: '/var/lib/{{ magnum_cluster_api_proxy_system_user_name }}'
+    magnum_cluster_api_proxy_system_user_shell: '/bin/false'
+    magnum_cluster_api_proxy_etc_directory: '/etc/capi_proxy'
+
+    k8s_admin_conf_src: "/etc/kubernetes/admin.conf"
+    k8s_admin_conf_dest: "{{ magnum_cluster_api_proxy_system_user_home }}/.kube/config"
+  environment: "{{ deployment_environment_variables | default({}) }}"
+  tasks:
+
+    - name: Gather facts
+      setup:
+        gather_subset:
+          - "!all"
+          - min
+      when: osa_gather_facts | default(True)
+      tags:
+        - always
+
+    - name: Setup installation variables
+      import_role:
+        name: openstack.osa.install_defaults
+
+    - name: Install proxy service
+      include_role:
+        name: osa_ops.mcapi_vexxhost.proxy
+
+  tags:
+    - magnum-cluster-api-proxy

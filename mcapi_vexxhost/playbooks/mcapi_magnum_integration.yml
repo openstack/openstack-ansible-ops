@@ -1,0 +1,57 @@
+---
+# Copyright 2023, BBC R&D
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Set up helm and k8s credentials in magnum hosts
+  hosts: magnum_all
+  gather_facts: true
+  user: root
+  vars:
+    k8s_admin_conf_src: "/etc/kubernetes/admin.conf"
+    k8s_admin_conf_dest: "/var/lib/magnum/.kube/config"
+  tasks:
+    - name: Run os_magnum role pre-tasks to create user/group/dirs
+      include_role:
+        name: os_magnum
+        tasks_from: magnum_pre_install.yml
+
+    - name: Collect admin config from k8s cluster
+      slurp:
+        src: "{{ k8s_admin_conf_src }}"
+      register: k8s_admin_conf_slurp
+      delegate_to: "{{ groups['k8s_all'][0] }}"
+      run_once: true
+
+    - name: Ensure target directory exists
+      file:
+        state: directory
+        path: "{{ k8s_admin_conf_dest | dirname }}"
+        owner: magnum
+        group: magnum
+
+    - name: Write k8s admin config to magnum home dir
+      copy:
+        content: "{{ k8s_admin_conf_slurp.content | b64decode }}"
+        dest: "{{ k8s_admin_conf_dest }}"
+        owner: magnum
+        group: magnum
+        mode: '0600'
+
+    - name: Install helm
+      include_role:
+        name: "vexxhost.kubernetes.helm"
+
+        #  environment: "{{ deployment_environment_variables | default({}) }}"
+  tags:
+    - magnum_k8s_conf

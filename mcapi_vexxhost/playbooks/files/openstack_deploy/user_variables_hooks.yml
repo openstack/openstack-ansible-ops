@@ -1,1 +1,11 @@
-post_setup_openstack_hook: osa_ops.mcapi_vexxhost.install_and_test
+# This is used for a full AIO scenario
+
+# deploy the control plane k8s cluster as the last step in the "setup-ho
+post_setup_infrastructure_hook: osa_ops.mcapi_vexxhost.mcapi_control_plane_k8s
+
+# drop the control plane k8s credentials and do helm setup in the magnum
+# container before the openstack deployment
+pre_setup_openstack_hook: osa_ops.mcapi_vexxhost.mcapi_magnum_integration
+
+# run the functional test after the openstack deployment
+post_setup_openstack_hook: osa_ops.mcapi_vexxhost.functional_test
