@@ -31,6 +31,8 @@
     functional_test_master_count: 1
     functional_test_node_count: 1
 
+    functional_test_kubeconfig_file: "{{ '/root/' ~ 'kubeconfig-' ~ functional_test_cluster_name ~ '/config' }}"
+
     functional_test_resources_network:
       networks:
         - name: 'public'
@@ -135,11 +137,25 @@
       environment:
         OS_CLOUD: default
 
+    - name: Create dir to hold kubeconfig
+      ansible.builtin.file:
+        state: directory
+        path: "{{ functional_test_kubeconfig_file | dirname }}"
+
+    - name: Retrieve kubeconfig
+      vars:
+        ansible_python_interpreter: "{{ openstack_service_setup_host_python_interpreter }}"
+      ansible.builtin.command:
+        cmd: openstack coe cluster config --dir "{{ functional_test_kubeconfig_file | dirname }}" "{{ functional_test_cluster_name }}"
+        creates: "{{ functional_test_kubeconfig_file }}"
+      environment:
+        OS_CLOUD: default
+
     - name: Run sonobuoy test
       include_role:
         name: osa_ops.mcapi_vexxhost.sonobuoy
       vars:
-        sonobuoy_coe_cluster: "{{ functional_test_cluster_name }}"
+        sonobuoy_kubeconfig_file: "{{ functional_test_kubeconfig_file }}"
 
     # Delete cluster
     - name: Delete coe cluster

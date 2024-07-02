@@ -18,7 +18,7 @@ sonobuoy_download_url: "https://github.com/vmware-tanzu/sonobuoy/releases/downlo
 sonobuoy_unarchive_dest: /usr/local/bin
 
 # set the name or uuid of the openstack coe cluster to test
-sonobuoy_coe_cluster: ""
+sonobuoy_coe_cluster: "test"
 
 # the location of the kubeconfig file
 sonobuoy_kubeconfig_file: "{{ '/root/' ~ 'kubeconfig-' ~ sonobuoy_coe_cluster ~ '/config' }}"

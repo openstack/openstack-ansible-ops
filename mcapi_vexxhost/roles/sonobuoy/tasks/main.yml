@@ -12,20 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Create dir to hold kubeconfig
-  ansible.builtin.file:
-    state: directory
-    path: "{{ sonobuoy_kubeconfig_file | dirname }}"
-
-- name: Retrieve kubeconfig
-  vars:
-    ansible_python_interpreter: "{{ openstack_service_setup_host_python_interpreter }}"
-  ansible.builtin.command:
-    cmd: openstack coe cluster config --dir "{{ sonobuoy_kubeconfig_file | dirname }}" "{{ sonobuoy_coe_cluster }}"
-    creates: "{{ sonobuoy_kubeconfig_file }}"
-  environment:
-    OS_CLOUD: default
-
 - name: Run sonobuoy tests
   when: sonobuoy_run
   environment:
