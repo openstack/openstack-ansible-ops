@@ -96,8 +96,10 @@
   tasks:
 
     - name: Setup installation variables
-      import_role:
+      include_role:
         name: openstack.osa.install_defaults
+        defaults_from: "{{ install_method }}"
+        public: true
 
     - name: Create public network and subnet
       include_role:

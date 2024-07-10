@@ -46,8 +46,10 @@
         - always
 
     - name: Setup installation variables
-      import_role:
+      include_role:
         name: openstack.osa.install_defaults
+        defaults_from: "{{ install_method }}"
+        public: true
 
     - name: Install proxy service
       include_role:
