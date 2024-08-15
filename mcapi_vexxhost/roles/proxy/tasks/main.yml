@@ -18,17 +18,13 @@
   import_role:
     name: "python_venv_build"
   vars:
-    _upper_constraints_url: "{{ requirements_git_url | default('https://releases.openstack.org/constraints/upper/' ~ requirements_git_install_branch | default('master')) }}"
-    _git_constraints:
-      - "--constraint {{ _upper_constraints_url }}"
     venv_python_executable: "{{ openstack_venv_python_executable | default('python3') }}"
-    venv_build_constraints: "{{ _git_constraints }}"
+    venv_build_constraints: "{{ macpi_vexxhost_proxy_git_constraints }}"
     venv_install_destination_path: "{{ _bin | dirname }}"
-    #venv_install_distro_package_list:
-    #  - haproxy  # this will be there for free on the host in an AIO
+    venv_install_distro_package_list:
+      - haproxy
     venv_pip_install_args: "{{ pip_install_options | default('') }}"
-    venv_pip_packages:
-      - git+https://github.com/vexxhost/magnum-cluster-api@main#egg=magnum-cluster-api
+    venv_pip_packages: "{{ mcapi_vexxhost_proxy_pip_packages }}"
 
 # create user and group
 - name: Create the magnum_cluster_api_proxy system group
