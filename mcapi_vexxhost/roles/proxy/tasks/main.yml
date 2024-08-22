@@ -99,3 +99,4 @@
         execstarts:
           - "{{ _bin ~ '/magnum-cluster-api-proxy' }}"
         start_order: 1
+        environment: "{{ magnum_cluster_api_proxy_environment | default({}) }}"
