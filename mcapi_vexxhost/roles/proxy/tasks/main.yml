@@ -86,7 +86,6 @@
   vars:
     systemd_user_name: "{{ magnum_cluster_api_proxy_system_user_name }}"
     systemd_group_name: "{{ magnum_cluster_api_proxy_system_group_name }}"
-    systemd_service_restart_changed: true
     systemd_tempd_prefix: openstack
     systemd_slice_name: magnum-cluster-api-proxy
     systemd_lock_path: /var/lock/magnum-cluster-api-proxy
