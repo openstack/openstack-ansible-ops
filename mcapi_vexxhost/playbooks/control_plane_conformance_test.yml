@@ -1,0 +1,63 @@
+# Copyright 2024, BBC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Import haproxy playbook
+  import_playbook: openstack.osa.haproxy
+  tags:
+    - haproxy
+
+- name: Import installation playbook
+  import_playbook: osa_ops.mcapi_vexxhost.mcapi_control_plane_k8s
+  tags:
+    - k8s
+
+- hosts: utility_all[0]
+  gather_facts: false
+  vars:
+    k8s_admin_conf_src: "/etc/kubernetes/admin.conf"
+    k8s_admin_conf_dest: "/root/.kube/config"
+  tasks:
+    - name: Collect admin config from k8s cluster
+      slurp:
+        src: "{{ k8s_admin_conf_src }}"
+      register: k8s_admin_conf_slurp
+      delegate_to: "{{ groups['k8s_all'][0] }}"
+      run_once: true
+
+    - name: Ensure target directory exists
+      file:
+        state: directory
+        path: "{{ k8s_admin_conf_dest | dirname }}"
+        owner: root
+        group: root
+
+    - name: Write k8s admin config to magnum home dir
+      copy:
+        content: "{{ k8s_admin_conf_slurp.content | b64decode }}"
+        dest: "{{ k8s_admin_conf_dest }}"
+        owner: root
+        group: root
+        mode: '0600'
+  tags:
+    - kubeconfig
+
+- hosts: utility_all[0]
+  gather_facts: false
+  tasks:
+    - include_role:
+        name: osa_ops.mcapi_vexxhost.sonobuoy
+      vars:
+        sonobuoy_kubeconfig_file: '/root/.kube/config'
+  tags:
+    - sonobuoy

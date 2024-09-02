@@ -1,0 +1,1 @@
+post_setup_hosts_hook: osa_ops.mcapi_vexxhost.control_plane_conformance_test
