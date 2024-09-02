@@ -58,8 +58,12 @@
         - hostvars['localhost']['resolvconf_enabled'] | bool
 
     - name: ensure kernel headers are installed on host
+      vars:
+        _kernel_package_prefix:
+          redhat: 'kernel-headers'
+          debian: 'linux-headers'
       package:
-        name: "linux-headers-{{ ansible_facts['kernel'] }}"
+        name: "{{ _kernel_package_prefix[ansible_facts['os_family']|lower]}}-{{ ansible_facts['kernel'] }}"
         state: present
       delegate_to: "{{ physical_host }}"
       when: not is_metal
