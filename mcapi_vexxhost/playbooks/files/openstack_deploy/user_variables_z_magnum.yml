@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-magnum_magnum_cluster_api_git_install_branch: v0.22.0
+magnum_magnum_cluster_api_git_install_branch: v0.22.1
 
 # install magnum-cluster-api and kubernetes python package into magnum venv
 magnum_user_pip_packages:
