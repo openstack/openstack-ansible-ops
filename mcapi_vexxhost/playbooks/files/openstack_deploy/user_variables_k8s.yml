@@ -1,6 +1,6 @@
 # wire OSA group, host and network addresses into k8s deployment
 kubernetes_control_plane_group: k8s_container
-kubelet_hostname: "{{ ansible_facts['hostname'] }}"
+kubelet_hostname: "{{ ansible_facts['hostname'] | lower }}"
 kubelet_node_ip: "{{ management_address }}"
 kubernetes_hostname: "{{ internal_lb_vip_address }}"
 kubernetes_non_init_namespace: true

@@ -124,12 +124,13 @@
       - role: "vexxhost.kubernetes.cilium"
         environment: "{{ deployment_environment_variables | default({}) }}"
   tasks:
-      - kubernetes.core.k8s:
+      - name: Ensure Nodes are defined and labeled
+        kubernetes.core.k8s:
           definition:
             apiVersion: v1
             kind: Node
             metadata:
-              name: "{{ inventory_hostname }}"
+              name: "{{ inventory_hostname | lower }}"
               labels: "{{ k8s_node_labels }}"
   tags:
     - k8s
