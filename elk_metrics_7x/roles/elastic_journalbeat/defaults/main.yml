@@ -20,6 +20,10 @@ journalbeat_ilm_policy_template: "journalbeat-{{ beat_version }}"
 journalbeat_ilm_policy_filename: "journalbeat-ilm-policy.json"
 journalbeat_ilm_policy_file_location: "/etc/journalbeat"
 
+# Manually define Kibana targets.
+# Default: hosts from Ansible `kibana` group will be used
+journalbeat_kibana_target: "{{ kibana_target | default('') }}"
+
 ilm_policy_name: "{{ journalbeat_ilm_policy_name | default('') }}"
 ilm_policy: "{{ (journalbeat_ilm_policy | default(default_ilm_policy)) | default({}) }}"
 ilm_policy_template: "{{ journalbeat_ilm_policy_template | default('') }}"

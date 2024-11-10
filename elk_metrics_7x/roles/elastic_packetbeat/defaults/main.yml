@@ -20,6 +20,10 @@ packetbeat_ilm_policy_template: "packetbeat-{{ beat_version }}"
 packetbeat_ilm_policy_filename: "packetbeat-ilm-policy.json"
 packetbeat_ilm_policy_file_location: "/etc/packetbeat"
 
+# Manually define Kibana targets.
+# Default: hosts from Ansible `kibana` group will be used
+packetbeat_kibana_target: "{{ kibana_target | default('') }}"
+
 ilm_policy_name: "{{ packetbeat_ilm_policy_name | default('') }}"
 ilm_policy: "{{ (packetbeat_ilm_policy | default(default_ilm_policy)) | default({}) }}"
 ilm_policy_template: "{{ packetbeat_ilm_policy_template | default('') }}"
