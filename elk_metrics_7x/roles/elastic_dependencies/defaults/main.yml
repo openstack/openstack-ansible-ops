@@ -21,7 +21,7 @@
 #elastic_shared_fs_repos:
 #  - fstype: nfs4
 #    src: "<nfs-server-ip>:/esbackup"
-#    opts: clientaddr="{{ ansible_eth1['ipv4']['address'] }}"
+#    opts: clientaddr="{{ ansible_facts['eth1']['ipv4']['address'] }}"
 #    path: "/elastic-backup"
 #    state: mounted
 

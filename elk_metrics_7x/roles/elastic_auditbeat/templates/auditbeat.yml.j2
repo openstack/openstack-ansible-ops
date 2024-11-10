@@ -34,7 +34,7 @@ auditbeat.modules:
 # The auditd module collects events from the audit framework in the Linux
 # kernel. You need to specify audit rules for the events that you want to audit.
 - module: auditd
-{% if ansible_kernel is version('4.4', '>=') %}
+{% if ansible_facts['kernel'] is version('4.4', '>=') %}
   socket_type: {{ (apply_security_hardening | default(true) | bool) | ternary('multicast', 'unicast') }}
 {% endif %}
   resolve_ids: true
@@ -678,7 +678,7 @@ name: {{ elastic_hostname }}
   #kerberos.realm: ELASTIC
 
 # ------------------------------ Logstash Output -------------------------------
-{{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_processor_count) }}
+{{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_facts['processor_count']) }}
 
 # -------------------------------- Kafka Output --------------------------------
 #output.kafka:
@@ -1155,7 +1155,7 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 {{ elk_macros.beat_logging('auditbeat', auditbeat_log_level) }}
 
 # ============================= X-Pack Monitoring ==============================
-{{ elk_macros.xpack_monitoring_elasticsearch('auditbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count, beats_system_username, elastic_cluster_uuid) }}
+{{ elk_macros.xpack_monitoring_elasticsearch('auditbeat', inventory_hostname, elasticsearch_data_hosts, ansible_facts['processor_count'], beats_system_username, elastic_cluster_uuid) }}
 
 # =============================== HTTP Endpoint ================================
 

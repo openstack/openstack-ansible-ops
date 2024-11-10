@@ -23,7 +23,7 @@
             canonical_name: "openstack-ansible-ops"
             short_name: "ops"
           executor:
-            log_root: "{{ ansible_env.HOME }}/elk-test-logs"
+            log_root: "{{ ansible_facts['env']['HOME'] }}/elk-test-logs"
       when:
         - zuul is not defined
 

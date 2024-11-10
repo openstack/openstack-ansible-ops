@@ -32,7 +32,7 @@
         RUN_ARA: "true"
         # Some Zuul environments (such as OpenStack CI) use html based ara reports
         ARA_REPORT_TYPE: "{{ ara_report_type | default('database') }}"
-        WORKING_DIR: "{{ ansible_user_dir }}/src/opendev.org/openstack/openstack-ansible-ops/"
+        WORKING_DIR: "{{ ansible_facts['user_dir'] }}/src/opendev.org/openstack/openstack-ansible-ops/"
         LOGGING_DIR: "/tmp/elk-metrics-7x-logs"
 
     - name: Copy logs back to the executor

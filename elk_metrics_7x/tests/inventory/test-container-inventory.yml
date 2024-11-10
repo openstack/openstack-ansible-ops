@@ -15,7 +15,7 @@ hosts:
           management_address:
             address: "172.29.236.1"
             netmask: "255.255.255.0"
-            bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
+            bridge: "{{ hostvars[physical_host]['ansible_facts']['default_ipv4']['alias'] }}"
 
 
 all_containers:
@@ -26,7 +26,7 @@ all_containers:
       management_address:
         address: "{{ ansible_host }}"
         netmask: "255.255.255.0"
-        bridge: "{{ hostvars[physical_host]['ansible_default_ipv4']['alias'] }}"
+        bridge: "{{ hostvars[physical_host]['ansible_facts']['default_ipv4']['alias'] }}"
     # CI nodes havee limited resources, locking the memory is impossible.
     elastic_memory_lock: false
 

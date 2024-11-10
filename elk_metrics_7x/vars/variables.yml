@@ -1,9 +1,9 @@
 ---
-elastic_memory_lower_limit: "{{ (((ansible_memtotal_mb | int) * 0.15) // 1) | int }}"
-elastic_memory_upper_limit: "{{ (((ansible_memtotal_mb | int) * 0.35) // 1) | int }}"
+elastic_memory_lower_limit: "{{ (((ansible_facts['memtotal_mb'] | int) * 0.15) // 1) | int }}"
+elastic_memory_upper_limit: "{{ (((ansible_facts['memtotal_mb'] | int) * 0.35) // 1) | int }}"
 
 # Option to set persistent queue storage in gigabytes
-q_storage: "{{ (ansible_processor_count | int) * (ansible_processor_threads_per_core | int) * 2 }}"
+q_storage: "{{ (ansible_facts['processor_count'] | int) * (ansible_facts['processor_threads_per_core'] | int) * 2 }}"
 
 apm_port: 8200
 elastic_port: 9200
