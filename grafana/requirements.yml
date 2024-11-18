@@ -2,5 +2,5 @@
 
 collections:
 - name: grafana.grafana
-  version: 2.2.3
+  version: 5.6.0
   type: galaxy

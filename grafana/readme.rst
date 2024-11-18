@@ -21,10 +21,10 @@ lines
     haproxy_extra_services:
       - service:
           haproxy_service_name: grafana
-          haproxy_ssl: False
+          haproxy_ssl: "{{ haproxy_ssl }}"
           haproxy_backend_nodes: "{{ groups['grafana'] | default([]) }}"
           haproxy_port: 3000  # This is set using the "grafana_port" variable
-          haproxy_balance_type: tcp
+          haproxy_balance_type: http
 
 Deployment Process
 ------------------
@@ -68,4 +68,4 @@ install grafana
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/grafana
-    openstack-ansible installGrafana.yml
+    ANSIBLE_INJECT_FACT_VARS=True openstack-ansible installGrafana.yml
