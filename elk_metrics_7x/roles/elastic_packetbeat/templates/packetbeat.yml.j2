@@ -1101,7 +1101,7 @@ name: {{ elastic_hostname }}
   #kerberos.realm: ELASTIC
 
 # ------------------------------ Logstash Output -------------------------------
-{{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_processor_count) }}
+{{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_facts['processor_count']) }}
 
 # -------------------------------- Kafka Output --------------------------------
 #output.kafka:
@@ -1578,7 +1578,7 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 {{ elk_macros.beat_logging('packetbeat', packetbeat_log_level) }}
 
 # ============================= X-Pack Monitoring ==============================
-{{ elk_macros.xpack_monitoring_elasticsearch('packetbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count, beats_system_username, elastic_cluster_uuid) }}
+{{ elk_macros.xpack_monitoring_elasticsearch('packetbeat', inventory_hostname, elasticsearch_data_hosts, ansible_facts['processor_count'], beats_system_username, elastic_cluster_uuid) }}
 
 # =============================== HTTP Endpoint ================================
 

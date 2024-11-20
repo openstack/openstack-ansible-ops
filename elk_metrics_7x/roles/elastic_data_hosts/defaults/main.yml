@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # This interface is used to determine cluster recovery speed.
-elastic_data_interface: "{{ ansible_default_ipv4['alias'] }}"
+elastic_data_interface: "{{ ansible_facts['default_ipv4']['alias'] }}"
 
 # A list of interfaces/ports of the elasticsearch data nodes
 # to override the default of ansible_host:elastic_port

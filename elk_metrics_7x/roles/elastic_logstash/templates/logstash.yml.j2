@@ -38,9 +38,9 @@ path.data: /var/lib/logstash
 #
 # This defaults to the number of the host's CPU cores.
 #
-{% set _d_processors = ((ansible_processor_count | int) * 3) %}
+{% set _d_processors = ((ansible_facts['processor_count'] | int) * 3) %}
 {% set _processors = ((_d_processors | int) > 0) | ternary(_d_processors, 2) %}
-{% set _t_processors = (_processors | int) + (ansible_processor_count | int) %}
+{% set _t_processors = (_processors | int) + (ansible_facts['processor_count'] | int) %}
 {% set processors = ((_t_processors | int) > 64) | ternary(64, _t_processors) %}
 pipeline.workers: {{ processors | int }}
 #

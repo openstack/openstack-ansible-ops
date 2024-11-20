@@ -27,7 +27,7 @@
             union(groups['memcached_all'] | default([])) |
             union(groups['memcached_all'] | default([]))
           )
-        - ansible_service_mgr == 'systemd'
+        - ansible_facts['service_mgr'] == 'systemd'
   tags:
     - always
 
@@ -154,7 +154,7 @@
   post_tasks:
     - name: Find clouds config
       stat:
-        path: "{{ ansible_env.HOME }}/.config/openstack/clouds.yaml"
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/openstack/clouds.yaml"
       register: clouds_config
 
     - name: Find openstack release
@@ -174,9 +174,9 @@
       block:
         - name: Ensure disto packages are installed
           package:
-            name: "{{ monitorstack_distro_packages[(ansible_distribution | lower)] }}"
+            name: "{{ monitorstack_distro_packages[(ansible_facts['distribution'] | lower)] }}"
             state: "{{ monitorstack_package_state | default('present') }}"
-            update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+            update_cache: "{{ (ansible_facts['pkg_mgr'] == 'apt') | ternary('yes', omit) }}"
 
         - name: Refresh local facts
           setup:
@@ -218,7 +218,7 @@
 
         - name: Copy the clouds config into monitorstack
           copy:
-            src: "{{ ansible_env.HOME }}/.config/openstack/clouds.yaml"
+            src: "{{ ansible_facts['env']['HOME'] }}/.config/openstack/clouds.yaml"
             dest: "/var/lib/monitorstack/.config/openstack/clouds.yaml"
             remote_src: yes
           when:

@@ -63,7 +63,7 @@
       meta: end_play
       when:
         - not (journal_dir.stat.exists | bool) or
-          (ansible_service_mgr != 'systemd')
+          (ansible_facts['service_mgr'] != 'systemd')
 
   roles:
     - role: elastic_journalbeat
@@ -94,7 +94,7 @@
       meta: end_play
       when:
         - not (journal_dir.stat.exists | bool) or
-          (ansible_service_mgr != 'systemd')
+          (ansible_facts['service_mgr'] != 'systemd')
 
   roles:
     - role: elastic_rollup

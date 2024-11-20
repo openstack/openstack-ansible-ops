@@ -20,7 +20,7 @@
   tasks:
     - name: Ensure root ssh key
       user:
-        name: "{{ ansible_env.USER | default('root') }}"
+        name: "{{ ansible_facts['env']['USER'] | default('root') }}"
         generate_ssh_key: "yes"
         ssh_key_bits: 2048
         ssh_key_file: ".ssh/id_rsa"
@@ -36,6 +36,6 @@
 
     - name: Ensure public ssh key is in authorized_keys
       authorized_key:
-        user: "{{ ansible_env.USER | default('root') }}"
+        user: "{{ ansible_facts['env']['USER'] | default('root') }}"
         key: "{{ nspawn_container_ssh_key }}"
         manage_dir: no

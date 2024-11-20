@@ -58,8 +58,8 @@ metricbeat.max_start_delay: 10s
 #==========================  Modules configuration =============================
 {% set metric_sets = ['network', 'process', 'process_summary', 'uptime', 'service'] %}
 {% if physical_host is defined and physical_host != inventory_hostname %}
-{%   set host_mount_devices = (hostvars[physical_host]['ansible_mounts'] | map(attribute='device') | list) %}
-{%   set container_mount_devices = (ansible_mounts | map(attribute='device') | list) %}
+{%   set host_mount_devices = (hostvars[physical_host][ansible_facts['mounts']] | map(attribute='device') | list) %}
+{%   set container_mount_devices = (ansible_facts['mounts'] | map(attribute='device') | list) %}
 {%   if (((container_mount_devices | difference(host_mount_devices)) | length) > 0) | bool %}
 {%     set _ = metric_sets.extend(['filesystem', 'fsstat']) %}
 {%   endif %}
@@ -126,7 +126,7 @@ metricbeat.modules:
   process.cmdline.cache.enabled: true
 
   # Enable collection of cgroup metrics from processes on Linux.
-  process.cgroups.enabled: {{ ansible_service_mgr == 'systemd' }}
+  process.cgroups.enabled: {{ ansible_facts['service_mgr'] == 'systemd' }}
 
   # A list of regular expressions used to whitelist environment variables
   # reported with the process metricset's events. Defaults to empty.
@@ -620,7 +620,7 @@ metricbeat.modules:
 - module: memcached
   metricsets: ["stats"]
   period: 30s
-  hosts: ["{{ ansible_hostname }}:11211"]
+  hosts: ["{{ ansible_facts['hostname'] }}:11211"]
   enabled: true
 
 {% endif %}
@@ -690,7 +690,7 @@ metricbeat.modules:
   # or another DSN format supported by <https://github.com/Go-SQL-Driver/MySQL/>.
   # The username and password can either be set in the DSN or using the username
   # and password config options. Those specified in the DSN take precedence.
-  hosts: ["{{ galera_root_user }}:{{ galera_root_password }}@tcp({{ ansible_hostname }}:3306)/"]
+  hosts: ["{{ galera_root_user }}:{{ galera_root_password }}@tcp({{ ansible_facts['hostname'] }}:3306)/"]
 
   # Username of hosts. Empty by default.
   username: {{ galera_root_user }}
@@ -1438,7 +1438,7 @@ name: {{ elastic_hostname }}
   #kerberos.realm: ELASTIC
 
 # ------------------------------ Logstash Output -------------------------------
-{{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_processor_count) }}
+{{ elk_macros.output_logstash(inventory_hostname, logstash_data_hosts, ansible_facts['processor_count']) }}
 # -------------------------------- Kafka Output --------------------------------
 #output.kafka:
   # Boolean flag to enable or disable the output module.
@@ -1916,7 +1916,7 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 {{ elk_macros.beat_logging('metricbeat', metricbeat_log_level) }}
 
 # ============================= X-Pack Monitoring ==============================
-{{ elk_macros.xpack_monitoring_elasticsearch('metricbeat', inventory_hostname, elasticsearch_data_hosts, ansible_processor_count, beats_system_username, elastic_cluster_uuid) }}
+{{ elk_macros.xpack_monitoring_elasticsearch('metricbeat', inventory_hostname, elasticsearch_data_hosts, ansible_facts['processor_count'], beats_system_username, elastic_cluster_uuid) }}
 
 # =============================== HTTP Endpoint ================================
 

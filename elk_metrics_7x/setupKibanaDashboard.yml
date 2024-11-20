@@ -30,7 +30,7 @@
     - name: Add nodejs 6.x source
       shell: "curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -"
       when:
-        - ansible_pkg_mgr == 'apt'
+        - ansible_facts['pkg_mgr'] == 'apt'
         - ossec_nodejs_repo is not defined
 
     - name: Manual nodejs installation
@@ -54,14 +54,14 @@
           retries: 3
           delay: 2
       when:
-        - ansible_pkg_mgr == 'apt'
+        - ansible_facts['pkg_mgr'] == 'apt'
         - ossec_nodejs_repo is defined
 
     - name: Install nodejs
       package:
-        name: "{{ distro_packages[ansible_pkg_mgr] }}"
+        name: "{{ distro_packages[ansible_facts['pkg_mgr']] }}"
         state: "{{ elk_package_state | default('present') }}"
-        update_cache: "{{ (ansible_pkg_mgr == 'apt') | ternary('yes', omit) }}"
+        update_cache: "{{ (ansible_facts['pkg_mgr'] == 'apt') | ternary('yes', omit) }}"
       register: _pkg_task
       until: _pkg_task is success
       retries: 3

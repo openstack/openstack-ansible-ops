@@ -88,7 +88,7 @@
       apt:
         update_cache: yes
       when:
-        - ansible_pkg_mgr == 'apt'
+        - ansible_facts['pkg_mgr'] == 'apt'
 
   tasks:
     - name: Run embedded ansible installation
@@ -135,7 +135,7 @@
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_7x/tests"
       when:
-        - ansible_service_mgr != 'systemd' or
+        - ansible_facts['service_mgr'] != 'systemd' or
           not (container_inventory | bool)
 
     - name: Run environment setup
@@ -147,14 +147,14 @@
       args:
         chdir: "src/{{ current_test_repo }}/elk_metrics_7x/tests"
       when:
-        - ansible_service_mgr == 'systemd'
+        - ansible_facts['service_mgr'] == 'systemd'
         - container_inventory | bool
 
     - name: Wait 15 seconds
       command: "sleep 15"
       changed_when: false
       when:
-        - ansible_service_mgr == 'systemd'
+        - ansible_facts['service_mgr'] == 'systemd'
 
     - name: Run functional test
       become: yes
