@@ -26,6 +26,10 @@ ceph_metricbeat_group: cinder_volume
 # Include default kibana dashboards
 setup_kibana_dashboards: true
 
+# Manually define Kibana targets.
+# Default: hosts from Ansible `kibana` group will be used
+metricbeat_kibana_target: "{{ kibana_target | default('') }}"
+
 metricbeat_ilm_policy_name: "metricbeat-{{ beat_version }}"
 metricbeat_ilm_policy_template: "metricbeat-{{ beat_version }}"
 metricbeat_ilm_policy_filename: "metricbeat-ilm-policy.json"

@@ -17,3 +17,6 @@
 apm_interface: 0.0.0.0
 apm_port: 8200
 apm_token: SuperSecrete
+# Manually define Kibana targets.
+# Default: hosts from Ansible `kibana` group will be used
+apm_kibana_target: "{{ kibana_target | default('') }}"

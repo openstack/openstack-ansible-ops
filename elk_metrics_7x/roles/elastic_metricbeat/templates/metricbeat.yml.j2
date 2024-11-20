@@ -1907,7 +1907,9 @@ setup.ilm.policy_file: "{{ ilm_policy_file_location }}/{{ ilm_policy_filename }}
 
 # =================================== Kibana ===================================
 
-{% if (groups['kibana'] | length) > 0 and (setup_kibana_dashboards | default(true)) %}
+{% if metricbeat_kibana_target %}
+{{ elk_macros.setup_kibana(metricbeat_kibana_target) }}
+{% elif (groups['kibana'] | length) > 0 and (setup_kibana_dashboards | default(true)) %}
 {{ elk_macros.setup_kibana(hostvars[groups['kibana'][0]]['ansible_host'] ~ ':' ~ kibana_port) }}
 {% endif %}
 

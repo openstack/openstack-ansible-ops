@@ -20,6 +20,10 @@ auditbeat_ilm_policy_template: "auditbeat-{{ beat_version }}"
 auditbeat_ilm_policy_filename: "auditbeat-ilm-policy.json"
 auditbeat_ilm_policy_file_location: "/etc/auditbeat"
 
+# Manually define Kibana targets.
+# Default: hosts from Ansible `kibana` group will be used
+auditbeat_kibana_target: "{{ kibana_target | default('') }}"
+
 ilm_policy_name: "{{ auditbeat_ilm_policy_name | default('') }}"
 ilm_policy: "{{ (auditbeat_ilm_policy | default(default_ilm_policy)) | default({}) }}"
 ilm_policy_template: "{{ auditbeat_ilm_policy_template | default('') }}"
