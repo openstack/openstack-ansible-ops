@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-magnum_magnum_cluster_api_git_install_branch: v0.22.1
+magnum_magnum_cluster_api_git_install_branch: v0.24.2
 
 # install magnum-cluster-api and kubernetes python package into magnum venv
 magnum_user_pip_packages:
@@ -36,3 +36,6 @@ magnum_config_overrides:
     kubernetes_default_network_driver: 'calico'
   certificates:
     cert_manager_type: x509keypair
+  nova_client:
+    # ideally magnum would request an appropriate microversion for nova in it's client code
+    api_version: '2.15'
