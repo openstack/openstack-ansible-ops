@@ -13,27 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-magnum_magnum_cluster_api_git_install_branch: v0.22.1
-
-# install magnum-cluster-api and kubernetes python package into magnum venv
-magnum_user_pip_packages:
-  - "git+https://github.com/vexxhost/magnum-cluster-api@{{ magnum_magnum_cluster_api_git_install_branch }}#egg=magnum-cluster-api"
-  - kubernetes
-
-# ensure that the internal VIP CA is trusted by the CAPI driver
-# TODO - this is too hardwired somehow
-magnum_config_overrides:
-  drivers:
-    openstack_ca_file: '/usr/local/share/ca-certificates/ExampleCorpRoot.crt'
-  capi_client:
-    ca_file: '/usr/local/share/ca-certificates/ExampleCorpRoot.crt'
-    endpoint: 'internalURL'
-  cluster_template:
-    kubernetes_allowed_network_drivers: 'calico'
-    kubernetes_default_network_driver: 'calico'
-  certificates:
-    cert_manager_type: x509keypair
-
 # use the openstack_resources role in the capi functional test rather than os_magnum
 # to create the test resources
 magnum_glance_images: []
