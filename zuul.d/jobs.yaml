@@ -52,21 +52,6 @@
     nodeset: ubuntu-jammy
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_6x-centos-7"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
-    nodeset: centos-7
-    voting: false
-
-- job:
-    name: "openstack-ansible-ops:elk_metrics_6x-centos-7-clustered"
-    parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
-    nodeset: centos-7
-    voting: false
-    vars:
-      osa_test_repo: "openstack/openstack-ansible-ops"
-      test_clustered_elk: true
-
-- job:
     name: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic-clustered"
     parent: "openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic"
     nodeset: ubuntu-bionic
@@ -106,8 +91,3 @@
     files:
       - ^skydive/.*
       - ^bootstrap-embedded-ansible/.*
-
-- job:
-    name: "openstack-ansible-ops:skydive-centos-7"
-    parent: "openstack-ansible-ops:skydive-ubuntu-bionic"
-    nodeset: centos-7

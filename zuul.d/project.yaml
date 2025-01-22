@@ -20,7 +20,7 @@
     check:
       jobs:
         - openstack-ansible-linters
-        - openstack-ansible-ops:elk_metrics_6x-centos-7
+        # - openstack-ansible-ops:elk_metrics_6x-centos-7
         # - openstack-ansible-ops:elk_metrics_6x-centos-7-clustered
         - openstack-ansible-ops:elk_metrics_6x-ubuntu-bionic
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-bionic
@@ -32,7 +32,7 @@
         - openstack-ansible-ops:osquery-ubuntu-bionic
         # - openstack-ansible-ops:osquery-ubuntu-bionic-clustered
         - openstack-ansible-ops:skydive-ubuntu-bionic
-        - openstack-ansible-ops:skydive-centos-7
+        # - openstack-ansible-ops:skydive-centos-7
     gate:
       jobs:
         - openstack-ansible-linters
