@@ -1,0 +1,16 @@
+---
+upgrade:
+  - |
+    In order to align variable names for ``osa_ops.mcapi_vexxhost.proxy`` role,
+    following variables were renamed:
+
+    * _venv_tag -> mcapi_vexxhost_proxy_venv_tag
+    * _bin -> mcapi_vexxhost_proxy_bin
+    * magnum_cluster_api_proxy_hosts -> mcapi_vexxhost_proxy_hosts
+    * magnum_cluster_api_proxy_system_group_name -> mcapi_vexxhost_proxy_system_group_name
+    * magnum_cluster_api_proxy_system_user_name -> mcapi_vexxhost_proxy_system_user_name
+    * magnum_cluster_api_proxy_system_user_comment -> mcapi_vexxhost_proxy_system_user_comment
+    * magnum_cluster_api_proxy_system_user_home -> mcapi_vexxhost_proxy_system_user_home
+    * magnum_cluster_api_proxy_system_user_shell -> mcapi_vexxhost_proxy_system_user_shell
+    * magnum_cluster_api_proxy_etc_directory -> mcapi_vexxhost_proxy_etc_directory
+    * magnum_cluster_api_proxy_environment -> mcapi_vexxhost_proxy_environment
