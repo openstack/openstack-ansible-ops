@@ -14,10 +14,11 @@
 # limitations under the License.
 
 magnum_magnum_cluster_api_git_install_branch: v0.24.2
+magnum_magnum_cluster_api_git_repo: "{{ openstack_github_base_url | default('https://github.com') ~ '/vexxhost/magnum-cluster-api' }}"
 
 # install magnum-cluster-api and kubernetes python package into magnum venv
 magnum_user_pip_packages:
-  - "git+https://github.com/vexxhost/magnum-cluster-api@{{ magnum_magnum_cluster_api_git_install_branch }}#egg=magnum-cluster-api"
+  - "git+{{ magnum_magnum_cluster_api_git_repo }}@{{ magnum_magnum_cluster_api_git_install_branch }}#egg=magnum-cluster-api"
   - kubernetes
 
 # ensure that the internal VIP CA is trusted by the CAPI driver
