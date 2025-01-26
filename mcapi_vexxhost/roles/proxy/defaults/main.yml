@@ -15,7 +15,7 @@
 
 mcapi_vexxhost_proxy_upper_constraints_url: >-
   {{ requirements_git_url | default('https://releases.openstack.org/constraints/upper/' ~ requirements_git_install_branch | default('master')) }}
-macpi_vexxhost_proxy_git_constraints:
+mcapi_vexxhost_proxy_git_constraints:
   - "--constraint {{ mcapi_vexxhost_proxy_upper_constraints_url }}"
 
 mcapi_vexxhost_proxy_install_branch: "{{ magnum_magnum_cluster_api_git_install_branch | default('main') }}"
