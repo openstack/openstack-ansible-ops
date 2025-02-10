@@ -5,6 +5,13 @@ ansible_collection_kubernetes_target_venv: /opt/mcapi_ansible_venv
 # Pick a range of addresses for cilium that do not collide with anything else
 cilium_ipv4_cidr: 172.29.200.0/22
 
+# Set a clusterctl version. Supported list can be found in defaults:
+# https://github.com/vexxhost/ansible-collection-kubernetes/blob/main/roles/clusterctl/defaults/main.yml
+clusterctl_version: 1.8.4
+cluster_api_version: 1.8.4
+cluster_api_infrastructure_provider: openstack
+cluster_api_infrastructure_version: 0.11.2
+
 # wire OSA group, host and network addresses into k8s deployment
 kubelet_hostname: "{{ ansible_facts['hostname'] | lower }}"
 kubelet_node_ip: "{{ management_address }}"
