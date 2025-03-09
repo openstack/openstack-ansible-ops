@@ -1,0 +1,70 @@
+---
+- name: Verify rotation
+  hosts: encrypt-default
+  tasks:
+    # NOTE: While all actions are expected to run on "localhost", only
+    #       rotate job is sensetive to environment, as needs to load
+    #       and decrypt variables through ansible hostvars and not ansible-vault
+    #       binary.
+    - name: Importing ansible_vault role
+      ansible.builtin.import_role:
+        name: ansible_vault
+      vars:
+        ansible_vault_action: rotate
+        # NOTE: We actually do not test in-line secrets rotation due to the
+        #       reason above
+        ansible_vault_secrets_paths:
+          - "{{ ansible_vault_repo_path }}/group_vars/all/secrets.yml"
+  post_tasks:
+
+    - name: Fetch test files that were re-encrypted
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      loop:
+        - /etc/openstack_deploy/pki/certs/private/noop.key.pem
+        - /etc/openstack_deploy/pki/roots/TestRoot/private/TestRoot.key.pem
+        - /etc/openstack_deploy/ssh_keypairs/noop_keypair
+      register: encrypted_files
+
+    - name: Fetch test files to verify they are still not encrypted
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      loop:
+        - /etc/openstack_deploy/pki/certs/certs/noop.crt
+        - /etc/openstack_deploy/ssh_keypairs/noop_keypair.pub
+      register: plaintext_files
+
+    - name: Ensure that encrypted files contain same Vault ID
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - item['content'] | b64decode | split('\n') | first == "$ANSIBLE_VAULT;1.2;AES256;MOLECULE"
+      loop: "{{ encrypted_files['results'] }}"
+      loop_control:
+        label: "{{ item['source'] }}"
+
+    - name: Ensure that not encrypted files still do NOT contain ANSIBLE_VAULT header
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - "'ANSIBLE_VAULT' not in item['content'] | b64decode"
+      loop: "{{ plaintext_files['results'] }}"
+      loop_control:
+        label: "{{ item['source'] }}"
+
+    - name: Ensure that encrypted files can be decrypted with new password
+      ansible.builtin.command: "ansible-vault view {{ item['source'] }} --vault-password-file /etc/openstack_deploy/vault_pw.new"
+      changed_when: false
+      loop: "{{ encrypted_files['results'] }}"
+      loop_control:
+        label: "{{ item['source'] }}"
+
+    - name: Ensure that encrypted files can NOT be decrypted with old password
+      ansible.builtin.command: "ansible-vault view {{ item['source'] }} --vault-password-file /etc/openstack_deploy/vault_pw"
+      changed_when: false
+      failed_when:
+        - not (decrypt_invalid_pw.rc == 1 and 'no vault secrets were found that could decrypt' in decrypt_invalid_pw.stderr)
+      register: decrypt_invalid_pw
+      loop: "{{ encrypted_files['results'] }}"
+      loop_control:
+        label: "{{ item['source'] }}"

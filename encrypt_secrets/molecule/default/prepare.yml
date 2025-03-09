@@ -1,0 +1,54 @@
+---
+- name: Generate data for role verification
+  hosts: encrypt-default
+  tasks:
+    - name: Install required packages
+      ansible.builtin.package:
+        name:
+          - python3-cryptography
+          - ansible-core
+        update_cache: "{{ (ansible_facts['os_family'] | lower == 'debian') | ternary(true, omit) }}"
+
+    - name: Create required directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        recurse: true
+        mode: "0755"
+      loop:
+        - /etc/openstack_deploy/pki/certs/private
+        - /etc/openstack_deploy/pki/certs/certs
+        - /etc/openstack_deploy/pki/roots/TestRoot/private
+        - /etc/openstack_deploy/ssh_keypairs
+
+    - name: Generate ansible-vault secrets to use for data encryption
+      ansible.builtin.copy:
+        content: "{{ item.content }}"
+        dest: "{{ item.dest }}"
+        mode: "0600"
+      loop:
+        - dest: /etc/openstack_deploy/vault_pw
+          content: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=32) }}"
+        - dest: /etc/openstack_deploy/vault_pw.new
+          content: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=32) }}"
+        - dest: /etc/openstack_deploy/user_secrets.yml
+          content: |
+            ---
+            {{ _molecule_password_mapping | to_yaml }}
+
+    - name: Generate private keys
+      community.crypto.openssl_privatekey:
+        path: "{{ item }}"
+      loop:
+        - /etc/openstack_deploy/pki/certs/private/noop.key.pem
+        - /etc/openstack_deploy/pki/roots/TestRoot/private/TestRoot.key.pem
+
+    - name: Generate test certificate
+      community.crypto.x509_certificate:
+        path: /etc/openstack_deploy/pki/certs/certs/noop.crt
+        privatekey_path: /etc/openstack_deploy/pki/certs/private/noop.key.pem
+        provider: selfsigned
+
+    - name: Generate ssh keypair
+      community.crypto.openssh_keypair:
+        path: /etc/openstack_deploy/ssh_keypairs/noop_keypair

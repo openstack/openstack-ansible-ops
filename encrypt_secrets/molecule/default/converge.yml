@@ -1,0 +1,11 @@
+---
+
+- name: Encrypt secrets
+  hosts: encrypt-default
+  tasks:
+
+    - name: Importing ansible_vault role
+      ansible.builtin.import_role:
+        name: ansible_vault
+      vars:
+        ansible_vault_action: encrypt

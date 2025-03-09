@@ -1,0 +1,70 @@
+---
+- name: Verify encryption of data
+  hosts: encrypt-default
+  tasks:
+    - name: Fetch test files to verify they're encrypted
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      loop:
+        - /etc/openstack_deploy/pki/certs/private/noop.key.pem
+        - /etc/openstack_deploy/pki/roots/TestRoot/private/TestRoot.key.pem
+        - /etc/openstack_deploy/ssh_keypairs/noop_keypair
+      register: encrypted_files
+
+    - name: Fetch test files to verify they were not encrypted
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      loop:
+        - /etc/openstack_deploy/pki/certs/certs/noop.crt
+        - /etc/openstack_deploy/ssh_keypairs/noop_keypair.pub
+      register: plaintext_files
+
+    - name: Ensure that encrypted files contain proper IDs
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - item['content'] | b64decode | split('\n') | first == "$ANSIBLE_VAULT;1.2;AES256;MOLECULE"
+      loop: "{{ encrypted_files['results'] }}"
+      loop_control:
+        label: "{{ item['source'] }}"
+
+    - name: Ensure that not encrypted files do NOT contain ANSIBLE_VAULT header
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - "'ANSIBLE_VAULT' not in item['content'] | b64decode"
+      loop: "{{ plaintext_files['results'] }}"
+      loop_control:
+        label: "{{ item['source'] }}"
+
+    - name: Ensure that encrypted files can be decrypted with expected password
+      ansible.builtin.command: "ansible-vault view {{ item['source'] }} --vault-password-file /etc/openstack_deploy/vault_pw"
+      changed_when: false
+      loop: "{{ encrypted_files['results'] }}"
+      loop_control:
+        label: "{{ item['source'] }}"
+
+    - name: Verify that we can not read user_secrets without VAULT password
+      ansible.builtin.command: "ansible -e @/etc/openstack_deploy/user_secrets.yml -m debug -a var={{ item }} -i localhost, localhost"
+      failed_when:
+        - not (failed_secrets_read.rc == 2 and 'Attempting to decrypt but no vault secrets found' not in failed_secrets_read.stderr)
+      changed_when: false
+      loop: "{{ _molecule_password_mapping.keys() }}"
+      register: failed_secrets_read
+
+    - name: Verify that we can read user_secrets with supplied password
+      ansible.builtin.command: "ansible -e @/etc/openstack_deploy/user_secrets.yml -m debug -a var={{ item }} -i localhost, localhost"
+      environment:
+        ANSIBLE_VAULT_PASSWORD_FILE: /etc/openstack_deploy/vault_pw
+      changed_when: false
+      loop: "{{ _molecule_password_mapping.keys() }}"
+      register: success_secrets_read
+
+    - name: Verify that values are correct
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - _molecule_password_mapping[item['item']] in item['stdout']
+      loop: "{{ success_secrets_read['results'] }}"
+      loop_control:
+        label: "{{ item['item'] }}"
