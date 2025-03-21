@@ -131,13 +131,42 @@
 
     - name: Check cluster status
       ansible.builtin.command:
-        cmd: openstack coe cluster show "{{ functional_test_cluster_name }}"
+        cmd: openstack coe cluster show "{{ functional_test_cluster_name }}" -f yaml
       register: _cluster_status
       retries: 120
       delay: 5
       until: "'CREATE_COMPLETE' in _cluster_status.stdout"
       environment:
         OS_CLOUD: default
+      failed_when: "'CREATE_COMPLETE' not in _cluster_status.stdout"
+      ignore_errors: true
+
+    - name: Dump state logs if cluster create fails
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+        stack_id: "{{ (_cluster_status.stdout | from_yaml)['stack_id'] }}"
+      delegate_to: "{{ groups['k8s_all'][0] }}"
+      when: _cluster_status is failed
+      block:
+        - name: Create directory for state dump
+          ansible.builtin.file:
+            path: /var/log/clusterapi
+            state: directory
+            owner: root
+            group: root
+            mode: 0644
+
+        - name: Dump clusterctl state if cluster fails to create
+          ansible.builtin.shell:
+            cmd: clusterctl describe cluster -n magnum-system "{{ stack_id }}" --grouping=false --echo=false --show-conditions all > /var/log/clusterapi/clusterctl-dump.txt
+            chdir: /root
+
+        - name: Dump magnum-system resources if cluster fails to create
+          ansible.builtin.shell:
+            cmd: kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl describe -nl -n magnum-system > /var/log/clusterapi/magnum-system-dump.txt
+
+        - name: Fail if cluster did not create correctly
+          ansible.builtin.fail:
 
     - name: Create dir to hold kubeconfig
       ansible.builtin.file:
