@@ -43,7 +43,7 @@ Highlevel overview of the Magnum infrastructure these playbooks will
 build and operate against.
 
 .. image:: assets/mcapi-architecture.png
-    :scale: 100 %
+    :scale: 50 %
     :alt: OSA Magnum Cluster API Architecture
     :align: center
 
@@ -207,6 +207,63 @@ Create a workload cluster
 Optional Components
 -------------------
 
+Use of magnum-cluster-api-proxy
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As the control plane k8s cluster need to access a k8s control plane of tenant
+cluster for it's further configuration, the only way to do it out of the box
+is through the public network (Floating IP). This means, that API of the k8s
+control plane must be globally reachable, which posses a security threat to
+such tenant clusters.
+
+On order to solve the issue and provide access for the control plane k8s
+cluster to tenant clusters inside their internal networks a proxy service
+is introduced.
+
+.. image:: assets/magnum_capi_proxy.drawio.png
+    :scale: 100 %
+    :alt: Cluster Network Connectivity
+    :align: center
+
+Proxy service must be spawned on hosts, where Neutron Metadata agents are
+spawned. For LXB/OVS these are members of ``neutron-agent_hosts``, while
+for OVN the service should be installed to all ``compute_hosts``
+(or ``neutron_ovn_controller``).
+
+The service will configure own HAProxy instance and create backends
+for managed k8s clusters to point inside corresponding network
+namespaces.
+Service does not spawn own namespaces, but leverages already existing
+metadata namespaces to get connection to the Load Balancer inside
+the tenant network.
+
+Configuration of the service is relatively trivial:
+
+   .. code-block:: yaml
+
+      # Define a group of hosts where to install the service.
+      # OVN: compute_hosts / neutron_ovn_controller
+      # OVS/LXB: neutron_metadata_agent
+      mcapi_vexxhost_proxy_hosts: compute_hosts
+      # Define address and port HAProxy instance to listen on
+      mcapi_vexxhost_proxy_environment:
+         PROXY_BIND: "{{ management_address }}"
+         PROXY_PORT: 44355
+
+Also, in case of proxy service deployment, ensure that variable
+``magnum_magnum_cluster_api_git_install_branch`` is defined
+for the ``mcapi_vexxhost_proxy_hosts`` as well, or align value of the
+``magnum_magnum_cluster_api_git_install_branch`` with
+``mcapi_vexxhost_proxy_install_branch`` to avoid conflicts caused by different
+versions of driver used.
+
+Once configuration is complete, you can run the playbook:
+
+   .. code-block:: bash
+
+      openstack-ansible osa_ops.mcapi_vexxhost.mcapi_proxy
+
+
 Deploy the workload clusters with a local registry
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -216,11 +273,6 @@ Deploy the control plane cluster from a local registry
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 TODO - describe how to do this
-
-Use of magnum-cluster-api-proxy
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-TODO - describe what this is for
 
 Troubleshooting
 ---------------

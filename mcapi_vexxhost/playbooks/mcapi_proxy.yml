@@ -16,7 +16,7 @@
 # deploy the proxy service to communicate directly between magnum coe
 # clusters and the capi control plane without going via a public floating
 # IP
-# For OVS/Linuxbridge this can be installed to compute nodes, but for
+# For OVS/Linuxbridge this can be installed to network nodes, but for
 # OVN it must be installed to all computes. Override the target hosts
 # for this play as required
 - name: Install magnum-cluster-api-proxy
