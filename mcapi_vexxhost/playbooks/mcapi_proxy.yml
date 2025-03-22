@@ -20,19 +20,7 @@
 # OVN it must be installed to all computes. Override the target hosts
 # for this play as required
 - name: Install magnum-cluster-api-proxy
-  hosts: "{{ magnum_cluster_api_proxy_hosts | default('network_hosts') }}"
-  vars:
-    _venv_tag: "{{ venv_tag | default('untagged') }}"
-    _bin: "/openstack/venvs/magnum-cluster-api-proxy-{{ _venv_tag }}/bin"
-    magnum_cluster_api_proxy_system_group_name: 'capi_proxy'
-    magnum_cluster_api_proxy_system_user_name: 'capi_proxy'
-    magnum_cluster_api_proxy_system_user_comment: 'Magnum Cluster API Proxy System User'
-    magnum_cluster_api_proxy_system_user_home: '/var/lib/{{ magnum_cluster_api_proxy_system_user_name }}'
-    magnum_cluster_api_proxy_system_user_shell: '/bin/false'
-    magnum_cluster_api_proxy_etc_directory: '/etc/capi_proxy'
-
-    k8s_admin_conf_src: "/etc/kubernetes/admin.conf"
-    k8s_admin_conf_dest: "{{ magnum_cluster_api_proxy_system_user_home }}/.kube/config"
+  hosts: "{{ mcapi_vexxhost_proxy_hosts | default('network_hosts') }}"
   environment: "{{ deployment_environment_variables | default({}) }}"
   tasks:
 

@@ -1,6 +1,6 @@
 # {{ ansible_managed }}
 
-Defaults:{{ magnum_cluster_api_proxy_system_user_name }} !requiretty
-Defaults:{{ magnum_cluster_api_proxy_system_user_name }} secure_path="{{ _bin }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Defaults:{{ mcapi_vexxhost_proxy_system_user_name }} !requiretty
+Defaults:{{ mcapi_vexxhost_proxy_system_user_name }} secure_path="{{ mcapi_vexxhost_proxy_bin }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-{{ magnum_cluster_api_proxy_system_user_name }} ALL = (root) NOPASSWD: {{ _bin }}/privsep-helper
+{{ mcapi_vexxhost_proxy_system_user_name }} ALL = (root) NOPASSWD: {{ mcapi_vexxhost_proxy_bin }}/privsep-helper

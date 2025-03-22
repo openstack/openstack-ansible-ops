@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+mcapi_vexxhost_proxy_system_group_name: 'capi_proxy'
+mcapi_vexxhost_proxy_system_user_name: 'capi_proxy'
+mcapi_vexxhost_proxy_system_user_comment: 'Magnum Cluster API Proxy System User'
+mcapi_vexxhost_proxy_system_user_home: '/var/lib/{{ mcapi_vexxhost_proxy_system_user_name }}'
+mcapi_vexxhost_proxy_system_user_shell: '/bin/false'
+mcapi_vexxhost_proxy_etc_directory: '/etc/capi_proxy'
+
 mcapi_vexxhost_proxy_upper_constraints_url: >-
   {{ requirements_git_url | default('https://releases.openstack.org/constraints/upper/' ~ requirements_git_install_branch | default('master')) }}
 mcapi_vexxhost_proxy_git_constraints:
@@ -24,3 +31,11 @@ mcapi_vexxhost_proxy_git_repo: >-
 
 mcapi_vexxhost_proxy_pip_packages:
   - "{{ 'git+' ~ mcapi_vexxhost_proxy_git_repo ~ '@' ~ mcapi_vexxhost_proxy_install_branch ~ '#egg=magnum-cluster-api' }}"
+
+mcapi_vexxhost_proxy_venv_tag: "{{ venv_tag | default('untagged') }}"
+mcapi_vexxhost_proxy_bin: "/openstack/venvs/magnum-cluster-api-proxy-{{ mcapi_vexxhost_proxy_venv_tag }}/bin"
+
+mcapi_vexxhost_k8s_conf_src: "{{ k8s_admin_conf_src | default('/etc/kubernetes/admin.conf') }}"
+mcapi_vexxhost_k8s_conf_dest: "{{ k8s_admin_conf_dest | default(mcapi_vexxhost_proxy_system_user_home ~ '/.kube/config') }}"
+
+mcapi_vexxhost_proxy_environment: {}
