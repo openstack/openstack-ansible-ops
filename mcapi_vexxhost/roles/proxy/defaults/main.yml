@@ -18,9 +18,9 @@ mcapi_vexxhost_proxy_upper_constraints_url: >-
 macpi_vexxhost_proxy_git_constraints:
   - "--constraint {{ mcapi_vexxhost_proxy_upper_constraints_url }}"
 
-mcapi_vexxhost_proxy_install_branch: main
-mcapi_vexxhost_proxy_git_repo: "{{ openstack_github_base_url | default('https://github.com') ~ '/vexxhost/magnum-cluster-api' }}"
+mcapi_vexxhost_proxy_install_branch: "{{ magnum_magnum_cluster_api_git_install_branch | default('main') }}"
+mcapi_vexxhost_proxy_git_repo: >-
+  {{ magnum_magnum_cluster_api_git_repo | default(openstack_github_base_url | default('https://github.com') ~ '/vexxhost/magnum-cluster-api') }}
 
 mcapi_vexxhost_proxy_pip_packages:
- - "{{ 'git+' ~ mcapi_vexxhost_proxy_git_repo ~ '@' ~ mcapi_vexxhost_proxy_install_branch ~ '#egg=magnum-cluster-api' }}"
-
+  - "{{ 'git+' ~ mcapi_vexxhost_proxy_git_repo ~ '@' ~ mcapi_vexxhost_proxy_install_branch ~ '#egg=magnum-cluster-api' }}"
