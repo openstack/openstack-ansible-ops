@@ -19,7 +19,7 @@
     name: "python_venv_build"
   vars:
     venv_python_executable: "{{ openstack_venv_python_executable | default('python3') }}"
-    venv_build_constraints: "{{ macpi_vexxhost_proxy_git_constraints }}"
+    venv_build_constraints: "{{ mcapi_vexxhost_proxy_git_constraints }}"
     venv_install_destination_path: "{{ _bin | dirname }}"
     venv_install_distro_package_list:
       - haproxy
