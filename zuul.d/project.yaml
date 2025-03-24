@@ -29,4 +29,6 @@
       jobs:
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-focal
-        - openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
+        - openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.29.6
+        - openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.30.2
+        - openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.31.1
