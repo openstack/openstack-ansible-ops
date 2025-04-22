@@ -76,7 +76,7 @@
       when:
         - _secrets is defined
         - _secrets | length > 0
-        - ansible_vault_in_place_copy
+        - ansible_vault_in_place_copy | bool
 
     - name: Place encrypted secrets in independent blocks
       ansible.builtin.blockinfile:
@@ -85,10 +85,12 @@
         marker: "# {mark} ANSIBLE MANAGED {{ item.item['key'] }}"
         mode: "0600"
       loop: "{{ new_secrets.results }}"
+      loop_control:
+        label: "{{ item.item['key'] }}"
       when:
         - _secrets is defined
         - _secrets | length > 0
-        - not ansible_vault_in_place_copy
+        - not ansible_vault_in_place_copy | bool
 
     - name: Undefine the secrets variable
       ansible.builtin.set_fact:
