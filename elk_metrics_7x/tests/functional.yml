@@ -26,9 +26,10 @@
     ANSIBLE_PACKAGE: "{{ ansible_package | default('') }}"
     ANSIBLE_HOST_KEY_CHECKING: "False"
     ANSIBLE_LOG_PATH: "/tmp/elk-metrics-7x-logs/ansible-elk-test.log"
-    ANSIBLE_ACTION_PLUGINS: "${HOME}/ansible_venv/repositories/roles/config_template/action"
-    ANSIBLE_CONNECTION_PLUGINS: "${HOME}/ansible_venv/repositories/roles/plugins/connection"
+    ANSIBLE_TRANSPORT: openstack.osa.ssh
+    ANSIBLE_COLLECTIONS_PATH: "${HOME}/ansible_venv/repositories"
     ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
+    ANSIBLE_VERSION: 10.7.0
 
   vars:
     inventory_file: "inventory/test-{{ (container_inventory | bool) | ternary('container', 'metal') }}-inventory.yml"

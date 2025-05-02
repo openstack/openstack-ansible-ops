@@ -14,9 +14,9 @@
 # limitations under the License.
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-focal"
+    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-jammy"
     parent: base
-    nodeset: ubuntu-focal
+    nodeset: ubuntu-jammy
     description: "Runs a gate test on the elk_metrics_7x project."
     run: "elk_metrics_7x/tests/test.yml"
     post-run: "elk_metrics_7x/tests/post-run.yml"
@@ -28,9 +28,9 @@
       test_clustered_elk: false
 
 - job:
-    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-jammy"
-    parent: "openstack-ansible-ops:elk_metrics_7x-ubuntu-focal"
-    nodeset: ubuntu-focal
+    name: "openstack-ansible-ops:elk_metrics_7x-ubuntu-noble"
+    parent: "openstack-ansible-ops:elk_metrics_7x-ubuntu-jammy"
+    nodeset: ubuntu-noble
 
 - job:
     name: "openstack-ansible-ops:osquery-ubuntu-jammy"
