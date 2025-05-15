@@ -1,0 +1,3 @@
+---
+
+_ansible_vault_encrypt_file: "{{ (ansible_vault_action == 'rotate') | ternary(ansible_vault_new_pw, ansible_vault_pw) }}"

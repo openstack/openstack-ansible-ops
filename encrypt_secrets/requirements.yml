@@ -1,0 +1,6 @@
+---
+collections:
+  - name: community.crypto
+    source: https://github.com/ansible-collections/community.crypto
+    type: git
+    version: 2.22.3

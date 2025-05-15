@@ -91,3 +91,19 @@
     parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm-ubuntu-jammy
     files:
       - ^mcapi_vexxhost/.*
+
+- job:
+    name: openstack-ansible-tox-molecule-encrypt-secrets-rockylinux-9
+    parent: openstack-ansible-tox-molecule-rockylinux-9
+    files:
+      - encrypt_secrets
+    vars:
+      tox_envlist: molecule-encrypt-secrets
+
+- job:
+    name: openstack-ansible-tox-molecule-encrypt-secrets-ubuntu-noble
+    parent: openstack-ansible-tox-molecule-ubuntu-noble
+    files:
+      - encrypt_secrets
+    vars:
+      tox_envlist: molecule-encrypt-secrets

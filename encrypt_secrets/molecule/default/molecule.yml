@@ -1,0 +1,55 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+driver:
+  name: docker
+
+platforms:
+  - name: "encrypt-${MOLECULE_SCENARIO_NAME}"
+    image: "${DOCKER_REGISTRY:-quay.io/gotmax23}/${DOCKER_IMAGE_TAG:-debian-systemd:bookworm}"
+    command: ${DOCKER_COMMAND:-""}
+    pre_build_image: true
+    privileged: true
+    systemd: true
+
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+  env:
+    ANSIBLE_ROLES_PATH: ../../roles
+  inventory:
+    group_vars:
+      all:
+        ansible_vault_repo_path: /etc/openstack_deploy
+        ansible_vault_pw: /etc/openstack_deploy/vault_pw
+        ansible_vault_region: molecule
+        _molecule_password_mapping:
+          keystone_container_mysql_password: oequ0iejahgh8amaiy3Qua1Moo3weicaazo4
+          keystone_auth_admin_password: chaumei2Hoh5eisiesaip5goodees9eesahs
+          keystone_oslomsg_rpc_password: ei6Ooraenuavahleijuv3oos7asheih6Aidi
+  config_options:
+    defaults:
+      inject_facts_as_vars: false
+
+scenario:
+  name: default
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    # NOTE: We don't use side-effect due to bug preventing to define multiple of them:
+    #       https://github.com/ansible/molecule/issues/3617
+    - verify verify_converge.yml
+    - verify verify_rotate.yml
+    - verify verify_decrypt.yml
+    - cleanup
+    - destroy

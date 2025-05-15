@@ -8,6 +8,7 @@ OpenStack-Ansible Operator Tooling
    swift_storage_mount_drives
    elk_metrics
    mcapi
+   encrypt_secrets
 
 OpenStack-Ansible Diff Generator
 --------------------------------

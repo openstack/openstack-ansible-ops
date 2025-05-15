@@ -1,0 +1,39 @@
+---
+- name: Verify decryption
+  hosts: encrypt-default
+  tasks:
+    - name: Importing ansible_vault role
+      ansible.builtin.import_role:
+        name: ansible_vault
+      vars:
+        ansible_vault_action: decrypt
+        # NOTE: At this point we have rotated the secret, so "new" one should be used
+        ansible_vault_pw: /etc/openstack_deploy/vault_pw.new
+  post_tasks:
+    - name: Fetch test files to verify they were not encrypted
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      loop:
+        - /etc/openstack_deploy/pki/certs/certs/noop.crt
+        - /etc/openstack_deploy/ssh_keypairs/noop_keypair.pub
+        - /etc/openstack_deploy/pki/certs/private/noop.key.pem
+        - /etc/openstack_deploy/pki/roots/TestRoot/private/TestRoot.key.pem
+        - /etc/openstack_deploy/ssh_keypairs/noop_keypair
+      register: plaintext_files
+
+    - name: Ensure that not encrypted files do NOT contain ANSIBLE_VAULT header
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - "'ANSIBLE_VAULT' not in item['content'] | b64decode"
+      loop: "{{ plaintext_files['results'] }}"
+      loop_control:
+        label: "{{ item['source'] }}"
+
+    - name: Verify that user_secrets remain encrypted
+      ansible.builtin.command: "ansible -e @/etc/openstack_deploy/user_secrets.yml -m debug -a var={{ item }} -i localhost, localhost"
+      failed_when:
+        - not (failed_secrets_read.rc == 2 and 'Attempting to decrypt but no vault secrets found' not in failed_secrets_read.stderr)
+      changed_when: false
+      loop: "{{ _molecule_password_mapping.keys() }}"
+      register: failed_secrets_read

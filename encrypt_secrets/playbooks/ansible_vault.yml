@@ -1,0 +1,7 @@
+---
+- name: Using ansible-vault for managing data encryption
+  hosts: localhost
+  tasks:
+    - name: Importing ansible_vault role
+      ansible.builtin.import_role:
+        name: osa_ops.encrypt_secrets.ansible_vault

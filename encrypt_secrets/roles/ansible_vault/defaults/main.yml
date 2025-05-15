@@ -1,0 +1,39 @@
+---
+# Copyright 2025, Advanced Hosters B.V.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Allowed values: "encrypt", "decrypt" and "rotate"
+ansible_vault_action: encrypt
+# Path to the OpenStack-Ansible configuration (openstack_deploy) folder
+ansible_vault_repo_path: "{{ lookup('ansible.builtin.env', 'OSA_CONFIG_DIR') | default(lookup('ansible.builtin.env', 'PWD') ~ '/openstack_deploy', True) }}"
+# Name of the region, which will be used as vault id
+ansible_vault_region: "{{ service_region | default('RegionOne') }}"
+# Path to the ansible-vault password file
+ansible_vault_pw: "{{ lookup('ansible.builtin.env', 'ANSIBLE_VAULT_PASSWORD_FILE') }}"
+# Path to the freshly generated ansible-vault password file. Used for rotation only
+ansible_vault_new_pw: "{{ ansible_vault_pw ~ '.new' }}"
+# If in-place copy is enabled, role will completely override the resulting file
+# When disabled, Ansible will produce a managed block for each managed variable
+ansible_vault_in_place_copy: true
+# Paths to files, where individual variables needs to be encrypted
+ansible_vault_secrets_paths:
+  - "{{ ansible_vault_repo_path }}/user_secrets.yml"
+  - "{{ ansible_vault_repo_path }}/group_vars/all/secrets.yml"
+# Instead of defining paths to files explicitly, you can search filesystem for
+# files with individually encrypted secrets. Results will be combined with
+# `ansible_vault_secrets_paths`
+ansible_vault_secrets_search_paths: []
+ansible_vault_secrets_search_pattern: "secrets.yml"
+# Can be overriden to a specific destination in case venv is not activated
+ansible_vault_binary: ansible-vault
