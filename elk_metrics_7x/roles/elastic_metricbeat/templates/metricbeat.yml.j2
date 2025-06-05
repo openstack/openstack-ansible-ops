@@ -732,8 +732,8 @@ metricbeat.modules:
   # Nginx hosts
   hosts: ["http://127.0.1.1:18182"]
 
-  # Path to server status. Default nginx_status
-  server_status_path: "nginx_status"
+  # Path to server status. Set to server-status in templates/nginx-status.conf.j2
+  server_status_path: "server-status"
 
 {% endif %}
 #----------------------------- Openmetrics Module -----------------------------
