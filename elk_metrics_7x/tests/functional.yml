@@ -29,7 +29,7 @@
     ANSIBLE_TRANSPORT: openstack.osa.ssh
     ANSIBLE_COLLECTIONS_PATH: "${HOME}/ansible_venv/repositories"
     ANSIBLE_ROLES_PATH: "${HOME}/ansible_venv/repositories/roles"
-    ANSIBLE_VERSION: 10.7.0
+    ANSIBLE_VERSION: 11.6.0
 
   vars:
     inventory_file: "inventory/test-{{ (container_inventory | bool) | ternary('container', 'metal') }}-inventory.yml"
