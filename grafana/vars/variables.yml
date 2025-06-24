@@ -1,21 +1,25 @@
 # Grafana vars
-grafana_db_name: grafana
-grafana_db_user: grafana
-grafana_db_password: SuperSecrete
-grafana_admin_password: admin
+grafana_db_setup_host: "{{ openstack_db_setup_host | default('localhost') }}"
+grafana_db_setup_python_interpreter: "{{ openstack_db_setup_python_interpreter | default((grafana_db_setup_host == 'localhost') | ternary(ansible_playbook_python, ansible_facts['python']['executable'])) }}"
+grafana_galera_database: grafana
+grafana_galera_user: grafana
+# define the following variables ideally and encrypted in user_secrets.yml
+grafana_db_password:
+grafana_admin_password:
 
-grafana_users:
-  allow_sign_up: False
-  allow_org_create: false
-  auto_assign_org: false
-  auto_assign_org_role: Viewer
-  default_theme: light
-
-grafana_security:
-  admin_user: admin
-  admin_password: "{{ grafana_admin_password }}"
-
-grafana_address: "{{ ansible_host }}"
+grafana_ini:
+  users:
+    allow_sign_up: false
+    allow_org_create: false
+    auto_assign_org: true
+    auto_assign_org_role: Viewer
+    default_theme: dark
+  security:
+    admin_user: admin
+    admin_password: "{{ grafana_admin_password }}"
+  server:
+    http_addr: "{{ ansible_host }}"
+    root_url: https://{{ external_lb_vip_address }}:{{ grafana_ini_default.server.http_port }}/
 
 grafana_plugins:
   - grafana-piechart-panel

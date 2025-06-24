@@ -68,4 +68,4 @@ install grafana
 .. code-block:: bash
 
     cd /opt/openstack-ansible-ops/grafana
-    ANSIBLE_INJECT_FACT_VARS=True openstack-ansible installGrafana.yml
+    openstack-ansible installGrafana.yml
