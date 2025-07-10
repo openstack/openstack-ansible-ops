@@ -18,45 +18,41 @@
   user: root
   pre_tasks:
     - name: Fail if host_to_be_removed is not defined
-      fail:
+      ansible.builtin.fail:
         msg: "host_to_be_removed must be defined as ansible user variable"
       when: host_to_be_removed is not defined
+
     - name: Find ID of the nova-compute service we want to remove
-      shell: |
-        . {{ ansible_env.HOME }}/openrc
-        openstack compute service list | grep {{ host_to_be_removed }} | awk '{print $2}'
-      register: results
-      changed_when: results.rc == 0 and results.stdout_lines|length > 0
-      failed_when: results.rc > 0 or results.stdout_lines|length == 0
+      ansible.builtin.command: openstack compute service list --os-cloud default --service nova-compute -f json
+      register: compute_services
+      changed_when: compute_services.rc == 0 and compute_services.stdout_lines | length > 0
+      failed_when: compute_services.rc > 0 or compute_services.stdout_lines | length == 0
+
     - name: Find ID of the neutron agent service we want to remove
-      shell: |
-        . {{ ansible_env.HOME }}/openrc
-        neutron agent-list | grep {{ host_to_be_removed }} | awk '{print $2}'
+      ansible.builtin.command: openstack network agent list --os-cloud default -f json
       register: neutron_agent_list_results
       changed_when: neutron_agent_list_results.rc == 0
       failed_when: neutron_agent_list_results.rc > 0
+
   tasks:
     - name: Remove the nova-compute service from compute node
-      shell: |
-        . {{ ansible_env.HOME }}/openrc
-        openstack compute service delete {{ results.stdout }}
+      ansible.builtin.command: openstack compute service delete {{ item }} --os-cloud default
+      with_items: "{{ compute_services.stdout | from_json | selectattr('Host', 'search', host_to_be_removed) | map(attribute='ID') }}"
       register: compute_delete_result
       changed_when: compute_delete_result.rc
       failed_when: compute_delete_result.rc > 0
+
     - name: Remove neutron agent service on {{ host_to_be_removed }}
-      shell: |
-        . {{ ansible_env.HOME }}/openrc
-        neutron agent-delete {{ item }}
-      with_items: "{{ neutron_agent_list_results.stdout_lines }}"
+      ansible.builtin.command: openstack network agent delete {{ item }} --os-cloud default
+      with_items: "{{ neutron_agent_list_results.stdout | from_json | selectattr('Host', 'search', host_to_be_removed) | map(attribute='ID') }}"
       register: neutron_delete_results
       changed_when: neutron_delete_results.rc == 0
       failed_when: neutron_delete_results.rc > 0
+
     - name: Delete the host from the OSA inventory file
-      shell: |
+      ansible.builtin.command: |
          python /opt/openstack-ansible/scripts/inventory-manage.py -r {{ host_to_be_removed }}
       register: inventory_manage_output
       delegate_to: 127.0.0.1
       connection: local
-      failed_when : inventory_manage_output.rc > 0
-
-
+      failed_when: inventory_manage_output.rc > 0
