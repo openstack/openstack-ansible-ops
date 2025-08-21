@@ -13,30 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This playbook is typically used with the following ansible-playbook
-# arguments:
-# * `-e hostname=<host>`
-# * `-e backend_state=<enabled|disabled>`
-# in order to globally enable/disable a controller at the HAProxy level.
-
-- name: Set HAProxy backends state
-  hosts: haproxy
-  vars:
-    - hostname: ""
-    - backend_state: enabled
-  tasks:
-    - name: List HAProxy backends to process
-      ansible.builtin.shell: echo show servers state | nc -U /var/run/haproxy.stat | awk '{print $4}' | grep '^{{ hostname }}' | sort | uniq
-      register: backends
-      changed_when: false
-    - name: Loop through backends to set state
-      community.general.haproxy:
-        host: "{{ item }}"
-        state: "{{ backend_state }}"
-        socket: /var/run/haproxy.stat
-        drain: "{{ haproxy_drain | default(False) }}"
-        shutdown_sessions: "False"
-        wait: "True"
-        wait_interval: "{{ haproxy_wait_interval | default(5) }}"
-        wait_retries: "{{ haproxy_wait_retries | default(24) }}"
-      with_items: "{{ backends.stdout_lines }}"
+- name: Import openstack.osa.tools.set_haproxy_backends_state
+  ansible.builtin.import_playbook: openstack.osa.tools.set_haproxy_backends_state
