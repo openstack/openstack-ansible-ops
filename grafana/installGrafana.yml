@@ -50,7 +50,7 @@
             grafana_ini: "{{ grafana_ini_database | ansible.builtin.combine(grafana_ini, recursive=true) }}"
           vars:
             grafana_ini_database:
-              grafana_database:
+              database:
                 type: mysql
                 host: "{{ galera_address }}:3306"
                 name: "{{ grafana_galera_database }}"
