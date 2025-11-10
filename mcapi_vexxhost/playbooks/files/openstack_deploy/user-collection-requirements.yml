@@ -1,9 +1,0 @@
-collections:
-  - name: vexxhost.kubernetes
-    source: https://github.com/jrosser/ansible-collection-kubernetes
-    type: git
-    version: venv-support
-  - name: osa_ops.mcapi_vexxhost
-    type: git
-    version: master
-    source: https://opendev.org/openstack/openstack-ansible-ops#/mcapi_vexxhost

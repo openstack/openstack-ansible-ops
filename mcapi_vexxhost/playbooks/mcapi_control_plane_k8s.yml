@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Initial facts gathering and venv setup
+- name: Initial facts gathering
   hosts: k8s_all
   gather_facts: false
   tags:
@@ -26,21 +26,6 @@
           - "!all"
           - min
       when: osa_gather_facts | default(True)
-
-    - name: ensure python3 virtualenv is present
-      ansible.builtin.package:
-        name:
-          - python3-venv
-          - python3-setuptools
-      when: ansible_facts['os_family'] == 'Debian'
-
-    - name: ensure ansible target venv is present
-      ansible.builtin.pip:
-        name:
-          - packaging
-        virtualenv_command: "python3 -m venv"
-        virtualenv: "{{ ansible_collection_kubernetes_target_venv }}"
-      when: ansible_collection_kubernetes_target_venv is defined
 
 
 - name: Create and configure k8s container
@@ -116,7 +101,6 @@
   vars:
     k8s_node_labels:
       openstack-control-plane: enabled
-    ansible_python_interpreter: "{{ ansible_collection_kubernetes_target_venv ~ '/bin/python' }}"
   roles:
       - role: "vexxhost.containers.containerd"
       - role: "vexxhost.kubernetes.kubernetes"
@@ -141,10 +125,19 @@
   gather_facts: true
   user: root
   vars:
-    ansible_python_interpreter: "{{ ansible_collection_kubernetes_target_venv ~ '/bin/python' }}"
-  roles:
-    - role: "vexxhost.kubernetes.cert_manager"
-    - role: "vexxhost.kubernetes.cluster_api"
-      #  environment: "{{ deployment_environment_variables | default({}) }}"
+    _k8s_is_first_play_host: >-
+      {{
+         (inventory_hostname == ((groups['k8s_all'] | select('in', ansible_play_hosts)) | first)) | bool
+      }}
+  tasks:
+    - name: Including cert manager role
+      ansible.builtin.include_role:
+        name: "vexxhost.kubernetes.cert_manager"
+      when: _k8s_is_first_play_host
+
+    - name: Including cluster api role
+      ansible.builtin.include_role:
+        name: "vexxhost.kubernetes.cluster_api"
+      when: _k8s_is_first_play_host
   tags:
     - cluster-api

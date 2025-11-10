@@ -52,38 +52,50 @@
       - ^bootstrap-embedded-ansible/.*
 
 - job:
-    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.29.6
-    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
+    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-noble-v1.32.10
+    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-noble
     vars:
       mcapi_vexxhost_extra_user_variables:
         - path: /etc/openstack_deploy/user_variables_z_magnum.yml
           block: |
-            functional_test_k8s_version: 'v1.29.6'
-            functional_test_image_url: https://static.atmosphere.dev/artifacts/magnum-cluster-api/ubuntu-jammy-kubernetes-1-29-6-1720107687.qcow2
+            functional_test_k8s_version: 'v1.32.10'
+      osa_extra_ansible_collections:
+        - name: vexxhost.kubernetes
+          source: https://github.com/vexxhost/ansible-collection-kubernetes
+          type: git
+          version: main
 
 - job:
-    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.30.2
-    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
+    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-noble-v1.33.6
+    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-noble
     vars:
       mcapi_vexxhost_extra_user_variables:
         - path: /etc/openstack_deploy/user_variables_z_magnum.yml
           block: |
-            functional_test_k8s_version: 'v1.30.2'
-            functional_test_image_url: https://static.atmosphere.dev/artifacts/magnum-cluster-api/ubuntu-jammy-kubernetes-1-30-2-1720107688.qcow2
+            functional_test_k8s_version: 'v1.33.6'
+      osa_extra_ansible_collections:
+        - name: vexxhost.kubernetes
+          source: https://github.com/vexxhost/ansible-collection-kubernetes
+          type: git
+          version: main
 
 - job:
-    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy-v1.31.1
-    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
+    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-noble-v1.34.2
+    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-noble
     vars:
       mcapi_vexxhost_extra_user_variables:
         - path: /etc/openstack_deploy/user_variables_z_magnum.yml
           block: |
-            functional_test_k8s_version: 'v1.31.1'
-            functional_test_image_url: https://static.atmosphere.dev/artifacts/magnum-cluster-api/ubuntu-jammy-kubernetes-1-31-1-1728920853.qcow2
+            functional_test_k8s_version: 'v1.34.2'
+      osa_extra_ansible_collections:
+        - name: vexxhost.kubernetes
+          source: https://github.com/vexxhost/ansible-collection-kubernetes
+          type: git
+          version: main
 
 - job:
-    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-jammy
-    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm-ubuntu-jammy
+    name: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm_ops-ubuntu-noble
+    parent: openstack-ansible-deploy-aio_magnum_octavia_capi_kvm-ubuntu-noble
     files:
       - ^mcapi_vexxhost/.*
 

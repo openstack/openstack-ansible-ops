@@ -20,9 +20,9 @@
   vars:
     ansible_python_interpreter: "{{ openstack_service_setup_host_python_interpreter }}"
 
-    functional_test_k8s_version: 'v1.23.17'
-    functional_test_image_name: "{{ 'ubuntu-2204-kube-' ~ functional_test_k8s_version }}"
-    functional_test_image_url_base: 'https://object-storage.public.mtl1.vexxhost.net/swift/v1/a91f106f55e64246babde7402c21b87a/magnum-capi/'
+    functional_test_k8s_version: 'v1.34.2'
+    functional_test_image_name: "{{ 'ubuntu-22.04-' ~ functional_test_k8s_version }}"
+    functional_test_image_url_base: 'https://github.com/vexxhost/capo-image-elements/releases/download/2025.11-4/'
     functional_test_image_url: "{{ functional_test_image_url_base ~ functional_test_image_name ~ '.qcow2' }}"
 
     functional_test_cluster_template_name: "{{ 'functional-test-k8s-' ~ functional_test_k8s_version }}"

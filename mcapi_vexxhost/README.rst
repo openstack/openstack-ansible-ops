@@ -67,7 +67,7 @@ Openstack-Ansible by adding the collection to the deployment host by
 adding the following to  `/etc/openstack_deploy/user-collection-requirements.yml`
 under the collections key.
 
-.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/user-collection-requirements.yml
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/examples/user-collection-requirements.yml
    :language: yaml
 
 The collections can then be installed with the following command:
@@ -87,18 +87,12 @@ in /etc/openstack_deploy/user-ansible-venv-requirements.txt
 OpenStack-Ansible configuration for magnum-cluster-api driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Specify the deployment of the control plane k8s cluster in
-`/etc/openstack_deploy/env.d/k8s.yml`
-
-.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/env.d/k8s.yml
-   :language: yaml
-
 Define the physical hosts that will host the controlplane k8s
 cluster in /etc/openstack_deploy/conf.d/k8s.yml. This example is
 for an all-in-one deployment and should be adjusted to match a real
 deployment with multiple hosts if high availability is required.
 
-.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/openstack_deploy/conf.d/k8s.yml
+.. literalinclude:: ../../mcapi_vexxhost/playbooks/files/examples/k8s.yml
    :language: yaml
 
 Integrate the control plane k8s cluster with the haproxy loadbalancer
@@ -135,8 +129,7 @@ Run the deployment
 For a new deployment
 ^^^^^^^^^^^^^^^^^^^^
 
-Run the OSA playbooks/setup.yml playbooks as usual, following the normal
-deployment guide.
+Run the OSA setup playbooks as usual, following the normal deployment guide.
 
 Run the magnum-cluster-api deployment
 
@@ -163,13 +156,13 @@ Add the magnum-cluser-api driver to the magnum service
 
   .. code-block:: bash
 
-     openstack-ansible playbooks/os-magnum-install.yml
+     openstack-ansible openstack.osa.magnum
 
 Create the k8s control plane containers
 
   .. code-block:: bash
 
-     openstack-ansible playbooks/lxc-containers-create.yml --limit k8s_all
+     openstack-ansible openstack.osa.containers_lxc_create --limit k8s_all
 
 Run the magnum-cluster-api deployment
 
