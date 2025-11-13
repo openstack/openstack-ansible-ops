@@ -69,6 +69,8 @@
     owner: "{{ mcapi_vexxhost_proxy_system_user_name }}"
     group: "{{ mcapi_vexxhost_proxy_system_group_name }}"
     mode: '0600'
+  notify:
+    - "k8s config changed"
 
 - name: Write capi_proxy sudoers config
   template:
