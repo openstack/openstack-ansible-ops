@@ -141,3 +141,69 @@
       when: _k8s_is_first_play_host
   tags:
     - cluster-api
+
+- name: Set up Cluster API backups
+  hosts: k8s_all
+  gather_facts: true
+  user: root
+  vars:
+    cluster_api_backups_path: "/var/backup/cluster-api-backup"
+    cluster_api_backups_group_name: "backups"
+    # cluster_api_backups_group_gid: ""
+    cluster_api_backups_init_overrides: {}
+    cluster_api_backups_on_calendar: "*-*-* 00:00:00"
+    cluster_api_backups_randomized_delay_sec: 0
+    cluster_api_backups_nodes: "{{ [(groups['k8s_all'] | select('in', ansible_play_hosts)) | last] }}"
+  tasks:
+    - name: Set up Cluster API backups
+      block:
+        - name: Ensure group backups exists
+          ansible.builtin.group:
+            name: "{{ cluster_api_backups_group_name }}"
+            state: present
+            gid: "{{ cluster_api_backups_group_gid | default(omit) }}"
+
+        - name: Create Cluster API backup directory
+          ansible.builtin.file:
+            path: "{{ cluster_api_backups_path }}"
+            state: "directory"
+            group: "{{ cluster_api_backups_group_name }}"
+            mode: "0750"
+
+        - name: Copy Cluster API backup scripts
+          ansible.builtin.copy:
+            src: "scripts/{{ item }}"
+            dest: "{{ cluster_api_backups_path }}/{{ item }}"
+            mode: "0755"
+          with_items:
+            - "export-cluster-api-state.sh"
+            - "import-cluster-api-state.sh"
+
+        - name: Create service and timer for backups
+          ansible.builtin.import_role:
+            name: systemd_service
+          vars:
+            systemd_service_enabled: true
+            systemd_service_restart_changed: false
+            systemd_overrides: "{{ cluster_api_backups_init_overrides }}"
+            systemd_group_name: "{{ cluster_api_backups_group_name }}"
+            systemd_services:
+              - service_name: "cluster-api-backup"
+                execstarts:
+                  - "{{ cluster_api_backups_path }}/export-cluster-api-state.sh"
+                environment:
+                  UMASK: "0640"
+                  UMASK_DIR: "0750"
+                timer:
+                  state: "started"
+                  options:
+                    OnCalendar: "{{ cluster_api_backups_on_calendar }}"
+                    RandomizedDelaySec: "{{ cluster_api_backups_randomized_delay_sec }}"
+                    Persistent: true
+                    Unit: "cluster-api-backup.service"
+
+      when:
+        - cluster_api_backups_enabled is defined and cluster_api_backups_enabled | bool
+        - inventory_hostname in cluster_api_backups_nodes
+  tags:
+    - backups
