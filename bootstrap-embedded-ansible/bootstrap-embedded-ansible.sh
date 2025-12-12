@@ -39,9 +39,6 @@ if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
   if [  ${ID} = "ubuntu" ]; then
     apt-get update
     apt-get -y install virtualenv
-  elif [  ${ID} = "opensuse" ] || [ ${ID} = "suse" ]; then
-    zypper install -y insserv
-    zypper install -y python-virtualenv
   elif [ ${ID} = "centos" ] || [ ${ID} = "redhat" ] || [ ${ID} = "rhel" ]; then
     yum install -y python3-virtualenv
   else
@@ -51,8 +48,6 @@ if [[ ! -e "${ANSIBLE_EMBED_HOME}/bin/ansible" ]]; then
   echo "done installing python-virtualenv"
   if [[ -f "/usr/bin/python3" ]]; then
     virtualenv --system-site-packages --python="/usr/bin/python3" "${ANSIBLE_EMBED_HOME}"
-  elif [[ -f "/usr/bin/python2" ]]; then
-    virtualenv --system-site-packages --python="/usr/bin/python2" "${ANSIBLE_EMBED_HOME}"
   else
     virtualenv "${ANSIBLE_EMBED_HOME}"
   fi
