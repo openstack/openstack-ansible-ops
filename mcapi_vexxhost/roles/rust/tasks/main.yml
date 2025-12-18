@@ -1,0 +1,48 @@
+---
+# Copyright 2025, BBC R&D
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather variables for each operating system
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_version'] | lower }}.yml"
+        - "{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_major_version'] | lower }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}-{{ ansible_facts['distribution_major_version'] | lower }}.yml"
+        - "{{ ansible_facts['distribution'] | lower }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}.yml"
+      paths:
+        - "{{ role_path }}/vars"
+  tags:
+    - always
+
+- name: Install rust dependencies
+  ansible.builtin.package:
+    name: "{{ rust_distro_packages }}"
+
+# Required where update-alternatives not available on Ubuntu, and LTS versions too old
+- name: Install symlinks for installed dependencies
+  ansible.builtin.file:
+    src: "/usr/bin/{{ item }}"
+    dest: "/usr/local/bin/{{ item.split('-')[0] }}"
+    state: link
+  with_items: "{{ rust_distro_packages }}"
+  when: rust_binary_symlinks | bool
+
+- name: Drop cargo configuration where required
+  copy:
+    content: "{{ rust_cargo_config }}"
+    dest: "{{ rust_cargo_config_path }}"
+  when: rust_cargo_config is defined

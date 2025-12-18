@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-magnum_magnum_cluster_api_git_install_branch: v0.24.2
+magnum_magnum_cluster_api_git_install_branch: v0.33.0
 magnum_magnum_cluster_api_git_repo: "{{ openstack_github_base_url | default('https://github.com') ~ '/vexxhost/magnum-cluster-api' }}"
 
 # install magnum-cluster-api and kubernetes python package into magnum venv
