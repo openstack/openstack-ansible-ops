@@ -41,6 +41,12 @@
   with_items: "{{ rust_distro_packages }}"
   when: rust_binary_symlinks | bool
 
+- name: Create cargo configuration directory where required
+  ansible.builtin.file:
+    dest: "{{ rust_cargo_config_path | dirname }}"
+    state: directory
+  when: rust_cargo_config is defined
+
 - name: Drop cargo configuration where required
   copy:
     content: "{{ rust_cargo_config }}"
