@@ -1,6 +1,0 @@
-# {{ ansible_managed }}
-
-Defaults:{{ mcapi_vexxhost_proxy_system_user_name }} !requiretty
-Defaults:{{ mcapi_vexxhost_proxy_system_user_name }} secure_path="{{ mcapi_vexxhost_proxy_bin }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
-{{ mcapi_vexxhost_proxy_system_user_name }} ALL = (root) NOPASSWD: {{ mcapi_vexxhost_proxy_bin }}/privsep-helper

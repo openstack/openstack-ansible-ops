@@ -1,7 +1,0 @@
-- hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: Copy configuration files into place
-      ansible.builtin.copy:
-        src: '.'
-        dest: '/etc/'
