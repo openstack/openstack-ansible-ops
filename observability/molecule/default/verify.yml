@@ -1,0 +1,27 @@
+---
+- name: Verify Grafana deployment
+  hosts: grafana_all
+  tasks:
+    - name: Check if the grafana-server service is running
+      ansible.builtin.service_facts:
+      check_mode: no
+      register: service_facts_result
+
+    - name: Assert that the grafana-server service is running
+      ansible.builtin.assert:
+        that: "service_facts_result.ansible_facts.services['grafana-server.service'].state == 'running'"
+
+    - name: Fetch /health endpoint
+      ansible.builtin.uri:
+        url: "{{ haproxy_ssl | default(false) | ternary('https', 'http') }}://{{ internal_lb_vip_address | default('127.0.1.1') }}:3000/api/health"
+        follow_redirects: none
+        method: GET
+      register: grafana_health
+      retries: 10
+      delay: 5
+
+    - name: Check output
+      ansible.builtin.assert:
+        that:
+          - grafana_health.json.version == molecule_grafana_version
+          - grafana_health.json.database == 'ok'

@@ -1,0 +1,47 @@
+---
+
+- name: Prepare required infrastructure
+  hosts: haproxy, galera_all
+  roles:
+    - role: haproxy_server
+      haproxy_hatop_install: false
+      haproxy_vip_binds:
+        - address: '*'
+          interface: eth0
+          type: external
+        - address: "{{ galera_address }}"
+          interface: lo
+          type: internal
+    - role: galera_server
+      galera_install_server: true
+      galera_install_client: false
+      galera_wsrep_address: "{{ galera_server_bind_address }}"
+      galera_wsrep_cluster_address: "{{ galera_server_bind_address }}"
+      galera_root_password: "{{ _molecule_password_mapping['galera_root_password'] }}"
+      galera_monitoring_user_password: "{{ _molecule_password_mapping['galera_monitoring_user_password'] }}"
+
+- name: Configure haproxy services
+  ansible.builtin.import_playbook: openstack.osa.haproxy_service_config
+  vars:
+    service_group: galera_all
+    service_variable: "galera_haproxy_services"
+  when: groups[service_group] | length > 0
+
+- name: Wait for galera to be up
+  hosts: haproxy
+  tasks:
+    - name: Place my.cnf config file
+      ansible.builtin.copy:
+        content: |
+          [client]
+          host = {{ galera_address }}
+          user = admin
+          password = {{ _molecule_password_mapping['galera_root_password'] }}
+        dest: /root/.my.cnf
+        mode: "0600"
+
+    - name: Wait for haproxy to load the backend
+      ansible.builtin.wait_for:
+        host: "{{ galera_address }}"
+        port: 3306
+        delay: 10

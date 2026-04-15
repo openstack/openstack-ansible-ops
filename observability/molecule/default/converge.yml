@@ -1,0 +1,8 @@
+---
+
+- name: Run grafana deployment
+  ansible.builtin.import_playbook: osa_ops.observability.grafana
+  vars:
+    grafana_db_password: "{{ _molecule_password_mapping['grafana_db_password'] }}"
+    grafana_admin_password: "{{ _molecule_password_mapping['grafana_admin_password'] }}"
+    grafana_db_setup_host: "{{ inventory_hostname }}"

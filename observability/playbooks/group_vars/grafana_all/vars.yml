@@ -1,0 +1,34 @@
+---
+grafana_version: 13.1.0
+
+grafana_rhsm_repo: false
+grafana_rhsm_subscription: false
+
+grafana_tls: "{{ haproxy_ssl | default(false) }}"
+grafana_proto: "{{ grafana_tls | ternary('https', 'http') }}"
+
+grafana_ini:
+  database:
+    type: mysql
+    host: "{{ grafana_db_address }}:3306"
+    name: "{{ grafana_db_database }}"
+    user: "{{ grafana_db_user }}"
+    password: "{{ grafana_db_password }}"
+  users:
+    allow_sign_up: false
+    allow_org_create: false
+    auto_assign_org: true
+    auto_assign_org_role: Viewer
+    default_theme: dark
+  security:
+    admin_user: admin
+    admin_password: "{{ grafana_admin_password }}"
+  server:
+    http_addr: "{{ management_address | default('127.0.0.1') }}"
+    http_port: "{{ grafana_service_port }}"
+    http_proto: "{{ grafana_proto }}"
+    root_url: >-
+      {{ grafana_proto }}://{{ grafana_public_bind | ternary(
+          external_lb_vip_address, internal_lb_vip_address) }}:{{ grafana_ini_default.server.http_port }}/
+
+grafana_plugins: []

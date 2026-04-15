@@ -1,6 +1,0 @@
----
-
-collections:
-- name: grafana.grafana
-  version: 6.0.6
-  type: galaxy

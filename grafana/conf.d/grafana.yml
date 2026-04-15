@@ -1,3 +1,0 @@
-grafana_hosts:
-  logging01:
-    ip: 172.22.8.27

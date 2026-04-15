@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+
+import urllib.request
+import json
+import time
+import sys
+
+for _ in range(60):
+    try:
+        response = urllib.request.urlopen(
+            "{{ grafana_proto }}://{{ management_address | default('127.0.0.1') }}:{{ grafana_service_port }}/api/health"
+        )
+
+        if response.getcode() == 200:
+            data = json.loads(response.read())
+            if data.get("database") == "ok":
+                sys.exit(0)
+
+    except Exception:
+        pass
+    time.sleep(1)
+
+sys.exit(1)

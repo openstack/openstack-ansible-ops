@@ -22,10 +22,14 @@
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-noble
         - openstack-ansible-tox-molecule-encrypt-secrets-rockylinux-9
+        - openstack-ansible-tox-molecule-observability-centos-10-stream
         - openstack-ansible-tox-molecule-encrypt-secrets-ubuntu-noble
+        - openstack-ansible-tox-molecule-observability-ubuntu-noble
     gate:
       jobs:
         - openstack-ansible-linters
         - openstack-ansible-ops:elk_metrics_7x-ubuntu-noble
         - openstack-ansible-tox-molecule-encrypt-secrets-rockylinux-9
+        - openstack-ansible-tox-molecule-observability-centos-10-stream
         - openstack-ansible-tox-molecule-encrypt-secrets-ubuntu-noble
+        - openstack-ansible-tox-molecule-observability-ubuntu-noble

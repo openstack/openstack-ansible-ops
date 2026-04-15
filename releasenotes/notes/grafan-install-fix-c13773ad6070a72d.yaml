@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Resolved several issues with the Grafana deployment and refreshed
+    the installation documentation.

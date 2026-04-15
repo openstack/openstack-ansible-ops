@@ -1,0 +1,13 @@
+---
+- name: haproxy_server
+  src: https://opendev.org/openstack/openstack-ansible-haproxy_server
+  scm: git
+  version: master
+- name: galera_server
+  src: https://opendev.org/openstack/openstack-ansible-galera_server
+  scm: git
+  version: master
+- name: systemd_service
+  src: https://opendev.org/openstack/ansible-role-systemd_service
+  scm: git
+  version: master

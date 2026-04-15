@@ -1,0 +1,4 @@
+---
+grafana_hosts:
+  infra01:
+    ip: 172.29.236.100

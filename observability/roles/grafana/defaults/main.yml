@@ -1,5 +1,5 @@
 ---
-# Copyright 2019, Rackspace US, Inc.
+# Copyright 2026, Cleura AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,4 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- import_playbook: installGrafana.yml
+grafana_db_setup_host: "{{ openstack_db_setup_host | default('localhost') }}"
+grafana_db_setup_python_interpreter: "{{ openstack_db_setup_python_interpreter | default((grafana_db_setup_host == 'localhost') | ternary(ansible_playbook_python, ansible_facts['python']['executable'])) }}"
+grafana_db_database: grafana
+grafana_db_user: grafana
+grafana_db_address: "{{ galera_address | default(internal_lb_vip_address) }}"

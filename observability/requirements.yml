@@ -1,0 +1,23 @@
+---
+collections:
+  - name: openstack.config_template
+    source: https://opendev.org/openstack/ansible-config_template
+    type: git
+  - name: grafana.grafana
+    source: https://github.com/grafana/grafana-ansible-collection
+    type: git
+  - name: openstack.osa
+    source: https://opendev.org/openstack/openstack-ansible-plugins
+    type: git
+  - name: community.mysql
+    source: https://github.com/ansible-collections/community.mysql
+    type: git
+roles:
+  - name: haproxy_server
+    src: https://opendev.org/openstack/openstack-ansible-haproxy_server
+    scm: git
+    version: master
+  - name: systemd_service
+    src: https://opendev.org/openstack/ansible-role-systemd_service
+    scm: git
+    version: master

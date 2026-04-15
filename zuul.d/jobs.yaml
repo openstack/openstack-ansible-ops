@@ -66,3 +66,19 @@
       - encrypt_secrets
     vars:
       tox_envlist: molecule-encrypt-secrets
+
+- job:
+    name: openstack-ansible-tox-molecule-observability-centos-10-stream
+    parent: openstack-ansible-tox-molecule-centos-10-stream
+    files:
+      - observability
+    vars:
+      tox_envlist: molecule-observability
+
+- job:
+    name: openstack-ansible-tox-molecule-observability-ubuntu-noble
+    parent: openstack-ansible-tox-molecule-ubuntu-noble
+    files:
+      - observability
+    vars:
+      tox_envlist: molecule-observability

@@ -1,7 +1,7 @@
 ---
 namespace: osa_ops
 name: observability
-version: 0.0.1
+version: 0.1.0
 readme: README.rst
 authors:
   - OpenStack-Ansible Operators
@@ -18,3 +18,6 @@ repository: https://opendev.org/openstack/openstack-ansible-ops/observability
 documentation: https://docs.openstack.org/openstack-ansible-ops
 homepage: https://docs.openstack.org/openstack-ansible
 issues: https://bugs.launchpad.net/openstack-ansible
+
+dependencies:
+  grafana.grafana: ">=6.0.0"

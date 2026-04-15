@@ -9,6 +9,7 @@ OpenStack-Ansible Operator Tooling
    elk_metrics
    mcapi
    encrypt_secrets
+   observability
 
 OpenStack-Ansible Diff Generator
 --------------------------------
@@ -19,5 +20,3 @@ independent roles, and the OpenStack projects it deploys.
 
 * `GitHub repository <https://github.com/rcbops/osa_differ>`_
 * `PyPi package <https://pypi.org/project/osa_differ>`_
-
-
