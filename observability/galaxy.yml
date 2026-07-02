@@ -1,0 +1,20 @@
+---
+namespace: osa_ops
+name: observability
+version: 0.0.1
+readme: README.rst
+authors:
+  - OpenStack-Ansible Operators
+description: Observability suite for deployments based on OpenStack-Ansible
+license:
+  - Apache-2.0
+tags:
+  - openstack
+  - openstack-ansible
+  - observability
+  - monitoring
+
+repository: https://opendev.org/openstack/openstack-ansible-ops/observability
+documentation: https://docs.openstack.org/openstack-ansible-ops
+homepage: https://docs.openstack.org/openstack-ansible
+issues: https://bugs.launchpad.net/openstack-ansible
