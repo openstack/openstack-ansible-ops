@@ -1,0 +1,8 @@
+---
+
+- name: Import converge verification playbook
+  ansible.builtin.import_playbook: verify_converge.yml
+- name: Import rotate verification playbook
+  ansible.builtin.import_playbook: verify_rotate.yml
+- name: Import decrypt verification playbook
+  ansible.builtin.import_playbook: verify_decrypt.yml

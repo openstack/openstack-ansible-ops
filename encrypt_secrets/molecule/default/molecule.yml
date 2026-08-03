@@ -46,10 +46,6 @@ scenario:
     - prepare
     - converge
     - idempotence
-    # NOTE: We don't use side-effect due to bug preventing to define multiple of them:
-    #       https://github.com/ansible/molecule/issues/3617
-    - verify verify_converge.yml
-    - verify verify_rotate.yml
-    - verify verify_decrypt.yml
+    - verify
     - cleanup
     - destroy
