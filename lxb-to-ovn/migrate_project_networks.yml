@@ -1,0 +1,229 @@
+---
+# Copyright 2026, BBC Research & Development 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Find hypervisors
+  command: "openstack compute service list --service nova-compute -f json"
+  register: hypervisors
+  changed_when: false
+
+- name: Gather VM information
+  ansible.builtin.command: "openstack server list --sort-column 'Project ID' -c 'ID' -c 'Name' -c 'Status' -c 'Power State' -c 'Flavor' -c 'Host' -c 'Host Status' -c 'Project ID' --project {{ project.ID }} -f json"
+  register: project_vm_servers
+  changed_when: false
+
+- name: Identify load balancers for project
+  block:
+    - name: Gather load balancer information
+      ansible.builtin.command: "openstack loadbalancer list --project {{ project.ID }} -f json"
+      register: load_balancers
+      changed_when: false
+
+    - name: Gather amphora information
+      ansible.builtin.command: "openstack loadbalancer amphora list --long --loadbalancer {{ item['id'] }} -f json"
+      with_items: "{{ load_balancers.stdout | from_json }}"
+      register: amphora_vms
+      changed_when: false
+
+    - name: Gather amphora VM information
+      ansible.builtin.command: "openstack server show {{ item['compute_id'] }} -f json"
+      with_items: "{{ amphora_vm_lb_info }}"
+      register: amphora_vm_server_info
+      changed_when: false
+
+    - name: Obtain amphora VM information in the correct format
+      ansible.builtin.command: "openstack server list --sort-column 'Project ID' -c 'ID' -c 'Name' -c 'Status' -c 'Power State' -c 'Flavor' -c 'Host' -c 'Host Status' -c 'Project ID'  --project {{ item['project_id'] }} --host {{ item['OS-EXT-SRV-ATTR:host'] }} --instance-name {{ item['OS-EXT-SRV-ATTR:instance_name'] }} -f json"
+      with_items: "{{ amphora_vm_info_list }}"
+      register: amphora_vm_servers
+      changed_when: false
+
+  when: lb_enabled | bool
+
+- name: List VMs which require migration
+  ansible.builtin.debug:
+    msg: "{{ lxb_vms }}"
+
+- name: Identify Routers
+  ansible.builtin.command: "openstack router list --project {{ project.ID }} -f json"
+  register: routers
+  changed_when: false
+
+- name: Router info
+  ansible.builtin.command: "openstack router show {{ item.ID }} -f json"
+  with_items: "{{ routers.stdout | from_json }}"
+  register: router_info
+  changed_when: false
+
+- name: Test connectivity to LXB project routers
+  block:
+    - name: Ensure we can reach the external IPs
+      ansible.builtin.command: "ping -c 2 {{ item }}"
+      with_items: "{{ router_external_ips }}"
+  rescue:
+    - name: Display external IPs to double check
+      debug:
+        msg: "{{ router_external_ips }}"
+
+    - name: Pause until resolved
+      pause:
+
+- name: Find port IDs for external IPs
+  ansible.builtin.command: "openstack port list --fixed-ip ip-address={{ item }} -f json"
+  with_items: "{{ router_external_ips }}"
+  register: external_ports
+  changed_when: false
+
+- name: Disable LXB tap interfaces for external router ports
+  ansible.builtin.command: "ip link set tap{{ item.0.ID[0:11] }} down"
+  delegate_to: "{{ item.1.Host }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  when: external_ports_list | length > 0
+  ignore_errors: true
+  with_nested:
+    - "{{ external_ports_list }}"
+    - "{{ l3_agents }}"
+
+- name: Fix ml2_port_bindings database records for router external ports
+  community.general.lxc_container:
+    name: "{{ galera_db_container }}"
+    container_command: "mariadb -e 'UPDATE ml2_port_bindings SET `vif_type` = \"ovs\", `vif_details` = \"{{ vif_details }}\" WHERE `port_id` = \"{{ item.0.ID }}\" AND `vif_type` = \"bridge\";' neutron"
+  delegate_to: "{{ galera_db_hostname }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items:
+    - "{{ external_ports_list }}"
+
+- name: Fix ml2_port_binding_levels database records for router external ports
+  community.general.lxc_container:
+    name: "{{ galera_db_container }}"
+    container_command: "mariadb -e 'UPDATE ml2_port_binding_levels SET `driver` = \"ovn\" WHERE `port_id` = \"{{ item.0.ID }}\" AND `driver` = \"linuxbridge\";' neutron"
+  delegate_to: "{{ galera_db_hostname }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items:
+    - "{{ external_ports_list }}"
+
+- name: Change provider resource association from HA to OVN
+  community.general.lxc_container:
+    name: "{{ galera_db_container }}"
+    container_command: "mariadb -e 'UPDATE providerresourceassociations SET `provider_name` = \"ovn\" WHERE `provider_name` = \"ha\" AND `resource_id` = \"{{ item.id }}\";' neutron"
+  delegate_to: "{{ galera_db_hostname }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items:
+    - "{{ router_info_list }}"
+
+- name: Identify router internal HA ports
+  ansible.builtin.command: "openstack port list --project {{ project.ID }} --device-owner network:ha_router_replicated_interface -f json"
+  register: router_internal_ports_ha
+  changed_when: false
+
+- name: Identify router internal non-HA ports
+  ansible.builtin.command: "openstack port list --project {{ project.ID }} --device-owner network:router_interface -f json"
+  register: router_internal_ports
+  changed_when: false
+
+- name: Fix ml2_port_bindings database records for router internal ports
+  community.general.lxc_container:
+    name: "{{ galera_db_container }}"
+    container_command: "mariadb -e 'UPDATE ml2_port_bindings SET `vif_type` = \"ovs\", `host` = \"\", `vif_details` = \"\" WHERE `port_id` = \"{{ item.ID }}\" AND `vif_type` = \"bridge\";' neutron"
+  delegate_to: "{{ galera_db_hostname }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items:
+    - "{{ router_internal_ports_ha.stdout | from_json }}"
+    - "{{ router_internal_ports.stdout | from_json }}"
+
+- name: Fix ml2_port_binding_levels database records for router internal ports
+  community.general.lxc_container:
+    name: "{{ galera_db_container }}"
+    container_command: "mariadb -e 'UPDATE ml2_port_binding_levels SET `driver` = \"ovn\" WHERE `port_id` = \"{{ item.ID }}\" AND `driver` = \"linuxbridge\";' neutron"
+  delegate_to: "{{ galera_db_hostname }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items:
+    - "{{ router_internal_ports_ha.stdout | from_json }}"
+    - "{{ router_internal_ports.stdout | from_json }}"
+
+- name: Fix database records for router internal ports
+  community.general.lxc_container:
+    name: "{{ galera_db_container }}"
+    container_command: "mariadb -e 'UPDATE ports SET `device_owner` = \"network:router_interface\" WHERE `id` = \"{{ item.ID }}\"; UPDATE routerports SET `port_type` = \"network:router_interface\" WHERE `port_id` = \"{{ item.ID }}\";' neutron"
+  delegate_to: "{{ galera_db_hostname }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items:
+    - "{{ router_internal_ports_ha.stdout | from_json }}"
+
+# NOTE: Ideally we would use the router option disable_garp_rarp, but this isn't available on OVN versions typically used alongside LXB
+- name: Enable OVN GARP for router NAT ports
+  community.general.lxc_container:
+    name: "{{ ovn_db_container }}"
+    container_command: "ovn-nbctl --no-leader-only acl-del neutron-{{ neutron_external_network_id }} to-lport 2000 \"eth.src == {{ item.0['MAC Address'] }} && arp.op == 1\""
+  delegate_to: "{{ ovn_db_hostname }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items:
+    - "{{ external_ports_list }}"
+
+- name: Enable OVN LRP external router ports
+  community.general.lxc_container:
+    name: "{{ ovn_db_container }}"
+    container_command: "ovn-nbctl --no-leader-only lrp-set-enabled lrp-{{ item.0.ID }} enabled"
+  delegate_to: "{{ ovn_db_hostname }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items:
+    - "{{ external_ports_list }}"
+
+- name: Test connectivity to OVN project routers
+  block:
+    # We need to force an update to the switch MAC address table from the same L2 segment
+    - name: Trigger an ARP request to the router MAC
+      ansible.builtin.command: "arping -c 2 -I {{ l3_agent_external_interface }} {{ item }}"
+      with_items: "{{ router_external_ips }}"
+      delegate_to: "{{ l3_agents[0]['Host'] }}"
+      vars:
+        ansible_connection: "ssh"
+        ansible_python_interpreter: "/usr/bin/python3"
+      when:
+        - (item | ansible.utils.ipv4) is not false
+      ignore_errors: true # Responses may get consumed upstream
+
+    - name: Ensure we can reach the external IPs
+      ansible.builtin.command: "ping -c 2 {{ item }}"
+      with_items: "{{ router_external_ips }}"
+  rescue:
+    - name: Display external IPs to double check
+      debug:
+        msg: "{{ router_external_ips }}"
+
+    - name: Pause until resolved
+      pause:
+
+- name: Migrate servers
+  include_tasks: migrate_vm.yml
+  loop_control:
+    loop_var: "vm"
+  with_items: "{{ lxb_vms }}"

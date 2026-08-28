@@ -1,0 +1,67 @@
+---
+# Copyright 2026, BBC Research & Development 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- hosts: localhost
+  gather_facts: no
+  connection: local
+  vars:
+    ovn_db_hostname: "shared1.mydomain.com"
+    ovn_db_container: "shared1-neutron-ovn-northd-container-xxxx"
+
+    galera_db_hostname: "shared1.mydomain.com"
+    galera_db_container: "shared1_galera_container-xxxx"
+
+    neutron_server_hostname: "infra1.mydomain.com"
+    neutron_server_container: "infra1_neutron_server_container-xxxx"
+    neutron_server_venv: "/openstack/venvs/neutron-30.1.1"
+  tasks:
+    - name: Migrate VXLAN network segments and VNI allocations to Geneve
+      community.general.lxc_container:
+        name: "{{ galera_db_container }}"
+        container_command: "mariadb -e '{{ item }}' neutron"
+      delegate_to: "{{ galera_db_hostname }}"
+      vars:
+        ansible_connection: "ssh"
+        ansible_python_interpreter: "/usr/bin/python3"
+      with_items:
+        - "UPDATE ml2_geneve_allocations INNER JOIN ml2_vxlan_allocations ON ml2_vxlan_allocations.vxlan_vni = ml2_geneve_allocations.geneve_vni SET ml2_geneve_allocations.allocated = ml2_vxlan_allocations.allocated WHERE ml2_geneve_allocations.allocated = \"0\";"
+        - "UPDATE networksegments SET `network_type` = \"geneve\" WHERE `network_type` = \"vxlan\";"
+#        - "UPDATE ml2_vxlan_allocations SET `allocated` = \"0\";" # Maybe don't release these for now. It's a useful record, and in practice if OVN ever referenced these IDs, VXLAN and GENEVE ones would overlap.
+
+    - name: Gather a list of Geneve networks
+      ansible.builtin.command: "openstack network list --provider-network-type geneve -f json"
+      register: networks
+      changed_when: false
+
+    # NOTE: A sync alone doesn't fix this, even if you bump the ovn revision number table
+    - name: Update OVN external IDs to reference geneve
+      community.general.lxc_container:
+        name: "{{ ovn_db_container }}"
+        container_command: "ovn-nbctl --no-leader-only set logical_switch neutron-{{ item.ID }} external_ids:\\\"neutron:provnet-network-type\\\"=geneve"
+      delegate_to: "{{ ovn_db_hostname }}"
+      vars:
+        ansible_connection: "ssh"
+        ansible_python_interpreter: "/usr/bin/python3"
+      with_items:
+        - "{{ networks.stdout | from_json }}"
+
+    - name: Re-sync the OVN database with Neutron
+      community.general.lxc_container:
+        name: "{{ neutron_server_container }}"
+        container_command: "{{ neutron_server_venv }}/bin/neutron-ovn-db-sync-util --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --ovn-neutron_sync_mode repair"
+      delegate_to: "{{ neutron_server_hostname }}"
+      vars:
+        ansible_connection: "ssh"
+        ansible_python_interpreter: "/usr/bin/python3"

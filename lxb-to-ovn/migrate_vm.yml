@@ -1,0 +1,81 @@
+---
+# Copyright 2026, BBC Research & Development 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Perform migration
+  block:
+    - name: Migrate server
+      include_tasks: live_migrate_vm.yml
+      with_items: "{{ [vm] }}"
+
+    - name: Gather VM information
+      ansible.builtin.command: "openstack server show {{ vm.ID }} -f json"
+      register: migrated_vm
+      changed_when: false
+
+    - name: Ensure migration was successful
+      assert:
+        that: (migrated_vm.stdout | from_json)['OS-EXT-SRV-ATTR:host'] not in disabled_hypervisors
+  rescue:
+    - name: Print failed VM migration details
+      debug:
+        msg: "{{ vm }}"
+
+    - name: Pausing until VM is manually migrated to an OVN host
+      pause:
+
+    - name: Gather VM information
+      ansible.builtin.command: "openstack server show {{ vm.ID }} -f json"
+      register: migrated_vm
+      changed_when: false
+
+    - name: Update disabled hypervisors list
+      command: "openstack compute service list --service nova-compute -f json"
+      register: hypervisors
+      changed_when: false
+
+- name: Find network ports to fix
+  ansible.builtin.command: "openstack port list --server {{ vm.ID }} -f json"
+  register: migrated_ports
+  changed_when: false
+
+- name: Get detailed information for each VM port
+  ansible.builtin.command: "openstack port show {{ item['ID'] }} -f json"
+  register: migrated_port_details
+  changed_when: false
+  with_items: "{{ migrated_ports.stdout | from_json }}"
+
+- name: Prepare variable for port network types
+  ansible.builtin.set_fact:
+    port_network_types: []
+
+- name: Populate variable for port network types
+  ansible.builtin.set_fact:
+    port_network_types: >-
+      {{
+        port_network_types + [{
+          'id': item['id'],
+          'vnic_type': item['binding_vnic_type']
+        }]
+      }}
+  with_items: "{{ migrated_port_details.results | map(attribute='stdout') | map('from_json') | list }}"
+
+- name: Fix networking
+  script: "fixNetworking.sh tap{{ item['id'][0:11] }} {{ (vm.Status in ['SHUTOFF', 'SUSPENDED']) | ternary(1, 0) }}"
+  delegate_to: "{{ (migrated_vm.stdout | from_json)['OS-EXT-SRV-ATTR:host'] }}"
+  vars:
+    ansible_connection: "ssh"
+    ansible_python_interpreter: "/usr/bin/python3"
+  with_items: "{{ port_network_types }}"
+  when: item['vnic_type'] == 'normal'

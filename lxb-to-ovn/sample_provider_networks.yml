@@ -1,0 +1,52 @@
+---
+global_overrides:
+  provider_networks:
+    # #########################################################################
+    # VLAN NETWORKS
+    - network:
+        net_name: physnet_neutron
+        container_bridge: "{{ (neutron_host_type == 'ovn') | ternary('br-vlan', 'bond0') }}"
+        network_interface: "bond0"
+        type: "vlan"
+        range: "1810:1820,3000:4000"
+        group_binds:
+          - network_hosts
+          - compute_hosts
+
+    # #########################################################################
+    # EXT NETWORK
+    - network:
+        net_name: physnet_ext
+        container_bridge: "{{ (neutron_host_type == 'ovn') | ternary('br-ext', 'bond1') }}"
+        container_type: "veth"
+        container_interface: "eth4"
+        network_interface: "bond1"
+        type: "vlan"
+        range: "1:4000"
+        group_binds:
+          - network_hosts
+
+    # #########################################################################
+    # VXLAN/GENEVE TENANT NETWORKS
+    - network:
+        net_name: physnet_vxlan
+        container_bridge: "br-vxlan"
+        container_type: "veth"
+        container_interface: "eth10"
+        container_mtu: "1550"
+        type: "vxlan"
+        range: "10000:15000"
+        group_binds:
+          - neutron_linuxbridge_agent
+          - neutron_ovn_controller
+
+    - network:
+        net_name: physnet_geneve
+        container_bridge: "br-geneve"
+        container_type: "veth"
+        container_interface: "eth11"
+        container_mtu: "1558"
+        type: "geneve"
+        range: "10000:15000"
+        group_binds:
+          - neutron_ovn_controller

@@ -1,0 +1,72 @@
+---
+# Copyright 2026, BBC Research & Development
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- hosts: localhost
+  gather_facts: no
+  connection: local
+  vars:
+    neutron_lxb_agents:
+      - neutron-l3-agent
+      - neutron-linuxbridge-agent
+      - neutron-metadata-agent
+      - neutron-dhcp-agent
+
+    agents_to_delete: "{{ network_agents.stdout | from_json | selectattr('Binary', 'in', neutron_lxb_agents) | list }}"
+  tasks:
+    - name: Identify network agents
+      ansible.builtin.command: "openstack network agent list -f json"
+      register: network_agents
+      changed_when: false
+
+    - name: Ensure all LXB agents are disabled
+      assert:
+        that: "{{ not (item.Alive | bool) }}"
+      with_items: "{{ agents_to_delete }}"
+
+    - name: Delete LXB agents
+      ansible.builtin.command: "openstack network agent delete {{ item.ID }}"
+      with_items: "{{ agents_to_delete }}"
+
+    - name: Identify DHCP agent ports
+      ansible.builtin.command: "openstack port list --device-owner network:dhcp -f json"
+      register: dhcp_ports
+      changed_when: false
+
+    - name: Delete DHCP agent ports
+      ansible.builtin.command: "openstack port delete {{ item.ID }}"
+      with_items: "{{ dhcp_ports.stdout | from_json }}"
+
+    - name: Identify Metadata agent ports
+      ansible.builtin.command: "openstack port list --device-owner network:router_ha_interface -f json"
+      register: metadata_ports
+      changed_when: false
+
+    - name: Delete Metadata agent ports
+      ansible.builtin.command: "openstack port delete {{ item.ID }}"
+      with_items: "{{ metadata_ports.stdout | from_json }}"
+      when:
+        - item.Name.startswith('HA port tenant')
+
+    - name: Identify metadata networks
+      ansible.builtin.command: "openstack network list --long -f json"
+      register: metadata_networks
+      changed_when: false
+
+    - name: Delete metadata networks
+      ansible.builtin.command: "openstack network delete {{ item.ID }}"
+      with_items: "{{ metadata_networks.stdout | from_json }}"
+      when:
+        - item.Project == ''
+        - item.Name.startswith('HA network tenant')

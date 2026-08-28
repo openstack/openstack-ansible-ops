@@ -1,0 +1,115 @@
+---
+# Copyright 2026, BBC Research & Development 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Please source the relevant RC file for the cloud you are targeting before running this playbook with 'ansible-playbook -i localhost, <playbook name>'
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    ovn_db_hostname: "shared1.mydomain.com"
+    ovn_db_container: "shared1-neutron-ovn-northd-container-xxxx"
+
+    galera_db_hostname: "shared1.mydomain.com"
+    galera_db_container: "shared1_galera_container-xxxx"
+
+    neutron_external_network_id: "ca792bc5-469d-484e-9c14-9a0865812995"
+
+    # Enclude the project used by Octavia if enabled so we don't migrate all load balancers at once
+    excluded_projects:
+      - service
+
+    ## Vars for migrate_project_networks.yml ##
+    lb_enabled: true
+    fw_enabled: true
+
+    # NOTE: Can't derive this automatically as the agent reports itself as down due to comms failure with OVN neutron-server
+    l3_agents:
+      - Host: network2.mydomain.com
+
+    # Interface to the external network on LXB nodes, so we can use it for arping to new routers' external interfaces
+    l3_agent_external_interface: "bond1.65"
+
+    # NOTE: vif_details assumes all external router ports use the same vif details (both bridge name and port filtering)
+    vif_details: '{\"port_filter\": true, \"connectivity\": \"l2\", \"bridge_name\": \"br-int\", \"datapath_type\": \"system\"}'
+
+    disabled_hypervisors: "{{ hypervisors.stdout | from_json | selectattr('Status', 'equalto', 'disabled') | map(attribute='Host') | list }}"
+    project_lxb_vms: "{{ project_vm_servers.stdout | from_json | selectattr('Host', 'in', disabled_hypervisors) | list }}"
+    amphora_lxb_vms: "{{ amphora_vm_servers.results | map(attribute='stdout') | map('from_json') | flatten | selectattr('Host', 'in', disabled_hypervisors) | list }}"
+    lxb_vms: "{{ (project_lxb_vms | default([])) + (amphora_lxb_vms | default([])) }}"
+    amphora_vm_lb_info: "{{ amphora_vms.results | map(attribute='stdout') | map('from_json') | list }}"
+    amphora_vm_info_list: "{{ amphora_vm_server_info.results | map(attribute='stdout') | map('from_json') | list }}"
+    router_info_list: "{{ router_info.results | map(attribute='stdout') | map('from_json') | list }}"
+    router_external_ips: "{{ router_info_list | map(attribute='external_gateway_info.external_fixed_ips') | flatten | map(attribute='ip_address') | list }}"
+    external_ports_list: "{{ external_ports.results | map(attribute='stdout') | map('from_json') | list }}"
+
+# We assume LRP ports in OVN are down for networks which haven't migrated yet
+  tasks:
+    - name: Test connectivity to the OVN database
+      community.general.lxc_container:
+        name: "{{ ovn_db_container }}"
+        container_command: "ovn-nbctl --no-leader-only show"
+      delegate_to: "{{ ovn_db_hostname }}"
+      vars:
+        ansible_connection: "ssh"
+        ansible_python_interpreter: "/usr/bin/python3"
+      changed_when: false
+
+    - name: Test connectivity to the Galera database
+      community.general.lxc_container:
+        name: "{{ galera_db_container }}"
+        container_command: "mariadb -e 'show tables;' neutron"
+      delegate_to: "{{ galera_db_hostname }}"
+      vars:
+        ansible_connection: "ssh"
+        ansible_python_interpreter: "/usr/bin/python3"
+      changed_when: false
+
+    - name: Gather a list of projects sorted by name
+      ansible.builtin.command: "openstack project list --sort-column Name -f json"
+      register: projects
+      changed_when: false
+
+    - name: Gather a list of firewall groups
+      ansible.builtin.command: "openstack firewall group list --long -f json"
+      register: firewall_groups
+      changed_when: false
+      when: fw_enabled | bool
+
+    - name: Format firewall groups
+      ansible.builtin.set_fact:
+        firewall_groups: "{{ firewall_groups.stdout | from_json | selectattr('Status', 'eq', 'ACTIVE') | list | default([]) }}"
+      when: fw_enabled | bool
+
+    # NOTE: Initial sync of Neutron to OVN doesn't include firewall group ports (at least on Dalmatian), so fix this before we get going
+    - name: Fix firewall group port sync with OVN (unset ports)
+      ansible.builtin.command: "openstack firewall group unset --port {{ item.1 }} {{ item.0.ID }}"
+      when: fw_enabled | bool
+      with_subelements:
+        - "{{ firewall_groups }}"
+        - Ports
+
+    - name: Fix firewall group port sync with OVN (set ports)
+      ansible.builtin.command: "openstack firewall group set --port {{ item.1 }} {{ item.0.ID }}"
+      when: fw_enabled | bool
+      with_subelements:
+        - "{{ firewall_groups }}"
+        - Ports
+
+    - name: Perform migrations
+      include_tasks: migrate_project_networks.yml
+      loop_control:
+        loop_var: project
+      with_items: "{{ projects.stdout | from_json }}"
+      when: project.Name not in excluded_projects

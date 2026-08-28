@@ -1,0 +1,45 @@
+---
+# The following provides an example of how an OSA deployment can be set up to handle LXB and OVN simultaneously to permit migration.
+# Initially all hosts run with LXB only. As migration proceeds, host_vars can be used to set a _neutron_host_type of 'ovn' to correctly set up Neutron config for OVN operation.
+# Neutron server containers are treated as a special case, with the OVN and LXB drivers running together until migration completes. This is dependent on minor code patches.
+
+neutron_host_type: "{{ _neutron_host_type | default('lxb') }}"
+neutron_plugin_type: "{{ (neutron_host_type == 'ovn') | ternary('ml2.ovn', 'ml2.lxb') }}"
+neutron_ml2_drivers_type: "vlan,local,geneve,vxlan,flat"
+
+neutron_plugin_base: "{{ ((neutron_host_type == 'ovn') | ternary(['ovn-router'], ['router'])) + neutron_plugin_base_core }}"
+neutron_plugin_base_core:
+  - metering
+  - segments
+  - dns_domain_ports
+  - port_forwarding
+  - neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin
+  - firewall_v2
+
+neutron_plugin_types: "{{ ((neutron_host_type == 'ovn' and 'neutron_server' in group_names) | ternary(['ml2.lxb'], [])) + neutron_plugin_types_core }}" # Always load both plugin types - requires patched neutron
+neutron_plugin_types_core:
+  - ml2.sriov
+  - ml2.genericswitch
+  - ml2.baremetal
+
+neutron_neutron_conf_overrides:
+  DEFAULT:
+    global_physnet_mtu: 1558
+  experimental:
+    linuxbridge: true # Need this explicitly when LXB is a secondary driver
+
+neutron_ml2_conf_ini_overrides:
+  ml2:
+#    tenant_network_types: "geneve" # Enable this once GENEVE conversion has been completed
+    tenant_network_types: "vxlan"
+    path_mtu: 1558 # MTU of physical network providing tunnels
+    physical_network_mtus: "physnet_neutron:9000,physnet_ext:1500,physnet_vxlan:1550,physnet_geneve:1558"  # phys network type of external provider network and its MTU
+
+neutron_fwaasv2_service_provider: >-
+  FIREWALL_V2:fwaas_db:neutron_fwaas.services.firewall.service_drivers.
+  {{- (neutron_plugin_type == 'ml2.ovn') | ternary('ovn.firewall_l3_driver.OVNFwaasDriver:default', 'agents.agents.FirewallAgentDriver:default') }}
+
+# OVN support for FWaaS only came in in Epoxy, after LXB was removed, so we need to use more recent code.
+neutron_fwaas_git_repo: "{{ openstack_opendev_base_url }}/openstack/neutron-fwaas"
+neutron_fwaas_git_install_branch: 106b2ed888638a43c054e7f0756a7fef0f66012b
+neutron_fwaas_git_track_branch: stable/2025.1

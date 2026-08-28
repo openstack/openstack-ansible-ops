@@ -1,0 +1,67 @@
+---
+# Copyright 2026, BBC Research & Development 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- hosts: localhost
+  gather_facts: no
+  connection: local
+  vars:
+    ovn_db_hostname: "shared1.mydomain.com"
+    ovn_db_container: "shared1-neutron-ovn-northd-container-xxxx"
+
+    neutron_external_network_id: "ca792bc5-469d-484e-9c14-9a0865812995"
+
+    router_info_list: "{{ router_info.results | map(attribute='stdout') | map('from_json') | list }}"
+    router_external_ips: "{{ router_info_list | map(attribute='external_gateway_info.external_fixed_ips') | flatten | map(attribute='ip_address') | list }}"
+    external_ports_list: "{{ external_ports.results | map(attribute='stdout') | map('from_json') | list }}"
+  tasks:
+    - name: Identify Routers
+      ansible.builtin.command: "openstack router list -f json"
+      register: routers
+      changed_when: false
+
+    - name: Router info
+      ansible.builtin.command: "openstack router show {{ item.ID }} -f json"
+      with_items: "{{ routers.stdout | from_json }}"
+      register: router_info
+      changed_when: false
+
+    - name: Find port IDs for external IPs
+      ansible.builtin.command: "openstack port list --fixed-ip ip-address={{ item }} -f json"
+      with_items: "{{ router_external_ips }}"
+      register: external_ports
+      changed_when: false
+
+    - name: Disable OVN LRP external router ports
+      community.general.lxc_container:
+        name: "{{ ovn_db_container }}"
+        container_command: "ovn-nbctl --no-leader-only lrp-set-enabled lrp-{{ item.0.ID }} disabled"
+      delegate_to: "{{ ovn_db_hostname }}"
+      vars:
+        ansible_connection: "ssh"
+        ansible_python_interpreter: "/usr/bin/python3"
+      with_items:
+        - "{{ external_ports_list }}"
+
+    # NOTE: Ideally we would use the router option disable_garp_rarp, but this isn't available on OVN versions typically used alongside LXB
+    - name: Disable OVN GARP for router NAT ports
+      community.general.lxc_container:
+        name: "{{ ovn_db_container }}"
+        container_command: "ovn-nbctl --no-leader-only acl-add neutron-{{ neutron_external_network_id }} to-lport 2000 \"eth.src == {{ item.0['MAC Address'] }} && arp.op == 1\" drop"
+      delegate_to: "{{ ovn_db_hostname }}"
+      vars:
+        ansible_connection: "ssh"
+        ansible_python_interpreter: "/usr/bin/python3"
+      with_items:
+        - "{{ external_ports_list }}"

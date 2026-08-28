@@ -1,0 +1,65 @@
+---
+# Copyright 2026, BBC Research & Development 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- hosts: all
+  gather_facts: no
+  vars:
+    neutron_lxb_services:
+      - neutron-l3-agent
+      - neutron-linuxbridge-agent
+      - neutron-metadata-agent
+      - neutron-dhcp-agent
+  tasks:
+    - name: Gather count of keepalived processes from network nodes
+      ansible.builtin.shell: "pidof keepalived"
+      register: keepalived_processes
+      failed_when: false
+      changed_when: false
+
+    - name: Confirm that keepalived isn't running on network nodes
+      ansible.builtin.assert:
+        that: keepalived_processes.rc != 0
+        fail_msg: "Keepalived processes detected. Tenant routers may still depend on this node."
+
+    - name: Gather count of virtual machines from compute nodes
+      ansible.builtin.shell: "virsh list --all --name | wc -l"
+      register: virtual_machines
+      changed_when: false
+
+    - name: Confirm that no virtual machines are present on compute nodes
+      ansible.builtin.assert:
+        that: virtual_machines.stdout_lines[-1] | int <= 1
+        fail_msg: "Virtual machines detected. Please migrate these away before continuing."
+
+    - name: Disable Neutron Linux Bridge services
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: "stopped"
+        enabled: false
+      with_items: "{{ neutron_lxb_services }}"
+      ignore_errors: true
+
+    - name: Delete Linux Bridge network namespaces
+      ansible.builtin.shell: "for i in $(ip netns | grep 'qdhcp\\|qrouter' | awk {'print $1'}); do ip netns delete $i; done;"
+      register: lxb_namespaces
+      changed_when: (lxb_namespaces.stdout_lines | length) > 0
+
+    - name: Delete Linux Bridge network interfaces
+      ansible.builtin.shell: "{{ item }}"
+      with_items:
+        - "for i in $(ip link show | grep 'master brq' | awk {'print $2'} | sed 's/@.*//' | sed 's/://'); do ip link delete $i; done;"
+        - "for i in $(ip -br link show | grep brq | awk {'print $1'}); do ip link delete $i; done;"
+      register: lxb_interfaces
+      changed_when: (lxb_interfaces.stdout_lines | length) > 0
