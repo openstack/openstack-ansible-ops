@@ -24,7 +24,7 @@
         recurse: true
       register: _found_secret_files
 
-    - name: Verify existance of expected files
+    - name: Verify existence of expected files
       vars:
         _ansible_vault_found_secrets_paths: "{{ _found_secret_files.get('files', []) | map(attribute='path') }}"
       ansible.builtin.stat:
