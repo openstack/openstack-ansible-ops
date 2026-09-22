@@ -23,8 +23,8 @@ INTERFACE=$(ovs-vsctl get port $TAP_NAME interface)
 EXTIDS=$(ovs-vsctl get interface ${INTERFACE:1:-1} external_ids)
 ovs-vsctl del-port $TAP_NAME
 if [[ $CLEANUP_ONLY -eq 1 ]]; then
-  ovs-vsctl destroy interface $INTERFACE
-  ovs-vsctl destroy qos $QOS
+  ovs-vsctl destroy interface ${INTERFACE:1:-1} || true
+  ovs-vsctl destroy qos $QOS || true
 else
   ovs-vsctl add-port br-int $TAP_NAME
   ovs-vsctl set port $TAP_NAME qos=$QOS

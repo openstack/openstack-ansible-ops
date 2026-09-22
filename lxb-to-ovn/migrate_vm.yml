@@ -79,3 +79,8 @@
     ansible_python_interpreter: "/usr/bin/python3"
   with_items: "{{ port_network_types }}"
   when: item['vnic_type'] == 'normal'
+
+# NOTE: Amphora VMs' network namespaces don't handle the network changes well. The simplest fix is to reboot them after migrating.
+- name: Restart amphora VMs
+  ansible.builtin.command: "openstack server reboot {{ vm.ID }}"
+  when: vm.Name.startswith("amphora-")

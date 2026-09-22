@@ -30,6 +30,9 @@
     excluded_projects:
       - service
 
+    project_offset_id: ""
+    project_offset_index: 0
+
     ## Vars for migrate_project_networks.yml ##
     lb_enabled: true
     fw_enabled: true
@@ -51,7 +54,7 @@
     amphora_vm_lb_info: "{{ amphora_vms.results | map(attribute='stdout') | map('from_json') | list }}"
     amphora_vm_info_list: "{{ amphora_vm_server_info.results | map(attribute='stdout') | map('from_json') | list }}"
     router_info_list: "{{ router_info.results | map(attribute='stdout') | map('from_json') | list }}"
-    router_external_ips: "{{ router_info_list | map(attribute='external_gateway_info.external_fixed_ips') | flatten | map(attribute='ip_address') | list }}"
+    router_external_ips: "{{ router_info_list | rejectattr('external_gateway_info', 'equalto', None) | map(attribute='external_gateway_info.external_fixed_ips') | flatten | map(attribute='ip_address') | list }}"
     external_ports_list: "{{ external_ports.results | map(attribute='stdout') | map('from_json') | list }}"
 
 # We assume LRP ports in OVN are down for networks which haven't migrated yet
@@ -107,9 +110,19 @@
         - "{{ firewall_groups }}"
         - Ports
 
+    - name: Find index of project start offset
+      set_fact:
+        project_offset_index: "{{ loop_index }}"
+      loop_control:
+        index_var: loop_index
+      with_items: "{{ projects.stdout | from_json }}"
+      when:
+        - (project_offset_id | length) > 0
+        - item.ID == project_offset_id
+
     - name: Perform migrations
       include_tasks: migrate_project_networks.yml
       loop_control:
         loop_var: project
-      with_items: "{{ projects.stdout | from_json }}"
+      with_items: "{{ (projects.stdout | from_json)[(project_offset_index|int):] }}"
       when: project.Name not in excluded_projects
