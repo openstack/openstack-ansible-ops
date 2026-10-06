@@ -23,7 +23,7 @@
     neutron_external_network_id: "ca792bc5-469d-484e-9c14-9a0865812995"
 
     router_info_list: "{{ router_info.results | map(attribute='stdout') | map('from_json') | list }}"
-    router_external_ips: "{{ router_info_list | map(attribute='external_gateway_info.external_fixed_ips') | flatten | map(attribute='ip_address') | list }}"
+    router_external_ips: "{{ router_info_list | rejectattr('external_gateway_info', 'equalto', None) | map(attribute='external_gateway_info.external_fixed_ips') | flatten | map(attribute='ip_address') | list }}"
     external_ports_list: "{{ external_ports.results | map(attribute='stdout') | map('from_json') | list }}"
   tasks:
     - name: Identify Routers
