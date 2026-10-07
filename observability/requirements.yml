@@ -9,8 +9,8 @@ collections:
   - name: openstack.osa
     source: https://opendev.org/openstack/openstack-ansible-plugins
     type: git
-  - name: community.mysql
-    source: https://github.com/ansible-collections/community.mysql
+  - name: ansible.mariadb
+    source: https://github.com/ansible-collections/ansible.mariadb
     type: git
 roles:
   - name: haproxy_server
